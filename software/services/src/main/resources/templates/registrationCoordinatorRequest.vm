@@ -1,0 +1,3 @@
+$REGISTRATION_COORDINATOR.DisplayName has requested access to be your Registration Coordinator.
+
+#parse( "/templates/firebird_email_footer.vm" )

@@ -1,0 +1,193 @@
+<profilesXml xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                      http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <profiles>
+        <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <!-- Use this section to override properties that are set in the pom.xml for any section. -->
+                <database.server>localhost</database.server>
+                <database.port>5432</database.port>
+                <database.name>firebird</database.name>
+                <jdbc.username>firebird</jdbc.username>
+                <jdbc.password>firebird</jdbc.password>
+                <admin.db.username>postgres</admin.db.username>
+                <admin.db.password>password</admin.db.password>
+
+                <jboss.home><!-- Replace with $JBOSS_HOME --></jboss.home>
+                <jboss.hostname>localhost</jboss.hostname>
+
+                <logger.level>WARN</logger.level>
+                <log.level.default>WARN</log.level.default>
+                <log.level.nci-commons>WARN</log.level.nci-commons>
+                <log.level.firebird>WARN</log.level.firebird>
+                <log.level.struts.validator>WARN</log.level.struts.validator>
+                <struts.devMode>false</struts.devMode>
+
+                <test.selenium.driver.type>firefox</test.selenium.driver.type>
+                <test.selenium.browser.window.maximize>false</test.selenium.browser.window.maximize>
+                <test.selenium.firefox.profile.location>/Users/<USER>/Library/Application Support/Firefox/Profiles/selenium.default</test.selenium.firefox.profile.location>
+                <test.selenium.firefox.binary.location>/Applications/Firefox.app/Contents/MacOS/firefox-bin</test.selenium.firefox.binary.location>
+                <test.selenium.captureScreenShotOnFailure>false</test.selenium.captureScreenShotOnFailure>
+                <test.fail.on.logged.error>false</test.fail.on.logged.error>
+                <test.fail.on.logged.warning>false</test.fail.on.logged.warning>
+
+                <ca.keystore.require.https>false</ca.keystore.require.https>
+                <registration.validation.require.nes.status.active>true</registration.validation.require.nes.status.active>
+
+                <mail.smtp.server>localhost</mail.smtp.server>
+                <mail.smtp.port>2525</mail.smtp.port>
+                <send.mail>true</send.mail>
+                <mail.override.address></mail.override.address>
+            </properties>
+        </profile>
+        <profile>
+            <!-- Activate this profile when you want to skip all of the code checks and tests to build -->
+            <id>quick</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <struts.devMode>true</struts.devMode>
+                <cobertura.check.haltOnFailure>false</cobertura.check.haltOnFailure>
+                <skipTests>true</skipTests>
+                <pmd.skip>true</pmd.skip>
+                <checkstyle.skip>true</checkstyle.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>nihmail</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <mail.smtp.server>mailfwd.nih.gov</mail.smtp.server>
+                <mail.smtp.port>25</mail.smtp.port>
+                <send.mail>true</send.mail>
+                <mail.override.address>test@example.com</mail.override.address>
+            </properties>
+        </profile>
+        <profile>
+            <!-- Use this profile to initiate a Debug mode for when running selenium tests,
+                 but -Dmaven.surefire.debug might be a quicker way for doing the same on port 5005 -->
+            <id>debug</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <maven.surefire.debug>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=2112 -Xnoagent -Djava.compiler=NONE</maven.surefire.debug>
+                <logger.level>DEBUG</logger.level>
+            </properties>
+        </profile>
+        <profile>
+            <!-- Use this profile to build FIREBIRD to use the NES DEMO tier -->
+            <id>nes-demo-tier</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <nes.coppa.services.base.url>https://ctms-services-po-3-2-demo.nci.nih.gov:1522/wsrf/services/cagrid</nes.coppa.services.base.url>
+                <cagrid.dorian.url>https://dorian.training.cagrid.org:8443/wsrf/services/cagrid/Dorian</cagrid.dorian.url>
+                <cagrid.disallowed.idps>Ohio State University,University of Arkansas for Medical Sciences</cagrid.disallowed.idps>
+                <cagrid.firebird.username>coppagridtest</cagrid.firebird.username>
+                <cagrid.firebird.password>Coppa#12345</cagrid.firebird.password>
+                <cagrid.gridgrouper.url>https://grouper.training.cagrid.org:8443/wsrf/services/cagrid/GridGrouper</cagrid.gridgrouper.url>
+                <cagrid.gridgrouper.stem>Projects:FIREBIRD</cagrid.gridgrouper.stem>
+                <cagrid.gridgrouper.admin.user>fbggadmin</cagrid.gridgrouper.admin.user>
+                <cagrid.gridgrouper.admin.password>F1reb1rd!!</cagrid.gridgrouper.admin.password>
+                <cagrid.sync.description.file>training-sync-description.xml</cagrid.sync.description.file>
+                <grid.target>training-1.3</grid.target>
+
+                <!-- FIREBIRD Sponsor configuration-->
+                <sponsor.organization.nes.ids>2.16.840.1.113883.3.26.4.2:28202,2.16.840.1.113883.3.26.4.2:2893521,2.16.840.1.113883.3.26.4.2:519</sponsor.organization.nes.ids>
+                <sponsor.organization.with.annual.registrations.nes.id>2.16.840.1.113883.3.26.4.2:519</sponsor.organization.with.annual.registrations.nes.id>
+                <sponsor.organization.with.protocol.registrations.nes.ids>2.16.840.1.113883.3.26.4.2:28202,2.16.840.1.113883.3.26.4.2:2893521</sponsor.organization.with.protocol.registrations.nes.ids>
+                <sponsor.organization.email.mappings>2.16.840.1.113883.3.26.4.2:28202:REGULATORY@CCSAINC.COM,2.16.840.1.113883.3.26.4.2:2893521:nhlbiinfo@nhlbi.nih.gov,2.16.840.1.113883.3.26.4.2:519:pmbregpend@ctep.nci.nih.gov</sponsor.organization.email.mappings>
+
+                <!-- NIH OER Organization NES ID -->
+                <nih.oer.organization.nes.id>2.16.840.1.113883.3.26.4.2:2863040</nih.oer.organization.nes.id>
+
+                <!-- Email settings -->
+                <firebird.email.support.address>nciocr@mail.nih.gov</firebird.email.support.address>
+                <firebird.email.send.address>nciocr@mail.nih.gov</firebird.email.send.address>
+                <ctep.registration.notification.mailbox>pmbregpend@ctep.nci.nih.gov</ctep.registration.notification.mailbox>
+
+                <!-- Certificate generation settings -->
+                <ca.keystore.password>password</ca.keystore.password>
+                <ca.root.cert.validDays>3650</ca.root.cert.validDays>
+                <ca.user.cert.validDays>365</ca.user.cert.validDays>
+                <ca.first.name>CA</ca.first.name>
+                <ca.last.name>NCI OCR</ca.last.name>
+                <ca.country.code>US</ca.country.code>
+                <ca.city>Rockville</ca.city>
+                <ca.organization.unit>CBIIT</ca.organization.unit>
+                <ca.organization>NCI</ca.organization>
+                <ca.state.or.province>MD</ca.state.or.province>
+                <ca.alias>NCI OCR ROOT CA</ca.alias>
+                <ca.friendly.name>NCI OCR CA Certificate</ca.friendly.name>
+
+                <!-- Testing properties -->
+                <test.ctrp.tier>demo</test.ctrp.tier>
+                <test.identity.provider>Training</test.identity.provider>
+            </properties>
+        </profile>
+        <profile>
+            <!-- Use this profile to build FIREBIRD to use the NES INTEGRATION tier -->
+            <id>nes-integration-tier</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <nes.coppa.services.base.url>https://ctms-services-po-3-2-integration.nci.nih.gov:1522/wsrf/services/cagrid</nes.coppa.services.base.url>
+                <cagrid.dorian.url>https://cagrid-dorian-stage.nci.nih.gov:8443/wsrf/services/cagrid/Dorian</cagrid.dorian.url>
+                <cagrid.disallowed.idps></cagrid.disallowed.idps>
+                <cagrid.firebird.username>fbnes</cagrid.firebird.username>
+                <cagrid.firebird.password>F1reb1rd!!</cagrid.firebird.password>
+                <cagrid.gridgrouper.url>https://cagrid-gridgrouper-stage.nci.nih.gov:8443/wsrf/services/cagrid/GridGrouper</cagrid.gridgrouper.url>
+                <cagrid.gridgrouper.stem>Organization:CBIIT:FIREBIRD</cagrid.gridgrouper.stem>
+                <cagrid.gridgrouper.admin.user>fbggadmin</cagrid.gridgrouper.admin.user>
+                <cagrid.gridgrouper.admin.password>F1reb1rd!!</cagrid.gridgrouper.admin.password>
+                <cagrid.sync.description.file>stage-sync-description.xml</cagrid.sync.description.file>
+                <grid.target>nci_stage-1.3</grid.target>
+
+                <!-- FIREBIRD Sponsor configuration-->
+                <sponsor.organization.nes.ids>2.16.840.1.113883.3.26.4.2:66707,2.16.840.1.113883.3.26.4.2:159558,2.16.840.1.113883.3.26.4.2:502</sponsor.organization.nes.ids>
+                <sponsor.organization.with.annual.registrations.nes.id>2.16.840.1.113883.3.26.4.2:502</sponsor.organization.with.annual.registrations.nes.id>
+                <sponsor.organization.with.protocol.registrations.nes.ids>2.16.840.1.113883.3.26.4.2:66707,2.16.840.1.113883.3.26.4.2:159558</sponsor.organization.with.protocol.registrations.nes.ids>
+                <sponsor.organization.email.mappings>2.16.840.1.113883.3.26.4.2:66707:REGULATORY@CCSAINC.COM,2.16.840.1.113883.3.26.4.2:159558:ncictepcoppaservices@mail.nih.gov,2.16.840.1.113883.3.26.4.2:502:pmbregpend@ctep.nci.nih.gov</sponsor.organization.email.mappings>
+
+                <!-- NIH OER Organization NES ID -->
+                <nih.oer.organization.nes.id>2.16.840.1.113883.3.26.4.2:24359261</nih.oer.organization.nes.id>
+
+                <!-- Email settings -->
+                <firebird.email.support.address>nciocr@mail.nih.gov</firebird.email.support.address>
+                <firebird.email.send.address>nciocr@mail.nih.gov</firebird.email.send.address>
+                <ctep.registration.notification.mailbox>pmbregpend@ctep.nci.nih.gov</ctep.registration.notification.mailbox>
+
+                <!-- Certificate generation settings -->
+                <ca.keystore.password>password</ca.keystore.password>
+                <ca.root.cert.validDays>3650</ca.root.cert.validDays>
+                <ca.user.cert.validDays>365</ca.user.cert.validDays>
+                <ca.first.name>CA</ca.first.name>
+                <ca.last.name>NCI OCR</ca.last.name>
+                <ca.country.code>US</ca.country.code>
+                <ca.city>Rockville</ca.city>
+                <ca.organization.unit>CBIIT</ca.organization.unit>
+                <ca.organization>NCI</ca.organization>
+                <ca.state.or.province>MD</ca.state.or.province>
+                <ca.alias>NCI OCR ROOT CA</ca.alias>
+                <ca.friendly.name>NCI OCR CA Certificate</ca.friendly.name>
+
+                <!-- Testing properties -->
+                <test.ctrp.tier>integration</test.ctrp.tier>
+                <test.identity.provider>Dorian</test.identity.provider>
+            </properties>
+        </profile>
+    </profiles>
+    <activeProfiles>
+        <activeProfile>local</activeProfile>
+    </activeProfiles>
+</profilesXml>

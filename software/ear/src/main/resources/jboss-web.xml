@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-web>
+    <security-domain flushOnSessionInvalidation="true">
+       java:/jaas/jbossweb-form-auth
+    </security-domain>
+</jboss-web>

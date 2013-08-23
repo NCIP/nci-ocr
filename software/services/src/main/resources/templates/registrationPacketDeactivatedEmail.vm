@@ -1,0 +1,15 @@
+** NCI OCR Registration Deactivated **
+
+Dear $REGISTRATION.Profile.Person.DisplayName:
+
+$REGISTRATION.Protocol.Sponsor.Name has deactivated your registration for protocol $REGISTRATION.Protocol.ProtocolNumber, using the NCI OCR system, with the following comments.
+
+Registration Comments:
+"$COMMENTS"
+
+#set($PROTOCOL = $REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+If you have any questions about or need assistance with your registration, please contact a representative of $REGISTRATION.Protocol.Sponsor.Name by sending an email to $SPONSOR_EMAIL_ADDRESS.
+
+#parse( "/templates/firebird_email_footer.vm" )

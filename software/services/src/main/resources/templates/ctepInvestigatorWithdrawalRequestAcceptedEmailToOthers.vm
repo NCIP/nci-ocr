@@ -1,0 +1,4 @@
+$INVESTIGATOR.DisplayName's request to withdraw from participating in NCI-sponsored clinical trials has been accepted.
+$INVESTIGATOR.DisplayName will have to submit a new registration packet if they wish to reactivate their status.
+
+#parse( "/templates/firebird_email_footer.vm" )

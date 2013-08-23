@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.1.7//EN"
+    "http://struts.apache.org/dtds/struts-2.1.7.dtd">
+
+
+<struts>
+    <constant name="struts.convention.exclude.parentClassLoader" value="true" />
+    <constant name="struts.convention.action.fileProtocols" value="jar,vfsfile,vfszip" />
+    <constant name="struts.convention.default.parent.package" value="firebird-default"/>
+    <constant name="struts.convention.actionConfigBuilder" value="firebird-convention"/>
+
+    <constant name="struts.devMode" value="${struts.devMode}" />
+    <constant name="struts.ui.theme" value="css_xhtml" />
+    <constant name="struts.multipart.maxSize" value="100000000" />
+    <constant name="struts.objectFactory" value="guice" />
+    <constant name="struts.ognl.allowStaticMethodAccess" value="true" />
+
+    <bean type="org.apache.struts2.convention.ActionConfigBuilder" name="firebird-convention" class="gov.nih.nci.firebird.web.struts2.convention.FirebirdActionConfigBuilder"/>
+    <bean type="com.opensymphony.xwork2.ObjectFactory" name="guice" class="gov.nih.nci.firebird.web.inject.Struts2GuiceObjectFactory" />
+
+    <!--  Make the Guice object factory the automatic default -->
+    <constant name="struts.objectFactory" value="guice" />
+
+    <package name="firebird-default" extends="json-default">
+
+        <interceptors>
+
+            <interceptor name="nullCollectionElements"
+                class="com.fiveamsolutions.nci.commons.web.struts2.interceptor.NullCollectionElementInterceptor" />
+
+            <interceptor name="parameterTrim"
+                class="com.fiveamsolutions.nci.commons.web.struts2.interceptor.ParameterTrimInterceptor" />
+
+            <interceptor name="firebirdExceptionHandler"
+                class="gov.nih.nci.firebird.web.interceptor.FirebirdExceptionHandlingInterceptor" />
+
+            <interceptor name="userRegistration" class="gov.nih.nci.firebird.web.interceptor.RegistrationRequiredInterceptor" />
+            <interceptor name="profileManagement" class="gov.nih.nci.firebird.web.interceptor.ProfileManagementInterceptor" />
+            <interceptor name="registrationManagement" class="gov.nih.nci.firebird.web.interceptor.RegistrationManagementInterceptor" />
+            <interceptor name="protocolManagement" class="gov.nih.nci.firebird.web.interceptor.ProtocolManagementInterceptor" />
+            <interceptor name="sponsorRepresentativeProtocolManagement" class="gov.nih.nci.firebird.web.interceptor.SponsorRepresentativeProtocolManagementInterceptor" />
+            <interceptor name="firebirdParams" class="gov.nih.nci.firebird.web.interceptor.FirebirdParametersInterceptor" />
+
+            <interceptor name="showDisclaimer"
+                class="gov.nih.nci.firebird.web.interceptor.FirebirdShowSplashPageInterceptor">
+                <param name="splashPageActionName">showDisclaimer</param>
+                <param name="sessionFlagName">disclaimerAccepted</param>
+            </interceptor>
+            <interceptor name="accountRequestRequired" class="gov.nih.nci.firebird.web.interceptor.AccountRequestRequiredInterceptor" />
+
+            <interceptor-stack name="firebirdPrePrepareStack">
+                <interceptor-ref name="logger"/>
+                <interceptor-ref name="exception" />
+                <interceptor-ref name="firebirdExceptionHandler" />
+                <interceptor-ref name="accountRequestRequired" />
+                <interceptor-ref name="showDisclaimer" />
+                <interceptor-ref name="userRegistration" />
+                <interceptor-ref name="store">
+                    <param name="operationMode">AUTOMATIC</param>
+                </interceptor-ref>
+                <interceptor-ref name="alias" />
+                <interceptor-ref name="fileUpload">
+                    <param name="maximumSize">50000000</param>
+                </interceptor-ref>
+
+                <interceptor-ref name="firebirdParams">
+                    <!--
+                        Excludes the jQuery no-cache _ parameter and the Displaytag d-#-X parameter(s)
+                    -->
+                    <param name="excludeParams">
+                        _,d-\d+?-[sop]
+                    </param>
+                    <!--
+                        Excludes the Rich Text inputs from being filtered
+                    -->
+                    <param name="ignoreParams">
+                        comment,(?i).*comments$,profile\.clinicalResearchExperience\.text$
+                    </param>
+                    <param name="acceptParamNames">
+                        \w+((\.\w+)|(\[\d+\])|(\(\d+\))|(\['.+'\])|(\('\w+'\)))*
+                    </param>
+
+                </interceptor-ref>
+                <interceptor-ref name="servletConfig" />
+            </interceptor-stack>
+
+            <interceptor-stack name="firebirdPostPrepareStack">
+                <interceptor-ref name="i18n" />
+                <interceptor-ref name="chain" />
+                <interceptor-ref name="checkbox" />
+                <interceptor-ref name="staticParams" />
+                <interceptor-ref name="firebirdParams">
+                    <!--
+                        Excludes the jQuery no-cache _ parameter and the Displaytag d-#-X parameter(s)
+                    -->
+                    <param name="excludeParams">
+                        _,d-\d+?-[sop]
+                    </param>
+                    <!--
+                        Excludes the Rich Text inputs from being filtered
+                    -->
+                    <param name="ignoreParams">
+                    comment,(?i).*comments$,profile\.clinicalResearchExperience\.text$
+                    </param>
+                </interceptor-ref>
+                <interceptor-ref name="conversionError" />
+                <interceptor-ref name="nullCollectionElements" />
+                <interceptor-ref name="parameterTrim">
+                    <param name="trimToNull">true</param>
+                </interceptor-ref>
+                <interceptor-ref name="validation">
+                    <param name="validateAnnotatedMethodOnly">true</param>
+                    <param name="excludeMethods">input,back,cancel</param>
+                </interceptor-ref>
+                <interceptor-ref name="workflow">
+                    <param name="excludeMethods">input,back,cancel</param>
+                </interceptor-ref>
+            </interceptor-stack>
+
+            <interceptor-stack name="firebirdParamsPrepareParamsStack">
+                <interceptor-ref name="firebirdPrePrepareStack" />
+                <interceptor-ref name="prepare" />
+                <interceptor-ref name="firebirdPostPrepareStack" />
+            </interceptor-stack>
+
+            <interceptor-stack name="profileManagementStack">
+                <interceptor-ref name="firebirdPrePrepareStack" />
+                <interceptor-ref name="profileManagement" />
+                <interceptor-ref name="prepare" />
+                <interceptor-ref name="firebirdPostPrepareStack" />
+            </interceptor-stack>
+
+            <interceptor-stack name="registrationManagementStack">
+                <interceptor-ref name="firebirdPrePrepareStack" />
+                <interceptor-ref name="registrationManagement" />
+                <interceptor-ref name="prepare" />
+                <interceptor-ref name="firebirdPostPrepareStack" />
+            </interceptor-stack>
+
+            <interceptor-stack name="protocolManagementStack">
+                <interceptor-ref name="firebirdPrePrepareStack" />
+                <interceptor-ref name="protocolManagement" />
+                <interceptor-ref name="prepare" />
+                <interceptor-ref name="firebirdPostPrepareStack" />
+            </interceptor-stack>
+
+            <interceptor-stack name="sponsorRepresentativeProtocolManagementStack">
+                <interceptor-ref name="firebirdPrePrepareStack" />
+                <interceptor-ref name="sponsorRepresentativeProtocolManagement" />
+                <interceptor-ref name="prepare" />
+                <interceptor-ref name="firebirdPostPrepareStack" />
+            </interceptor-stack>
+
+            <interceptor-stack name="firebirdNoDisclaimerStack">
+                <interceptor-ref name="logger"/>
+                <interceptor-ref name="exception" />
+                <interceptor-ref name="firebirdExceptionHandler" />
+                <interceptor-ref name="alias" />
+                <interceptor-ref name="servletConfig" />
+                <interceptor-ref name="prepare" />
+                <interceptor-ref name="i18n" />
+                <interceptor-ref name="chain" />
+                <interceptor-ref name="debugging" />
+                <interceptor-ref name="profiling" />
+                <interceptor-ref name="checkbox" />
+                <interceptor-ref name="staticParams" />
+                <interceptor-ref name="firebirdParams">
+                    <!--
+                        Excludes the jQuery no-cache _ parameter and the Displaytag d-#-X parameter(s)
+                    -->
+                    <param name="excludeParams">
+                        _,d-\d+?-[sop]
+                    </param>
+                    <!--
+                        Excludes the Rich Text inputs from being filtered
+                    -->
+                    <param name="ignoreParams">
+                    comment,(?i).*comments$,profile\.clinicalResearchExperience\.text$
+                    </param>
+                </interceptor-ref>
+                <interceptor-ref name="conversionError" />
+                <interceptor-ref name="nullCollectionElements" />
+                <interceptor-ref name="parameterTrim">
+                    <param name="trimToNull">true</param>
+                </interceptor-ref>
+                <interceptor-ref name="validation">
+                    <param name="validateAnnotatedMethodOnly">true</param>
+                    <param name="excludeMethods">input,back,cancel</param>
+                </interceptor-ref>
+                <interceptor-ref name="workflow">
+                    <param name="excludeMethods">input,back,cancel</param>
+                </interceptor-ref>
+            </interceptor-stack>
+        </interceptors>
+
+        <default-interceptor-ref name="firebirdParamsPrepareParamsStack" />
+
+        <global-results>
+            <result name="error">/WEB-INF/error.jsp</result>
+            <result name="remoteException">/WEB-INF/remoteException.jsp</result>
+            <result name="profileAccessSuspended">/WEB-INF/suspended_from_profile.jsp</result>
+            <result name="registrationAccessSuspended">/WEB-INF/suspended_from_registrations.jsp</result>
+            <result name="accessDenied">/WEB-INF/403.jsp</result>
+            <result name="notYetImplemented">/>/WEB-INF/notYetImplemented.jsp</result>
+            <result name="closeDialog">/WEB-INF/close-dialog.jsp</result>
+            <result name="enterRegistrationFlow" type="redirectAction">
+                <param name="actionName">enterRegistrationFlow</param>
+                <param name="namespace">/user/registration</param>
+            </result>
+            <result name="showDisclaimer" type="redirectAction">
+                <param name="actionName">showDisclaimer</param>
+                <param name="namespace">/disclaimer</param>
+            </result>
+            <result name="requestAccountEnter" type="redirectAction">
+                <param name="actionName">requestAccountEnter</param>
+                <param name="namespace">/user</param>
+            </result>
+        </global-results>
+
+        <global-exception-mappings>
+            <exception-mapping result="error" exception="java.lang.Throwable" />
+            <exception-mapping result="remoteException" exception="gov.nih.nci.firebird.common.RemoteServiceException" />
+        </global-exception-mappings>
+
+    </package>
+</struts>

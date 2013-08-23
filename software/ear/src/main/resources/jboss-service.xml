@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE server
+PUBLIC "-//JBoss//DTD MBean Service 5.0//EN"
+"http://www.jboss.org/j2ee/dtd/jboss-service_5_0.dtd">
+<server>
+	<mbean code="org.jboss.security.auth.login.DynamicLoginConfig"
+		name="jboss.security.tests:service=FirebirdLoginConfig">
+		<attribute name="AuthConfig">META-INF/security-config.xml</attribute>
+		<depends optional-attribute-name="LoginConfigService">jboss.security:service=XMLLoginConfig
+		</depends>
+		<depends optional-attribute-name="SecurityManagerService">jboss.security:service=JaasSecurityManager
+		</depends>
+	</mbean>
+	<mbean code="org.jboss.logging.Log4jService"
+		name="jboss.system:type=FirebirdLog4jService,service=Logging"
+		xmbean-dd="resource:xmdesc/Log4jService-xmbean.xml">
+		<attribute name="ConfigurationURL">resource:firebird-log4j.xml</attribute>
+		<!-- Set the org.apache.log4j.helpers.LogLog.setQuiteMode. As of log4j1.2.8
+			this needs to be set to avoid a possible deadlock on exception at the appender
+			level. See bug#696819. -->
+		<attribute name="Log4jQuietMode">true</attribute>
+		<!-- How frequently in seconds the ConfigurationURL is checked for changes -->
+		<attribute name="RefreshPeriod">60</attribute>
+	</mbean>
+	<mbean code="org.jboss.mail.MailService" name="jboss:service=FirebirdMail">
+		<attribute name="JNDIName">java:/FirebirdMail</attribute>
+		<attribute name="Configuration">
+			<configuration>
+				<property name="mail.transport.protocol" value="smtp" />
+				<property name="mail.smtp.host" value="${mail.smtp.server}" />
+				<property name="mail.smtp.port" value="${mail.smtp.port}" />
+				<property name="mail.from" value="${firebird.email.send.address}" />
+				<property name="mail.debug" value="false" />
+			</configuration>
+		</attribute>
+		<depends>jboss:service=Naming</depends>
+	</mbean>
+	<mbean code="org.jboss.jms.server.destination.QueueService"
+		name="jboss.messaging.destination:service=Queue,name=firebird.email.dlq"
+		xmbean-dd="xmdesc/Queue-xmbean.xml">
+		<attribute name="RedeliveryDelay">60000</attribute>
+		<depends optional-attribute-name="ServerPeer">jboss.messaging:service=ServerPeer</depends>
+		<depends>jboss.messaging:service=PostOffice</depends>
+	</mbean>
+	<mbean code="org.jboss.jms.server.destination.QueueService"
+		name="jboss.messaging.destination:service=Queue,name=firebird.email.queue"
+		xmbean-dd="xmdesc/Queue-xmbean.xml">
+		<attribute name="DLQ">jboss.messaging.destination:service=Queue,name=firebird.email.dlq</attribute>
+		<depends optional-attribute-name="ServerPeer">jboss.messaging:service=ServerPeer</depends>
+		<depends>jboss.messaging:service=PostOffice</depends>
+		<depends>jboss.messaging.destination:service=Queue,name=firebird.email.dlq</depends>
+	</mbean>
+</server>

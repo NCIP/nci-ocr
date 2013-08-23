@@ -1,0 +1,8 @@
+** NCI OCR Registration Submission: **
+
+This is to inform you that $ANNUAL_REGISTRATION.Profile.Person.DisplayName has submitted a registration packet to the
+National Cancer Institute (NCI) to participate in NCI-sponsored clinical trials on $ANNUAL_REGISTRATION.LastSubmissionDate.
+
+Click here to access NCI OCR $FIREBIRD_LINK
+
+#parse( "/templates/firebird_email_footer.vm" )

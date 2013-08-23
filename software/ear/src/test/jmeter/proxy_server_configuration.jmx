@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="2.4" jmeter="2.9 r1437961">
+  <hashTree>
+    <ProxyControl guiclass="ProxyControlGui" testclass="ProxyControl" testname="HTTP Proxy Server" enabled="true">
+      <stringProp name="ProxyControlGui.port">8888</stringProp>
+      <collectionProp name="ProxyControlGui.exclude_list">
+        <stringProp name="114776151">.*\.png.*</stringProp>
+        <stringProp name="102930865">.*\.css.*</stringProp>
+        <stringProp name="117813872">.*\.swf.*</stringProp>
+        <stringProp name="-135020589">.*\.js.*</stringProp>
+        <stringProp name="109294607">.*\.jpg.*</stringProp>
+        <stringProp name="106314546">.*\.gif.*</stringProp>
+        <stringProp name="43825951">.*_.*</stringProp>
+        <stringProp name="101825715">.*\.bmp.*</stringProp>
+      </collectionProp>
+      <collectionProp name="ProxyControlGui.include_list"/>
+      <boolProp name="ProxyControlGui.capture_http_headers">true</boolProp>
+      <intProp name="ProxyControlGui.grouping_mode">4</intProp>
+      <boolProp name="ProxyControlGui.add_assertion">true</boolProp>
+      <stringProp name="ProxyControlGui.sampler_type_name">HttpClient4</stringProp>
+      <boolProp name="ProxyControlGui.sampler_redirect_automatically">false</boolProp>
+      <boolProp name="ProxyControlGui.sampler_follow_redirects">true</boolProp>
+      <boolProp name="ProxyControlGui.use_keepalive">true</boolProp>
+      <boolProp name="ProxyControlGui.sampler_download_images">false</boolProp>
+      <boolProp name="ProxyControlGui.regex_match">false</boolProp>
+      <stringProp name="ProxyControlGui.content_type_include"></stringProp>
+      <stringProp name="ProxyControlGui.content_type_exclude"></stringProp>
+    </ProxyControl>
+    <hashTree>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>false</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

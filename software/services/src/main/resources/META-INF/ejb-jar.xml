@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ejb-jar xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  version="3.0" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/ejb-jar_3_0.xsd">
+    <assembly-descriptor>
+        <!-- Default interceptor that will apply to all methods for all beans in deployment -->
+        <interceptor-binding>
+            <ejb-name>*</ejb-name>
+            <interceptor-class>gov.nih.nci.firebird.inject.GuiceEjbInterceptor</interceptor-class>
+        </interceptor-binding>
+    </assembly-descriptor>
+</ejb-jar>

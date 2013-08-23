@@ -1,0 +1,9 @@
+$SUBINVESTIGATOR_REGISTRATION.PrimaryRegistration.Profile.Person.DisplayName has removed $SUBINVESTIGATOR_REGISTRATION.Profile.Person.DisplayName as a subinvestigator for the following registration packet using the NCI OCR system.
+Before removal, the registrations status was $SUBINVESTIGATOR_REGISTRATION.Status.Display
+
+#set($PROTOCOL = $SUBINVESTIGATOR_REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+If you have any questions, please contact $SUBINVESTIGATOR_REGISTRATION.PrimaryRegistration.Profile.Person.DisplayName.
+
+#parse( "/templates/firebird_email_footer.vm" )

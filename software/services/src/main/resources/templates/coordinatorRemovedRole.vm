@@ -1,0 +1,5 @@
+Dear $INVESTIGATOR.DisplayName:
+
+$REGISTRATION_COORDINATOR.DisplayName is no longer acting as a registration coordinator and will no longer be managing your profile or completing clinical study registrations on your behalf.
+
+#parse( "/templates/firebird_email_footer.vm" )

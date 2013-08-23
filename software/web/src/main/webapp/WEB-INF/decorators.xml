@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<decorators defaultdir="/WEB-INF/content/decorators">
+    <excludes>
+        <pattern>/styles/*</pattern>
+        <pattern>/scripts/*</pattern>
+        <pattern>/images/*</pattern>
+        <pattern>/struts/*</pattern>
+        <pattern>/ajax/*</pattern>
+        <pattern>/*/ajax/*</pattern>
+    </excludes>
+
+    <decorator name="main" page="mainTemplate.jsp">
+        <excludes>
+            <pattern>/user/registration/*</pattern>
+        </excludes>
+        <pattern>/*</pattern>
+    </decorator>
+
+    <decorator name="noNavigation" page="noNavigationTemplate.jsp">
+        <pattern>/disclaimer/*</pattern>
+    </decorator>
+
+    <decorator name="noSignin" page="noSignInTemplate.jsp">
+        <pattern>/login/*</pattern>
+    </decorator>
+
+    <decorator name="userRegistration" page="userRegistrationTemplate.jsp">
+        <excludes>
+            <pattern>/user/registration/flow/*</pattern>
+            <pattern>/user/registration/nav/*</pattern>
+        </excludes>
+        <pattern>/user/registration/*</pattern>
+    </decorator>
+
+    <decorator name="userRegistrationContent" page="userRegistrationContentTemplate.jsp">
+        <excludes>
+            <pattern>/user/registration/flow/ajax/*</pattern>
+        </excludes>
+        <pattern>/user/registration/flow/*</pattern>
+        <pattern>/user/registration/nav/*</pattern>
+    </decorator>
+</decorators>

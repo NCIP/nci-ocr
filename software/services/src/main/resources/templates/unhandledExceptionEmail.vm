@@ -1,0 +1,7 @@
+An unhandled Exception has occurred in NCI OCR.
+
+Date: $TIMESTAMP
+User: #if ($FIREBIRD_USER) $FIREBIRD_USER.BaseUsername #else No logged in user #end
+URL: $REQUEST_URL
+Parameters: $REQUEST_PARAMETERS
+Stack Trace: $STACKTRACE

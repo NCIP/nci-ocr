@@ -1,0 +1,11 @@
+Dear $REGISTRATION.Profile.Person.DisplayName:
+
+$REGISTRATION_COORDINATOR.DisplayName has completed the registration packet for the following protocol:
+
+#set($PROTOCOL = $REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+It is now ready for you to review, sign and submit it.
+Click here to access NCI OCR: $FIREBIRD_LINK
+
+#parse( "/templates/firebird_email_footer.vm" )

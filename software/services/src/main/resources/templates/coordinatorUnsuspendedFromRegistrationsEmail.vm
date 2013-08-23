@@ -1,0 +1,7 @@
+Dear $MANAGED_INVESTIGATOR.User.Person.DisplayName:
+
+$MANAGED_INVESTIGATOR.InvestigatorProfile.Person.DisplayName has reactivated your ability to manage his/her protocol registrations.
+
+Click here to access NCI OCR: $FIREBIRD_LINK
+
+#parse( "/templates/firebird_email_footer.vm" )

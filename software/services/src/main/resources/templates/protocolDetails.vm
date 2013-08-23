@@ -1,0 +1,16 @@
+Protocol Details:
+Sponsor Protocol ID: $PROTOCOL.ProtocolNumber
+Title: $PROTOCOL.ProtocolTitle
+#if ($PROTOCOL.LeadOrganizations.empty)
+Lead Organizations: None
+#else
+Lead Organizations:
+#foreach ($leadOrganization in $PROTOCOL.LeadOrganizations)
+ - $leadOrganization.organization.name ($leadOrganization.principalInvestigator.displayName)
+#end
+#end
+Phase: $PROTOCOL.Phase.Display
+Sponsor: $PROTOCOL.Sponsor.Name
+#if ($PROTOCOL.AgentListForDisplay != "")
+Agents: $PROTOCOL.AgentListForDisplay
+#end

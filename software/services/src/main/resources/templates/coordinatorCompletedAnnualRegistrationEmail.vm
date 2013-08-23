@@ -1,0 +1,17 @@
+Dear $ANNUAL_REGISTRATION.Profile.Person.DisplayName:
+
+$REGISTRATION_COORDINATOR.DisplayName has completed your annual registration packet.
+
+#if ($ANNUAL_REGISTRATION.PlainTextCoordinatorComments != "")
+Registration Coordinator Comments:
+"$ANNUAL_REGISTRATION.PlainTextCoordinatorComments"
+#end
+#if ($ANNUAL_REGISTRATION.PlainTextSponsorComments != "")
+Sponsor Comments:
+"$ANNUAL_REGISTRATION.PlainTextSponsorComments"
+#end
+
+It is now ready for you to review, sign and submit it.
+Click here to access NCI OCR: $FIREBIRD_LINK
+
+#parse( "/templates/firebird_email_footer.vm" )

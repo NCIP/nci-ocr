@@ -1,0 +1,7 @@
+$INVESTIGATOR.DisplayName's request to withdraw from participating in NCI-sponsored clinical trials has been denied for the following reason:
+
+$COMMENTS
+
+No further action is required at this time. If you feel that this request has been denied in error, you may contact the CTEP Investigator Registration Help Desk at: pmbregpend@ctep.nci.nih.gov
+
+#parse( "/templates/firebird_email_footer.vm" )

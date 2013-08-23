@@ -1,0 +1,11 @@
+** NCI OCR Submission: **
+
+$REGISTRATION.Profile.Person.DisplayName has submitted a protocol registration for protocol $REGISTRATION.Protocol.ProtocolNumber.
+The sponsor for this protocol is $REGISTRATION.Protocol.Sponsor.Name.
+
+#set($PROTOCOL = $REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+Click here to access NCI OCR $FIREBIRD_LINK
+
+#parse( "/templates/firebird_email_footer.vm" )

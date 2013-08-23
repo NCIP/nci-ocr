@@ -1,0 +1,4 @@
+$INVESTIGATOR_REGISTRATION.Profile.Person.DisplayName has chosen to revise their submission for protocol $INVESTIGATOR_REGISTRATION.Protocol.ProtocolNumber: $INVESTIGATOR_REGISTRATION.Protocol.ProtocolTitle.
+Any previously approved registrations will be stored and can be viewed at any time.
+
+#parse( "/templates/firebird_email_footer.vm" )

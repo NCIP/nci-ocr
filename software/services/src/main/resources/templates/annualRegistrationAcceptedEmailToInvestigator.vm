@@ -1,0 +1,11 @@
+** NCI OCR Registration Returned **
+
+Dear $ANNUAL_REGISTRATION.Profile.Person.DisplayName:
+
+$ANNUAL_REGISTRATION.Sponsor.Name has accepted your annual registration packet.
+
+Click here to access NCI OCR: $FIREBIRD_LINK
+
+If you have any questions about or need assistance with your registration, please contact a representative of $ANNUAL_REGISTRATION.Sponsor.Name by sending an email to $SPONSOR_EMAIL_ADDRESS.
+
+#parse( "/templates/firebird_email_footer.vm" )

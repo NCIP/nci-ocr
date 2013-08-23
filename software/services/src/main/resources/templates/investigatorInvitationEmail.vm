@@ -1,0 +1,14 @@
+** NCI OCR Registration Invitation **
+
+Dear $INVESTIGATOR_REGISTRATION.Profile.Person.DisplayName:
+
+$INVESTIGATOR_REGISTRATION.Protocol.Sponsor.Name has invited you to complete the registration for protocol $INVESTIGATOR_REGISTRATION.Protocol.ProtocolNumber using the NCI OCR system.
+
+#set($PROTOCOL = $INVESTIGATOR_REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+Click here to access NCI OCR: $FIREBIRD_LINK
+
+If you have any questions about or need assistance with your registration, please contact a representative of $INVESTIGATOR_REGISTRATION.Protocol.Sponsor.Name by sending an email to $SPONSOR_EMAIL_ADDRESS.
+
+#parse( "/templates/firebird_email_footer.vm" )

@@ -1,0 +1,34 @@
+$ACCOUNT_DATA.Person.FirstName $ACCOUNT_DATA.Person.LastName has requested NCI OCR access. The request has the following information:
+
+Username: $ACCOUNT_DATA.Username
+First Name: $ACCOUNT_DATA.Person.FirstName
+Last Name: $ACCOUNT_DATA.Person.LastName
+Email: $ACCOUNT_DATA.Person.Email
+Phone: $!ACCOUNT_DATA.Person.PhoneNumber
+Organization: $ACCOUNT_DATA.PrimaryOrganization.Organization.Name
+Address 1: $ACCOUNT_DATA.Person.PostalAddress.StreetAddress
+#if ($ACCOUNT_DATA.Person.PostalAddress.DeliveryAddress)
+Address 2: $ACCOUNT_DATA.Person.PostalAddress.DeliveryAddress
+#end
+City: $ACCOUNT_DATA.Person.PostalAddress.City
+#if ($ACCOUNT_DATA.Person.PostalAddress.StateOrProvince)
+State: $ACCOUNT_DATA.Person.PostalAddress.StateOrProvince
+#end
+Postal Code: $ACCOUNT_DATA.Person.PostalAddress.PostalCode
+Country: $ACCOUNT_DATA.Person.PostalAddress.Country
+
+The account was set up with the following roles:
+
+#foreach ($role in $ACCOUNT_DATA.Roles)
+- $role.Display
+#end
+#foreach ($sponsor in $ACCOUNT_DATA.SponsorOrganizations)
+- Sponsor for $sponsor.Name. Please request verification from the approving officer.
+#end
+#foreach ($sponsor in $ACCOUNT_DATA.DelegateOrganizations)
+- Sponsor Delegate for $sponsor.Name. Please request verification from the approving officer.
+#end
+
+Once the account is created, please contact the user with their new account information.
+
+#parse( "/templates/firebird_email_footer.vm" )

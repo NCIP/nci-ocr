@@ -1,0 +1,8 @@
+$ANNUAL_REGISTRATION.Profile.Person.DisplayName
+#if ($ANNUAL_REGISTRATION.Profile.Person.CtepId && $ANNUAL_REGISTRATION.Profile.Person.CtepId != "")
+NCI Investigator No: $ANNUAL_REGISTRATION.Profile.Person.CtepId
+#end
+
+$ANNUAL_REGISTRATION.Profile.Person.DisplayName's NCI Annual Registration has been approved. Food and Drug Administration (FDA) regulations and NCI policy require all investigators participating in any NCI-sponsored clinical trial to renew their registration annually. $ANNUAL_REGISTRATION.Profile.Person.DisplayName will be required to renew on $ANNUAL_REGISTRATION.RenewalDate.
+
+If you have any questions about or need assistance with $ANNUAL_REGISTRATION.Profile.Person.DisplayName's registration, please contact a representative of the NCI Cancer Therapy Evaluation Program by sending an email to pmbregpend@ctep.nci.nih.gov.

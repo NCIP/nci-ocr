@@ -1,0 +1,8 @@
+$FIREBIRD_USER.Person.DisplayName has completed reviewing the registration packet for protocol $REGISTRATION.Protocol.ProtocolNumber by $REGISTRATION.PrimaryRegistration.Profile.Person.DisplayName and the packet is now ready for approval.
+
+#set($PROTOCOL = $REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+Click here to access NCI OCR $FIREBIRD_LINK.
+
+#parse( "/templates/firebird_email_footer.vm" )

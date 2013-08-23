@@ -1,0 +1,5 @@
+$INVESTIGATOR.DisplayName has been disqualified from participating in NCI-sponsored clinical trials because he/she has been deemed not qualified or otherwise ineligible. Below is additional information provided by NCI:
+
+$COMMENTS
+
+#parse( "/templates/firebird_email_footer.vm" )

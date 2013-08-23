@@ -1,0 +1,10 @@
+** NCI OCR Registration Packet Approved: **
+
+$INVESTIGATOR_REGISTRATION.Protocol.Sponsor.Name has approved the complete registration packet for the following protocol.
+
+#set($PROTOCOL = $INVESTIGATOR_REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+If you have any questions about or need assistance with your registration, please contact a representative of $INVESTIGATOR_REGISTRATION.Protocol.Sponsor.Name by sending an email to $SPONSOR_EMAIL_ADDRESS.
+
+#parse( "/templates/firebird_email_footer.vm" )

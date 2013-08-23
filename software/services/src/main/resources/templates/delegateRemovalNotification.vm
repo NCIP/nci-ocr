@@ -1,0 +1,7 @@
+Dear $SPONSOR_ROLE.User.Person.DisplayName:
+
+You have been removed as a Sponsor Delegate for $SPONSOR_ROLE.Sponsor.Name.
+
+If you feel that you have been removed in error or have questions, please contact $SPONSOR_ROLE.Sponsor.Name at $SPONSOR_EMAIL_ADDRESS.
+
+#parse( "/templates/firebird_email_footer.vm" )

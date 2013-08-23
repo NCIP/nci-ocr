@@ -1,0 +1,44 @@
+Your request for NCI OCR access has been sent to NCI CBIIT Application Support. The requested account has the following information:
+
+#if ($ACCOUNT_DATA.Username)
+Username: $ACCOUNT_DATA.Username
+#end
+First Name: $ACCOUNT_DATA.Person.FirstName
+Last Name: $ACCOUNT_DATA.Person.LastName
+Email: $ACCOUNT_DATA.Person.Email
+Phone: $!ACCOUNT_DATA.Person.PhoneNumber
+Organization: $ACCOUNT_DATA.PrimaryOrganization.Organization.Name
+Address 1: $ACCOUNT_DATA.Person.PostalAddress.StreetAddress
+#if ($ACCOUNT_DATA.Person.PostalAddress.DeliveryAddress)
+Address 2: $ACCOUNT_DATA.Person.PostalAddress.DeliveryAddress
+#end
+City: $ACCOUNT_DATA.Person.PostalAddress.City
+#if ($ACCOUNT_DATA.Person.PostalAddress.StateOrProvince)
+State: $ACCOUNT_DATA.Person.PostalAddress.StateOrProvince
+#end
+Postal Code: $ACCOUNT_DATA.Person.PostalAddress.PostalCode
+Country: $ACCOUNT_DATA.Person.PostalAddress.Country
+
+The account was set up with the following roles:
+
+#foreach ($role in $ACCOUNT_DATA.Roles)
+#if ($role.Display == "Investigator")
+- Investigator*
+#else
+- $role.Display
+#end
+#end
+#foreach ($sponsor in $ACCOUNT_DATA.SponsorOrganizations)
+- Sponsor* for $sponsor.Name.
+#end
+#foreach ($sponsor in $ACCOUNT_DATA.DelegateOrganizations)
+- Sponsor Delegate* for $sponsor.Name.
+#end
+
+Roles marked with an * indicates that you will need to wait for NCI CBIIT Application Support to verify additional approvals for your request before you are able to perform certain functionality.
+
+Once the account is created, you will be contacted by NCI CBIIT Application Support with the disposition of your request along with a username and password, if applicable. You will then be able to log in to NCI OCR and complete the user account request process.
+
+If you need to follow up on account creation, please contact NCI CBIIT Application Support at $FIREBIRD_SUPPORT_EMAIL.
+
+#parse( "/templates/firebird_email_footer.vm" )

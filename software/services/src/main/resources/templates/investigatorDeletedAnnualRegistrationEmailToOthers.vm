@@ -1,0 +1,3 @@
+$INVESTIGATOR.DisplayName's has deleted their annual registration.
+
+#parse( "/templates/firebird_email_footer.vm" )

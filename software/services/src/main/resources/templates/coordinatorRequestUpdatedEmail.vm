@@ -1,0 +1,12 @@
+
+** NCI OCR Registration Coordinator Request Updated: **
+
+$MANAGED_INVESTIGATOR.InvestigatorProfile.Person.DisplayName has
+#if ($MANAGED_INVESTIGATOR.Approved)
+ approved
+#else
+ rejected
+#end
+ your request to become their Registration Coordinator.
+
+#parse( "/templates/firebird_email_footer.vm" )

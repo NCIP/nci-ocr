@@ -1,0 +1,3 @@
+$INVESTIGATOR_REGISTRATION.Profile.Person.DisplayName has cancelled the revision for their registration to protocol $INVESTIGATOR_REGISTRATION.Protocol.ProtocolNumber: $INVESTIGATOR_REGISTRATION.Protocol.ProtocolTitle
+
+#parse( "/templates/firebird_email_footer.vm" )

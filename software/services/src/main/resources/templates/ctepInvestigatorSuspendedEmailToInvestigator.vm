@@ -1,0 +1,7 @@
+Dear $INVESTIGATOR.DisplayName:
+
+Food and Drug Administration (FDA) regulations and National Cancer Institute (NCI) policy require all investigators participating in any NCI-sponsored clinical trial to renew their registration annually. Our records show that you have failed to renew your registration within one year of your last registration. Your investigator status has been suspended from participating in any NCI-sponsored clinical trial. You must renew your registration if you would like to reactivate your investigator status.
+
+If you have any questions or concerns, you may contact the CTEP Investigator Registration Help Desk (pmbregpend@ctep.nci.nih.gov).
+
+#parse( "/templates/firebird_email_footer.vm" )

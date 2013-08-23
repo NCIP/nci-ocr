@@ -1,0 +1,13 @@
+Dear $REGISTRATION_COORDINATOR.DisplayName:
+
+$SPONSOR.DisplayName has completed $ANNUAL_REGISTRATION.Profile.Person.DisplayName's NCI annual registration packet.
+
+#if ($ANNUAL_REGISTRATION.PlainTextSponsorComments != "")
+Sponsor Comments:
+"$ANNUAL_REGISTRATION.PlainTextSponsorComments"
+#end
+
+It is now ready for $ANNUAL_REGISTRATION.Profile.Person.DisplayName to review, sign and submit.
+Click here to access NCI OCR: $FIREBIRD_LINK
+
+#parse( "/templates/firebird_email_footer.vm" )

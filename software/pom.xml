@@ -1,0 +1,673 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>gov.nih.nci.firebird</groupId>
+    <artifactId>firebird</artifactId>
+    <packaging>pom</packaging>
+    <name>Firebird</name>
+    <version>3.3.0.8-SNAPSHOT</version>
+    <inceptionYear>2010</inceptionYear>
+    <properties>
+        <!-- general build properties -->
+        <project.root.dir>${project.basedir}</project.root.dir>
+        <cobertura.check.haltOnFailure>true</cobertura.check.haltOnFailure>
+        <cobertura.totalBranchRate>90</cobertura.totalBranchRate>
+        <cobertura.totalLineRate>95</cobertura.totalLineRate>
+
+        <logger.debug>false</logger.debug>
+        <logger.level>WARN</logger.level>
+        <logger.level.firebird>INFO</logger.level.firebird>
+        <log.level.struts.validator>WARN</log.level.struts.validator>
+
+        <firebird.base.url>http://localhost:8080/ocr</firebird.base.url>
+
+        <!-- dependency versions references in multiple locations -->
+        <nci-commons.version>1.3.4</nci-commons.version>
+        <struts.version>2.3.15.1</struts.version>
+        <hibernate.version>3.3.2.GA</hibernate.version>
+        <hibernate.annotations.version>3.4.0.GA</hibernate.annotations.version>
+        <hibernate.validator.version>3.1.0.GA</hibernate.validator.version>
+        <bouncycastle.version>1.45</bouncycastle.version>
+        <itext.version>5.0.6</itext.version>
+        <commons.lang3.version>3.1</commons.lang3.version>
+        <guava.version>14.0.1</guava.version>
+
+        <!-- Java version properties -->
+        <compileSource>1.6</compileSource>
+
+        <!-- JBoss Configuration properties -->
+        <jboss.home>${user.home}/dev/app_servers/jboss-5.1.0.GA</jboss.home>
+        <jboss.protocol>http</jboss.protocol>
+        <jboss.hostname>localhost</jboss.hostname>
+        <jboss.port>8080</jboss.port>
+        <jboss.naming.port>1099</jboss.naming.port>
+        <jboss.configuration>default</jboss.configuration>
+
+        <!-- Database related properties -->
+        <hibernate.dialect>org.hibernate.dialect.PostgreSQLDialect</hibernate.dialect>
+        <schema.file>schema.sql</schema.file>
+        <admin.db.username>postgres</admin.db.username>
+        <admin.db.password>postgres</admin.db.password>
+        <database.server />
+        <database.port />
+        <database.name />
+        <jdbc.username>firebird</jdbc.username>
+        <jdbc.password>firebird</jdbc.password>
+        <database.drop-schema>false</database.drop-schema>
+        <database.url.prefix>jdbc:postgresql://${database.server}:${database.port}</database.url.prefix>
+        <jdbc.url>${database.url.prefix}/${database.name}</jdbc.url>
+        <jdbc.groupId>postgresql</jdbc.groupId>
+        <jdbc.driverClassName>org.postgresql.Driver</jdbc.driverClassName>
+        <jdbc.artifactId>postgresql</jdbc.artifactId>
+        <jdbc.version>9.0-801.jdbc4</jdbc.version>
+        <ehcache.diskstore.path>java.io.tmpdir</ehcache.diskstore.path>
+
+        <!-- caGrid / NES service configuration properties - values must be supplied in profile when building -->
+        <nes.coppa.services.base.url />
+        <nes.personService.url>${nes.coppa.services.base.url}/Person</nes.personService.url>
+        <nes.organizationService.url>${nes.coppa.services.base.url}/Organization</nes.organizationService.url>
+        <nes.healthCareProvider.url>${nes.coppa.services.base.url}/HealthCareProvider</nes.healthCareProvider.url>
+        <nes.healthCareFacility.url>${nes.coppa.services.base.url}/HealthCareFacility</nes.healthCareFacility.url>
+        <nes.oversightCommittee.url>${nes.coppa.services.base.url}/OversightCommittee</nes.oversightCommittee.url>
+        <nes.researchOrganization.url>${nes.coppa.services.base.url}/ResearchOrganization</nes.researchOrganization.url>
+        <nes.organizationalContact.url>${nes.coppa.services.base.url}/OrganizationalContact</nes.organizationalContact.url>
+        <nes.identifiedOrganization.url>${nes.coppa.services.base.url}/IdentifiedOrganization</nes.identifiedOrganization.url>
+        <nes.identifiedPerson.url>${nes.coppa.services.base.url}/IdentifiedPerson</nes.identifiedPerson.url>
+        <nes.business.url>${nes.coppa.services.base.url}/Business</nes.business.url>
+        <cagrid.dorian.url />
+        <cagrid.disallowed.idps />
+        <cagrid.firebird.username />
+        <cagrid.firebird.password />
+        <cagrid.gridgrouper.url />
+        <cagrid.gridgrouper.stem />
+        <cagrid.gridgrouper.admin.user />
+        <cagrid.gridgrouper.admin.password />
+        <cagrid.sync.description.file />
+        <grid.target />
+        <cagrid.maximum.attempts>5</cagrid.maximum.attempts>
+
+        <!-- Email Options -->
+        <mail.queue.jndi>queue/firebird.email.queue</mail.queue.jndi>
+        <mail.queue.connection.factory.jndi>java:/ConnectionFactory</mail.queue.connection.factory.jndi>
+        <mail.service.jndi>java:/FirebirdMail</mail.service.jndi>
+        <send.mail>false</send.mail>
+        <mail.override.address />
+        <firebird.email.support.address />
+        <firebird.email.send.address />
+
+        <ctep.registration.notification.mailbox />
+
+        <!-- FIREBIRD configuration options -->
+        <registration.validation.require.nes.status.active>true</registration.validation.require.nes.status.active>
+        <ca.keystore.require.https>true</ca.keystore.require.https>
+        <daily.job.runtime>3:00</daily.job.runtime>
+        <!--ctep authentication options-->
+        <login.ctep.iam.username.prefix>/O=NCI/OU=CTEP/CN=</login.ctep.iam.username.prefix>
+        <login.ctep.iam.url>https://eapps-ctep.nci.nih.gov/iam</login.ctep.iam.url>
+
+        <!-- Certificate generation settings -->
+        <ca.keystore.password />
+        <ca.root.cert.validDays />
+        <ca.user.cert.validDays />
+        <ca.first.name />
+        <ca.last.name />
+        <ca.country.code />
+        <ca.city />
+        <ca.organization.unit />
+        <ca.organization />
+        <ca.state.or.province />
+        <ca.alias />
+        <ca.friendly.name />
+
+        <!-- FIREBIRD Sponsor configuration-->
+        <sponsor.organization.nes.ids />
+        <sponsor.organization.email.mappings />
+        <sponsor.organization.with.annual.registrations.nes.id />
+        <sponsor.organization.with.protocol.registrations.nes.ids />
+
+        <nih.oer.organization.nes.id />
+
+        <!-- Selenium test related properties. -->
+        <test.selenium.captureScreenShotOnFailure>true</test.selenium.captureScreenShotOnFailure>
+        <test.selenium.browser.window.maximize>true</test.selenium.browser.window.maximize>
+        <test.fail.on.logged.error>false</test.fail.on.logged.error>
+        <test.fail.on.logged.warning>false</test.fail.on.logged.warning>
+        <test.identity.provider />
+
+        <!-- CSRFGuard properties. -->
+        <!-- https://www.owasp.org/index.php/CSRFGuard_3_Token_Injection -->
+        <owasp.csrfguard.inject.into.forms>true</owasp.csrfguard.inject.into.forms>
+        <owasp.csrfguard.inject.into.attributes>false</owasp.csrfguard.inject.into.attributes>
+        <owasp.csrfguard.domain.strict>false</owasp.csrfguard.domain.strict>
+        <owasp.csrfguard.referer.pattern>.*ocr.*</owasp.csrfguard.referer.pattern>
+        <owasp.csrfguard.print.config>false</owasp.csrfguard.print.config>
+        <owasp.csrfguard.config.log.results>false</owasp.csrfguard.config.log.results>
+
+        <!-- Annual Registration Renewal Properties -->
+        <annual.registration.due.first.notification.days>60</annual.registration.due.first.notification.days>
+        <annual.registration.due.second.notification.days>30</annual.registration.due.second.notification.days>
+        <annual.registration.renewal.based.on.due.date.days>30</annual.registration.renewal.based.on.due.date.days>
+
+    </properties>
+
+    <!-- General Project information -->
+    <scm>
+        <connection>scm:svn:https://ncisvn.nci.nih.gov/svn/firebird/trunk/</connection>
+        <developerConnection>scm:svn:https://ncisvn.nci.nih.gov/svn/firebird/trunk/</developerConnection>
+        <url>https://ncisvn.nci.nih.gov/svn/firebird/trunk/</url>
+    </scm>
+
+    <issueManagement>
+        <system>Jira</system>
+        <url>https://tracker.nci.nih.gov/browse/FB</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Hudson</system>
+        <url>http://ncias-c490-v.nci.nih.gov:48080/hudson/</url>
+        <notifiers>
+            <notifier>
+                <type>mail</type>
+                <address>team-firebird@5amsolutions.com</address>
+            </notifier>
+        </notifiers>
+    </ciManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>team-firebird@5amsolutions.com</name>
+            <post>mailto:team-firebird@5amsolutions.com</post>
+        </mailingList>
+    </mailingLists>
+
+    <developers>
+        <developer>
+            <email>etavela@5amsolutions.com</email>
+            <id>etavela</id>
+            <name>Eric Tavela</name>
+        </developer>
+        <developer>
+            <email>aswift@5amsolutions.com</email>
+            <id>aswift</id>
+            <name>Adam Swift</name>
+        </developer>
+        <developer>
+            <email>rkumsher@5amsolutions.com</email>
+            <id>rkumsher</id>
+            <name>Ryan Kumsher</name>
+        </developer>
+        <developer>
+            <email>kherm@nih.gov</email>
+            <id>kherm</id>
+            <name>Manav Kher</name>
+        </developer>
+    </developers>
+
+    <distributionManagement>
+        <repository>
+            <id>releases</id>
+            <name>releases</name>
+            <url>https://ncimvn.nci.nih.gov/nexus/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>snapshots</name>
+            <url>https://ncimvn.nci.nih.gov/nexus/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <site>
+            <id>systems-sites</id>
+            <name>SCM Project Sites</name>
+            <url>dav:https://ncimvn.nci.nih.gov/nexus/content/sites/cbiit-sites/firebird/</url>
+        </site>
+    </distributionManagement>
+
+    <!-- Sub projects -->
+    <modules>
+        <module>services</module>
+        <module>web</module>
+        <module>ear</module>
+        <module>server</module>
+    </modules>
+
+    <!-- Build Configuration -->
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <source>${compileSource}</source>
+                    <target>${compileSource}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.10</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>process-test-classes</phase>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fiveamsolutions</groupId>
+                        <artifactId>nci-commons-core</artifactId>
+                        <version>${nci-commons.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>2.7.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                            <goal>cpd-check</goal>
+                        </goals>
+                        <phase>process-test-classes</phase>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.fiveamsolutions</groupId>
+                        <artifactId>nci-commons-core</artifactId>
+                        <version>${nci-commons.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.cargo</groupId>
+                <artifactId>cargo-maven2-plugin</artifactId>
+                <version>1.0.1-beta-3</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.12.4</version>
+                <configuration>
+                    <forkMode>once</forkMode>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*TestDb.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.5.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>clean</goal>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <check>
+                        <haltOnFailure>${cobertura.check.haltOnFailure}</haltOnFailure>
+                        <totalBranchRate>${cobertura.totalBranchRate}</totalBranchRate>
+                        <totalLineRate>${cobertura.totalLineRate}</totalLineRate>
+                    </check>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.fiveamsolutions</groupId>
+                <artifactId>nci-commons-maven-plugin</artifactId>
+                <version>${nci-commons.version}</version>
+                <configuration>
+                    <deployDirectory>${jboss.home}/server/${jboss.configuration}/tmp</deployDirectory>
+                    <deployDirectoryPattern>*</deployDirectoryPattern>
+                    <deploySubDirectory>firebird-web.war</deploySubDirectory>
+                    <copyToAllMatches>true</copyToAllMatches>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.2.2</version>
+                <configuration>
+                    <preparationGoals>clean install</preparationGoals>
+                    <arguments>-Dskip-liquibase=true</arguments>
+                    <tagBase>https://ncisvn.nci.nih.gov/svn/firebird/releases</tagBase>
+                    <stagingRepository>releases::default::https://ncimvn.nci.nih.gov/nexus/service/local/staging/deploy/maven2</stagingRepository>
+                </configuration>
+            </plugin>
+            <!--
+                See http://maven.apache.org/scm/maven-scm-plugin/examples/bootstrapping-with-pom.html
+                and http://maven.apache.org/scm/maven-scm-plugin/
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-scm-plugin</artifactId>
+                <version>1.7</version>
+                <configuration>
+                    <username>nciscm</username>
+                    <password />
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.0</version>
+            </plugin>
+
+
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>sql-maven-plugin</artifactId>
+                    <version>1.5</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>${jdbc.groupId}</groupId>
+                            <artifactId>${jdbc.artifactId}</artifactId>
+                            <version>${jdbc.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <driver>${jdbc.driverClassName}</driver>
+                        <url>${jdbc.url}</url>
+                        <username>${jdbc.username}</username>
+                        <password>${jdbc.password}</password>
+                        <autocommit>true</autocommit>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.cargo</groupId>
+                    <artifactId>cargo-maven2-plugin</artifactId>
+                    <version>1.0.1-beta-3</version>
+                    <configuration>
+                        <container>
+                            <containerId>jboss5x</containerId>
+                            <type>installed</type>
+                            <home>${jboss.home}</home>
+                        </container>
+                        <configuration>
+                            <type>existing</type>
+                            <home>${jboss.home}/server/${jboss.configuration}</home>
+                            <properties>
+                                <cargo.jboss.configuration>${jboss.configuration}</cargo.jboss.configuration>
+                                <cargo.hostname>${jboss.hostname}</cargo.hostname>
+                                <cargo.servlet.port>${jboss.port}</cargo.servlet.port>
+                            </properties>
+                        </configuration>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-webdav</artifactId>
+                <version>1.0-beta-2</version>
+            </extension>
+        </extensions>
+    </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.10</version>
+                <configuration>
+                    <configLocation>${project.root.dir}/resources/5amCheckstyle.xml</configLocation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.8.1</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>2.7.1</version>
+                <configuration>
+                    <rulesets>
+                        <ruleset>5amPmd.xml</ruleset>
+                    </rulesets>
+                    <failOnViolation>true</failOnViolation>
+                    <linkXref>true</linkXref>
+                    <targetJdk>${compileSource}</targetJdk>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jdepend-maven-plugin</artifactId>
+                <version>2.0-beta-2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <formats>
+                        <format>html</format>
+                        <format>xml</format>
+                    </formats>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>2.6</version>
+            </plugin>
+            <plugin>
+                <!-- Disabled features w/in the 2.1 plugin to speed up the report generation -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.1</version>
+                <configuration>
+                    <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+                    <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <!--
+        NCI Nexus repositories used.
+        Browse repositories: https://ncimvn.nci.nih.gov
+        Information on NCI Nexus: https://wiki.nci.nih.gov/display/sysdeploy/Sonatype+Nexus+Maven+Repository+Manager+(CBIIT)
+    -->
+    <repositories>
+        <repository>
+            <id>NCI Nexus</id>
+            <url>https://ncimvn.nci.nih.gov/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>NCI Nexus Third Party</id>
+            <url>https://ncimvn.nci.nih.gov/nexus/content/repositories/thirdparty/</url>
+        </repository>
+        <repository>
+            <id>NCI Nexus Maven Central</id>
+            <url>https://ncimvn.nci.nih.gov/nexus/content/repositories/central/</url>
+        </repository>
+        <repository>
+            <id>NCI Snapshots</id>
+            <url>https://ncimvn.nci.nih.gov/nexus/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>NCI Nexus</id>
+            <url>https://ncimvn.nci.nih.gov/nexus/content/groups/public/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang3.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Testing only jars -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.10</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.security</groupId>
+            <artifactId>jbosssx</artifactId>
+            <version>2.0.5.Final</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.jbossas</groupId>
+            <artifactId>jboss-as-ejb3</artifactId>
+            <version>5.1.0.GA</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>cglib</artifactId>
+                    <groupId>cglib</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>log4j</artifactId>
+                    <groupId>apache-log4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>trove</artifactId>
+                    <groupId>trove</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+
+        <!-- JBoss 5.1.0 provided jars -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>jsr250-api</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernate.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+               <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>xml-apis</artifactId>
+                    <groupId>xml-apis</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-annotations</artifactId>
+            <version>${hibernate.annotations.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate.validator.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.5.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.5.6</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!--  Bouncycastle JARs installed to JBoss lib -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpg-jdk16</artifactId>
+            <version>${bouncycastle.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+            <version>${bouncycastle.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>development</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.zeroturnaround</groupId>
+                        <artifactId>jrebel-maven-plugin</artifactId>
+                        <version>1.1.3</version>
+                        <executions>
+                            <execution>
+                                <id>generate-rebel-xml</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

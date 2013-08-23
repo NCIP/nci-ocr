@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+    <preConditions>
+        <dbms type="postgresql" />
+    </preConditions>
+    <changeSet id="initialSchema" author="smiller">
+        <validCheckSum>4d7a03d4657c628b4f2b741521c830</validCheckSum>
+        <validCheckSum>95f793b24bb84f5cb3eb9890267a5b0</validCheckSum>
+        <validCheckSum>3:e13f011fc0763fb30708d4cb91050fb0</validCheckSum>
+        <validCheckSum>3:34fbad93661ce683471816d122576213</validCheckSum>
+        <comment>Schema for version 3.0.0</comment>
+        <sqlFile path="${db.src.dir}/initialSchema/hibernateSchema.sql" />
+        <sqlFile path="${db.src.dir}/initialSchema/audit.sql" />
+        <sqlFile path="${db.src.dir}/initialSchema/countries.sql" />
+        <sqlFile path="${db.src.dir}/initialSchema/states.sql" />
+        <sqlFile path="${db.src.dir}/initialSchema/credentials.sql" />
+        <sqlFile path="${db.src.dir}/initialSchema/formTypes.sql" />
+    </changeSet>
+    <changeSet id="update-3.1.0-it53" author="firebird-team">
+        <validCheckSum>46db51eb5efdd71188286a39f0e6246a</validCheckSum>
+        <validCheckSum>3:b070a7168cde7f0abd061c961e241494</validCheckSum>
+        <comment>Update to 3.1.0, iteration 53</comment>
+        <sqlFile path="${db.src.dir}/update-3.1.x/update-3.1.0-it53.sql" />
+    </changeSet>
+    <changeSet id="update-3.1.0-it57" author="firebird-team">
+        <comment>Update to 3.1.0, iteration 57</comment>
+        <sqlFile path="${db.src.dir}/update-3.1.x/update-3.1.0-it57.sql" />
+    </changeSet>
+    <changeSet id="update-3.1.0-it59" author="firebird-team">
+        <comment>Update to 3.1.0, iteration 59</comment>
+        <sqlFile path="${db.src.dir}/update-3.1.x/update-3.1.0-it59.sql" />
+    </changeSet>
+    <changeSet id="update-3.2.0-it54" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 54</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it54.sql" />
+    </changeSet>
+    <changeSet id="update-3.2.0-it55" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 55</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it55.sql" />
+    </changeSet>
+    <changeSet id="update-3.2.0-it57" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 57</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it57.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it58" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 58</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it58.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it59" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 59</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it59.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it60" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 60</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it60.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it61" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 61</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it61.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it62" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 62</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it62.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it63" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 63</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it63.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it64" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 64</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it64.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it65" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 65</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it65.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it66" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 66</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it66.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it67" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 67</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it67.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it68" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 68</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it68.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it69" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 69</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it69.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it70" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 70</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it70.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it71" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 71</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it71.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it72" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 72</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it72.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it73" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 73</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it73.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it74" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 74</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it74.sql"/>
+    </changeSet>
+    <changeSet id="update-3.2.0-it76" author="firebird-team">
+        <comment>Update to 3.2.0, iteration 76</comment>
+        <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it76.sql"/>
+    </changeSet>
+    <changeSet id="update-3.3.0-it78" author="firebird-team">
+        <comment>Update to 3.3.0, iteration 78</comment>
+        <sqlFile path="${db.src.dir}/update-3.3.x/update-3.3.0-it78.sql"/>
+    </changeSet>
+    <changeSet id="update-3.3.0-it79" author="firebird-team">
+        <comment>Update to 3.3.0, iteration 79</comment>
+        <sqlFile path="${db.src.dir}/update-3.3.x/update-3.3.0-it79.sql"/>
+    </changeSet>
+    <changeSet id="update-3.3.0-it80" author="firebird-team">
+        <comment>Update to 3.3.0, iteration 80</comment>
+        <sqlFile path="${db.src.dir}/update-3.3.x/update-3.3.0-it80.sql"/>
+    </changeSet>
+    <changeSet id="update-3.3.0-it81" author="firebird-team">
+        <comment>Update to 3.3.0, iteration 81</comment>
+        <sqlFile path="${db.src.dir}/update-3.3.x/update-3.3.0-it81.sql"/>
+    </changeSet>
+</databaseChangeLog>

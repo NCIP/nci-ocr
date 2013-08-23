@@ -1,0 +1,13 @@
+Dear $REGISTRATIONS.get(0).Profile.Person.DisplayName:
+
+$INVESTIGATOR.DisplayName has removed you as a subinvestigator for the following registration packets using the NCI OCR system. You are no longer required to submit supporting documentation.
+
+#foreach ($registration in $REGISTRATIONS)
+#set($PROTOCOL = $registration.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+#end
+
+If you have any questions about or need assistance with your registration, please contact $INVESTIGATOR.DisplayName.
+
+#parse( "/templates/firebird_email_footer.vm" )

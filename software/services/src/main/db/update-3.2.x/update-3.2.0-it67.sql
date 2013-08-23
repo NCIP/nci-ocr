@@ -1,0 +1,4 @@
+alter table supplemental_investigator_data_form add column phrp_certification_date date;
+
+alter table firebird_user add column status_change_notification_required_for_investigator boolean default false;
+alter table firebird_user add column status_change_notification_required_for_coordinator boolean default false;

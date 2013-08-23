@@ -1,0 +1,274 @@
+/**
+ * The software subject to this notice and license includes both human readable
+ * source code form and machine readable, binary, object code form. The NCI OCR
+ * Software was developed in conjunction with the National Cancer Institute
+ * (NCI) by NCI employees and 5AM Solutions, Inc. (5AM). To the extent
+ * government employees are authors, any rights in such works shall be subject
+ * to Title 17 of the United States Code, section 105.
+ *
+ * This NCI OCR Software License (the License) is between NCI and You. You (or
+ * Your) shall mean a person or an entity, and all other entities that control,
+ * are controlled by, or are under common control with the entity. Control for
+ * purposes of this definition means (i) the direct or indirect power to cause
+ * the direction or management of such entity, whether by contract or otherwise,
+ * or (ii) ownership of fifty percent (50%) or more of the outstanding shares,
+ * or (iii) beneficial ownership of such entity.
+ *
+ * This License is granted provided that You agree to the conditions described
+ * below. NCI grants You a non-exclusive, worldwide, perpetual, fully-paid-up,
+ * no-charge, irrevocable, transferable and royalty-free right and license in
+ * its rights in the NCI OCR Software to (i) use, install, access, operate,
+ * execute, copy, modify, translate, market, publicly display, publicly perform,
+ * and prepare derivative works of the NCI OCR Software; (ii) distribute and
+ * have distributed to and by third parties the NCI OCR Software and any
+ * modifications and derivative works thereof; and (iii) sublicense the
+ * foregoing rights set out in (i) and (ii) to third parties, including the
+ * right to license such rights to further third parties. For sake of clarity,
+ * and not by way of limitation, NCI shall have no right of accounting or right
+ * of payment from You or Your sub-licensees for the rights granted under this
+ * License. This License is granted at no charge to You.
+ *
+ * Your redistributions of the source code for the Software must retain the
+ * above copyright notice, this list of conditions and the disclaimer and
+ * limitation of liability of Article 6, below. Your redistributions in object
+ * code form must reproduce the above copyright notice, this list of conditions
+ * and the disclaimer of Article 6 in the documentation and/or other materials
+ * provided with the distribution, if any.
+ *
+ * Your end-user documentation included with the redistribution, if any, must
+ * include the following acknowledgment: This product includes software
+ * developed by 5AM and the National Cancer Institute. If You do not include
+ * such end-user documentation, You shall include this acknowledgment in the
+ * Software itself, wherever such third-party acknowledgments normally appear.
+ *
+ * You may not use the names "The National Cancer Institute", "NCI", or "5AM"
+ * to endorse or promote products derived from this Software. This License does
+ * not authorize You to use any trademarks, service marks, trade names, logos or
+ * product names of either NCI or 5AM, except as required to comply with the
+ * terms of this License.
+ *
+ * For sake of clarity, and not by way of limitation, You may incorporate this
+ * Software into Your proprietary programs and into any third party proprietary
+ * programs. However, if You incorporate the Software into third party
+ * proprietary programs, You agree that You are solely responsible for obtaining
+ * any permission from such third parties required to incorporate the Software
+ * into such third party proprietary programs and for informing Your
+ * sub-licensees, including without limitation Your end-users, of their
+ * obligation to secure any required permissions from such third parties before
+ * incorporating the Software into such third party proprietary software
+ * programs. In the event that You fail to obtain such permissions, You agree
+ * to indemnify NCI for any claims against NCI by such third parties, except to
+ * the extent prohibited by law, resulting from Your failure to obtain such
+ * permissions.
+ *
+ * For sake of clarity, and not by way of limitation, You may add Your own
+ * copyright statement to Your modifications and to the derivative works, and
+ * You may provide additional or different license terms and conditions in Your
+ * sublicenses of modifications of the Software, or any derivative works of the
+ * Software as a whole, provided Your use, reproduction, and distribution of the
+ * Work otherwise complies with the conditions stated in this License.
+ *
+ * THIS SOFTWARE IS PROVIDED "AS IS," AND ANY EXPRESSED OR IMPLIED WARRANTIES,
+ * (INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+ * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE) ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE NATIONAL CANCER INSTITUTE, 5AM SOLUTIONS, INC. OR THEIR
+ * AFFILIATES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+package gov.nih.nci.firebird.selenium2.tests.protocol;
+
+import static gov.nih.nci.firebird.data.RegistrationStatus.*;
+import static org.junit.Assert.*;
+import gov.nih.nci.firebird.data.FormStatus;
+import gov.nih.nci.firebird.data.InvestigatorRegistration;
+import gov.nih.nci.firebird.data.InvitationStatus;
+import gov.nih.nci.firebird.data.RegistrationStatus;
+import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
+import gov.nih.nci.firebird.data.user.FirebirdUser;
+import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.ResubmissionCommentsDialog;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.SignAndSubmitRegistrationDialog;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.SubinvestigatorsTab;
+import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.InvestigatorDeactivateDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolInformationTab;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolInvestigatorsTab;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolInvestigatorsTab.InvestigatorRegistrationListing;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolSubInvestigatorsTab;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolSubInvestigatorsTab.SubInvestigatorRegistrationListing;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolsListPage;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewCompletionDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationOverviewTab;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdEmailUtils;
+import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
+import gov.nih.nci.firebird.test.LoginAccount.InvestigatorLogin;
+import gov.nih.nci.firebird.test.data.DataSet;
+import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.util.FirebirdPropertyUtils;
+
+import org.junit.Test;
+
+public class ReactivateApprovedRegistrationTest extends AbstractFirebirdWebDriverTest {
+
+    private DataSet dataSet;
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
+        InvestigatorRegistration registration = builder.createRegistration().withStatus(APPROVED).complete().get();
+        FirebirdUser subinvestigator = builder.createInvestigatorWithCompleteProfile()
+                .withLogin(InvestigatorLogin.fbciinv2).get();
+        builder.createSubinvestigatorRegistration(subinvestigator, registration).withStatus(APPROVED).complete().get();
+        builder.createSponsor();
+        dataSet = builder.build();
+    }
+
+    @Test
+    public void testDeactivateAndReactivateInvestigator_Approved() {
+        ProtocolsListPage protocolsPage = openHomePage(dataSet.getSponsorLogin()).getProtocolsMenu().clickBrowse();
+        ProtocolInformationTab protocolTab = protocolsPage.getHelper().clickLink(
+                dataSet.getInvestigatorRegistration().getProtocol());
+        ProtocolInvestigatorsTab investigatorsTab = protocolTab.getPage().clickInvestigatorsTab();
+        deactivateRegistration(investigatorsTab);
+
+        checkForInvestigatorRegistration(investigatorsTab, dataSet.getInvestigatorRegistration(),
+                InvitationStatus.RESPONDED, INACTIVE, false);
+
+        ProtocolSubInvestigatorsTab subInvestigatorsTab = investigatorsTab.getPage().clickSubInvestigatorsTab();
+        checkForSubInvestigatorRegistration(subInvestigatorsTab, dataSet.getSubInvestigatorRegistration(), INACTIVE);
+
+        investigatorsTab = subInvestigatorsTab.getPage().clickInvestigatorsTab();
+        reactivateRegistration(investigatorsTab);
+
+        InvestigatorRegistration newRegistration = dataSet.getLastCreatedObject(InvestigatorRegistration.class);
+        SubInvestigatorRegistration newsSubInvestigatorRegistration = dataSet
+                .getLastCreatedObject(SubInvestigatorRegistration.class);
+
+        checkForInvestigatorRegistration(investigatorsTab, dataSet.getInvestigatorRegistration(),
+                InvitationStatus.RESPONDED, INACTIVE, false);
+        checkForInvestigatorRegistration(investigatorsTab, newRegistration, InvitationStatus.REACTIVATED, IN_PROGRESS,
+                true);
+
+        subInvestigatorsTab = investigatorsTab.getPage().clickSubInvestigatorsTab();
+        checkForSubInvestigatorRegistration(subInvestigatorsTab, dataSet.getSubInvestigatorRegistration(), INACTIVE);
+        checkForSubInvestigatorRegistration(subInvestigatorsTab, newsSubInvestigatorRegistration, IN_PROGRESS);
+
+        resubmitRegistrationAsInvestigator(newRegistration, newsSubInvestigatorRegistration);
+        reviewRegistrationAsSponsor(newRegistration);
+        checkRegistrationsAsSponsor(dataSet.getInvestigatorRegistration(), newRegistration,
+                dataSet.getSubInvestigatorRegistration());
+    }
+
+    private void deactivateRegistration(ProtocolInvestigatorsTab investigatorsTab) {
+        InvestigatorDeactivateDialog deactivateDialog = investigatorsTab.getHelper()
+                .getListing(dataSet.getInvestigatorRegistration()).clickDeactivate();
+        deactivateDialog.typeComments("comments");
+        deactivateDialog.clickSave();
+        dataSet.reload();
+        checkForDeactivationEmails();
+    }
+
+    private void checkForDeactivationEmails() {
+        getEmailChecker().assertEmailCount(2);
+        String expectedSubject = FirebirdEmailUtils.getExpectedSubject(
+                FirebirdMessageTemplate.REGISTRATION_PACKET_DEACTIVATED_EMAIL, dataSet.getInvestigatorRegistration());
+        getEmailChecker().getSentEmail(dataSet.getInvestigatorRegistration().getProfile().getPerson().getEmail(),
+                expectedSubject);
+        getEmailChecker().getSentEmail(dataSet.getSubInvestigatorRegistration().getProfile().getPerson().getEmail(),
+                expectedSubject);
+    }
+
+    private void reactivateRegistration(ProtocolInvestigatorsTab investigatorsTab) {
+        investigatorsTab.getHelper().getListing(dataSet.getInvestigatorRegistration()).clickReactivate().clickSave();
+        dataSet.reload();
+        checkForReactivationEmails();
+    }
+
+    private void checkForReactivationEmails() {
+        getEmailChecker().assertEmailCount(4); // 2 deactivation and 2 reactivation emails
+        String expectedSubject = FirebirdEmailUtils.getExpectedSubject(
+                FirebirdMessageTemplate.REGISTRATION_PACKET_REACTIVATED_EMAIL, dataSet.getInvestigatorRegistration());
+        getEmailChecker().getSentEmail(dataSet.getInvestigatorRegistration().getProfile().getPerson().getEmail(),
+                expectedSubject);
+        getEmailChecker().getSentEmail(dataSet.getInvestigatorRegistration().getProfile().getPerson().getEmail(),
+                expectedSubject);
+        getEmailChecker().getSentEmail(dataSet.getSubInvestigatorRegistration().getProfile().getPerson().getEmail(),
+                expectedSubject);
+    }
+
+    private void checkForInvestigatorRegistration(ProtocolInvestigatorsTab investigatorsTab,
+            InvestigatorRegistration registration, InvitationStatus invitationStatus,
+            RegistrationStatus registrationStatus, boolean hasDeactivateButton) {
+        InvestigatorRegistrationListing listing = investigatorsTab.getHelper().getListing(registration);
+        assertTrue(listing.getInvitationStatus().startsWith(
+                FirebirdPropertyUtils.getPropertyText(invitationStatus.getKey())));
+        assertTrue(listing.getRegistrationStatus().startsWith(registrationStatus.getDisplay()));
+        assertFalse(listing.hasRemoveButton());
+        assertEquals(hasDeactivateButton, listing.hasDeactivateButton());
+    }
+
+    private void checkForSubInvestigatorRegistration(ProtocolSubInvestigatorsTab subInvestigatorsTab,
+            SubInvestigatorRegistration registration, RegistrationStatus registrationStatus) {
+        SubInvestigatorRegistrationListing listing = subInvestigatorsTab.getHelper().getListing(registration);
+        assertTrue(listing.getRegistrationStatus().startsWith(registrationStatus.getDisplay()));
+    }
+
+    private void resubmitRegistrationAsInvestigator(InvestigatorRegistration registration,
+            SubInvestigatorRegistration subInvestigatorRegistration) {
+        HomePage homePage = openHomePage(dataSet.getInvestigatorLogin());
+        RegistrationOverviewTab overviewTab = homePage.getHelper().openReactivatedRegistrationTask(registration);
+        overviewTab.getHelper().assertHasStatus(IN_PROGRESS);
+        overviewTab.getHelper().assertFormsHaveStatus(FormStatus.COMPLETED);
+        SubinvestigatorsTab subinvestigatorsTab = overviewTab.getPage().clickSubinvestigatorsTab();
+        subinvestigatorsTab.getHelper().getSubinvestigatorListing(subInvestigatorRegistration).clickDelete()
+                .clickConfirmButton();
+        checkForSubinvestigatorRemovedEmail(subInvestigatorRegistration);
+        ResubmissionCommentsDialog commentsDialog = (ResubmissionCommentsDialog) subinvestigatorsTab.getPage()
+                .clickOverviewTab().clickSubmitRegistration();
+        SignAndSubmitRegistrationDialog signDialog = (SignAndSubmitRegistrationDialog) commentsDialog.clickSave();
+        signDialog.getHelper().signAndSubmit(dataSet.getInvestigatorLogin()).clickClose();
+    }
+
+    private void checkForSubinvestigatorRemovedEmail(SubInvestigatorRegistration subInvestigatorRegistration) {
+        getEmailChecker().assertEmailCount(5);
+        String expectedSubject = FirebirdEmailUtils.getExpectedSubject(
+                FirebirdMessageTemplate.REMOVE_SUBINVESTIGATOR_NOTIFICATION_EMAIL, dataSet.getInvestigator()
+                        .getPerson());
+        getEmailChecker()
+                .getSentEmail(subInvestigatorRegistration.getProfile().getPerson().getEmail(), expectedSubject);
+    }
+
+    private void reviewRegistrationAsSponsor(InvestigatorRegistration registration) {
+        ReviewRegistrationTab reviewTab = openHomePage(dataSet.getSponsorLogin()).getHelper()
+                .openSubmittedProtocolRegistrationTask(registration);
+        reviewTab.getHelper().reviewAllForms(registration);
+        reviewTab.getHelper().acceptAllForms(registration);
+        ReviewCompletionDialog completionDialog = (ReviewCompletionDialog) reviewTab.clickCompleteReview();
+        completionDialog.clickApproveRegistration();
+        ReviewRegistrationOverviewTab overviewTab = reviewTab.getPage().clickOverviewTab();
+        assertEquals(1, overviewTab.getListings().size());
+    }
+
+    private void checkRegistrationsAsSponsor(InvestigatorRegistration inactiveRegistration,
+            InvestigatorRegistration newRegistration, SubInvestigatorRegistration inactiveSubInvestigatorRegistration) {
+        ProtocolsListPage protocolsPage = openHomePage(dataSet.getSponsorLogin()).getProtocolsMenu().click();
+        ProtocolInvestigatorsTab investigatorsTab = protocolsPage.getHelper()
+                .clickLink(inactiveRegistration.getProtocol()).getPage().clickInvestigatorsTab();
+        checkForInvestigatorRegistration(investigatorsTab, inactiveRegistration, InvitationStatus.RESPONDED, INACTIVE,
+                false);
+        checkForInvestigatorRegistration(investigatorsTab, newRegistration, InvitationStatus.REACTIVATED, APPROVED,
+                true);
+
+        ProtocolSubInvestigatorsTab subInvestigatorsTab = investigatorsTab.getPage().clickSubInvestigatorsTab();
+        checkForSubInvestigatorRegistration(subInvestigatorsTab, inactiveSubInvestigatorRegistration, INACTIVE);
+    }
+
+}

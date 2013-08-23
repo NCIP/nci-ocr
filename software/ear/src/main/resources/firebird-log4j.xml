@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<!-- ===================================================================== -->
+<!--                                                                       -->
+<!--  Log4j Configuration                                                  -->
+<!--                                                                       -->
+<!-- ===================================================================== -->
+
+<!-- $Id: log4j.xml 56612 2006-09-07 15:12:39Z thomas.diesler@jboss.com $ -->
+
+<!--
+   | For more configuration infromation and examples see the Jakarta Log4j
+   | owebsite: http://jakarta.apache.org/log4j
+ -->
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+   <!-- ================================= -->
+   <!-- Preserve messages in a local file -->
+   <!-- ================================= -->
+
+   <!-- A time/date based rolling appender -->
+   <appender name="SERVER-LOG" class="org.jboss.logging.appender.DailyRollingFileAppender">
+      <errorHandler class="org.jboss.logging.util.OnlyOnceErrorHandler"/>
+      <param name="File" value="${jboss.server.log.dir}/server.log"/>
+
+      <!-- Rollover at midnight each day -->
+      <param name="DatePattern" value="'.'yyyy-MM-dd"/>
+
+      <!-- Rollover at the top of each hour
+      <param name="DatePattern" value="'.'yyyy-MM-dd-HH"/>
+      -->
+
+      <layout class="org.apache.log4j.PatternLayout">
+         <!-- The default pattern: Date Priority [Category] Message\n -->
+         <param name="ConversionPattern" value="%d{ISO8601} %-5p [%F:%L] : %m%n"/>
+
+         <!-- The full pattern: Date MS Priority [Category] (Thread:NDC) Message\n
+         <param name="ConversionPattern" value="%d %-5r %-5p [%c] (%t:%x) %m%n"/>
+          -->
+         <param name="LocationInfo" value="true"/>
+      </layout>
+   </appender>
+
+
+   <!-- ================ -->
+   <!-- Limit categories -->
+   <!-- ================ -->
+   <category name="gov.nih.nci.firebird">
+      <priority value="${log.level.firebird}"/>
+   </category>
+
+   <category name="com.fiveamsolutions.nci.commons">
+      <priority value="${log.level.nci-commons}"/>
+   </category>
+
+   <category name="org.hibernate">
+      <priority value="${log.level.hibernate}"/>
+   </category>
+
+   <category name="com.opensymphony.xwork2.validator">
+      <priority value="${log.level.struts.validator}"/>
+   </category>
+
+   <category name="com.opensymphony.xwork2.ognl.OgnlValueStack">
+      <priority value="error"/>
+   </category>
+
+   <category name="org.apache.struts2.util.TextProviderHelper">
+      <priority value="error"/>
+   </category>
+
+    <category name="com.opensymphony.xwork2.ObjectFactory">
+        <priority value="fatal" />
+    </category>
+
+    <category name="org.jboss.ejb3.interceptors">
+        <priority value="ERROR" />
+    </category>
+
+   <!-- ======================= -->
+   <!-- Setup the Root category -->
+   <!-- ======================= -->
+
+   <root>
+      <!--  The default logging level, for any logger not configured above.
+            Warning: setting this too fine-grained can have major performance consequences
+      -->
+      <priority value="${log.level.default}"/>
+      <appender-ref ref="SERVER-LOG"/>
+   </root>
+
+</log4j:configuration>

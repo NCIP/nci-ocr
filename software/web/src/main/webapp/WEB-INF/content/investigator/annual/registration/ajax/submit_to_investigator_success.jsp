@@ -1,0 +1,2 @@
+<%@ include file="/WEB-INF/content/common/taglibs.jsp"%>
+<firebird:messageDialog titleKey="registration.coordinator.registration.complete.success.title" messageKey="registration.coordinator.registration.complete.success.message"/>

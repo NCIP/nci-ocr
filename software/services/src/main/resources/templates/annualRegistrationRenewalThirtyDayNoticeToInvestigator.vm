@@ -1,0 +1,9 @@
+** NCI OCR Annual Registration Renewal Notice**
+
+This is to inform you that your annual registration is due for renewal within the next thirty days.
+
+You may access the registration renewal at $FIREBIRD_LINK.
+
+For registration questions, please contact the CTEP Investigator Registration Help Desk at pmbregpend@ctep.nci.nih.gov.
+
+#parse( "/templates/firebird_email_footer.vm" )

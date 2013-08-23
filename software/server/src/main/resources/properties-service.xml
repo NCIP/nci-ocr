@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE server>
+<!-- $Id: properties-service.xml 16662 2003-08-27 04:38:22Z patriot1burke
+  $ -->
+
+<server>
+
+  <!-- ==================================================================== -->
+  <!-- PropertyEditorManager Service -->
+  <!-- ==================================================================== -->
+
+  <!-- | Allows access to the PropertyEditorManager, which is used when setting
+    | MBean attribute values from configuration. -->
+
+  <mbean code="org.jboss.varia.property.PropertyEditorManagerService"
+    name="jboss:type=Service,name=PropertyEditorManager">
+
+    <!-- | Register and editor for each of the type_name=editor_type_name listed
+      | in properties file style convetion. <attribute name="Editors"> java.net.URL=my.project.editors.URLPropertyEditor
+      </attribute> -->
+
+  </mbean>
+
+
+  <!-- ==================================================================== -->
+  <!-- System Properties Service -->
+  <!-- ==================================================================== -->
+
+  <!-- | Allows rich access to system properties. -->
+
+  <mbean code="org.jboss.varia.property.SystemPropertiesService"
+    name="jboss:type=Service,name=SystemProperties">
+
+    <!-- | Load properties from each of the given comma seperated URLs <attribute
+      name="URLList"> http://somehost/some-location.properties, ./conf/somelocal.properties
+      </attribute> -->
+
+    <!-- | Set raw properties file style properties. <attribute name="Properties">
+      my.project.property=This is the value of my property my.project.anotherProperty=This
+      is the value of my other property </attribute> -->
+
+    <attribute name="Properties">
+      nes.personService.url = ${nes.personService.url}
+      nes.organizationService.url = ${nes.organizationService.url}
+      nes.healthCareProvider.url = ${nes.healthCareProvider.url}
+      nes.healthCareFacility.url = ${nes.healthCareFacility.url}
+      nes.oversightCommittee.url=${nes.oversightCommittee.url}
+      nes.researchOrganization.url=${nes.researchOrganization.url}
+      nes.organizationalContact.url=${nes.organizationalContact.url}
+      nes.identifiedOrganization.url=${nes.identifiedOrganization.url}
+      nes.identifiedPerson.url=${nes.identifiedPerson.url}
+      nes.business.url=${nes.business.url}
+      mail.queue.jndi=${mail.queue.jndi}
+      mail.queue.connection.factory.jndi=${mail.queue.connection.factory.jndi}
+      mail.service.jndi=${mail.service.jndi}
+      send.mail=${send.mail}
+      grid.target=${grid.target}
+      mail.override.address=${mail.override.address}
+      cagrid.dorian.url=${cagrid.dorian.url}
+      cagrid.firebird.username=${cagrid.firebird.username}
+      cagrid.firebird.password=${cagrid.firebird.password}
+      cagrid.sync.description.file=/${cagrid.sync.description.file}
+      cagrid.gridgrouper.url=${cagrid.gridgrouper.url}
+      cagrid.gridgrouper.stem=${cagrid.gridgrouper.stem}
+      cagrid.gridgrouper.admin.user=${cagrid.gridgrouper.admin.user}
+      cagrid.gridgrouper.admin.password=${cagrid.gridgrouper.admin.password}
+      cagrid.maximum.attempts=${cagrid.maximum.attempts}
+      cagrid.pool.maxIdle=10
+      cagrid.pool.initIdleCapacity=2
+      cagrid.disallowed.idps=${cagrid.disallowed.idps}
+
+      sponsor.organization.nes.ids=${sponsor.organization.nes.ids}
+      sponsor.organization.email.mappings=${sponsor.organization.email.mappings}
+      sponsor.organization.with.annual.registrations.nes.id=${sponsor.organization.with.annual.registrations.nes.id}
+      sponsor.organization.with.protocol.registrations.nes.ids=${sponsor.organization.with.protocol.registrations.nes.ids}
+
+      nih.oer.organization.nes.id=${nih.oer.organization.nes.id}
+
+      login.ctep.iam.username.prefix=${login.ctep.iam.username.prefix}
+      login.ctep.iam.url=${login.ctep.iam.url}
+
+      firebird.email.send.address=${firebird.email.send.address}
+      firebird.email.send.name=NCI OCR Support
+
+      firebird.email.support.address=${firebird.email.support.address}
+      firebird.email.support.name=NCI OCR Support
+
+      ctep.registration.notification.mailbox=${ctep.registration.notification.mailbox}
+
+      firebird.base.url=${firebird.base.url}
+
+      velocity.class.loader.enable.cache=true
+      velocity.class.loader.cache.check.interval=2
+
+      ca.keystore.password=${ca.keystore.password}
+      ca.keystore.require.https=${ca.keystore.require.https}
+      ca.root.cert.validDays=3650
+      ca.user.cert.validDays=365
+      ca.first.name=${ca.first.name}
+      ca.last.name=${ca.last.name}
+      ca.country.code=${ca.country.code}
+      ca.city=${ca.city}
+      ca.organization.unit=${ca.organization.unit}
+      ca.organization=${ca.organization}
+      ca.state.or.province=${ca.state.or.province}
+      ca.alias=${ca.alias}
+      ca.friendly.name=${ca.friendly.name}
+
+      daily.job.runtime=${daily.job.runtime}
+      annual.registration.due.first.notification.days=${annual.registration.due.first.notification.days}
+      annual.registration.due.second.notification.days=${annual.registration.due.second.notification.days}
+      annual.registration.renewal.based.on.due.date.days=${annual.registration.renewal.based.on.due.date.days}
+
+      <!-- # Registration validation properties -->
+      registration.validation.require.nes.status.active=${registration.validation.require.nes.status.active}
+    </attribute>
+  </mbean>
+
+</server>

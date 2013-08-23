@@ -1,0 +1,6 @@
+$INVESTIGATOR_REGISTRATION.Profile.Person.DisplayName's submission for protocol $INVESTIGATOR_REGISTRATION.Protocol.ProtocolNumber: $INVESTIGATOR_REGISTRATION.Protocol.ProtocolTitle is now being revised.
+Any forms which have been already accepted will not require review again unless their information changes.
+Any previously approved registrations will be stored and can be viewed at any time.
+You will be notified when $INVESTIGATOR_REGISTRATION.Profile.Person.DisplayName has completed their revisions and it is ready for review.
+
+#parse( "/templates/firebird_email_footer.vm" )

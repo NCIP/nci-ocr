@@ -1,0 +1,16 @@
+Thank You,
+
+NCI OCR Application Support
+
+#if ($HAS_ANNUAL_REGISTRATION_SPONSOR)
+For annual registration questions, please contact the CTEP Investigator Registration Help Desk at pmbregpend@ctep.nci.nih.gov
+#end
+For protocol registration questions and issues, please contact your Sponsor representative.
+For technical questions and issues, please contact your local IT help desk, or the NCI Application Support team (reference NCI OCR) at:
+Email: ncicbiit@mail.nih.gov
+Telephone: 1-301-451-4384, or toll free at 1-888-478-4423
+(Weekdays from 8am-8pm Eastern time, excluding Federal Government holidays).
+
+This is an automatically generated notification email from the National Cancer Institute Online Credentialing Repository (NCI OCR) system. NCI OCR is a software application that supports electronic submission of clinical trial investigator information to trial sponsors and regulatory bodies. It is the first module realized from the vision of the Interagency Oncology Task Force (IOTF), a partnership of the National Cancer Institute (NCI) and the Food and Drug Administration (FDA), to create an electronic infrastructure for the submission of regulatory data.
+
+Please ensure that emails from NCI OCR arrive in your inbox by checking your SPAM filter settings. Contact NCI OCR support (contact details above) or your local IT support desk for help.

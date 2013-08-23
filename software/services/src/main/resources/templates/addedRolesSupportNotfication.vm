@@ -1,0 +1,30 @@
+$FIREBIRD_USER.Person.DisplayName has requested additional roles that require verification. The user's contact information is below:
+
+First Name: $FIREBIRD_USER.Person.FirstName
+Last Name: $FIREBIRD_USER.Person.LastName
+Email: $FIREBIRD_USER.Person.Email
+Phone: $!FIREBIRD_USER.Person.PhoneNumber
+Address 1: $FIREBIRD_USER.Person.PostalAddress.StreetAddress
+#if ($FIREBIRD_USER.Person.PostalAddress.DeliveryAddress)
+Address 2: $FIREBIRD_USER.Person.PostalAddress.DeliveryAddress
+#end
+City: $FIREBIRD_USER.Person.PostalAddress.City
+#if ($FIREBIRD_USER.Person.PostalAddress.StateOrProvince)
+State: $FIREBIRD_USER.Person.PostalAddress.StateOrProvince
+#end
+Postal Code: $FIREBIRD_USER.Person.PostalAddress.PostalCode
+Country: $FIREBIRD_USER.Person.PostalAddress.Country
+
+The following roles requiring verification were added to the account:
+
+#if ($ACCOUNT_DATA.InvestigatorIncluded)
+- Investigator
+#end
+#foreach ($sponsor in $ACCOUNT_DATA.SponsorOrganizations)
+- Sponsor for $sponsor.Name.
+#end
+#foreach ($sponsor in $ACCOUNT_DATA.DelegateOrganizations)
+- Sponsor Delegate for $sponsor.Name.
+#end
+
+#parse( "/templates/firebird_email_footer.vm" )

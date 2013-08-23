@@ -1,0 +1,10 @@
+Dear $INVESTIGATOR_REGISTRATION.Profile.Person.DisplayName:
+
+You have been removed as an investigator for the following protocol using the NCI OCR system. You are no longer required to submit supporting documentation.
+
+#set($PROTOCOL = $INVESTIGATOR_REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+If you have any questions, please contact a representative of $INVESTIGATOR_REGISTRATION.Protocol.Sponsor.Name by sending an email to $SPONSOR_EMAIL_ADDRESS.
+
+#parse( "/templates/firebird_email_footer.vm" )

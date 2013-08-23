@@ -1,0 +1,3 @@
+#parse( "/templates/annualRegistrationApprovedNotificationToCoordinator.vm" )
+
+#parse( "/templates/firebird_email_footer.vm" )

@@ -1,0 +1,5 @@
+$REGISTRATION_COORDINATOR.DisplayName has chosen to revise your submission for protocol $INVESTIGATOR_REGISTRATION.Protocol.ProtocolNumber: $INVESTIGATOR_REGISTRATION.Protocol.ProtocolTitle.
+You will be notified when your coordinator has completed their modifications and it is ready for you to sign or you can modify it yourself and resubmit it.
+Any previously approved registrations will be stored and can be viewed at any time.
+
+#parse( "/templates/firebird_email_footer.vm" )

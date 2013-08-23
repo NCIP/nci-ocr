@@ -1,0 +1,28 @@
+** NCI OCR Registration Returned **
+
+Dear $REGISTRATION.Profile.Person.DisplayName:
+
+$REGISTRATION.Protocol.Sponsor.Name has returned the registration for protocol $REGISTRATION.Protocol.ProtocolNumber that you completed using the NCI OCR system with the following comments.
+
+#if ($REGISTRATION.PlainTextSponsorComments != "")
+Registration Comments:
+"$REGISTRATION.PlainTextSponsorComments"
+#end
+
+Form Comments:
+#foreach ($form in $REGISTRATION.Forms)
+#if ($form.PlainTextComments != "")
+    - $form.FormType.Name:
+        "$form.PlainTextComments"
+#end
+#end
+
+
+#set($PROTOCOL = $REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+Click here to access NCI OCR: $FIREBIRD_LINK
+
+If you have any questions about or need assistance with your registration, please contact a representative of $REGISTRATION.Protocol.Sponsor.Name by sending an email to $SPONSOR_EMAIL_ADDRESS.
+
+#parse( "/templates/firebird_email_footer.vm" )

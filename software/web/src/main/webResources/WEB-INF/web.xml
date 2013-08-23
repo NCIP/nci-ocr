@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app id="NCI_OCR" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+  <display-name>NCI OCR</display-name>
+
+  <servlet>
+    <servlet-name>JavaScriptServlet</servlet-name>
+    <servlet-class>org.owasp.csrfguard.servlet.JavaScriptServlet</servlet-class>
+    <init-param>
+      <param-name>source-file</param-name>
+      <param-value>WEB-INF/Owasp.CsrfGuard.js</param-value>
+    </init-param>
+    <init-param>
+      <param-name>inject-into-forms</param-name>
+      <param-value>${owasp.csrfguard.inject.into.forms}</param-value>
+    </init-param>
+    <init-param>
+      <param-name>inject-into-attributes</param-name>
+      <param-value>${owasp.csrfguard.inject.into.attributes}</param-value>
+    </init-param>
+    <init-param>
+      <param-name>domain-strict</param-name>
+      <param-value>${owasp.csrfguard.domain.strict}</param-value>
+    </init-param>
+    <init-param>
+      <param-name>referer-pattern</param-name>
+      <param-value>${owasp.csrfguard.referer.pattern}</param-value>
+    </init-param>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>JavaScriptServlet</servlet-name>
+    <url-pattern>/JavaScriptServlet</url-pattern>
+  </servlet-mapping>
+
+  <!-- Define the basename for a resource bundle for I18N -->
+  <context-param>
+    <param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>
+    <param-value>ApplicationResources</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>Owasp.CsrfGuard.Config</param-name>
+    <param-value>WEB-INF/Owasp.CsrfGuard.properties</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>Owasp.CsrfGuard.Config.Print</param-name>
+    <param-value>${owasp.csrfguard.print.config}</param-value>
+  </context-param>
+
+  <!-- Filters -->
+  <filter>
+    <filter-name>CSRFGuard</filter-name>
+    <filter-class>gov.nih.nci.firebird.web.filter.FirebirdCsrfGuardFilter</filter-class>
+    <init-param>
+      <param-name>Owasp.CsrfGuard.Config.Log.Results</param-name>
+      <param-value>${owasp.csrfguard.config.log.results}</param-value>
+    </init-param>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>CSRFGuard</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>guiceFilter</filter-name>
+    <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>guiceFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>
+    <dispatcher>FORWARD</dispatcher>
+  </filter-mapping>
+
+
+  <session-config>
+    <session-timeout>30</session-timeout>
+  </session-config>
+
+  <!-- Context listeners -->
+
+  <listener>
+        <listener-class>org.owasp.csrfguard.CsrfGuardServletContextListener</listener-class>
+    </listener>
+    <listener>
+        <listener-class>org.owasp.csrfguard.CsrfGuardHttpSessionListener</listener-class>
+    </listener>
+
+  <listener>
+    <listener-class>gov.nih.nci.firebird.web.listener.FirebirdGuiceServletContextListener</listener-class>
+  </listener>
+
+  <listener>
+    <description>Servlet Context Listener used to start up a thread to keep the caGrid GTS credentials up to date.</description>
+    <listener-class>gov.nih.nci.firebird.web.listener.SyncGtsServletContextListener</listener-class>
+  </listener>
+
+  <listener>
+    <description>Initializes sponsor organizations used in the application.</description>
+    <listener-class>gov.nih.nci.firebird.web.listener.SponsorOrganizationInitializationListener</listener-class>
+  </listener>
+
+  <listener>
+    <description>Initializes annual registration form configuration if not present for sponsors which have annual registrations.</description>
+    <listener-class>gov.nih.nci.firebird.web.listener.AnnualRegistrationConfigurationInitializationListener</listener-class>
+  </listener>
+
+  <listener>
+    <description>Generate the root key-store, if one doesn't exist.</description>
+    <listener-class>gov.nih.nci.firebird.web.listener.KeystoreInitializerServletContextListener</listener-class>
+  </listener>
+
+    <listener>
+        <description>Updates the NIH OER organization details from NES</description>
+        <listener-class>gov.nih.nci.firebird.web.listener.NihOerOrganizationInitializationListener</listener-class>
+    </listener>
+
+    <listener>
+        <description>Starts the daily job execution timer if necessary</description>
+        <listener-class>gov.nih.nci.firebird.web.listener.DailyJobTimerCreationSerlvetContextListener</listener-class>
+    </listener>
+
+    <!-- Welcome file lists -->
+  <welcome-file-list>
+    <welcome-file>/WEB-INF/index.jsp</welcome-file>
+  </welcome-file-list>
+
+  <error-page>
+    <error-code>500</error-code>
+    <location>/WEB-INF/error.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>400</error-code>
+    <location>/WEB-INF/index.jsp</location>
+  </error-page>
+  <error-page>
+    <error-code>403</error-code>
+    <location>/WEB-INF/403.jsp</location>
+  </error-page>
+  <error-page>
+     <error-code>404</error-code>
+     <location>/WEB-INF/error.jsp</location>
+  </error-page>
+  <error-page>
+     <exception-type>java.lang.Throwable</exception-type>
+     <location>/WEB-INF/error.jsp</location>
+  </error-page>
+
+  <login-config>
+    <auth-method>FORM</auth-method>
+    <form-login-config>
+      <form-login-page>/login/login.action</form-login-page>
+      <form-error-page>/login/login.action?failedLogin=true</form-error-page>
+    </form-login-config>
+  </login-config>
+
+  <!-- Security constraints and roles -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Investigator pages</web-resource-name>
+      <url-pattern>/investigator/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>investigator</role-name>
+      <role-name>ctep_investigator</role-name>
+      <role-name>registration_coordinator</role-name>
+      <role-name>ctep_registration_coordinator</role-name>
+      <role-name>ctep_sponsor</role-name>
+      <role-name>ctep_sponsor_delegate</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Investigator annual registration pages</web-resource-name>
+      <url-pattern>/investigator/annual/registration/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>investigator</role-name>
+      <role-name>ctep_investigator</role-name>
+      <role-name>registration_coordinator</role-name>
+      <role-name>ctep_registration_coordinator</role-name>
+      <role-name>ctep_sponsor</role-name>
+      <role-name>ctep_sponsor_delegate</role-name>
+      <role-name>verified_sponsor</role-name>
+      <role-name>verified_sponsor_delegate</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Verified investigator pages</web-resource-name>
+      <url-pattern>/investigator/registration/ajax/sign.jsp</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>verified_investigator</role-name>
+      <role-name>ctep_investigator</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Protocol sponsor pages</web-resource-name>
+      <url-pattern>/sponsor/protocol/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>verified_sponsor</role-name>
+      <role-name>verified_sponsor_delegate</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Protocol sponsor representative pages</web-resource-name>
+      <url-pattern>/sponsor/representative/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>verified_sponsor</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Annual registration sponsor pages</web-resource-name>
+      <url-pattern>/sponsor/annual/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>ctep_sponsor</role-name>
+      <role-name>ctep_sponsor_delegate</role-name>
+      <role-name>verified_sponsor</role-name>
+      <role-name>verified_sponsor_delegate</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>CTEP-only annual registration sponsor pages</web-resource-name>
+      <url-pattern>/sponsor/annual/ctep/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>ctep_sponsor</role-name>
+      <role-name>ctep_sponsor_delegate</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>CTEP sponsor representative only annual registration sponsor pages</web-resource-name>
+      <url-pattern>/sponsor/annual/ctep/representative/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>ctep_sponsor</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>registration coordinator pages</web-resource-name>
+      <url-pattern>/coordinator/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>registration_coordinator</role-name>
+      <role-name>ctep_registration_coordinator</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>secure</web-resource-name>
+      <url-pattern>/index.action</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>authenticated_user</role-name>
+    </auth-constraint>
+  </security-constraint>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>user registration</web-resource-name>
+      <url-pattern>/user/registration/enterRegistrationFlow.action</url-pattern>
+      <url-pattern>/disclaimer/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>authenticated_user</role-name>
+    </auth-constraint>
+  </security-constraint>
+
+
+  <security-role>
+    <description>Authenticated FIREBIRD user</description>
+    <role-name>authenticated_user</role-name>
+  </security-role>
+  <security-role>
+    <description>Registered FIREBIRD user</description>
+    <role-name>registered_user</role-name>
+  </security-role>
+  <security-role>
+    <description>Investigator</description>
+    <role-name>investigator</role-name>
+  </security-role>
+  <security-role>
+    <description>Sponsor</description>
+    <role-name>sponsor</role-name>
+  </security-role>
+  <security-role>
+    <description>Registration Coordinator</description>
+    <role-name>registration_coordinator</role-name>
+  </security-role>
+  <security-role>
+    <description>Sponsor Delegate</description>
+    <role-name>sponsor_delegate</role-name>
+  </security-role>
+  <security-role>
+    <description>CTEP Investigator</description>
+    <role-name>ctep_investigator</role-name>
+  </security-role>
+  <security-role>
+    <description>CTEP Sponsor</description>
+    <role-name>ctep_sponsor</role-name>
+  </security-role>
+  <security-role>
+    <description>CTEP Registration Coordinator</description>
+    <role-name>ctep_registration_coordinator</role-name>
+  </security-role>
+  <security-role>
+    <description>CTEP Sponsor Delegate</description>
+    <role-name>ctep_sponsor_delegate</role-name>
+  </security-role>
+  <security-role>
+    <description>Verified Investigator</description>
+    <role-name>verified_investigator</role-name>
+  </security-role>
+  <security-role>
+    <description>Verified Sponsor</description>
+    <role-name>verified_sponsor</role-name>
+  </security-role>
+  <security-role>
+    <description>Verified Sponsor Delegate</description>
+    <role-name>verified_sponsor_delegate</role-name>
+  </security-role>
+
+  <mime-mapping>
+    <extension>p12</extension>
+    <mime-type>application/x-pkcs12</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>pfx</extension>
+    <mime-type>application/x-pkcs12</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>jks</extension>
+    <mime-type>application/x-java-keystore</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>ks</extension>
+    <mime-type>application/x-java-keystore</mime-type>
+  </mime-mapping>
+</web-app>

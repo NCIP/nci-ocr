@@ -1,0 +1,18 @@
+#main
+{ zoom:1 }
+#tabwrapper
+{ background:#fff; border:1px solid #dcdcdc; border-right:2px solid #dcdcdc; border-bottom:2px solid #dcdcdc; border-top:0; width:892px;}
+.ui-dialog-content #tabwrapper
+{ width: auto; }
+#tabwrapper H2
+{ margin-top:15px; }
+.ui-autocomplete
+{ width:334px; }
+.twocol .ui-autocomplete
+{ width:383px; }
+#content
+{ width:918px; padding-right:0; background-position-x:0 }
+UL.tabs
+{ margin:0; }
+UL.search_results LI
+{ padding:3px; }

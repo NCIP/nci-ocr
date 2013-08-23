@@ -1,0 +1,9 @@
+$INVESTIGATOR.DisplayName has submitted a request to withdraw from participating in NCI-sponsored clinical trials.
+
+Explanation:
+
+$COMMENTS
+
+Click here to review the withdrawal request: $FIREBIRD_LINK
+
+#parse( "/templates/firebird_email_footer.vm" )

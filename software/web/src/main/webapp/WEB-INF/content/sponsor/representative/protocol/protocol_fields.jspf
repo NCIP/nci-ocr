@@ -1,0 +1,192 @@
+<sj:dialog id="leadOrganizationDialog" autoOpen="false" modal="true" width="950" position="top" resizable="false"
+           onCloseTopics="dialogClosed,checkUpdates"/>
+
+<div class="createProtocolInput">
+    <s:textfield name="protocol.protocolTitle" maxlength="4000" size="15"
+        cssStyle="width: 19em;" id="protocolTitleField"
+        label="%{getText('textfield.title')}" requiredLabel="true"
+        labelposition="left" />
+
+    <s:textfield name="protocol.protocolNumber" maxlength="200" size="15"
+        cssStyle="width: 19em;" id="protocolNumberField"
+        label="%{getText('textfield.protocol.number')}" requiredLabel="true"
+        labelposition="left" />
+
+    <firebird:sponsorSelection />
+
+    <s:select id="phaseField" name="protocol.phase"
+              list="@gov.nih.nci.firebird.data.ProtocolPhase@values()"
+              listValue="display" headerKey="" headerValue="%{getText('select.phase.default.option')}"
+              label="%{getText('dropdown.phase')}" requiredLabel="true"
+              labelposition="left"/>
+
+    <div id="leadOrganizationDiv" class="formcol_double_narrow">
+    <s:a id="selectLeadOrganizationBtn" href="javascript:void(0)" cssClass="button">
+        <fmt:message key="button.add.lead.organization"/>
+    </s:a>
+    </div>
+
+    <table id="protocolLeadOrganizations" class="ui-jqgrid-htable ui-jqgrid-btable hide"
+           summary="This table provides a list of the added Lead Organizations and their associated Principal Investigators.
+                    These records can be removed by using the remove line in the last column.">
+        <thead>
+        <tr>
+            <th scope="col" width="250px">
+                <div><fmt:message key="label.lead.organization"/></div>
+            </th>
+            <th scope="col" width="250px">
+                <div><fmt:message key="label.principal.investigator"/></div>
+            </th>
+            <th scope="col" width="50px">
+                <div><fmt:message key="label.remove"/></div>
+            </th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="clear dotted_line"></div>
+
+    <firebird:instructionBubble messageKey="protocol.agents.instructions" />
+
+    <div class="formcol_narrow">
+        <label for="agentAutosearch_widget"><fmt:message key="autocomplete.agents"/><fmt:message key="label.separator"/></label>
+    </div>
+    <div class="formcol_narrow">
+        <s:url id="remoteurl" action="agent-search"
+               namespace="/sponsor/protocol"/>
+        <s:fielderror fieldName="agentList"/>
+        <sj:autocompleter id="agentAutosearch" href="%{remoteurl}" delay="200"
+                          cssClass="autosearch" maxlength="200" onSelectTopics="selectRecord"/>
+        <div class="search_icon">
+            <img src="<c:url value='/images/ico_search.gif'/>" alt="Search"/>
+        </div>
+        <div class="side_buttons">
+            <s:a id="addAgentButton" href="javascript:void(0)" cssClass="button" onclick="protocolFields.addToList();">
+                <fmt:message key="button.add"/>
+            </s:a>
+        </div>
+        <s:hidden name="agentList" id="agentList"/>
+        <div class="clear"></div>
+        <div id="agentGridContent"></div>
+    </div>
+</div>
+<script>
+    if ($.trim($('#agentList').val()) !== "") {
+        var agentList = $('#agentList').val().split(",");
+    } else {
+        var agentList = [];
+    }
+
+    var protocolFields = {
+        addToList: function (agent) {
+            var val = $.trim(agent);
+            if (isBlank(agent)) {
+                val = $.trim($('#agentAutosearch_widget').val());
+            }
+            var duplicateAgent = _.any(agentList, function (agent) {
+                return val.toUpperCase() === agent.toUpperCase();
+            });
+            if (!isBlank(val) && !duplicateAgent) {
+                agentList.unshift(val);
+                $('#agentList').val(agentList);
+                this.generateList();
+            }
+            clearAutoComplete('agentAutosearch');
+        },
+        removeFromList: function (item) {
+            agentList = _.without(agentList, item);
+            $('#agentList').val(agentList);
+            this.generateList();
+        },
+        generateList: function () {
+            $('#agentDisplay').remove();
+
+            var list = $("<ul id='agentDisplay'/>");
+            _.each(agentList, this.getAgentBuildFunction(list));
+            $('#agentGridContent').append(list);
+        },
+        getAgentBuildFunction: function (list) {
+            return function (agent, index) {
+                var li = $("<li></li>");
+                var div = $("<div />").addClass("agent").append(agent);
+                var span = $("<span class='float_right'/>");
+                var link = $("<a></a>").attr("href", "javascript:void(0)").attr("agent_id", index).attr("id", agent);
+                link.click(function () {
+                    protocolFields.removeFromList($(this).attr("id"));
+                    editProtocolPage.toggleSaveButtonIfNeccessary();
+                });
+                var img = $(createImage('ico_delete.gif', 'Delete'));
+
+                $(link).append(img);
+                $(span).append(link);
+                $(div).append(span);
+                $(li).append(div);
+                $(list).append(li);
+            };
+        },
+        addLeadOrganizationRow: function (organizationKey, organizationName, piExtenalId, piName) {
+            var table$ = $("#protocolLeadOrganizations");
+            var tableBody$ = $("tbody", table$);
+            var row$ = $("<tr/>", {
+                id: organizationKey
+            }).appendTo(tableBody$);
+            $("<input type='hidden'/>").attr("name", "leadOrganizationIdMappings['" + organizationKey + "']").val(piExtenalId).appendTo(row$);
+            $("<td/>").text(organizationName).appendTo(row$);
+            $("<td/>").text(piName).appendTo(row$);
+            this.createRemoveLeadOrganizationColumn(organizationKey).appendTo(row$);
+            table$.show();
+            $("#leadOrganizationNameLabel").hide();
+        },
+        createRemoveLeadOrganizationColumn: function (organizationKey) {
+            var column$ = $("<td/>");
+            var link$ = $("<a/>", {
+                id: "remove." + organizationKey
+            }).click(this.removeLeadOrganization).appendTo(column$);
+            $("<img/>", {
+                src: '<s:url value="/images/ico_delete.gif" />',
+                title: 'Remove Lead Organization',
+                alt: 'Remove Lead Organization'
+            }).appendTo(link$);
+            return column$;
+        },
+        removeLeadOrganization: function (event) {
+            var table$ = $("#protocolLeadOrganizations");
+            $(event.target).parents("tr").first().remove();
+            editProtocolPage.toggleSaveButtonIfNeccessary();
+            if ($("tbody tr", table$).length === 0) {
+                table$.hide();
+                $("#leadOrganizationNameLabel").show()
+            }
+        },
+        checkLeadOrganizationAdded : function(organizationKey, personKey) {
+            return organizationKey && personKey
+            && $("#protocolLeadOrganizations tr#"+escapeForJquery(organizationKey) + " input[value='" + personKey + "']").length > 0;
+        }
+    };
+
+    <s:iterator var="leadOrganizationMapping" value="%{leadOrganizationMappings.entrySet()}">
+        <s:iterator var="primaryInvestigator" value="%{#leadOrganizationMapping.value}">
+            protocolFields.addLeadOrganizationRow(
+                    '<s:property value="%{#leadOrganizationMapping.key.externalId}"/>',
+                    '<s:property value="%{#leadOrganizationMapping.key.name}"/>',
+                    '<s:property value="%{#primaryInvestigator.externalId}"/>',
+                    '<s:property value="%{#primaryInvestigator.displayName}"/>'
+            );
+        </s:iterator>
+    </s:iterator>
+
+
+    $("#selectLeadOrganizationBtn").click(function() {
+        $('#leadOrganizationDialog').load('<s:url namespace="/sponsor/representative/protocol/ajax" action="enterCreateLeadOrganization" />').dialog('open');
+    });
+    $('#agentAutosearch').subscribe('selectRecord', function (event, data) {
+        var ui = event.originalEvent.ui;
+        protocolFields.addToList(ui.item.value);
+        setTimeout("clearAutoComplete('agentAutosearch');", 0);
+    });
+
+    $(document).ready(function() {
+        protocolFields.generateList();
+    });
+</script>

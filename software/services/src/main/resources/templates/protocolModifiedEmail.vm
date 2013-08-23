@@ -1,0 +1,24 @@
+** NCI OCR Protocol Updated **
+
+Dear $REGISTRATION.Profile.Person.DisplayName:
+
+$REGISTRATION.Protocol.Sponsor.Name has modified protocol $REGISTRATION.Protocol.ProtocolNumber: $REGISTRATION.Protocol.ProtocolTitle on $PROTOCOL_REVISION.date with the changes listed below.
+Please review the modifications, make changes if necessary, and resubmit.
+
+Sponsor Comments:
+"$PROTOCOL_REVISION.PlainTextComments"
+
+Change Log:
+#foreach ($message in $PROTOCOL_REVISION.InvestigatorModificationDescriptions)
+- $message
+#end
+
+
+#set($PROTOCOL = $REGISTRATION.Protocol)
+#parse( "/templates/protocolDetails.vm" )
+
+Click here to access NCI OCR: $FIREBIRD_LINK
+
+If you have any questions about or need assistance with your registration, please contact a representative of $REGISTRATION.Protocol.Sponsor.Name by sending an email to $SPONSOR_EMAIL_ADDRESS.
+
+#parse( "/templates/firebird_email_footer.vm" )

@@ -1,0 +1,43 @@
+sampler_label,aggregate_report_count,average,aggregate_report_median,aggregate_report_90%_line,aggregate_report_min,aggregate_report_max,aggregate_report_error%,aggregate_report_rate,aggregate_report_bandwidth
+Users:/ocr/login/logout.action,50,263,234,354,213,705,0.0,0.11235753065113435,1.2950544042185759
+Users:/ocr/index.action,160,294,248,549,47,713,0.0,0.36857357419616404,4.4893134179785585
+Users:/ocr/JavaScriptServlet,240,30,20,39,8,631,0.0,0.5529801019326654,3.9599504521188353
+Users:Open Login Page,40,281,261,352,226,519,0.0,0.09329728948049737,2.380237986807763
+Users:/ocr/j_security_check,40,1691,1673,1818,1396,2223,0.0,0.0929188841371204,0.026414733566714598
+Users:/ocr/disclaimer/showDisclaimer.action,40,127,100,151,68,749,0.0,0.09309231732378206,1.4711154357825922
+Users:Submit Login,40,1956,1914,2217,1671,2842,0.0,0.09273276503603826,2.853452382884314
+Users:/ocr/disclaimer/acceptDisclaimer.action,40,530,518,665,307,781,0.0,0.09295278463304564,1.8166074056354948
+Users:/ocr/,40,425,426,598,211,701,0.0,0.09290895619110442,1.7532210373749504
+Users:Accept Disclaimer,40,1899,1838,2407,1004,3153,0.0,0.09254717592292672,8.320470119408993
+Users:/ocr/user/enterMyAccount.action,10,171,159,203,115,300,0.0,0.02511887507629858,0.5378677246318201
+Users:/ocr/sponsor/representative/protocol/createProtocolEnter.action,10,226,232,249,183,274,0.0,0.02513655433140536,0.6467262308742242
+Users:/ocr/sponsor/representative/protocol/save.action,10,429,376,563,303,605,0.0,0.025127143345327358,0.45476694103413273
+Users:/ocr/sponsor/protocol/enterProtocol.action,10,181,172,198,134,275,0.0,0.025139208366328544,0.44531259820003266
+Users:/ocr/sponsor/protocol/ajax/investigatorsTab.action,30,267,224,431,155,482,0.0,0.07463614877472322,0.5186313401853464
+Users:/ocr/sponsor/representative/protocol/ajax/enterAddInvestigator.action,10,311,196,242,157,1399,0.0,0.025136427962767924,0.1831228052756335
+Users:/ocr/search/searchForPersons.action,10,1433,1410,1509,1363,1512,0.0,0.025061337623834334,0.04028414231331183
+Users:/ocr/sponsor/representative/protocol/ajax/selectInvestigator.action,10,200,192,238,162,271,0.0,0.02514413877553073,0.1108871252894719
+Users:/ocr/sponsor/representative/protocol/ajax/addInvestigator.action,10,540,470,699,375,866,0.0,0.025104497470721878,0.014413021545934955
+Users:/ocr/sponsor/representative/protocol/ajax/enterInvite.action,10,311,281,418,238,421,0.0,0.025117676313528882,0.20756178241938483
+Users:/ocr/sponsor/representative/protocol/ajax/invite.action,10,433,402,537,318,622,0.0,0.025116225332727195,0.010934387942704868
+Users:/ocr/investigator/profile/home.action,10,170,173,181,138,188,0.0,0.025090891755383878,0.4434031027396745
+Users:/ocr/investigator/registration/ajax/viewInvitation.action,10,211,189,262,162,354,0.0,0.025090199266362575,0.0565019526447579
+Users:/ocr/investigator/registration/enterRegistrations.action,10,390,352,456,303,568,0.0,0.0250663631965629,0.5453157938767889
+Users:/ocr/investigator/registration/ajax/viewOverview.action,30,439,436,576,261,629,0.0,0.07311544929443592,0.4595777240074578
+Users:/ocr/investigator/registration/ajax/viewForm.action,40,693,630,1014,296,1453,0.0,0.09911490390810065,1.75661566817693
+Users:/ocr/investigator/registration/ajax/fda1572/practiceSite/selectOrganization.action,10,356,334,415,303,424,0.0,0.02505016295131,0.00599100088552326
+Users:/ocr/investigator/registration/ajax/fda1572/lab/selectOrganization.action,10,341,313,417,288,417,0.0,0.025050100200400802,0.005990985878006012
+Users:/ocr/investigator/registration/ajax/fda1572/irb/selectOrganization.action,10,357,297,417,278,470,0.0,0.025050100200400802,0.005990985878006012
+Users:/ocr/investigator/registration/ajax/financialdisclosure/save.action,10,364,327,480,252,484,0.0,0.025046022065545438,0.0059875646500444565
+Users:/ocr/investigator/registration/ajax/humanresearchcertificate/selectCertificate.action,10,442,380,449,340,949,0.0,0.025037619022581427,0.005985555797585872
+Users:/ocr/investigator/registration/ajax/submitRegistration.action,10,1794,1817,1885,1665,1897,0.0,0.024972031324916096,0.13035205257611476
+Users:/ocr/investigator/registration/ajax/sign.action,10,2752,2627,3055,2365,3241,0.0,0.024899530394856755,0.06915212352532532
+Users:/ocr/sponsor/protocol/review/enter.action,10,388,374,446,318,471,0.0,0.02496280541992431,0.4207110311885291
+Users:/ocr/sponsor/protocol/review/ajax/enter.action,90,483,465,651,81,1526,0.0,0.2194763294778658,3.2629362053944844
+Users:/ocr/sponsor/protocol/review/ajax/downloadForm.action,30,798,705,1102,519,1342,0.0,0.07433396764985728,9.122587785318546
+Users:/ocr/sponsor/protocol/review/ajax/additionalDocumentsEnter.action,10,448,407,552,332,671,0.0,0.02493516856173948,0.10886733555256332
+Users:/ocr/sponsor/protocol/review/ajax/acceptForm.action,40,360,341,405,267,529,0.0,0.09902558821199398,0.019036315468292007
+Users:/ocr/sponsor/annual/registration/review/enterReviewRegistration.action,10,114,116,140,76,150,0.0,0.02491206042669377,0.41413381077297146
+Users:/ocr/sponsor/protocol/review/ajax/acceptRegistration.action,10,460,449,522,322,552,0.0,0.024885278864434954,0.03906308324872339
+Users:/ocr/sponsor/protocol/review/ajax/approvePacket.action,10,506,503,594,397,602,0.0,0.024876116937650503,0.010837144302622937
+TOTAL,1240,490,327,1512,8,3241,0.0,2.786466760148132,45.768315629297675
