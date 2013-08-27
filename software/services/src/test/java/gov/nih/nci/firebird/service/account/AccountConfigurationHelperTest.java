@@ -82,7 +82,7 @@
  */
 package gov.nih.nci.firebird.service.account;
 
-import static gov.nih.nci.firebird.nes.NesIdTestUtil.*;
+import static gov.nih.nci.firebird.nes.NesIdTestUtil.getNesIdExtension;
 import static gov.nih.nci.firebird.test.ValueGenerator.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
@@ -95,6 +95,7 @@ import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.messages.FirebirdMessage;
 import gov.nih.nci.firebird.service.messages.TemplateService;
@@ -116,8 +117,6 @@ import java.util.ResourceBundle;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Iterables;
-
 public class AccountConfigurationHelperTest {
 
     private static final String SUPPORT_EMAIL_ADDRESS = "firebird-support@5amsolutions.com";
@@ -134,7 +133,7 @@ public class AccountConfigurationHelperTest {
     private AccountConfigurationHelper helper = new AccountConfigurationHelper();
 
     @Before
-    public void setUp() {
+    public void setUp() throws UnavailableEntityException {
         helper.setEmailService(mockEmailService);
         helper.setOrganizationService(mockOrganizationService);
         helper.setGridGrouperService(mockGridGrouperService);
@@ -152,7 +151,7 @@ public class AccountConfigurationHelperTest {
         AccountConfigurationData configurationData = createBaseConfigurationData();
         FirebirdUser user = helper.createUser(configurationData);
         checkBaseConfiguration(user, configurationData);
-        verify(mockPersonService).save(configurationData.getPerson());
+        verify(mockPersonService).createNesPerson(configurationData.getPerson());
         verify(mockUserService, never()).checkPersonAssociated(configurationData.getPerson());
         verify(mockUserService).save(user);
     }
@@ -160,22 +159,18 @@ public class AccountConfigurationHelperTest {
     @Test
     public void testCreateUser_ExistingPerson() throws ValidationException {
         AccountConfigurationData configurationData = createBaseConfigurationData();
-        addExistingPerson(configurationData);
+        configurationData.getPerson().setNesId("1234");
         FirebirdUser user = helper.createUser(configurationData);
         checkBaseConfiguration(user, configurationData);
-        verify(mockPersonService, never()).save(configurationData.getPerson());
+        verify(mockPersonService, never()).createNesPerson(configurationData.getPerson());
         verify(mockUserService).checkPersonAssociated(configurationData.getPerson());
         verify(mockUserService).save(user);
-    }
-
-    private void addExistingPerson(AccountConfigurationData configurationData) {
-        configurationData.setPerson(PersonFactory.getInstance().create());
     }
 
     @Test(expected = ValidationException.class)
     public void testCreateUser_PersonNotAvailable() throws ValidationException {
         AccountConfigurationData configurationData = createBaseConfigurationData();
-        addExistingPerson(configurationData);
+        configurationData.getPerson().setNesId("1234");
         when(mockUserService.checkPersonAssociated(configurationData.getPerson())).thenReturn(true);
         helper.createUser(configurationData);
     }
@@ -183,7 +178,8 @@ public class AccountConfigurationHelperTest {
     private AccountConfigurationData createBaseConfigurationData() {
         AccountConfigurationData configurationData = new AccountConfigurationData();
         configurationData.setUsername(getUniqueString());
-        Person person = PersonFactory.getInstance().createWithoutExternalData();
+        Person person = PersonFactory.getInstance().create();
+        person.setNesId(null);
         configurationData.setPerson(person);
         return configurationData;
     }
@@ -209,7 +205,7 @@ public class AccountConfigurationHelperTest {
     }
 
     @Test
-    public void testCreateUser_InvestigatorExistingProfile() throws ValidationException, GridInvocationException {
+    public void testCreateUser_InvestigatorExistingProfile() throws ValidationException, GridInvocationException, UnavailableEntityException {
         AccountConfigurationData configurationData = createBaseConfigurationData();
         addInvestigatorRole(configurationData);
         InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
@@ -236,21 +232,19 @@ public class AccountConfigurationHelperTest {
     private void addInvestigatorRole(AccountConfigurationData configurationData) {
         configurationData.getRoles().add(UserRoleType.INVESTIGATOR);
         configurationData.setPrimaryOrganization(PrimaryOrganizationFactory.getInstance().create());
-        configurationData.getPrimaryOrganization().getOrganization().setExternalData(null);
+        configurationData.getPrimaryOrganization().getOrganization().setNesId(null);
     }
 
-    private void checkInvestigatorConfiguration(FirebirdUser user, AccountConfigurationData configurationData,
-            boolean groupMembershipExpected) throws ValidationException, GridInvocationException {
+    private void checkInvestigatorConfiguration(FirebirdUser user, AccountConfigurationData configurationData, boolean groupMembershipExpected) throws ValidationException, GridInvocationException {
         assertTrue(user.isInvestigator());
         InvestigatorProfile profile = user.getInvestigatorRole().getProfile();
         assertEquals(configurationData.getPerson(), profile.getPerson());
         assertEquals(configurationData.getPrimaryOrganization(), profile.getPrimaryOrganization());
-        verify(mockOrganizationAssociationService).createNewPrimaryOrganization(
-                configurationData.getPrimaryOrganization());
+        verify(mockProfileService).setPrimaryPerson(profile, configurationData.getPerson());
+        verify(mockOrganizationAssociationService).createNewPrimaryOrganization(configurationData.getPrimaryOrganization());
         verify(mockProfileService).setPrimaryOrganization(profile, configurationData.getPrimaryOrganization());
         if (groupMembershipExpected) {
-            verify(mockGridGrouperService).addGridUserToGroup(user.getUsername(),
-                    UserRoleType.INVESTIGATOR.getGroupName());
+            verify(mockGridGrouperService).addGridUserToGroup(user.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
         }
     }
 
@@ -262,8 +256,7 @@ public class AccountConfigurationHelperTest {
                 anyString(), any(FirebirdMessage.class));
     }
 
-    private void checkSponsorConfiguration(FirebirdUser user, AccountConfigurationData configurationData,
-            boolean groupMembershipExpected) throws GridInvocationException {
+    private void checkSponsorConfiguration(FirebirdUser user, AccountConfigurationData configurationData, boolean groupMembershipExpected) throws GridInvocationException {
         assertTrue(user.isSponsorRepresentative());
         assertEquals(1, user.getSponsorRepresentativeOrganizations().size());
         Organization sponsor = user.getSponsorRepresentativeOrganizations().get(0);
@@ -274,8 +267,7 @@ public class AccountConfigurationHelperTest {
         }
     }
 
-    private void checkSponsorDelegateConfiguration(FirebirdUser user, AccountConfigurationData configurationData,
-            boolean groupMembershipExpected) throws GridInvocationException {
+    private void checkSponsorDelegateConfiguration(FirebirdUser user, AccountConfigurationData configurationData, boolean groupMembershipExpected) throws GridInvocationException {
         assertTrue(user.isSponsorDelegate());
         assertEquals(1, user.getSponsorDelegateOrganizations().size());
         Organization sponsor = user.getSponsorDelegateOrganizations().get(0);
@@ -287,22 +279,18 @@ public class AccountConfigurationHelperTest {
     }
 
     @Test
-    public void testAddRoles() throws Exception {
+    public void testAddRoles() throws ValidationException, GridInvocationException {
         FirebirdUser user = FirebirdUserFactory.getInstance().create();
         AccountConfigurationData configurationData = createBaseConfigurationData();
         addAllRoles(configurationData);
-        Organization sponsor = Iterables.getOnlyElement(configurationData.getSponsorOrganizations());
-        when(mockOrganizationService.getByExternalId(sponsor.getExternalId())).thenReturn(sponsor);
-        Organization sponsorDelegate = Iterables.getOnlyElement(configurationData.getDelegateOrganizations());
-        when(mockOrganizationService.getByExternalId(sponsorDelegate.getExternalId())).thenReturn(sponsorDelegate);
         helper.addRoles(user, configurationData);
         checkInvestigatorConfiguration(user, configurationData, true);
         checkRegistrationCoordinatorConfiguration(user, configurationData);
         checkSponsorConfiguration(user, configurationData, true);
         checkSponsorDelegateConfiguration(user, configurationData, true);
         verify(mockUserService).save(user);
-        verify(mockEmailService).sendMessage(eq(SUPPORT_EMAIL_ADDRESS), anyCollectionOf(String.class), anyString(),
-                any(FirebirdMessage.class));
+        verify(mockEmailService).sendMessage(eq(SUPPORT_EMAIL_ADDRESS), anyCollectionOf(String.class),
+                anyString(), any(FirebirdMessage.class));
     }
 
 }

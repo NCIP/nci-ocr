@@ -83,12 +83,8 @@
 package gov.nih.nci.firebird.selenium2.tests.protocol.registration;
 
 import static org.junit.Assert.*;
-
-import com.google.inject.Inject;
-
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
 import gov.nih.nci.firebird.data.FormStatus;
-import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.InvestigatorProfilePage;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.BrowseRegistrationsPage;
@@ -100,21 +96,15 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.Add
 import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.RegistrationReviewCommentDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab;
 import gov.nih.nci.firebird.selenium2.tests.investigator.registration.common.AbstractAdditionalAttachmentTest;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
 
 public class ProtocolAdditionalAttachmentsTabTest extends AbstractAdditionalAttachmentTest {
 
-    @Inject
-    private DataSetBuilder builder;
-    private DataSet dataSet;
-    private InvestigatorRegistration registration;
+    private InvestigatorRegistrationTestDataSet dataSet;
 
     @Override
     protected void setUpData() {
-        registration = builder.createRegistration().complete().withStatus(RegistrationStatus.IN_PROGRESS).get();
-        builder.createSponsor();
-        dataSet = builder.build();
+        dataSet = InvestigatorRegistrationTestDataSet.createReadyForSubmissionNoMd(getDataLoader(), getGridResources());
     }
 
     @Override
@@ -122,7 +112,7 @@ public class ProtocolAdditionalAttachmentsTabTest extends AbstractAdditionalAtta
         BrowseRegistrationsPage browseRegistrationsPage = openHomePage(dataSet.getInvestigatorLogin())
                 .getInvestigatorMenu().clickProtocolRegistrations();
         RegistrationOverviewTab overviewTab = browseRegistrationsPage.getHelper()
-                .getRegistrationListing(registration).clickRegistrationLink();
+                .getRegistrationListing(dataSet.getRegistration()).clickRegistrationLink();
         return overviewTab.getPage().clickAdditionalAttachmentsTab();
     }
 
@@ -151,7 +141,7 @@ public class ProtocolAdditionalAttachmentsTabTest extends AbstractAdditionalAtta
         RegistrationOverviewTab overviewTab = ((ProtocolAdditionalAttachmentsTab) additionalAttachmentsTab).getPage()
                 .clickOverviewTab();
         String actualStatus = overviewTab.getHelper()
-                .getFormListing(registration.getAdditionalAttachmentsForm()).getFormStatus();
+                .getFormListing(dataSet.getRegistration().getAdditionalAttachmentsForm()).getStatus();
         assertEquals(FormStatus.NOT_APPLICABLE.getDisplay(), actualStatus);
         return overviewTab.getPage().clickAdditionalAttachmentsTab();
     }
@@ -159,9 +149,9 @@ public class ProtocolAdditionalAttachmentsTabTest extends AbstractAdditionalAtta
     @Override
     protected ProtocolAdditionalAttachmentsTab returnRegistration(AdditionalAttachmentsTab additionalAttachmentsTab) {
         ReviewRegistrationTab overviewTab = openHomePage(dataSet.getSponsorLogin()).getHelper()
-                .openSubmittedProtocolRegistrationTask(registration);
+                .openSubmittedProtocolRegistrationTask(dataSet.getRegistration());
         overviewTab = reviewAllForms(overviewTab);
-        overviewTab.getHelper().rejectAllForms(registration);
+        overviewTab.getHelper().rejectAllForms(dataSet.getRegistration());
         RegistrationReviewCommentDialog reviewCommentDialog = (RegistrationReviewCommentDialog) overviewTab.clickCompleteReview();
         reviewCommentDialog.clickSave().clickConfirm().clickClose();
         getEmailChecker().assertEmailCount(2);
@@ -170,9 +160,9 @@ public class ProtocolAdditionalAttachmentsTabTest extends AbstractAdditionalAtta
     }
 
     public ReviewRegistrationTab reviewAllForms(ReviewRegistrationTab overviewTab) {
-        for (AbstractRegistrationForm form : registration.getForms()) {
+        for (AbstractRegistrationForm form : dataSet.getRegistration().getForms()) {
             if (form.isReviewRequired()) {
-                overviewTab.getHelper().reviewForm(overviewTab.getHelper().getMatchingListing(form));
+                overviewTab = overviewTab.getHelper().reviewForm(overviewTab.getHelper().getMatchingListing(form));
             }
         }
         return overviewTab;

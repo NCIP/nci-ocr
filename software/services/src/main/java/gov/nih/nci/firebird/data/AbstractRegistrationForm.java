@@ -133,8 +133,6 @@ public abstract class AbstractRegistrationForm implements PersistentObject {
     static final EnumSet<FormStatus> CURRENTLY_REVIEWABLE_STATUSES = EnumSet.of(FormStatus.IN_REVIEW,
             FormStatus.ACCEPTED, FormStatus.REJECTED);
     static final EnumSet<FormStatus> REVIEWED_STATUSES = EnumSet.of(FormStatus.ACCEPTED, FormStatus.REJECTED);
-    static final Set<FormTypeEnum> FORMS_WITH_COLLECTION_OF_DOCUMENTS = EnumSet.of(
-            FormTypeEnum.HUMAN_RESEARCH_CERTIFICATE);
 
     private Long id;
     private FormStatus formStatus = FormStatus.NOT_STARTED;
@@ -151,11 +149,6 @@ public abstract class AbstractRegistrationForm implements PersistentObject {
 
     AbstractRegistrationForm(FormType formType) {
         setFormType(formType);
-    }
-
-    AbstractRegistrationForm(FormType formType, FormStatus formStatus) {
-        setFormType(formType);
-        this.formStatus = formStatus;
     }
 
     /**
@@ -457,13 +450,13 @@ public abstract class AbstractRegistrationForm implements PersistentObject {
     }
 
     private void validateCurationStatus(Organization organization, ValidationResult result, ResourceBundle resources) {
-        if (CurationStatus.NULLIFIED.equals(organization.getCurationStatus())) {
+        if (CurationStatus.NULLIFIED.equals(organization.getNesStatus())) {
             ValidationFailure failure = createValidationFailure(resources,
                     "validation.failures.organization.nullified", organization.getName(), getFormType().getName());
             addValidationFailure(result, failure, organization.getId());
-        } else if (!CurationStatus.ACTIVE.equals(organization.getCurationStatus())) {
+        } else if (!CurationStatus.ACTIVE.equals(organization.getNesStatus())) {
             ValidationFailure failure = createValidationFailure(resources, "validation.failure.uncurated",
-                    organization.getName(), getFormType().getName(), organization.getCurationStatus().getDisplay());
+                    organization.getName(), getFormType().getName(), organization.getNesStatus().getDisplay());
             addValidationFailure(result, failure, organization.getId());
         }
     }
@@ -481,13 +474,13 @@ public abstract class AbstractRegistrationForm implements PersistentObject {
     }
 
     private void validateCurationStatus(Person person, ValidationResult result, ResourceBundle resources) {
-        if (CurationStatus.NULLIFIED.equals(person.getCurationStatus())) {
+        if (CurationStatus.NULLIFIED.equals(person.getNesStatus())) {
             result.addFailure(createValidationFailure(resources, "validation.failures.person.nullified",
                     person.getDisplayName(), getFormType().getName()));
             getInvalidEntityIds().add(person.getId());
-        } else if (!CurationStatus.ACTIVE.equals(person.getCurationStatus())) {
+        } else if (!CurationStatus.ACTIVE.equals(person.getNesStatus())) {
             result.addFailure(createValidationFailure(resources, "validation.failure.uncurated",
-                    person.getDisplayName(), getFormType().getName(), person.getCurationStatus().getDisplay()));
+                    person.getDisplayName(), getFormType().getName(), person.getNesStatus().getDisplay()));
             getInvalidEntityIds().add(person.getId());
         } else if (person.isUpdatePending()) {
             result.addFailure(createValidationFailure(resources, "validation.failure.pending.nes.updates",
@@ -502,6 +495,23 @@ public abstract class AbstractRegistrationForm implements PersistentObject {
     @Transient
     public FirebirdFile getFileToReview() {
         return getFlattenedPdf();
+    }
+
+    /**
+     * Used to ascertain whether the role provided is valid and active or not.
+     *
+     * @param role The Role to validate.
+     * @param result the Validation result.
+     * @param resources the Resources to obtain error messages from.
+     */
+    public void validateCurationStatus(AbstractOrganizationRole role, ValidationResult result,
+            ResourceBundle resources) {
+        if (requiresActiveCurationStatus() && !CurationStatus.ACTIVE.equals(role.getNesStatus())) {
+            result.addFailure(createValidationFailure(resources, "validation.failure.uncurated", role.getOrganization()
+                    .getName() + " role as " + role.getRoleType().getDisplay(), getFormType().getName(), role
+                    .getNesStatus().getDisplay()));
+            getInvalidEntityIds().add(role.getOrganization().getId());
+        }
     }
 
     /**
@@ -540,7 +550,7 @@ public abstract class AbstractRegistrationForm implements PersistentObject {
     /**
      * Default functionality for when this form is returned. Forms can override functionality to provide for additional
      * actions that need to be performed when a form is returned occurs. Ex. Removing archived data
-     *
+     * 
      * @return objects that should be removed from the database
      */
     Set<PersistentObject> returnForm() {
@@ -616,29 +626,12 @@ public abstract class AbstractRegistrationForm implements PersistentObject {
     /**
      * Checks if the given file is referenced from this form. Subclasses should
      * override as appropriate.
-     *
+     * 
      * @param file check if this form references this file
      * @return true if referenced
      */
     boolean isFileReferenced(FirebirdFile file) {
         return file.equals(getFlattenedPdf()) || file.equals(getSignedPdf());
-    }
-
-    /**
-     * @return whether or not to show the comments link for the investigator
-     */
-    @Transient
-    public boolean isCommentsLinkToInvestigatorToBeDisplayed() {
-        return !getPlainTextComments().isEmpty() && getFormStatus() != FormStatus.ACCEPTED
-                && getFormStatus() != FormStatus.IN_REVIEW;
-    }
-
-    /**
-     * @return true if this form consists of a collection of documents.
-     */
-    @Transient
-    public boolean isCollectionOfDocuments() {
-        return FORMS_WITH_COLLECTION_OF_DOCUMENTS.contains(getFormType().getFormTypeEnum());
     }
 
 }

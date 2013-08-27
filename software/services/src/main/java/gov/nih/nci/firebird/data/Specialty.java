@@ -93,4 +93,9 @@ public interface Specialty<T extends CertifyingBoard<?>> extends ListItem {
      */
     T getCertifyingBoard();
 
+    /**
+     * @param board the certifying board
+     */
+    void setCertifyingBoard(T board);
+
 }

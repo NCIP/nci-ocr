@@ -128,9 +128,9 @@ public class DailyJobServiceBeanTest {
 
     @Mock
     private SponsorService mockSponsorService;
-
+    
     private List<Timer> timerList = Lists.newArrayList();
-
+    
     @Before
     public void setUp() throws ParseException {
         MockitoAnnotations.initMocks(this);
@@ -183,7 +183,7 @@ public class DailyJobServiceBeanTest {
 
     @Test
     public void testExecuteJobs_WithAnnualRegistrationSponsor() {
-        when(mockSponsorService.getSponsorWithAnnualRegistrationsExternalId()).thenReturn("externalId");
+        when(mockSponsorService.getSponsorWithAnnualRegistrationsNesId()).thenReturn("nesId");
         bean.executeJobs(mockTimer);
         verify(mockHibernateHelper).openAndBindSession();
         verify(mockAnnualRegistrationService).createPendingRenewals();

@@ -158,7 +158,7 @@ AbstractManageMedicalTrainingCredentialsAction<MedicalSpecialtyCertifyingBoard, 
     @Validations(
             customValidators = { @CustomValidator(type = "hibernate", fieldName = "residency.issuer", parameters = {
                 @ValidationParameter(name = "resourceKeyBase", value = "profile.organization"),
-                @ValidationParameter(name = "excludes", value = "externalId") }) },
+                @ValidationParameter(name = "excludes", value = "nesId") }) },
             requiredStrings = { @RequiredStringValidator(fieldName = "effectiveDate",
                     key = "error.start.date.required") },
             requiredFields = { @RequiredFieldValidator(

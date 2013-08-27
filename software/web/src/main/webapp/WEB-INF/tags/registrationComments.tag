@@ -6,9 +6,11 @@ type="gov.nih.nci.firebird.data.AbstractRegistration"%>
 <%@ attribute name="titleKey"%>
 <%@ attribute name="retainState" type="java.lang.Boolean"%>
 
-<s:if test="%{registration.commentsEntered}">
+<s:if test="%{registration.sponsorComments not in {null, ''}
+        || registration.investigatorComments not in {null, ''}
+        || registration.coordinatorComments not in {null, ''}}">
     <firebird:comments titleKey="${titleKey}" retainState="${retainState}">
-        <s:if test="%{registration.sponsorComments not in {null, ''} || registration.formComments not in {null, ''}}">
+        <s:if test="%{registration.sponsorComments not in {null, ''}}">
             <h5><fmt:message key="sponsor.comments.header" /></h5>
             <s:property value="%{@gov.nih.nci.firebird.common.RichTextUtil@cleanRichText(registration.formComments)}" escapeHtml="false"/>
             <b><fmt:message key="label.additional.comments"/></b>

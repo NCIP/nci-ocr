@@ -127,7 +127,7 @@ public class OrganizationAssociationsTabActionTest {
 
     private void checkJsonForCommonValues(OrganizationAssociation association, String json) {
         assertTrue(json.contains(association.getOrganizationRole().getOrganization().getId().toString()));
-        assertTrue(json.contains(association.getOrganizationRole().getExternalId()));
+        assertTrue(json.contains(association.getOrganizationRole().getNesId()));
         assertTrue(json.contains(association.getOrganizationRole().getOrganization().getName()));
         assertTrue(json.contains(association.getOrganizationRole().getOrganization().getCtepId()));
         assertTrue(json.contains(association.getOrganizationRole().getOrganization().getEmail()));

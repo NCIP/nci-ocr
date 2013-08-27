@@ -157,7 +157,7 @@ public class PracticeSite extends AbstractOrganizationRole {
     /**
      * @return a snapshot copy of this PracticeSite's data.
      */
-    PracticeSiteSnapshot createSnapshot() {
+    public PracticeSiteSnapshot createSnapshot() {
         PracticeSiteSnapshot snapshot = new PracticeSiteSnapshot();
         copyRoleData(snapshot);
         snapshot.setOhrpAssuranceNumber(getOhrpAssuranceNumber());

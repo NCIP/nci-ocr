@@ -94,9 +94,11 @@ import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.PracticeSiteType;
+import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.ManagedInvestigatorStatus;
 import gov.nih.nci.firebird.data.user.UserRoleType;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.base.MessageHandler;
 import gov.nih.nci.firebird.selenium2.pages.base.ValidationException;
@@ -107,6 +109,11 @@ import gov.nih.nci.firebird.selenium2.pages.coordinator.investigators.BrowseInve
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact.ProfessionalContactInformationTab;
 import gov.nih.nci.firebird.selenium2.pages.login.LoginPage;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.CreateProtocolPage;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolInformationTab;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolInvestigatorsTab;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.ProtocolRegistrationPage;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.protocol.AddInvestigatorsDialog;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.AbstractAccountRegistrationPage;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.CreatePrimaryOrganizationPage;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.EditPersonPage;
@@ -120,14 +127,17 @@ import gov.nih.nci.firebird.selenium2.pages.user.regsitration.ViewSelectedRolesP
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.FailingAction;
 import gov.nih.nci.firebird.selenium2.pages.util.VerificationUtils;
-import gov.nih.nci.firebird.service.person.external.ExternalPersonService;
+import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.LoginAccount.InvestigatorLogin;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
+import gov.nih.nci.firebird.test.ProtocolFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
+import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
 
+import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Map;
 
@@ -146,22 +156,26 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
     @Inject
     private RegistrationTestHelper helper;
 
+    private DataSetBuilder builder;
+
     private LoginAccount testUser;
 
-    private Person newAccountPerson = PersonFactory.getInstance().createWithoutExternalData();
+    private Person newAccountPerson = PersonFactory.getInstance().create();
 
     @Inject
-    private ExternalPersonService nesPersonService;
+    private NesPersonIntegrationService nesPersonService;
 
-    private Organization primaryOrganization;
+    private Organization organization1;
 
     private Map<InvestigatorLogin, FirebirdUser> investigatorMap;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        builder = new DataSetBuilder(getDataLoader(), getGridResources());
+        newAccountPerson.setNesId(null);
         testUser = helper.createNewGridUser(newAccountPerson);
-        primaryOrganization = getExistingPrimaryOrganization();
+        organization1 = getExistingPrimaryOrganization();
     }
 
     @After
@@ -173,48 +187,72 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
 
     @Test
     public void testInvestigatorRegistration() throws GridInvocationException {
-        Person person = getExistingExternalPerson();
-        addGroupMembership(UserRoleType.INVESTIGATOR);
+        builder.createInvestigator();
+        DataSet dataSet = builder.build();
+        Person usedPerson = dataSet.getInvestigator().getPerson();
+
+        Person person = getExistingNesPerson();
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
 
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
-        rolePage.getHelper().checkForRoles(UserRoleType.INVESTIGATOR.getDisplay());
-        PersonSelectionPage selectPersonPage = (PersonSelectionPage) rolePage.clickNext();
+        List<String> roleNames = rolePage.getRoleNames();
+        assertEquals(1, roleNames.size());
+        assertEquals(UserRoleType.INVESTIGATOR.getDisplay(), roleNames.get(0));
+        PersonSelectionPage selectPersonPage = selectPreviouslySelectedPerson(usedPerson, rolePage);
         EditPersonPage editPersonPage = selectPerson(person, selectPersonPage);
-        editPersonPage.getHelper().verifyFormValues(person);
-        OrganizationSelectionPage organizationSelectionPage = (OrganizationSelectionPage) editPersonPage.clickNext();
-        VerificationPage verificationPage = (VerificationPage) selectOrganization(primaryOrganization, organizationSelectionPage);
-        ViewOrganizationPage viewOrganizationPage = (ViewOrganizationPage) verificationPage.clickPrevious();
-        viewOrganizationPage.getHelper().verifyInformationIsDisplayed(primaryOrganization);
-        verificationPage = (VerificationPage) viewOrganizationPage.clickNext();
-        checkVerificationPage(verificationPage, person, primaryOrganization, INVESTIGATOR);
-        Organization newOrganization = editOrganization(verificationPage, person);
-        Person newPerson = editPerson(verificationPage, newOrganization);
+        VerificationPage verificationPage = (VerificationPage) selectOrganization(organization1, editPersonPage);
+        ViewOrganizationPage viewOrgPage = (ViewOrganizationPage) verificationPage.clickPrevious();
+        viewOrgPage.getHelper().verifyInformationIsDisplayed(organization1);
+        verificationPage = (VerificationPage) viewOrgPage.clickNext();
+        checkVerificationPage(verificationPage, person, organization1, INVESTIGATOR);
+        Organization newOrganization = editOrganization(verificationPage, person, organization1);
+        Person newPerson = editPerson(verificationPage, person, newOrganization);
         completeInvestigatorRegistration(verificationPage, newPerson, newOrganization);
-    }
-
-    private void addGroupMembership(UserRoleType role) throws GridInvocationException {
-        addGroupMembership(role.getGroupName());
-    }
-
-    private void addGroupMembership(String groupName) throws GridInvocationException {
-        addGroupMemberships(groupName);
-    }
-
-    private void addGroupMemberships(String... groupNames) throws GridInvocationException {
-        helper.addGroupMemberships(testUser.getUsername(), groupNames);
     }
 
     private ViewSelectedRolesPage openSelectedRolesPage() {
         return openLoginPage().getHelper().goToSelectedRolesPage(testUser, getProvider());
     }
 
+    private PersonSelectionPage selectPreviouslySelectedPerson(final Person person, ViewSelectedRolesPage rolePage) {
+        final PersonSelectionPage selectPersonPage = checkInvalidEmailAddressCharacters(rolePage);
+        selectPersonPage.getHelper().searchForPerson(person);
+        selectPersonPage.getHelper().checkPersonInResults(person);
+        ExpectedValidationFailure expectedFailure = new ExpectedValidationFailure(USER_ALREADY_USED_ERROR_KEY);
+        expectedFailure.assertFailureOccurs(new FailingAction() {
+            @Override
+            public void perform() {
+                selectPersonPage.getHelper().selectPerson(person);
+            }
+        });
+        return selectPersonPage;
+    }
+
+    private PersonSelectionPage checkInvalidEmailAddressCharacters(ViewSelectedRolesPage rolePage) {
+        PersonSelectionPage selectPersonPage = (PersonSelectionPage) rolePage.clickNext();
+        selectPersonPage.typeInSearchField("%@test.com");
+        assertTrue(selectPersonPage.getSearchResults().size() == 0);
+        return (PersonSelectionPage) selectPersonPage.clickPrevious().clickNext();
+    }
+
     private EditPersonPage selectPerson(Person person, PersonSelectionPage selectPersonPage) {
-        return selectPersonPage.getHelper().searchAndSelectPerson(person);
+        selectPersonPage.getHelper().searchForPerson(person);
+        selectPersonPage.getHelper().checkPersonInResults(person);
+        EditPersonPage editPersonPage = selectPersonPage.getHelper().selectPerson(person);
+        editPersonPage.getHelper().verifyFormValues(person);
+        return editPersonPage;
     }
 
     private AbstractAccountRegistrationPage<?> selectOrganization(Organization organization,
-            OrganizationSelectionPage organizationSelectionPage) {
-        return organizationSelectionPage.getHelper().searchAndSelectOrganization(organization);
+            EditPersonPage editPersonPage) {
+        OrganizationSelectionPage selectOrgPage = (OrganizationSelectionPage) editPersonPage.clickNext();
+        selectOrgPage = clickCreateNewThenSearchAgain(selectOrgPage);
+        selectOrgPage.getHelper().searchForOrganization(organization);
+        return selectOrgPage.getHelper().selectOrganization(organization1);
+    }
+
+    private OrganizationSelectionPage clickCreateNewThenSearchAgain(OrganizationSelectionPage selectOrgPage) {
+        return selectOrgPage.clickCreateNew().clickSearchAgain();
     }
 
     private void checkVerificationPage(VerificationPage verificationPage, Person person, Organization organization,
@@ -224,7 +262,7 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
         verificationPage.getHelper().verifyRoles(roles);
     }
 
-    private Organization editOrganization(VerificationPage verificationPage, Person person) {
+    private Organization editOrganization(VerificationPage verificationPage, Person person, Organization organization) {
         OrganizationSelectionPage organizationSelectionPage = verificationPage.clickEditPrimaryOrganization()
                 .clickSearchAgain();
         checkCreateNewOrganizationRemovesReturnLink(organizationSelectionPage);
@@ -244,11 +282,11 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
         createOrganizationPage.clickSearchAgain();
     }
 
-    private Person editPerson(VerificationPage verificationPage, Organization organization) {
+    private Person editPerson(VerificationPage verificationPage, Person person, Organization organization) {
         PersonSelectionPage personSelectionPage = verificationPage.clickEditPerson().clickSearchAgain();
         checkCreateNewInvalidPersonRemovesReturnLink(personSelectionPage);
-        Person newPerson = getExistingExternalPerson();
-        EditPersonPage editPersonPage = personSelectionPage.getHelper().searchAndSelectPerson(
+        Person newPerson = getExistingNesPerson();
+        EditPersonPage editPersonPage = (EditPersonPage) personSelectionPage.getHelper().searchAndSelectPerson(
                 newPerson);
         editPersonPage.getHelper().verifyFormValues(newPerson);
         ViewOrganizationPage viewOrganizationPage = (ViewOrganizationPage) editPersonPage.clickNext();
@@ -288,59 +326,20 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
         dialog.getHelper().checkForRoles(roles);
         return (HomePage) dialog.clickConfirm();
     }
-    
-    @Test
-    public void testPersonCantBeReusedForNewRegistration() throws GridInvocationException {
-        addGroupMembership(UserRoleType.INVESTIGATOR);
-        DataSetBuilder builder = createDataSetBuilder();
-        Person usedPerson = builder.createInvestigator().get().getPerson();
-        builder.build();
-        PersonSelectionPage personSelectionPage = openPersonSelectionPage();
-        checkCantSelectInUsePersonRecord(usedPerson, personSelectionPage);
-        
-    }
 
-    private DataSetBuilder createDataSetBuilder() {
-        return new DataSetBuilder(getDataLoader(), getGridResources());
-    }
-
-    private PersonSelectionPage openPersonSelectionPage() {
-        ViewSelectedRolesPage rolePage = openSelectedRolesPage();
-        PersonSelectionPage personSelectionPage = (PersonSelectionPage) rolePage.clickNext();
-        return personSelectionPage;
-    }
-
-    private void checkCantSelectInUsePersonRecord(final Person person, final PersonSelectionPage personSelectionPage) {
-        personSelectionPage.getHelper().searchForPerson(person);
-        ExpectedValidationFailure expectedFailure = new ExpectedValidationFailure(USER_ALREADY_USED_ERROR_KEY);
-        expectedFailure.assertFailureOccurs(new FailingAction() {
-            @Override
-            public void perform() {
-                personSelectionPage.getHelper().selectPerson(person);
-            }
-        });
-    }
-
-    @Test
-    public void testWildcardsCantBeUsedInPersonEmailSearch() throws GridInvocationException {
-        addGroupMembership(UserRoleType.INVESTIGATOR);
-        PersonSelectionPage selectPersonPage = openPersonSelectionPage();
-        selectPersonPage.typeInSearchField("%@test.com");
-        assertTrue(selectPersonPage.getSearchResults().isEmpty());
-    }
-    
     @Test
     public void testInvestigatorRegistrationProfileAlreadyExists() throws GridInvocationException {
-        DataSetBuilder builder = createDataSetBuilder();
-        Person personWithProfile = builder.createProfile().get().getPerson();
-        builder.build();
+        builder.createSponsor();
+        DataSet dataSet = builder.build();
+        Person existingPerson = getExistingNesPerson();
 
-        addGroupMembership(UserRoleType.INVESTIGATOR);
+        createProtocolWithPerson(existingPerson, dataSet.getSponsorLogin());
+
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
-        EditPersonPage editPersonPage = selectPerson(personWithProfile, rolePage);
-        OrganizationSelectionPage organizationSelectionPage = (OrganizationSelectionPage) editPersonPage.clickNext();
-        VerificationPage verificationPage = (VerificationPage) selectOrganization(primaryOrganization, organizationSelectionPage);
-        checkVerificationPage(verificationPage, personWithProfile, primaryOrganization, INVESTIGATOR);
+        EditPersonPage editPersonPage = selectPerson(existingPerson, rolePage);
+        VerificationPage verificationPage = (VerificationPage) selectOrganization(organization1, editPersonPage);
+        checkVerificationPage(verificationPage, existingPerson, organization1, INVESTIGATOR);
         verificationPage.clickSave();
     }
 
@@ -349,56 +348,82 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
         return selectPerson(person, selectPersonPage);
     }
 
+    private void createProtocolWithPerson(Person investigator, LoginAccount loginAccount) {
+        Protocol protocol = ProtocolFactory.getInstance().create();
+
+        HomePage homePage = openHomePage(loginAccount);
+        CreateProtocolPage createProtocolPage = homePage.getProtocolsMenu().clickCreateNew();
+        createProtocolPage.setProtocolTitle(protocol.getProtocolTitle());
+        createProtocolPage.setProtocolNumber(protocol.getProtocolNumber());
+        createProtocolPage.selectPhase(protocol.getPhase());
+        createProtocolPage.getHelper().selectFirstSponsor();
+        ProtocolInformationTab protocolInformationTab = createProtocolPage.clickSave();
+        ProtocolRegistrationPage protocolPage = protocolInformationTab.getPage();
+        ProtocolInvestigatorsTab investigatorsTab = protocolPage.clickInvestigatorsTab();
+        AddInvestigatorsDialog addDialog = investigatorsTab.clickAddInvestigators();
+        addDialog.getHelper().searchAndAddPerson(investigator);
+        addDialog.clickDone();
+        protocolPage.clickSignOut();
+
+    }
+
     @Test
     public void testSponsorRepresentativeRegistration() throws GridInvocationException {
-        String sponsorExternalId = getGridResources().getValidSponsorExternalId();
-        String sponsorGroup = getSponsorGroupName(sponsorExternalId);
-        Organization sponsor = getGridResources().getTestDataSource().getProtocolSponsorOrganization(sponsorExternalId);
-        addGroupMembership(sponsorGroup);
+        String sponsorNesId = getGridResources().getValidSponsorNesId();
+        String sponsorGroup = getSponsorGroupName(sponsorNesId);
+        Organization sponsor = getGridResources().getNesTestDataSource().getProtocolSponsorOrganization(sponsorNesId);
+        helper.addGroupMemberships(testUser.getUsername(), sponsorGroup);
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
-        rolePage.getHelper().checkForRoles("Sponsor for " + sponsor.getName());
-        EditPersonPage editPersonPage = selectPerson(getExistingExternalPerson(), rolePage);
+        List<String> roleNames = rolePage.getRoleNames();
+        assertEquals(1, roleNames.size());
+        assertEquals("Sponsor for " + sponsor.getName(), roleNames.get(0));
+        EditPersonPage editPersonPage = selectPerson(getExistingNesPerson(), rolePage);
         VerificationPage verificationPage = (VerificationPage) editPersonPage.clickNext();
         assertEquals(1, verificationPage.getSponsorOrganizationSection().getSponsorRepresentativeOrganizations().size());
         assertEquals(0, verificationPage.getSponsorOrganizationSection().getSponsorDelegateOrganizations().size());
         completeRegistration(verificationPage, SPONSOR);
     }
 
-    private String getSponsorGroupName(String sponsorExternalId) {
-        return UserRoleType.SPONSOR.getGroupName() + "_" + getNesIdExtension(sponsorExternalId);
+    private String getSponsorGroupName(String sponsorNesId) {
+        return UserRoleType.SPONSOR.getGroupName() + "_" + getNesIdExtension(sponsorNesId);
     }
 
     @Test
     public void testSponsorDelegateRegistration() throws GridInvocationException {
-        String sponsorExternalId = getGridResources().getValidSponsorExternalId();
-        Organization sponsor = getGridResources().getTestDataSource().getProtocolSponsorOrganization(sponsorExternalId);
-        String delegateGroup = getSponsorDelegateGroupName(sponsorExternalId);
-        addGroupMembership(delegateGroup);
+        String sponsorNesId = getGridResources().getValidSponsorNesId();
+        Organization sponsor = getGridResources().getNesTestDataSource().getProtocolSponsorOrganization(sponsorNesId);
+        String delegateGroup = getSponsorDelegateGroupName(sponsorNesId);
+        helper.addGroupMemberships(testUser.getUsername(), delegateGroup);
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
-        rolePage.getHelper().checkForRoles("Sponsor Delegate for " + sponsor.getName());
-        EditPersonPage editPersonPage = selectPerson(getExistingExternalPerson(), rolePage);
+        List<String> roleNames = rolePage.getRoleNames();
+        assertEquals(1, roleNames.size());
+        assertEquals("Sponsor Delegate for " + sponsor.getName(), roleNames.get(0));
+        EditPersonPage editPersonPage = selectPerson(getExistingNesPerson(), rolePage);
         VerificationPage verificationPage = (VerificationPage) editPersonPage.clickNext();
         assertEquals(0, verificationPage.getSponsorOrganizationSection().getSponsorRepresentativeOrganizations().size());
         assertEquals(1, verificationPage.getSponsorOrganizationSection().getSponsorDelegateOrganizations().size());
         completeRegistration(verificationPage, SPONSOR_DELEGATE);
     }
 
-    private String getSponsorDelegateGroupName(String sponsorExternalId) {
-        return UserRoleType.SPONSOR_DELEGATE.getGroupName() + "_" + getNesIdExtension(sponsorExternalId);
+    private String getSponsorDelegateGroupName(String sponsorNesId) {
+        return UserRoleType.SPONSOR_DELEGATE.getGroupName() + "_" + getNesIdExtension(sponsorNesId);
     }
 
     @Test
     public void testSponsorAndDelegateRegistration() throws GridInvocationException {
-        String sponsor1ExternalId = getGridResources().getValidProtocolSponsorExternalId();
-        Organization sponsor1 = getGridResources().getTestDataSource().getProtocolSponsorOrganization(sponsor1ExternalId);
-        String sponsor2ExternalId = getGridResources().getValidProtocolSponsorExternalId();
-        Organization sponsor2 = getGridResources().getTestDataSource().getProtocolSponsorOrganization(sponsor2ExternalId);
-        String sponsorGroup = getSponsorGroupName(sponsor1ExternalId);
-        String delegateGroup = getSponsorDelegateGroupName(sponsor2ExternalId);
-        addGroupMemberships(sponsorGroup, delegateGroup);
+        String sponsor1NesId = getGridResources().getValidProtocolSponsorNesId();
+        Organization sponsor1 = getGridResources().getNesTestDataSource().getProtocolSponsorOrganization(sponsor1NesId);
+        String sponsor2NesId = getGridResources().getValidProtocolSponsorNesId();
+        Organization sponsor2 = getGridResources().getNesTestDataSource().getProtocolSponsorOrganization(sponsor2NesId);
+        String sponsorGroup = getSponsorGroupName(sponsor1NesId);
+        String delegateGroup = getSponsorDelegateGroupName(sponsor2NesId);
+        helper.addGroupMemberships(testUser.getUsername(), sponsorGroup, delegateGroup);
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
-        rolePage.getHelper().checkForRoles("Sponsor for " + sponsor1.getName(), "Sponsor Delegate for " + sponsor2.getName());
-        EditPersonPage editPersonPage = selectPerson(getExistingExternalPerson(), rolePage);
+        List<String> roleNames = rolePage.getRoleNames();
+        assertEquals(2, roleNames.size());
+        assertEquals("Sponsor for " + sponsor1.getName(), roleNames.get(0));
+        assertEquals("Sponsor Delegate for " + sponsor2.getName(), roleNames.get(1));
+        EditPersonPage editPersonPage = selectPerson(getExistingNesPerson(), rolePage);
         VerificationPage verificationPage = (VerificationPage) editPersonPage.clickNext();
         assertEquals(1, verificationPage.getSponsorOrganizationSection().getSponsorRepresentativeOrganizations().size());
         assertEquals(1, verificationPage.getSponsorOrganizationSection().getSponsorDelegateOrganizations().size());
@@ -407,10 +432,13 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
 
     @Test
     public void testRegisterInvestigatorWithNewEntities() throws GridInvocationException {
-        Person newPerson = PersonFactory.getInstance().createWithoutExternalData();
+        Person newPerson = PersonFactory.getInstance().create();
+        newPerson.setCtepId(null);
+        newPerson.setNesId(null);
         newPerson.setProviderNumber(ValueGenerator.getUniqueString());
-        Organization newOrganization = OrganizationFactory.getInstance().createWithoutExternalData();
-        addGroupMembership(UserRoleType.INVESTIGATOR);
+        Organization newOrganization = OrganizationFactory.getInstance().create();
+        newOrganization.setNesId(null);
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
         OrganizationSelectionPage selectOrgPage = createPerson(newPerson, rolePage);
         VerificationPage verificationPage = createOrganization(newOrganization, selectOrgPage);
@@ -475,42 +503,26 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
 
     private VerificationPage createOrganization(Organization organization, OrganizationSelectionPage selectOrgPage) {
         CreatePrimaryOrganizationPage createOrganizationPage = selectOrgPage.clickCreateNew();
-        clickNextAndValidateMissingFields(createOrganizationPage);
         createOrganizationPage.getHelper().enterOrganizationData(organization, PracticeSiteType.CANCER_CENTER);
         return (VerificationPage) createOrganizationPage.clickNext();
     }
 
-    private void clickNextAndValidateMissingFields(final CreatePrimaryOrganizationPage createOrganizationPage) {
-        ExpectedValidationFailure expectedFailure = new ExpectedValidationFailure();
-        expectedFailure.addExpectedRequiredFields("organization.name", "organization.email", "organization.postalAddress.streetAddress",
-                "organization.postalAddress.city", "organization.postalAddress.stateOrProvince",
-                "organization.postalAddress.postalCode");
-        expectedFailure.addExpectedMessage("organization.type.required");
-        expectedFailure.assertFailureOccurs(new FailingAction() {
-            @Override
-            public void perform() {
-                createOrganizationPage.clickNext();
-            }
-        });
-    }
-
     @Test
     public void testRegisterRegistrationCoordinator() throws GridInvocationException {
-        DataSetBuilder builder = createDataSetBuilder();
         investigatorMap = Maps.newHashMap();
         investigatorMap.put(fbciinv2, builder.createInvestigator().withLogin(fbciinv2).get());
         investigatorMap.put(fbciinv3, builder.createInvestigator().withLogin(fbciinv3).get());
         investigatorMap.put(fbciinv4, builder.createInvestigator().withLogin(fbciinv4).get());
         builder.build();
-        Person coordinatorPerson = getExistingExternalPerson();
-        addGroupMembership(UserRoleType.REGISTRATION_COORDINATOR);
+        Person coordinatorPerson = getExistingNesPerson();
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.REGISTRATION_COORDINATOR.getGroupName());
         VerificationPage verificationPage = fillInCoordinatorRegistration(coordinatorPerson);
 
         verificationPage = returnAndModifySelectedInvestigators(verificationPage);
         verifySelectedInvestigatorsDisplayed(verificationPage, fbciinv3);
         HomePage homePage = completeRegistration(verificationPage, REGISTRATION_COORDINATOR);
         checkCoordinatorAwaitingVerificationTask(homePage);
-        checkCoordinatorEmail();
+        checkCoordinatorEmail(coordinatorPerson);
     }
 
     private VerificationPage fillInCoordinatorRegistration(Person coordinatorPerson) {
@@ -621,16 +633,16 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
         assertEquals(ManagedInvestigatorStatus.AWAITING_APPROVAL.getDisplay(), investigatorListing.getStatus());
     }
 
-    private void checkCoordinatorEmail() {
+    private void checkCoordinatorEmail(Person coordinatorPerson) {
         getEmailChecker().assertEmailCount(1);
         MimeMessage[] messages = getEmailChecker().getSentEmails();
         getEmailChecker().checkTo(messages[0], getSavedProfile(fbciinv3).getPerson().getEmail());
     }
 
     @Test
-    public void testPersonAutoSelection() throws Exception {
-        nesPersonService.save(newAccountPerson);
-        addGroupMembership(UserRoleType.INVESTIGATOR);
+    public void testPersonAutoSelection() throws RemoteException, GridInvocationException {
+        nesPersonService.createPerson(newAccountPerson);
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
         EditPersonPage editPersonPage = (EditPersonPage) rolePage.clickNext();
         editPersonPage.getHelper().verifyFormValues(newAccountPerson);
@@ -639,18 +651,24 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
     }
 
     @Test
-    public void testPersonAutoSelection_AlreadySelected() throws Exception {
+    public void testPersonAutoSelection_AlreadySelected() throws RemoteException, GridInvocationException {
+        String nesId = nesPersonService.createPerson(newAccountPerson);
+        newAccountPerson.setNesId(nesId);
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
         simulatePersonRecordAlreadySelected();
-        addGroupMembership(UserRoleType.INVESTIGATOR);
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
         EditPersonPage editPersonPage = (EditPersonPage) rolePage.clickNext();
         editPersonPage.getHelper().verifyFormValues(newAccountPerson);
-        checkForUserAlreadyAssociatedMessage(editPersonPage);
+        editPersonPage = checkForUserAlreadyAssociatedMessage(editPersonPage);
+        rolePage = (ViewSelectedRolesPage) editPersonPage.clickPrevious();
+        editPersonPage = (EditPersonPage) rolePage.clickNext();
+        editPersonPage.getHelper().verifyFormValues(newAccountPerson);
     }
 
     private EditPersonPage checkForUserAlreadyAssociatedMessage(final EditPersonPage editPersonPage) {
         ExpectedValidationFailure expectedFailure = new ExpectedValidationFailure(USER_ALREADY_USED_ERROR_KEY);
         expectedFailure.assertFailureOccurs(new FailingAction() {
+
             @Override
             public void perform() {
                 editPersonPage.clickNext();
@@ -659,36 +677,42 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
         return editPersonPage;
     }
 
-    private void simulatePersonRecordAlreadySelected() throws Exception {
-        nesPersonService.save(newAccountPerson);
-        DataSetBuilder builder = createDataSetBuilder();
-        InvestigatorProfile profile = builder.createProfile().withPerson(newAccountPerson).get();
-        builder.createInvestigator(profile);
-        builder.build();
+    private void simulatePersonRecordAlreadySelected() {
+        FirebirdUser user = FirebirdUserFactory.getInstance().create();
+        user.setPerson(newAccountPerson);
+        getHibernateHelper().openAndBindSession();
+        getHibernateHelper().getCurrentSession().beginTransaction();
+        getHibernateHelper().getCurrentSession().save(user);
+        getHibernateHelper().getCurrentSession().getTransaction().commit();
+        getHibernateHelper().unbindAndCleanupSession();
     }
 
     @Test
-    public void testPersonAutoSearchByEmailAddress() throws Exception {
-        nesPersonService.save(newAccountPerson);
-        Person person2 = PersonFactory.getInstance().createWithoutExternalData();
+    public void testPersonAutoSearchByEmailAddress() throws RemoteException, GridInvocationException {
+        nesPersonService.createPerson(newAccountPerson);
+        Person person2 = PersonFactory.getInstance().create();
+        person2.setNesId(null);
         person2.setEmail(newAccountPerson.getEmail());
-        nesPersonService.save(person2);
-        addGroupMembership(UserRoleType.INVESTIGATOR);
-        PersonSelectionPage personSelectionPage = openPersonSelectionPage();
+        nesPersonService.createPerson(person2);
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
+        ViewSelectedRolesPage rolePage = openSelectedRolesPage();
+        PersonSelectionPage personSelectionPage = (PersonSelectionPage) rolePage.clickNext();
         assertEquals(newAccountPerson.getEmail(), personSelectionPage.getSearchFieldValue());
         assertEquals(2, personSelectionPage.getSearchResults().size());
     }
 
     @Test
-    public void testPersonAutoSearchByName() throws Exception {
+    public void testPersonAutoSearchByName() throws RemoteException, GridInvocationException {
         newAccountPerson.setEmail(getUniqueEmailAddress());
-        nesPersonService.save(newAccountPerson);
-        Person person2 = PersonFactory.getInstance().createWithoutExternalData();
+        nesPersonService.createPerson(newAccountPerson);
+        Person person2 = PersonFactory.getInstance().create();
+        person2.setNesId(null);
         person2.setFirstName(newAccountPerson.getFirstName());
         person2.setLastName(newAccountPerson.getLastName());
-        nesPersonService.save(person2);
-        addGroupMembership(UserRoleType.INVESTIGATOR);
-        PersonSelectionPage personSelectionPage = openPersonSelectionPage();
+        nesPersonService.createPerson(person2);
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
+        ViewSelectedRolesPage rolePage = openSelectedRolesPage();
+        PersonSelectionPage personSelectionPage = (PersonSelectionPage) rolePage.clickNext();
         String expectedSearchString = newAccountPerson.getLastName() + ", " + newAccountPerson.getFirstName();
         assertEquals(expectedSearchString, personSelectionPage.getSearchFieldValue());
         assertEquals(2, personSelectionPage.getSearchResults().size());
@@ -696,16 +720,16 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
 
     @Test
     public void testNoFunctionalityWarningIfRolesAreVerified() throws GridInvocationException {
-        String sponsorExternalId = getGridResources().getValidSponsorExternalId();
-        Organization sponsor = getGridResources().getTestDataSource().getProtocolSponsorOrganization(sponsorExternalId);
-        String sponsorGroup = getSponsorGroupName(sponsorExternalId);
+        String sponsorNesId = getGridResources().getValidSponsorNesId();
+        Organization sponsor = getGridResources().getNesTestDataSource().getProtocolSponsorOrganization(sponsorNesId);
+        String sponsorGroup = getSponsorGroupName(sponsorNesId);
         String verifiedSponsorGroup = "verified_" + sponsorGroup;
-        addGroupMemberships(sponsorGroup, verifiedSponsorGroup);
+        helper.addGroupMemberships(testUser.getUsername(), sponsorGroup, verifiedSponsorGroup);
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
         List<String> roleNames = rolePage.getRoleNames();
         assertEquals(1, roleNames.size());
         assertEquals("Sponsor for " + sponsor.getName(), roleNames.get(0));
-        EditPersonPage editPersonPage = selectPerson(getExistingExternalPerson(), rolePage);
+        EditPersonPage editPersonPage = selectPerson(getExistingNesPerson(), rolePage);
         VerificationPage verificationPage = (VerificationPage) editPersonPage.clickNext();
         assertEquals(1, verificationPage.getSponsorOrganizationSection().getSponsorRepresentativeOrganizations().size());
         assertEquals(0, verificationPage.getSponsorOrganizationSection().getSponsorDelegateOrganizations().size());
@@ -714,22 +738,21 @@ public class AccountRegistrationTest extends AbstractFirebirdWebDriverTest {
 
     @Test
     public void testOnlyUnverifiedRolesShownInFunctionalityWarning() throws GridInvocationException {
-        String sponsorGroup = getSponsorGroupName(getGridResources().getValidSponsorExternalId());
+        String sponsorGroup = getSponsorGroupName(getGridResources().getValidSponsorNesId());
         String verifiedSponsorGroup = "verified_" + sponsorGroup;
         String investigatorGroup = UserRoleType.INVESTIGATOR.getGroupName();
-        addGroupMemberships(investigatorGroup, sponsorGroup, verifiedSponsorGroup);
+        helper.addGroupMemberships(testUser.getUsername(), investigatorGroup, sponsorGroup, verifiedSponsorGroup);
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
-        EditPersonPage editPersonPage = selectPerson(getExistingExternalPerson(), rolePage);
-        OrganizationSelectionPage organizationSelectionPage = (OrganizationSelectionPage) editPersonPage.clickNext();
-        VerificationPage verificationPage = (VerificationPage) selectOrganization(primaryOrganization, organizationSelectionPage);
+        EditPersonPage editPersonPage = selectPerson(getExistingNesPerson(), rolePage);
+        VerificationPage verificationPage = (VerificationPage) selectOrganization(organization1, editPersonPage);
         completeRegistration(verificationPage, UserRoleType.INVESTIGATOR);
     }
 
     @Test
     public void testInvestigatorLeaveFlow() throws GridInvocationException {
-        addGroupMembership(UserRoleType.INVESTIGATOR);
+        helper.addGroupMemberships(testUser.getUsername(), UserRoleType.INVESTIGATOR.getGroupName());
         ViewSelectedRolesPage rolePage = openSelectedRolesPage();
-        assertTrue(rolePage.clickCancelRegistration() instanceof LoginPage);
+        ((LoginPage) rolePage.clickCancelRegistration()).waitUntilReady();
     }
 
 }

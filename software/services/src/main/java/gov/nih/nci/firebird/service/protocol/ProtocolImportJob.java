@@ -116,12 +116,12 @@ public class ProtocolImportJob implements Serializable {
     private static final long serialVersionUID = 1L;
 
     static final int PROTOCOL_NUMBER_COLUMN_INDEX = 0;
-    private static final int PROTOCOL_TITLE_COLUMN_INDEX = 1;
-    private static final int PROTOCOL_PHASE_COLUMN_INDEX = 2;
+    static final int PROTOCOL_TITLE_COLUMN_INDEX = 1;
+    static final int PROTOCOL_PHASE_COLUMN_INDEX = 2;
     static final int PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX = 3;
-    private static final int PROTOCOL_AGENTS_COLUMN_INDEX = 4;
+    static final int PROTOCOL_AGENTS_COLUMN_INDEX = 4;
     static final int PROTOCOL_INVESTIGATOR_IDS_COLUMN_INDEX = 5;
-    private static final int EXPECTED_NUMBER_OF_COLUMNS = 6;
+    static final int EXPECTED_NUMBER_OF_COLUMNS = 6;
 
     private static final String PROTOCOL_NUMBER_FIELD_NAME = "Sponsor Protocol ID";
     private static final String PROTOCOL_TITLE_FIELD_NAME = "Title";
@@ -287,8 +287,8 @@ public class ProtocolImportJob implements Serializable {
         String[] values = mapping.split(LEAD_ORGANIZATION_MAPPING_SEPARATOR);
         if (values.length == 2) {
             String organizationCtepId = values[0];
-            String principalInvestigatorExternalId = values[1];
-            detail.getLeadOrganizationMappings().put(organizationCtepId, principalInvestigatorExternalId);
+            String principalInvestigatorNesId = values[1];
+            detail.getLeadOrganizationMappings().put(organizationCtepId, principalInvestigatorNesId);
         } else {
             detail.addFailure(resources, INVALID_MAPPING_MESSAGE_KEY, PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX,
                               mapping);
@@ -323,10 +323,10 @@ public class ProtocolImportJob implements Serializable {
 
     private void handleInvestigatorIds(ProtocolImportDetail detail, String investigatorIds) {
         if (StringUtils.isNotBlank(investigatorIds)) {
-            detail.setInvestigatorExternalIds(Lists.newArrayList(splitValues(investigatorIds)));
+            detail.setInvestigatorNesIds(Lists.newArrayList(splitValues(investigatorIds)));
         } else {
             List<String> emptyList = Collections.emptyList();
-            detail.setInvestigatorExternalIds(emptyList);
+            detail.setInvestigatorNesIds(emptyList);
         }
     }
 

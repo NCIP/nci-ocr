@@ -104,9 +104,7 @@ import com.google.common.collect.Maps;
  * @param <BOARD> certifying board type
  * @param <SPECIALTY> specialty type
  */
-@SuppressWarnings({ "PMD.GenericsNaming", "ucd" })
-// provides clarity
-// methods called from JSP pages
+@SuppressWarnings("PMD.GenericsNaming") //provides clarity
 public abstract class AbstractManageMedicalTrainingCredentialsAction
        <BOARD extends CertifyingBoard<SPECIALTY>, SPECIALTY extends Specialty<BOARD>>
         extends AbstractManageCredentialsAction {
@@ -154,7 +152,7 @@ public abstract class AbstractManageMedicalTrainingCredentialsAction
     protected String manageCredentialsAjaxEnter() {
         if (getPage() == null || FirebirdUIConstants.RETURN_SEARCH_PAGE.equals(getPage())) {
             setPage(FirebirdUIConstants.RETURN_SEARCH_PAGE);
-            setIssuingOrganizationExternalId(null);
+            setIssuerSearchKey(null);
         }
 
         return getPage();
@@ -288,15 +286,11 @@ public abstract class AbstractManageMedicalTrainingCredentialsAction
      */
     protected abstract void setSpecialty(SPECIALTY specialty);
 
-    @SuppressWarnings("ucd")
-    // called from JSP pages
-    public BOARD getCertifyingBoard() {
+    BOARD getCertifyingBoard() {
         return certifyingBoard;
     }
 
-    @SuppressWarnings("ucd")
-    // called from JSP pages
-    public void setCertifyingBoard(BOARD certifyingBoard) {
+    void setCertifyingBoard(BOARD certifyingBoard) {
         this.certifyingBoard = certifyingBoard;
     }
 

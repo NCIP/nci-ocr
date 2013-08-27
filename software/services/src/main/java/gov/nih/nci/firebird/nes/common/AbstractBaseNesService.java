@@ -84,20 +84,14 @@ package gov.nih.nci.firebird.nes.common;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.ResourceBundle;
 
 import gov.nih.nci.coppa.common.LimitOffset;
 import gov.nih.nci.coppa.po.faults.NullifiedEntityFault;
 import gov.nih.nci.coppa.po.faults.SimpleIIMapTypeEntry;
-import gov.nih.nci.firebird.common.RemoteServiceException;
 import gov.nih.nci.iso21090.extensions.Bl;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
-
-import com.google.inject.Inject;
 
 /**
  * An Abstract Base class that can hold common methods used by the different NES service interfaces.
@@ -109,8 +103,6 @@ public abstract class AbstractBaseNesService {
     @SuppressWarnings("PMD.LoggerIsNotStaticFinal")
     private final Logger log = Logger.getLogger(this.getClass());
 
-    private ResourceBundle resources;
-
     /**
      * Logs and re-throws an exception as an unchecked exception when encountered.
      *
@@ -118,7 +110,7 @@ public abstract class AbstractBaseNesService {
      */
     protected void handleUnexpectedError(Exception e) {
         log.error("Unexpected error while contacting the NCI Enterprise Org Service.", e);
-        throw new RemoteServiceException(e);
+        throw new IllegalStateException(e);
     }
 
     /**
@@ -156,7 +148,7 @@ public abstract class AbstractBaseNesService {
 
     /**
      * Creates an ISO 21090 boolean object from a boolean value.
-     *
+     * 
      * @param value the boolean value.
      * @return the translated BL
      */
@@ -169,10 +161,10 @@ public abstract class AbstractBaseNesService {
     /**
      * Returns a List of entries in the array provided. A null array
      * will return an empty List.
-     *
+     * 
      * @param entries the array
      * @param <T> the entry type
-     * @return the list
+     * @return the list 
      */
     protected <T> List<T> toList(T[] entries) {
         if (entries == null) {
@@ -180,26 +172,6 @@ public abstract class AbstractBaseNesService {
         } else {
             return Arrays.asList(entries);
         }
-    }
-
-    /**
-     * Indicates whether a record is stale according to the lastNesRefresh date.
-     * 
-     * @param lastNesRefresh date of last NES refresh
-     * @return true if record is considered stale and requires refresh
-     */
-    protected boolean isStale(Date lastNesRefresh) {
-        Date now = new Date();
-        return lastNesRefresh == null || now.after(DateUtils.addDays(lastNesRefresh, 1));
-    }
-
-    @Inject
-    public void setResources(ResourceBundle resources) {
-        this.resources = resources;
-    }
-    
-    public ResourceBundle getResources() {
-        return resources;
     }
 
 }

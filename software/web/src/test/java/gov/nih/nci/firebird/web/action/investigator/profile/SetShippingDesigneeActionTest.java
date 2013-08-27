@@ -7,8 +7,8 @@ import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.ShippingDesignee;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
-import gov.nih.nci.firebird.service.person.PersonService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
+import gov.nih.nci.firebird.service.person.PersonSearchService;
 import gov.nih.nci.firebird.test.PersonAssociationFactory;
 import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
@@ -26,10 +26,10 @@ import com.opensymphony.xwork2.ActionSupport;
 public class SetShippingDesigneeActionTest extends AbstractWebTest {
 
     @Inject
-    private PersonService mockPersonService;
+    private PersonSearchService mockPersonSearchService;
 
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockOrganizationSearchService;
 
     @Inject
     private InvestigatorProfileService mockProfileService;
@@ -47,28 +47,28 @@ public class SetShippingDesigneeActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testPrepare_NoOrganizationExternalIds() {
+    public void testPrepare_NoSearchKeys() {
         action.prepare();
-        verifyZeroInteractions(mockPersonService);
-        verifyZeroInteractions(mockOrganizationService);
+        verifyZeroInteractions(mockPersonSearchService);
+        verifyZeroInteractions(mockOrganizationSearchService);
     }
 
     @Test
-    public void testPrepare_PersonOrganizationExternalIds() throws Exception {
-        String organizationExternalId = "12345";
-        action.setSelectedPersonExternalId(organizationExternalId);
+    public void testPrepare_PersonSearchKeys() {
+        String searchKey = "12345";
+        action.setSelectedPersonKey(searchKey);
         action.prepare();
-        verify(mockPersonService).getByExternalId(organizationExternalId);
-        verifyZeroInteractions(mockOrganizationService);
+        verify(mockPersonSearchService).getPerson(searchKey);
+        verifyZeroInteractions(mockOrganizationSearchService);
     }
 
     @Test
-    public void testPrepare_OrganizationOrganizationExternalIds() throws Exception {
-        String organizationExternalId = "12345";
-        action.setSelectedOrganizationExternalId(organizationExternalId);
+    public void testPrepare_OrganizationSearchKeys() throws Exception {
+        String searchKey = "12345";
+        action.setSelectedOrganizationKey(searchKey);
         action.prepare();
-        verify(mockOrganizationService).getByExternalId(organizationExternalId);
-        verifyZeroInteractions(mockPersonService);
+        verify(mockOrganizationSearchService).getOrganization(searchKey);
+        verifyZeroInteractions(mockPersonSearchService);
     }
 
     @Test

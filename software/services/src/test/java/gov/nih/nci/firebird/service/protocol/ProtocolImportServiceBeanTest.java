@@ -141,9 +141,9 @@ public class ProtocolImportServiceBeanTest {
         assertEquals(2, protocol.getAgents().size());
         assertTrue(protocol.getAgentListForDisplay().contains("Aspirin"));
         assertTrue(protocol.getAgentListForDisplay().contains("Nyquil"));
-        assertEquals(2, detail.getInvestigatorExternalIds().size());
-        assertEquals("22248", detail.getInvestigatorExternalIds().get(0));
-        assertEquals("23084", detail.getInvestigatorExternalIds().get(1));
+        assertEquals(2, detail.getInvestigatorNesIds().size());
+        assertEquals("22248", detail.getInvestigatorNesIds().get(0));
+        assertEquals("23084", detail.getInvestigatorNesIds().get(1));
         assertTrue(detail.isMarkedForImport());
         assertEquals(ProtocolImportJobStatus.NOT_STARTED, job.getStatus());
     }
@@ -180,7 +180,7 @@ public class ProtocolImportServiceBeanTest {
         String titleMissingMessage = getMessage("validation.failure.protocol.import.missing.value", "1", "2", "Title");
         String phaseMissingMessage = getMessage("validation.failure.protocol.import.missing.value", "1", "3", "Phase");
         checkForExpectedFailures(detail, numberMissingMessage, titleMissingMessage, phaseMissingMessage);
-        assertTrue(detail.getInvestigatorExternalIds().isEmpty());
+        assertTrue(detail.getInvestigatorNesIds().isEmpty());
         assertTrue(detail.getProtocol().getAgents().isEmpty());
     }
 

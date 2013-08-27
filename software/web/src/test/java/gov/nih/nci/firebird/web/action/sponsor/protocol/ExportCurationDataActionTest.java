@@ -82,18 +82,39 @@
  */
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
+import static gov.nih.nci.firebird.nes.NesIdTestUtil.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.data.CurationDataset;
-import gov.nih.nci.firebird.service.curation.CurationService;
+import gov.nih.nci.firebird.data.AbstractOrganizationRole;
+import gov.nih.nci.firebird.data.ClinicalLaboratory;
+import gov.nih.nci.firebird.data.InstitutionalReviewBoard;
+import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.data.Person;
+import gov.nih.nci.firebird.data.PracticeSite;
+import gov.nih.nci.firebird.service.organization.OrganizationAssociationService;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.person.PersonService;
+import gov.nih.nci.firebird.test.OrganizationFactory;
+import gov.nih.nci.firebird.test.PersonFactory;
+import gov.nih.nci.firebird.web.action.sponsor.protocol.ExportCurationDataAction.OrganizationListing;
+import gov.nih.nci.firebird.web.action.sponsor.protocol.ExportCurationDataAction.OrganizationRoleListing;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.struts2.json.JSONException;
 import org.apache.struts2.json.JSONUtil;
 import org.junit.Test;
 
+import com.csvreader.CsvReader;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.opensymphony.xwork2.ActionSupport;
@@ -103,7 +124,11 @@ public class ExportCurationDataActionTest extends AbstractWebTest {
     @Inject
     private ExportCurationDataAction action;
     @Inject
-    private CurationService mockCurationService;
+    private PersonService mockPersonService;
+    @Inject
+    private OrganizationAssociationService mockOrganizationAssociationService;
+    @Inject
+    private OrganizationService mockOrganizationService;
 
     @Override
     public void setUp() throws Exception {
@@ -117,63 +142,221 @@ public class ExportCurationDataActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testViewPersons() {
-        assertEquals(ActionSupport.SUCCESS, action.viewPersons());
-        verify(mockCurationService).getPersonsToBeCurated();
+    public void testExportPersons_Null() throws Exception {
+        doExportPersonsTest(null);
+    }
+
+    private void doExportPersonsTest(List<Person> persons) throws Exception {
+        when(mockPersonService.getPersonsToBeCurated()).thenReturn(persons);
+        assertEquals(ActionSupport.NONE, action.exportPersons());
+        IteratorPredicate<Person> predicate = null;
+        if (CollectionUtils.isNotEmpty(persons)) {
+            predicate = new IteratorPredicate<Person>(persons.iterator()) {
+                @Override
+                public boolean doApply(CsvReader input) throws Exception {
+                    return new EqualsBuilder().append(current.getNesId(), input.get(0))
+                            .append(current.getDisplayNameForList(), input.get(1)).isEquals();
+                }
+            };
+        }
+
+        checkCsv(ExportCurationDataAction.PERSON_EXPORT_HEADERS, persons, predicate);
+    }
+
+    private void checkCsv(String[] headers, List<?> entities, IteratorPredicate<?> predicate) throws Exception {
+        String content = getMockResponse().getContentAsString();
+        assertTrue(StringUtils.isNotBlank(content));
+        CsvReader reader = new CsvReader(new StringReader(content), ',');
+        checkCsvHeaders(reader, headers);
+
+        if (CollectionUtils.isNotEmpty(entities)) {
+            checkCsvContent(reader, headers.length, predicate);
+        }
+    }
+
+    private void checkCsvContent(CsvReader reader, int expectedNumColumns, IteratorPredicate<?> predicate)
+            throws Exception {
+        while (reader.readRecord()) {
+            assertEquals(expectedNumColumns, reader.getColumnCount());
+            assertTrue(predicate.apply(reader));
+        }
+        predicate.verifySpent();
+    }
+
+    private void checkCsvHeaders(CsvReader reader, String[] headers) throws IOException {
+        assertTrue(reader.readHeaders());
+        assertEquals(headers.length, reader.getHeaderCount());
+        for (int i = 0; i < headers.length; i++) {
+            assertEquals(headers[i], reader.getHeader(i));
+        }
     }
 
     @Test
-    public void testViewOrganizations() {
-        assertEquals(ActionSupport.SUCCESS, action.viewOrganizations());
-        verify(mockCurationService).getOrganizationsToBeCurated();
-    }
-
-    @Test
-    public void testViewRoles() {
-        assertEquals(ActionSupport.SUCCESS, action.viewRoles());
-        verify(mockCurationService).getRolesToBeCurated();
+    public void testExportPersons_None() throws Exception {
+        doExportPersonsTest(new ArrayList<Person>());
     }
 
     @Test
     public void testExportPersons() throws Exception {
-        CurationDataset mockCurationDataset = mock(CurationDataset.class);
-        when(mockCurationService.getPersonsToBeCurated()).thenReturn(mockCurationDataset);
-        assertEquals(ActionSupport.NONE, action.exportPersons());
-        verify(mockCurationDataset).writeCsv(getMockResponse().getOutputStream());
+        doExportPersonsTest(createPersons());
+    }
+
+    private ArrayList<Person> createPersons() {
+        return Lists.newArrayList(PersonFactory.getInstance().create(), PersonFactory.getInstance().create());
+    }
+
+    @Test
+    public void testExportOrganizations_Null() throws Exception {
+        doExportOrganizationsTest(null);
+    }
+
+    private void doExportOrganizationsTest(List<Organization> organizations) throws Exception {
+        when(mockOrganizationService.getOrganizationsToBeCurated()).thenReturn(organizations);
+        assertEquals(ActionSupport.NONE, action.exportOrganizations());
+        IteratorPredicate<Organization> predicate = null;
+        if (CollectionUtils.isNotEmpty(organizations)) {
+            predicate = new IteratorPredicate<Organization>(organizations.iterator()) {
+                @Override
+                public boolean doApply(CsvReader input) throws Exception {
+                    return new EqualsBuilder().append(getNesIdExtension(current.getNesId()), input.get(0))
+                            .append(current.getName(), input.get(1)).isEquals();
+                }
+            };
+        }
+
+        checkCsv(ExportCurationDataAction.ORGANIZATION_EXPORT_HEADERS, organizations, predicate);
+    }
+
+    @Test
+    public void testExportOrganizations_None() throws Exception {
+        doExportOrganizationsTest(new ArrayList<Organization>());
     }
 
     @Test
     public void testExportOrganizations() throws Exception {
-        CurationDataset mockCurationDataset = mock(CurationDataset.class);
-        when(mockCurationService.getOrganizationsToBeCurated()).thenReturn(mockCurationDataset);
-        assertEquals(ActionSupport.NONE, action.exportOrganizations());
-        verify(mockCurationDataset).writeCsv(getMockResponse().getOutputStream());
+        doExportOrganizationsTest(createOrganizations());
+    }
+
+    private ArrayList<Organization> createOrganizations() {
+        return Lists.newArrayList(OrganizationFactory.getInstance().create(), OrganizationFactory.getInstance()
+                .create());
+    }
+
+    @Test
+    public void testExportRoles_Null() throws Exception {
+        doExportRolesTest(null);
+    }
+
+    private void doExportRolesTest(List<AbstractOrganizationRole> roles) throws Exception {
+        when(mockOrganizationAssociationService.getRolesToBeCurated()).thenReturn(roles);
+        assertEquals(ActionSupport.NONE, action.exportRoles());
+        IteratorPredicate<AbstractOrganizationRole> predicate = null;
+        if (CollectionUtils.isNotEmpty(roles)) {
+            predicate = new IteratorPredicate<AbstractOrganizationRole>(roles.iterator()) {
+                @Override
+                public boolean doApply(CsvReader input) throws Exception {
+                    return new EqualsBuilder().append(getNesIdExtension(current.getNesId()), input.get(0))
+                            .append(ExportCurationDataAction.getNesRoleType(current).getDisplay(), input.get(1))
+                            .append(getNesIdExtension(current.getOrganization().getPlayerIdentifier()), input.get(2))
+                            .append(current.getOrganization().getName(), input.get(3)).isEquals();
+                }
+            };
+        }
+
+        checkCsv(ExportCurationDataAction.ROLE_EXPORT_HEADERS, roles, predicate);
+    }
+
+    @Test
+    public void testExportRoles_None() throws Exception {
+        doExportRolesTest(new ArrayList<AbstractOrganizationRole>());
     }
 
     @Test
     public void testExportRoles() throws Exception {
-        CurationDataset mockCurationDataset = mock(CurationDataset.class);
-        when(mockCurationService.getRolesToBeCurated()).thenReturn(mockCurationDataset);
-        assertEquals(ActionSupport.NONE, action.exportRoles());
-        verify(mockCurationDataset).writeCsv(getMockResponse().getOutputStream());
+        doExportRolesTest(createRoles());
+    }
+
+    private ArrayList<AbstractOrganizationRole> createRoles() {
+        Organization org = OrganizationFactory.getInstance().create();
+        org.setPlayerIdentifier(TEST_NES_ID_STRING);
+        PracticeSite practiceSite = new PracticeSite();
+        ClinicalLaboratory lab = new ClinicalLaboratory();
+        InstitutionalReviewBoard irb = new InstitutionalReviewBoard();
+
+        org.addRole(practiceSite);
+        org.addRole(lab);
+        org.addRole(irb);
+        return Lists.newArrayList(lab, irb, practiceSite);
+    }
+
+    private abstract class IteratorPredicate<T> implements Predicate<CsvReader> {
+
+        protected Iterator<T> iter;
+        protected T current;
+
+        public IteratorPredicate(Iterator<T> iter) {
+            this.iter = iter;
+        }
+
+        public void verifySpent() {
+            assertFalse(iter.hasNext());
+        }
+
+        protected abstract boolean doApply(CsvReader input) throws Exception;
+
+        @Override
+        public boolean apply(CsvReader input) {
+            try {
+                current = iter.next();
+                return doApply(input);
+            } catch (Exception e) {
+                throw new IllegalStateException();
+            }
+        }
     }
 
     @Test
-    public void testGetCurationDataRowsJson() throws JSONException {
-        CurationDataset dataset = createCurationDataset();
-        action.setCurationDataset(dataset);
-        String json = action.getCurationDataRowsJson();
-        String expectedJson = JSONUtil.serialize(dataset.getRows(), null, null, false, true, false);
+    public void testGetPersonsToBeCuratedJson() throws JSONException {
+        List<Person> persons = createPersons();
+        when(mockPersonService.getPersonsToBeCurated()).thenReturn(persons);
+        String json = action.getPersonsToBeCuratedJson();
+        String expectedJson = JSONUtil.serialize(persons, null, null, false, true, false);
         assertEquals(expectedJson, json);
     }
 
-    private CurationDataset createCurationDataset() {
-        List<String> displayHeaderKeys = Lists.newArrayList("displayHeaderKey1", "displayHeaderKey2");
-        List<String> csvHeaders = Lists.newArrayList("header1", "header2");
-        List<String> values = Lists.newArrayList("value1", "value2");
-        CurationDataset dataset = new CurationDataset(csvHeaders, displayHeaderKeys);
-        dataset.addRow(values);
-        return dataset;
+    @Test
+    public void testGetOrganizationsToBeCuratedJson() throws JSONException {
+        List<Organization> organizations = createOrganizations();
+        when(mockOrganizationService.getOrganizationsToBeCurated()).thenReturn(organizations);
+        String json = action.getOrganizationsToBeCuratedJson();
+
+        String expectedJson = JSONUtil.serialize(toOrganizationListings(organizations));
+        assertEquals(expectedJson, json);
+    }
+
+    private List<OrganizationListing> toOrganizationListings(List<Organization> organizations) {
+        List<OrganizationListing> listings = Lists.newArrayList();
+        for (Organization organization : organizations) {
+            listings.add(new OrganizationListing(organization));
+        }
+        return listings;
+    }
+
+    @Test
+    public void testGetRolesToBeCuratedJson() throws JSONException {
+        List<AbstractOrganizationRole> roles = createRoles();
+        when(mockOrganizationAssociationService.getRolesToBeCurated()).thenReturn(roles);
+        String json = action.getRolesToBeCuratedJson();
+        String expectedJson = JSONUtil.serialize(toOrganizationRoleListings(roles));
+        assertEquals(expectedJson, json);
+    }
+
+    private List<OrganizationRoleListing> toOrganizationRoleListings(List<AbstractOrganizationRole> roles) {
+        List<OrganizationRoleListing> listings = Lists.newArrayList();
+        for (AbstractOrganizationRole role : roles) {
+            listings.add(new OrganizationRoleListing(role));
+        }
+        return listings;
     }
 
 }

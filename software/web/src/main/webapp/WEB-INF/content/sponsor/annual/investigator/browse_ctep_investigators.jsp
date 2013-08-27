@@ -9,11 +9,7 @@
             <firebird:instructionBubble messageKey="sponsor.browse.ctep.investigators.instructions" />
 
             <firebird:label forId="investigatorSearchInput" messageKey="sponsor.browse.ctep.investigators.search.label"/>
-            <div class="formcol_org_search">
-                <input id="investigatorSearchInput" class="autosearch" onkeyup="investigatorSearch.searchKeyEvent();"/>
-                <div class="search_icon"><img src="<s:url value='/images/ico_search.gif'/>" alt="Search" /></div>
-                <div class="loading_icon hide"><img src="<s:url value='/images/loading.gif'/>" alt="Searching" /></div>
-            </div>
+            <input id="investigatorSearchInput" class="autosearch" onkeyup="investigatorSearch.searchKeyEvent();"/>
 
             <table id="investigatorsTable" class="ui-jqgrid-htable ui-jqgrid-btable"
                     summary="This table will display the results of searches using the input above.
@@ -46,24 +42,14 @@ var investigatorSearch = new SearchSupport(
 
 var page = {
     createInvestigatorColumn: function(investigator) {
-        <s:if test="%{ctepSponsor || ctepSponsorDelegate}">
-            includeProfileLink = true;
-        </s:if>
-        <s:else>
-          includeProfileLink = false;
-        </s:else>
-        if (includeProfileLink) {
-            return linkFormatter(investigator.name,
-                {
-                    "url" : '<s:property value="investigatorProfileUrl"/>',
-                    "paramName" : "profile.id",
-                    "paramValue" : "id",
-                    "action" : "profile"
-                },
-                investigator);
-        } else {
-            return investigator.name;
-        }
+      return linkFormatter(investigator.name,
+            {
+                "url" : '<s:property value="investigatorProfileUrl"/>',
+                "paramName" : "profile.id",
+                "paramValue" : "id",
+                "action" : "profile"
+            },
+            investigator);
     },
 
     createRegistrationsColumn: function(investigator) {

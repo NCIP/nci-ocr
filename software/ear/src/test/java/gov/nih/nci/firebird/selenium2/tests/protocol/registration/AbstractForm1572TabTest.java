@@ -193,7 +193,7 @@ public abstract class AbstractForm1572TabTest extends AbstractFirebirdWebDriverT
 
     @Test
     public void testIRBAddNewFunctionality() {
-        InstitutionalReviewBoard irb = getTestDataSource().getIrb();
+        InstitutionalReviewBoard irb = getNesTestDataSource().getIrb();
         addIrbTo1572(irb);
         form1572Tab.getIrbSection().getHelper().getListing(irb);
     }
@@ -228,7 +228,7 @@ public abstract class AbstractForm1572TabTest extends AbstractFirebirdWebDriverT
 
     @Test
     public void testPracticeSiteAddNewFunctionality() {
-        PracticeSite practiceSite = getTestDataSource().getPracticeSite();
+        PracticeSite practiceSite = getNesTestDataSource().getPracticeSite();
         addPracticeSiteTo1572(practiceSite);
         assertNotNull(form1572Tab.getPracticeSiteSection().getHelper().getListing(practiceSite));
     }
@@ -270,7 +270,7 @@ public abstract class AbstractForm1572TabTest extends AbstractFirebirdWebDriverT
 
     @Test
     public void testLabAddNewFunctionality() {
-        ClinicalLaboratory lab = getTestDataSource().getClinicalLab();
+        ClinicalLaboratory lab = getNesTestDataSource().getClinicalLab();
         AddOrganizationAssociationDialog dialog = form1572Tab.getClinicalLabSection().clickAddAssociationButton();
         dialog.getHelper().searchAndSelectOrganization(lab);
         assertNotNull(form1572Tab.getClinicalLabSection().getHelper().getListing(lab));

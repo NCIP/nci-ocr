@@ -84,7 +84,7 @@ package gov.nih.nci.firebird.selenium2.tests.coordinator;
 
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Person;
-import gov.nih.nci.firebird.data.PrimaryOrganizationType;
+import gov.nih.nci.firebird.data.PracticeSiteType;
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact.CreatePrimaryOrganizationDialog;
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact.ManagePersonDialog;
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact.OrganizationSearchDialog;
@@ -144,7 +144,7 @@ public abstract class AbstractManageInvestigatorProfileProfessionalContactInform
             checkPhoneNumberRequired(createOrganizationDialog, organization);
             organization.setPhoneNumber(ValueGenerator.getUniquePhoneNumber());
         }
-        createOrganizationDialog.getHelper().enterDataAndSave(organization, PrimaryOrganizationType.CANCER_CENTER);
+        createOrganizationDialog.getHelper().enterDataAndSave(organization, PracticeSiteType.CANCER_CENTER);
         contactInfoPage.getHelper().verifyOrganization(organization);
     }
 
@@ -154,7 +154,7 @@ public abstract class AbstractManageInvestigatorProfileProfessionalContactInform
         expectedValidationFailure.assertFailureOccurs(new FailingAction() {
             @Override
             public void perform() {
-                createOrganizationDialog.getHelper().enterDataAndSave(organization, PrimaryOrganizationType.CANCER_CENTER);
+                createOrganizationDialog.getHelper().enterDataAndSave(organization, PracticeSiteType.CANCER_CENTER);
             }
         });
     }

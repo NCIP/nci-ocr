@@ -88,8 +88,6 @@ import gov.nih.nci.firebird.service.periodic.DailyJobService;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.apache.log4j.Logger;
-
 import com.fiveamsolutions.nci.commons.util.HibernateHelper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -98,9 +96,7 @@ import com.google.inject.Injector;
  * Start up listener that creates the daily job timer if necessary.
  */
 public class DailyJobTimerCreationSerlvetContextListener implements ServletContextListener {
-
-    private static final Logger LOG = Logger.getLogger(DailyJobTimerCreationSerlvetContextListener.class);
-
+    
     private DailyJobService jobService;
     private HibernateHelper hibernateHelper;
 
@@ -129,15 +125,13 @@ public class DailyJobTimerCreationSerlvetContextListener implements ServletConte
     @Override
     public void contextInitialized(ServletContextEvent contextEvent) {
         try {
-            LOG.info("Initializing Daily Job Service");
             hibernateHelper.openAndBindSession();
             jobService.initialize();
-            LOG.info("Initialization of Daily Job Service successful");
         } finally {
             hibernateHelper.unbindAndCleanupSession();
         }
     }
-
+    
     Injector getInjector() {
         return GuiceInjectorHolder.getInjector();
     }

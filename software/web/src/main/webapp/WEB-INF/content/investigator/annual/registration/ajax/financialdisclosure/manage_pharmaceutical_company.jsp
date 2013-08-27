@@ -17,7 +17,7 @@
             </firebird:dialogHeader>
             <firebird:messages/>
             <s:form id="selectPharmaceuticalCompanyForm" action="selectPharmaceuticalCompany" namespace="/investigator/annual/registration/ajax/financialdisclosure" onsubmit="return false">
-                <s:hidden id="pharmaceuticalCompanyExternalId" name="pharmaceuticalCompanyExternalId" />
+                <s:hidden id="pharmaceuticalCompanyId" name="pharmaceuticalCompanyId" />
                 <s:hidden name="profile.id" value="%{profile.id}" />
                 <s:hidden name="registration.id" value="%{registration.id}" />
             </s:form>
@@ -33,8 +33,8 @@
        $(document).ready(function() {
            setFocusToFirstControl();
 
-           organizationSearch.clickSelectButton = function(pharmaceuticalCompany) {
-               $('#pharmaceuticalCompanyExternalId').val(pharmaceuticalCompany.externalId);
+           organizationSearch.clickSelectButton = function(pharmaceuticalCompanyId) {
+               $('#pharmaceuticalCompanyId').val(pharmaceuticalCompanyId);
                var url = $('#selectPharmaceuticalCompanyForm').attr('action');
                var serializedForm = $('#selectPharmaceuticalCompanyForm').serialize();
                var target = getCurrentDialog();

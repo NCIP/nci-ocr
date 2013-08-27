@@ -201,8 +201,6 @@ public class FlowNavigationAction extends FirebirdActionSupport implements Prepa
         }
     }
 
-    @SuppressWarnings("ucd")
-    // used in tests to verify flow
     RegistrationFlowController getFlow() {
         return flow;
     }

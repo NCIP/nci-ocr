@@ -84,23 +84,22 @@ package gov.nih.nci.firebird.nes.organization;
 
 import static gov.nih.nci.firebird.nes.NesIdTestUtil.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.coppa.po.StringMap;
 import gov.nih.nci.coppa.po.faults.NullifiedEntityFault;
 import gov.nih.nci.coppa.po.faults.SimpleIIMapType;
 import gov.nih.nci.coppa.po.faults.SimpleIIMapTypeEntry;
 import gov.nih.nci.coppa.services.entities.organization.common.OrganizationI;
-import gov.nih.nci.firebird.common.RemoteServiceException;
 import gov.nih.nci.firebird.common.ValidationFailure;
 import gov.nih.nci.firebird.common.ValidationResult;
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.nes.AbstractNesData;
+import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 
 import java.rmi.RemoteException;
@@ -114,7 +113,7 @@ import org.mockito.MockitoAnnotations;
 import com.google.common.collect.Lists;
 
 public class AbstractOrganizationIntegrationServiceBeanTest {
-
+    
     @Mock
     public static OrganizationI mockOrganizationService;
     @Mock
@@ -122,47 +121,43 @@ public class AbstractOrganizationIntegrationServiceBeanTest {
     @Mock
     private IdentifiedOrganizationIntegrationService mockIdentifiedOrganizationService;
     private TestBean beanSpy;
-    private Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+    private Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         beanSpy = spy(new TestBean());
     }
-
+    
     @Test
     public void testCreate() throws RemoteException {
         OrganizationCreator creator = mock(OrganizationCreator.class);
         when(creator.create(organization)).thenReturn(TEST_NES_ID.toId());
         beanSpy.create(organization, creator);
-        assertEquals(TEST_NES_ID_STRING, organization.getExternalId());
-        assertNotNull(getExternalData(organization).getLastNesRefresh());
-        assertEquals(CurationStatus.PENDING, organization.getCurationStatus());
+        assertEquals(TEST_NES_ID_STRING, organization.getNesId());
+        assertNotNull(organization.getLastNesRefresh());
+        assertEquals(CurationStatus.PENDING, organization.getNesStatus());
     }
 
-    private AbstractNesData getExternalData(Organization organization) {
-        return (AbstractNesData) organization.getExternalData();
-    }
-
-    @Test(expected = RemoteServiceException.class)
+    @Test(expected = IllegalStateException.class)
     public void testCreate_RemoteException() throws RemoteException {
         OrganizationCreator creator = mock(OrganizationCreator.class);
         when(creator.create(organization)).thenThrow(new RemoteException());
         beanSpy.create(organization, creator);
     }
-
+    
     @Test(expected = IllegalArgumentException.class)
     public void testCreate_ExistingOrganization() {
-        organization = OrganizationFactory.getInstance().create();
+        organization.setNesId(TEST_NES_ID_STRING);
         beanSpy.create(organization, null);
     }
 
     @Test
-    public void testGetById() throws Exception {
+    public void testGetById() throws UnavailableEntityException, ReplacedEntityException {
         assertEquals(organization, beanSpy.getById(TEST_NES_ID_STRING));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testGetById_NotFound() throws Exception {
         when(beanSpy.getOrganization(TEST_NES_ID)).thenReturn(null);
         beanSpy.getById(TEST_NES_ID_STRING);
@@ -174,14 +169,22 @@ public class AbstractOrganizationIntegrationServiceBeanTest {
         beanSpy.getById(TEST_NES_ID_STRING);
     }
 
-    @Test(expected = InvalidatedOrganizationException.class)
-    public void testGetById_NullifiedEntityFaultForDuplicate() throws Exception {
+    @Test
+    public void testGetById_NullifiedEntityFaultForDuplicate() throws NullifiedEntityFault, RemoteException, UnavailableEntityException {
         String nullifiedIdExtension = "1";
         String nullifiedId = TEST_ROOT + ":" + nullifiedIdExtension;
         String replacementIdExtension = "2";
+        String replacementId = NesIIRoot.ORGANIZATION.getRoot() + ":" + replacementIdExtension;
         final NullifiedEntityFault fault = createNullifiedEntityFault(nullifiedIdExtension, replacementIdExtension);
+        organization.setNesId(nullifiedId);
         when(beanSpy.getOrganization(any(NesId.class))).thenThrow(fault);
-        beanSpy.getById(nullifiedId);
+        try {
+            beanSpy.getById(nullifiedId);
+            fail("Failure expected");
+        } catch (ReplacedEntityException e) {
+            assertEquals(nullifiedId, e.getOriginalNesId());
+            assertEquals(replacementId, e.getReplacmentNesId());
+        }
     }
 
     private NullifiedEntityFault createNullifiedEntityFault(String nullifiedIdExtension, String replacementIdExtension) {
@@ -194,8 +197,8 @@ public class AbstractOrganizationIntegrationServiceBeanTest {
         return fault;
     }
 
-    @Test(expected = InvalidatedOrganizationException.class)
-    public void testGetById_NullifiedEntityFaultWithNoSubstitute() throws Exception {
+    @Test(expected = UnavailableEntityException.class)
+    public void testGetById_NullifiedEntityFaultWithNoSubstitute() throws RemoteException, UnavailableEntityException, ReplacedEntityException {
         String nullifiedIdExtension = "1";
         String nullifiedId = TEST_ROOT + ":" + nullifiedIdExtension;
         NullifiedEntityFault fault = createNullifiedEntityFault(nullifiedIdExtension, null);
@@ -203,27 +206,14 @@ public class AbstractOrganizationIntegrationServiceBeanTest {
         beanSpy.getById(nullifiedId);
     }
 
-    @Test(expected = InvalidatedOrganizationException.class)
-    public void testGetById_NullifiedEntityWithSameReplacementId() throws Exception {
+    @Test(expected = UnavailableEntityException.class)
+    public void testGetById_NullifiedEntityWithSameReplacementId() throws UnavailableEntityException, ReplacedEntityException, RemoteException {
         String nullifiedIdExtension = "1";
         String nullifiedId = TEST_ROOT + ":" + nullifiedIdExtension;
         String replacementIdExtension = "1";
         NullifiedEntityFault fault = createNullifiedEntityFault(nullifiedIdExtension, replacementIdExtension);
         when(beanSpy.getOrganization(any(NesId.class))).thenThrow(fault);
         beanSpy.getById(nullifiedId);
-    }
-
-    @Test
-    public void testGetById_NullifiedEntityWithReplacement() throws Exception {
-        String nullifiedIdExtension = "1";
-        String nullifiedId = TEST_ROOT + ":" + nullifiedIdExtension;
-        NesId nullifiedNesId = new NesId(nullifiedId);
-        String replacementIdExtension = "2";
-        NesId replacementNesId = new NesId(nullifiedNesId.getRoot() + ":" + replacementIdExtension);
-        NullifiedEntityFault fault = createNullifiedEntityFault(nullifiedIdExtension, replacementIdExtension);
-        when(beanSpy.getOrganization(nullifiedNesId)).thenThrow(fault);
-        when(beanSpy.getOrganization(replacementNesId)).thenReturn(organization);
-        assertEquals(organization, beanSpy.getById(nullifiedId));
     }
 
     @Test
@@ -234,7 +224,7 @@ public class AbstractOrganizationIntegrationServiceBeanTest {
         checkExpectedOrganizationResults(organizations);
     }
 
-    @Test(expected = RemoteServiceException.class)
+    @Test(expected = IllegalStateException.class)
     public void testSearchByName_RemoteException() throws RemoteException {
         OrganizationSearcher search = mock(OrganizationSearcher.class);
         when(search.search()).thenThrow(new RemoteException());
@@ -245,7 +235,7 @@ public class AbstractOrganizationIntegrationServiceBeanTest {
         assertEquals(1, organizations.size());
         assertEquals(organization, organizations.get(0));
     }
-
+    
     @Test
     public void testValidate() throws ValidationException {
         when(mockErrorTranslator.translateStringMapValidation(any(StringMap.class))).thenReturn(new ValidationResult());
@@ -260,27 +250,40 @@ public class AbstractOrganizationIntegrationServiceBeanTest {
         beanSpy.validate(organization);
     }
 
-    @Test(expected = RemoteServiceException.class)
+    @Test(expected = IllegalStateException.class)
     public void testValidate_RemoteException() throws ValidationException, RemoteException {
         doThrow(new RemoteException()).when(beanSpy).getValidationResults(organization);
         beanSpy.validate(organization);
     }
-
+    
     @Test
-    public void testRefresh() throws Exception {
+    public void testRefresh() throws UnavailableEntityException, ReplacedEntityException {
         Organization organizationToRefresh = OrganizationFactory.getInstance().create();
         Organization updatedOrganization = OrganizationFactory.getInstance().create();
-        when(beanSpy.getById(organizationToRefresh.getExternalId())).thenReturn(updatedOrganization);
+        when(beanSpy.getById(organizationToRefresh.getNesId())).thenReturn(updatedOrganization);
         beanSpy.refresh(organizationToRefresh);
         assertEquals(updatedOrganization, organizationToRefresh);
     }
+    
+    @Test
+    public void testRefresh_Nullified() throws UnavailableEntityException, ReplacedEntityException {
+        Organization organizationToRefresh = OrganizationFactory.getInstance().create();
+        when(beanSpy.getById(organizationToRefresh.getNesId())).thenThrow(new UnavailableEntityException(null, null));
+        beanSpy.refresh(organizationToRefresh);
+        assertEquals(CurationStatus.NULLIFIED, organizationToRefresh.getNesStatus());
+    }
 
     @Test
-    public void testRefresh_Nullified() throws Exception {
-        Organization organizationToRefresh = OrganizationFactory.getInstance().create();
-        when(beanSpy.getById(organizationToRefresh.getExternalId())).thenThrow(new InvalidatedOrganizationException());
+    public void testRefresh_Replaced() throws UnavailableEntityException, ReplacedEntityException {
+        final Organization organizationToRefresh = OrganizationFactory.getInstance().create();
+        final Organization replacingOrganization = OrganizationFactory.getInstance().create();
+        final String originalNesId = organizationToRefresh.getNesId();
+        final String replacementNesId = replacingOrganization.getNesId();
+        ReplacedEntityException replacedEntityException = new ReplacedEntityException(null, originalNesId, replacementNesId);
+        when(beanSpy.getById(originalNesId)).thenThrow(replacedEntityException);
+        when(beanSpy.getById(replacementNesId)).thenReturn(replacingOrganization);
         beanSpy.refresh(organizationToRefresh);
-        assertEquals(CurationStatus.NULLIFIED, organizationToRefresh.getCurationStatus());
+        assertEquals(replacingOrganization, organizationToRefresh);
     }
 
     private class TestBean extends AbstractOrganizationIntegrationServiceBean {
@@ -293,17 +296,17 @@ public class AbstractOrganizationIntegrationServiceBeanTest {
         Organization getOrganization(NesId nesId) throws RemoteException {
             return organization;
         }
+        
+        @Override
+        NesIIRoot getNesIIRoot() {
+            return NesIIRoot.ORGANIZATION;
+        }
 
         @Override
         StringMap getValidationResults(Organization organization) throws RemoteException {
             return new StringMap();
         }
 
-        @Override
-        AbstractNesData createNesExternalData() {
-            return new NesOrganizationData();
-        }
-
     }
-
+    
 }

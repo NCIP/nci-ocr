@@ -89,6 +89,6 @@ public class SponsorDelegateReviewAnnualRegistrationTest extends AbstractReviewA
 
     @Override
     public HomePage getHomePage() {
-        return openHomePage(dataSet.getSponsorLogins().get(1), getCtepProvider());
+        return openHomePage(dataSet.getSponsorDelegateLogin(), getCtepProvider());
     }
 }

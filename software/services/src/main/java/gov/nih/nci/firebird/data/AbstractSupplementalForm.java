@@ -104,7 +104,8 @@ public abstract class AbstractSupplementalForm extends AbstractRegistrationForm 
     }
 
     AbstractSupplementalForm(AbstractRegistration registration, FormType formType) {
-        super(formType, FormStatus.NOT_APPLICABLE);
+        super(formType);
+        setFormStatus(FormStatus.NOT_APPLICABLE);
         setRegistration(registration);
     }
 
@@ -121,7 +122,7 @@ public abstract class AbstractSupplementalForm extends AbstractRegistrationForm 
     }
 
     @Override
-    public void setFormStatus(FormStatus formStatus) {
+    public final void setFormStatus(FormStatus formStatus) {
         if (VALID_SUPPLEMENTARY_STATUSES.contains(formStatus)) {
             super.setFormStatus(formStatus);
         }

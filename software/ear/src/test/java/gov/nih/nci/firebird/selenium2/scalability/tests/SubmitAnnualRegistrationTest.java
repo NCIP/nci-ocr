@@ -126,7 +126,7 @@ public class SubmitAnnualRegistrationTest extends AbstractScalabilityTest {
     public void testSubmitAnnualRegistration() throws IOException {
         HomePage homePage = openHomePage(dataSet.getInvestigatorLogin(), getCtepProvider());
         BrowseAnnualRegistrationsPage registrationsPage = openBrowseRegistrationsPage(homePage);
-        AnnualRegistrationPage registrationPage = createAndOpenRegistration(registrationsPage);
+        AnnualRegistrationPage registrationPage = openRegistration(registrationsPage);
 
         completeFinancialDisclosureTab(registrationPage);
         completeForm1572Tab(registrationPage);
@@ -143,22 +143,11 @@ public class SubmitAnnualRegistrationTest extends AbstractScalabilityTest {
         }.time();
     }
 
-    private AnnualRegistrationPage createAndOpenRegistration(final BrowseAnnualRegistrationsPage registrationsPage) {
-        createRegistration(registrationsPage);
+    private AnnualRegistrationPage openRegistration(final BrowseAnnualRegistrationsPage registrationsPage) {
         return new TimedAction<AnnualRegistrationPage>("Open Registration") {
             @Override
             public AnnualRegistrationPage perform() {
                 return registrationsPage.getRegistrationListings().get(0).clickEditButton().getPage();
-            }
-        }.time();
-    }
-
-    private void createRegistration(final BrowseAnnualRegistrationsPage registrationsPage) {
-        new TimedAction<Void>("Create Registration") {
-            @Override
-            public Void perform() {
-                registrationsPage.clickCreateRegistration();
-                return null;
             }
         }.time();
     }
@@ -316,7 +305,7 @@ public class SubmitAnnualRegistrationTest extends AbstractScalabilityTest {
     }
 
     private SignAndSubmitRegistrationDialog clickSubmitRegistration(final OverviewTab overviewTab) {
-        return new TimedAction<SignAndSubmitRegistrationDialog>("Click Registration Submission Button",
+        return new TimedAction<SignAndSubmitRegistrationDialog>("Click Registration Submission Button", 
                 MAX_NES_RESPONSE_TIME_SECONDS) {
             @Override
             public SignAndSubmitRegistrationDialog perform() throws IOException {
@@ -326,7 +315,7 @@ public class SubmitAnnualRegistrationTest extends AbstractScalabilityTest {
     }
 
     private void signRegistration(final SignAndSubmitRegistrationDialog signDialog) {
-        SignedDocumentsDialog signedDocumentsDialog = new TimedAction<SignedDocumentsDialog>("Sign Registration",
+        SignedDocumentsDialog signedDocumentsDialog = new TimedAction<SignedDocumentsDialog>("Sign Registration", 
                 MAX_AUTHENTICATION_RESPONSE_TIME_SECONDS) {
             @Override
             public SignedDocumentsDialog perform() throws IOException {

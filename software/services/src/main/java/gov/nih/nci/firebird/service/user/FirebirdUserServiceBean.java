@@ -134,7 +134,7 @@ public class FirebirdUserServiceBean extends AbstractGenericServiceBean<Firebird
     }
 
     private FirebirdUser retrieveUser(String username) {
-        Criteria query = getSession().createCriteria(FirebirdUser.class)
+        Criteria query = getSessionProvider().get().createCriteria(FirebirdUser.class)
                 .add(Restrictions.eq("username", username).ignoreCase());
         return (FirebirdUser) query.uniqueResult();
     }
@@ -158,7 +158,7 @@ public class FirebirdUserServiceBean extends AbstractGenericServiceBean<Firebird
         if (person.getId() == null) {
             return false;
         }
-        Query query = getSession().createQuery(FIND_USER_BY_INVESTIGATOR_PERSON_QUERY);
+        Query query = getSessionProvider().get().createQuery(FIND_USER_BY_INVESTIGATOR_PERSON_QUERY);
         query.setEntity("person", person);
         boolean isAssociated = query.uniqueResult() != null;
         return isAssociated;
@@ -166,7 +166,7 @@ public class FirebirdUserServiceBean extends AbstractGenericServiceBean<Firebird
 
     @Override
     public FirebirdUser getByCtepId(String ctepId) {
-        Query query = getSession().createQuery(FIND_USER_BY_CTEP_ID_QUERY);
+        Query query = getSessionProvider().get().createQuery(FIND_USER_BY_CTEP_ID_QUERY);
         query.setString("ctepId", ctepId);
         return (FirebirdUser) query.uniqueResult();
     }

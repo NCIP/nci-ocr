@@ -106,7 +106,7 @@ public class LeadOrganizationSearchDialogHelper {
 
     public SearchResultListing<AbstractProtocolModificationPage<?>> getMatchingResult(Organization organization) {
         for (SearchResultListing<AbstractProtocolModificationPage<?>> result : dialog.getSearchResults()) {
-            if (organization.getExternalId().equals(result.getExternalId())) {
+            if (organization.getNesId().equals(result.getNesId())) {
                 return result;
             }
         }
@@ -115,7 +115,7 @@ public class LeadOrganizationSearchDialogHelper {
 
     public AbstractProtocolModificationPage<?> select(Organization organization) {
         SearchResultListing<AbstractProtocolModificationPage<?>> result = getMatchingResult(organization);
-        assertNotNull("Organization with external ID: " + organization.getExternalId() + " not found in results", result);
+        assertNotNull("Organization with NES Id: " + organization.getNesId() + " not found in results", result);
         return result.clickSelect();
     }
 

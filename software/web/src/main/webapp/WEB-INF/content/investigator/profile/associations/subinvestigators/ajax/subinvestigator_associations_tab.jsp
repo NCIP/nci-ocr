@@ -53,7 +53,7 @@
                 }},
                 {mDataProp: "person.email"},
                 {mDataProp: "person.postalAddress", fnRender: function (obj) {
-                    return addressFormatter(obj.aData.person.postalAddress);
+                    return __addressFormatter(obj.aData.person.postalAddress);
                 }},
                 {mDataProp: "person.phoneNumber"},
                 {mDataProp: null, fnRender: function (obj) {

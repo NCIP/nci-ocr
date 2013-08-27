@@ -88,7 +88,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.data.user.InvestigatorStatus;
 import gov.nih.nci.firebird.data.user.InvestigatorWithdrawalRequest;
 import gov.nih.nci.firebird.data.user.ManagedInvestigator;
 import gov.nih.nci.firebird.data.user.ManagedInvestigatorStatus;
@@ -241,11 +240,9 @@ public class RegistrationWithdrawalServiceBeanTest {
     @Test
     public void testReactivateInvestigator() throws Exception {
         FirebirdUser investigator = FirebirdUserFactory.getInstance().createInvestigator();
-        investigator.getInvestigatorRole().setStatus(InvestigatorStatus.WITHDRAWN);
         service.reactivateInvestigator(investigator);
         verify(mockAnnualRegistrationService).createReactivatedRegistration(
                 investigator.getInvestigatorRole().getProfile());
-        assertEquals(InvestigatorStatus.ACTIVE, investigator.getInvestigatorRole().getStatus());
     }
 
     @Test(expected = IllegalArgumentException.class)

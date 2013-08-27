@@ -300,8 +300,6 @@ public class ProtocolForm1572 extends AbstractProtocolRegistrationForm implement
     /**
      * @param validator the validator to set
      */
-    @SuppressWarnings("ucd")
-    // used to inject mock validator from tests
     void setValidator(ProtocolForm1572Validator validator) {
         this.validator = validator;
     }

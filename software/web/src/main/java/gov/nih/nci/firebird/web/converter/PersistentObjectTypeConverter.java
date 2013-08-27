@@ -91,8 +91,6 @@ import com.google.inject.Inject;
 /**
  * Converter to move between persistent objects and their id's.
  */
-@SuppressWarnings("ucd")
-// used in xwork-conversion.properties
 public class PersistentObjectTypeConverter extends AbstractPersistentObjectTypeConverter {
 
     private GenericDataRetrievalService service;

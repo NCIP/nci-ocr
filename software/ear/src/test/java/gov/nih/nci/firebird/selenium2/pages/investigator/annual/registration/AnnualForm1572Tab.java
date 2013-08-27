@@ -104,7 +104,6 @@ import org.openqa.selenium.support.FindBy;
 
 public class AnnualForm1572Tab extends AbstractAnnualRegistrationTab<AnnualForm1572Tab> implements Form1572Tab {
 
-    private static final String TAB_UNIQUE_LOCATOR_ID = "ctepForm1572";
     static final String TAB_ID = "form_form_fda_1572_tab";
     static final String COMMENTS_DIV_ID = "commentsDiv";
     private static final String LOCKED_PDF_BUTTON_DIV_ID = "lockedView1572PdfButtonTopDiv";
@@ -214,7 +213,6 @@ public class AnnualForm1572Tab extends AbstractAnnualRegistrationTab<AnnualForm1
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
-        assertElementWithIdPresent(TAB_UNIQUE_LOCATOR_ID);
         assertTrue(isPresent(By.id(LOCKED_PDF_BUTTON_DIV_ID)) || isPresent(By.id(UNLOCKED_PDF_BUTTON_DIV_ID)));
         if (isPresent(By.id(UNLOCKED_PDF_BUTTON_DIV_ID))) {
             assertFindBysPresent();

@@ -94,7 +94,7 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.service.GenericDataRetrievalService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
@@ -119,7 +119,7 @@ public class ManageDegreeCredentialsActionTest extends AbstractWebTest {
     @Inject
     private GenericDataRetrievalService mockDataService;
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockSearchService;
     @Inject
     private ManageDegreeCredentialsAction action;
     private InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
@@ -134,7 +134,7 @@ public class ManageDegreeCredentialsActionTest extends AbstractWebTest {
         action.setProfile(profile);
         action.setServletRequest(getMockRequest());
         action.setPage(DEGREE.name());
-        when(mockOrganizationService.getByExternalId(issuer.getExternalId())).thenReturn(issuer);
+        when(mockSearchService.getOrganization(issuer.getNesId())).thenReturn(issuer);
     }
 
     @Test
@@ -148,7 +148,7 @@ public class ManageDegreeCredentialsActionTest extends AbstractWebTest {
         action.setDegree(degree);
         action.setPage(FirebirdUIConstants.RETURN_SEARCH_PAGE);
         assertEquals(FirebirdUIConstants.RETURN_SEARCH_PAGE, action.manageCredentialsAjaxEnter());
-        assertNull(action.getIssuingOrganizationExternalId());
+        assertNull(action.getIssuerSearchKey());
 
         action.setPage(FirebirdUIConstants.RETURN_FIELDS_PAGE);
         assertEquals(FirebirdUIConstants.RETURN_FIELDS_PAGE, action.manageCredentialsAjaxEnter());

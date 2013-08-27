@@ -93,11 +93,8 @@ import java.util.Set;
 /**
  * Table listing for an Organization Association.
  */
-@SuppressWarnings("ucd")
-// needs to be public for JSONUtil.serialize()
 public class OrganizationAssociationListing {
     private final Long id;
-    private final String organizationExternalId;
     private final String name;
     private final String ctepId;
     private final Address address;
@@ -118,7 +115,6 @@ public class OrganizationAssociationListing {
     public OrganizationAssociationListing(OrganizationAssociation organizationAssociation,
             Set<Organization> selectedOrganizations, AbstractRegistration registration) {
         this.id = organizationAssociation.getOrganizationRole().getOrganization().getId();
-        this.organizationExternalId = organizationAssociation.getOrganizationRole().getOrganization().getExternalId();
         this.name = organizationAssociation.getOrganizationRole().getOrganization().getName();
         this.ctepId = organizationAssociation.getOrganizationRole().getOrganization().getCtepId();
         this.address = organizationAssociation.getOrganizationRole().getOrganization().getPostalAddress();
@@ -133,13 +129,6 @@ public class OrganizationAssociationListing {
      */
     public Long getId() {
         return id;
-    }
-
-    /**
-     * @return the organizationExternalId
-     */
-    public String getOrganizationExternalId() {
-        return organizationExternalId;
     }
 
     /**

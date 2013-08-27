@@ -134,8 +134,6 @@ public class Country implements Auditable {
      * @param alpha2 two-letter country code, per ISO 3166-1
      * @param alpha3 three-letter country code, per ISO 3166-1
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public Country(String name, String numeric, String alpha2, String alpha3) {
         this.name = name;
         this.numeric = numeric;

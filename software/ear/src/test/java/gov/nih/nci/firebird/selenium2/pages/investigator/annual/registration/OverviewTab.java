@@ -84,14 +84,14 @@ package gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration;
 
 import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
+import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
 import gov.nih.nci.firebird.data.FormTypeEnum;
+import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
 import gov.nih.nci.firebird.selenium2.pages.base.ValidationMessageDialog;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag.CommentType;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.RegistrationProgressBar;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.openqa.selenium.By;
@@ -99,27 +99,37 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 /**
  * /investigator/annual/registration/ajax/view_overview.jsp
  */
 public class OverviewTab extends AbstractAnnualRegistrationTab<OverviewTab> {
 
     public static final IdentifiableComponentFactory<OverviewTab> FACTORY = new Factory();
-    private static final String TAB_UNIQUE_LOCATOR_ID = "ctepOverview";
     static final String TAB_ID = "overviewTab";
     private static final String SUBMIT_FOR_REVIEW_BUTTON_ID = "submitForReviewButton";
     private static final String REGISTRATION_STATUS_ID = "registrationStatus";
-    private static final String DELETE_REGISTRATION_ID = "deleteRegistration";
+    private static final String PROGRESS_BAR_ID = "registrationProgressBar";
+    public static final String REQUIRED_FORMS_TABLE_ID = "requiredFormsTable";
+    public static final String OPTIONAL_FORMS_TABLE_ID = "optionalFormsTable";
+    public static final String SUPPLEMENTAL_FORMS_TABLE_ID = "supplementalFormsTable";
+
+    @FindBy(id = PROGRESS_BAR_ID)
+    private WebElement progressBarElement;
 
     @FindBy(id = SUBMIT_FOR_REVIEW_BUTTON_ID)
     private WebElement submitForReviewButton;
     @FindBy(id = REGISTRATION_STATUS_ID)
     private WebElement registrationStatus;
-    @FindBy(id = DELETE_REGISTRATION_ID)
-    private WebElement deleteRegistrationButton;
+    @FindBy(id = REQUIRED_FORMS_TABLE_ID)
+    private WebElement requiredFormsTable;
+    @FindBy(id = OPTIONAL_FORMS_TABLE_ID)
+    private WebElement optionalFormsTable;
+    @FindBy(id = SUPPLEMENTAL_FORMS_TABLE_ID)
+    private WebElement supplementalFormsTable;
     private final RegistrationCommentsTag commentsTag;
-    private final RegistrationProgressBar progressBar;
-    private final InvestigatorRegistrationFormTablesTag formTables;
 
     private final OverviewTabHelper helper;
 
@@ -127,20 +137,47 @@ public class OverviewTab extends AbstractAnnualRegistrationTab<OverviewTab> {
         super(driver, page);
         this.helper = new OverviewTabHelper(this);
         this.commentsTag = new RegistrationCommentsTag(driver);
-        this.progressBar = new RegistrationProgressBar(driver);
-        this.formTables = new InvestigatorRegistrationFormTablesTag(getDriver());
     }
 
     public OverviewTabHelper getHelper() {
         return helper;
     }
 
-    RegistrationProgressBar getProgressBar() {
-        return progressBar.waitUntilReady();
+    public List<FormListing> getFormsListing() {
+        return Lists.newArrayList((Iterables.concat(getRequiredFormsListing(), getOptionalFormsListing(),
+                getSupplementalFormsListing())));
     }
 
-    private InvestigatorRegistrationFormTablesTag getFormTablesTag() {
-        return formTables.waitUntilReady();
+    public List<FormListing> getRequiredFormsListing() {
+        return getFormsListing(requiredFormsTable);
+    }
+
+    public List<FormListing> getFormsListing(WebElement table) {
+        List<FormListing> formsListings = Lists.newArrayList();
+        for (WebElement form : table.findElements(By.className("form"))) {
+            formsListings.add(new FormListing(form));
+        }
+        return formsListings;
+    }
+
+    public List<FormListing> getOptionalFormsListing() {
+        if (WebElementUtils.isPresent(getDriver(), By.id(OPTIONAL_FORMS_TABLE_ID))) {
+            return getFormsListing(optionalFormsTable);
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<FormListing> getSupplementalFormsListing() {
+        if (WebElementUtils.isPresent(getDriver(), By.id(SUPPLEMENTAL_FORMS_TABLE_ID))) {
+            return getFormsListing(supplementalFormsTable);
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    public ProgressBar getProgressBar() {
+        return new ProgressBar(progressBarElement);
     }
 
     public String getRegistrationStatus() {
@@ -159,30 +196,13 @@ public class OverviewTab extends AbstractAnnualRegistrationTab<OverviewTab> {
                 ValidationMessageDialog.getFactory(this));
     }
 
-    public boolean isDeleteRegistrationButtonPresent() {
-        return isPresent(By.id(DELETE_REGISTRATION_ID));
-    }
-
-    public DeleteAnnualRegistrationConfirmDialog clickDeleteRegistration() {
-        deleteRegistrationButton.click();
-        return new DeleteAnnualRegistrationConfirmDialog(getDriver(), this).waitUntilReady();
-    }
-
     public String getInvestigatorComments() {
         return commentsTag.waitUntilReady().getComments(CommentType.INVESTIGATOR);
     }
 
-    public List<FormListing> getFormsListing() {
-        return getFormTablesTag().getFormsListing();
-    }
-
-    String getCurrentProgress() {
-        return getProgressBar().getCurrentProgress();
-    }
-
     @Override
     public boolean isReadOnly() {
-        return !RegistrationProgressBar.isPresent(getDriver()) && !isPresent(By.id(SUBMIT_FOR_REVIEW_BUTTON_ID));
+        return !isPresent(By.id(PROGRESS_BAR_ID)) && !isPresent(By.id(SUBMIT_FOR_REVIEW_BUTTON_ID));
     }
 
     @Override
@@ -193,8 +213,7 @@ public class OverviewTab extends AbstractAnnualRegistrationTab<OverviewTab> {
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
-        assertElementWithIdPresent(TAB_UNIQUE_LOCATOR_ID);;
-        assertElementWithIdPresent(REGISTRATION_STATUS_ID);
+        assertElementsWithIdsPresent(REGISTRATION_STATUS_ID, REQUIRED_FORMS_TABLE_ID);
     }
 
     @Override
@@ -210,6 +229,70 @@ public class OverviewTab extends AbstractAnnualRegistrationTab<OverviewTab> {
     @Override
     public AbstractAnnualRegistrationTab<?> clickNextButton() {
         throw new IllegalArgumentException("Overview tab doesn't have a next button");
+    }
+
+    public class FormListing implements TableListing {
+        private final Long id;
+        private String description;
+        private String formStatus;
+        private int additionalDocumentsCount;
+        private final WebElement row;
+
+        public FormListing(WebElement row) {
+            this.row = row;
+            id = Long.valueOf(WebElementUtils.getId(row));
+
+            if (WebElementUtils.isPresent(row, By.className("formDescription"))) {
+                description = WebElementUtils.getElementIfPresent(row, By.className("formDescription")).getText();
+            }
+            if (WebElementUtils.isPresent(row, By.id("formStatus"))) {
+                formStatus = WebElementUtils.getElementIfPresent(row, By.id("formStatus")).getText();
+            }
+            if (WebElementUtils.isPresent(row, By.id("additionalDocumentsCount"))) {
+                additionalDocumentsCount = Integer.parseInt(WebElementUtils.getElementIfPresent(row,
+                        By.id("additionalDocumentsCount")).getText());
+            }
+        }
+
+        @Override
+        public Long getId() {
+            return id;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getFormStatus() {
+            return formStatus;
+        }
+
+        public int getAdditionalDocumentsCount() {
+            return additionalDocumentsCount;
+        }
+
+        public AbstractAnnualRegistrationTab<?> click() {
+            row.click();
+            return (AbstractAnnualRegistrationTab<?>) identifyDisplayedComponent(10,
+                    SupplementalInvestigatorDataFormTab.getFactory(new AnnualRegistrationPage(getDriver())),
+                    FinancialDisclosureTab.getFactory(new AnnualRegistrationPage(getDriver())),
+                    AnnualAdditionalAttachmentsTab.getFactory(new AnnualRegistrationPage(getDriver())),
+                    AnnualForm1572Tab.getFactory(new AnnualRegistrationPage(getDriver())));
+        }
+    }
+
+    public class ProgressBar {
+
+        final static String widthAttribute = "aria-valuenow";
+        private String currentProgress;
+
+        ProgressBar(WebElement progressBarDiv) {
+            currentProgress = progressBarDiv.getAttribute(widthAttribute);
+        }
+
+        public String getCurrentProgress() {
+            return currentProgress;
+        }
     }
 
     private static class Factory extends IdentifiableComponentFactory<OverviewTab> {

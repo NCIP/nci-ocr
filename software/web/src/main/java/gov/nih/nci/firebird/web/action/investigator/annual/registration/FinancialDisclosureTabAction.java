@@ -262,8 +262,6 @@ public class FinancialDisclosureTabAction extends AbstractAnnualRegistrationTabA
     /**
      * @param processor the processor to set
      */
-    @SuppressWarnings("ucd")
-    // used to inject mock processor from tests
     void setProcessor(FinancialDisclosureTabProcessor<AnnualRegistration> processor) {
         this.processor = processor;
     }
@@ -271,10 +269,9 @@ public class FinancialDisclosureTabAction extends AbstractAnnualRegistrationTabA
     /**
      * Table listing object for Pharmaceutical Companies.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
-    protected final class PharmaceuticalCompanyListings {
-        private final String externalId;
+    protected class PharmaceuticalCompanyListings {
+        private final Long id;
+        private final String nesId;
         private final String name;
         private final String ctepId;
         private final String email;
@@ -284,8 +281,10 @@ public class FinancialDisclosureTabAction extends AbstractAnnualRegistrationTabA
         /**
          * @param pharmaceuticalCompany Pharmaceutical Company
          */
-        PharmaceuticalCompanyListings(Organization pharmaceuticalCompany) {
-            this.externalId = pharmaceuticalCompany.getExternalId();
+        protected PharmaceuticalCompanyListings(Organization pharmaceuticalCompany) {
+
+            this.id = pharmaceuticalCompany.getId();
+            this.nesId = pharmaceuticalCompany.getNesId();
             this.name = pharmaceuticalCompany.getName();
             this.ctepId = pharmaceuticalCompany.getCtepId();
             this.email = pharmaceuticalCompany.getEmail();
@@ -293,26 +292,51 @@ public class FinancialDisclosureTabAction extends AbstractAnnualRegistrationTabA
             this.postalAddress = pharmaceuticalCompany.getPostalAddress();
         }
 
-        public String getExternalId() {
-            return externalId;
+        /**
+         * @return the id
+         */
+        public Long getId() {
+            return id;
         }
 
+        /**
+         * @return the nesId
+         */
+        public String getNesId() {
+            return nesId;
+        }
+
+        /**
+         * @return the name
+         */
         public String getName() {
             return name;
         }
 
+        /**
+         * @return the ctepId
+         */
         public String getCtepId() {
             return ctepId;
         }
 
+        /**
+         * @return the email
+         */
         public String getEmail() {
             return email;
         }
 
+        /**
+         * @return the phoneNumber
+         */
         public String getPhoneNumber() {
             return phoneNumber;
         }
 
+        /**
+         * @return the postalAddress
+         */
         public Address getPostalAddress() {
             return postalAddress;
         }

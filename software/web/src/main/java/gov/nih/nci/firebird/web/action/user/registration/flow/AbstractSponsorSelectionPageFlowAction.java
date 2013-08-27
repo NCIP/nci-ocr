@@ -105,14 +105,12 @@ import com.opensymphony.xwork2.validator.annotations.ExpressionValidator;
 /**
  *  Page action for handling the Organization Selection page of the flow.
  */
-@SuppressWarnings("ucd")
-//needs to be public for actions to get mapped
 public abstract class AbstractSponsorSelectionPageFlowAction extends AbstractPageFlowAction {
 
     private static final long serialVersionUID = 1L;
     private final SponsorService sponsorService;
     private final Set<Organization> selectedSponsors = Sets.newHashSet();
-    private Set<String> selectedSponsorExternalIds = Sets.newHashSet();
+    private Set<Long> selectedSponsorIds = Sets.newHashSet();
     private Set<Organization> sponsorOrganizations = Sets.newHashSet();
 
     /**
@@ -131,8 +129,8 @@ public abstract class AbstractSponsorSelectionPageFlowAction extends AbstractPag
     public void prepare() {
         super.prepare();
         sponsorOrganizations = sponsorService.getSponsorsWithProtocolRegistrations();
-        selectedSponsors.addAll(findSelectedSponsorsByExternalId());
-        selectedSponsors.addAll(setupPreviouslySelectedSponsorExternalIds());
+        selectedSponsors.addAll(findSelectedSponsorsById());
+        selectedSponsors.addAll(setupPreviouslySelectedSponsorIds());
     }
 
     /**
@@ -140,17 +138,17 @@ public abstract class AbstractSponsorSelectionPageFlowAction extends AbstractPag
      *
      * @return Set of Organizations matching those that were selected by the user.
      */
-    protected Set<Organization> findSelectedSponsorsByExternalId() {
+    protected Set<Organization> findSelectedSponsorsById() {
         Set<Organization> selectedOrganizations = Sets.newHashSet();
         for (Organization sponsor : getSponsorOrganizations()) {
-            if (selectedSponsorExternalIds.contains(sponsor.getExternalId())) {
+            if (selectedSponsorIds.contains(sponsor.getId())) {
                 selectedOrganizations.add(sponsor);
             }
         }
         return selectedOrganizations;
     }
 
-    private Set<Organization> setupPreviouslySelectedSponsorExternalIds() {
+    private Set<Organization> setupPreviouslySelectedSponsorIds() {
         Set<Organization> previouslySelectedSponsors = Sets.newHashSet();
         previouslySelectedSponsors.addAll(getAccountConfigurationData().getSponsorOrganizations());
         previouslySelectedSponsors.addAll(getAccountConfigurationData().getDelegateOrganizations());
@@ -166,11 +164,10 @@ public abstract class AbstractSponsorSelectionPageFlowAction extends AbstractPag
                     NAMESPACE, NAV_NAMESPACE }) }),
             @Action(value = "gotoStep", results = { @Result(type = CHAIN, params = { ACTION_NAME, "enterFlowStep",
                     NAMESPACE, NAV_NAMESPACE }) }) })
-    @ExpressionValidator(expression = "!selectedSponsorExternalIds.empty",
-                         key = "user.registration.sponsor.selection.required")
+    @ExpressionValidator(expression = "!selectedSponsorIds.empty", key = "user.registration.sponsor.selection.required")
     public String saveAndProceedNext() {
         getSelectedSponsors().clear();
-        getSelectedSponsors().addAll(findSelectedSponsorsByExternalId());
+        getSelectedSponsors().addAll(findSelectedSponsorsById());
         return super.saveAndProceedNext();
     }
 
@@ -188,23 +185,23 @@ public abstract class AbstractSponsorSelectionPageFlowAction extends AbstractPag
      * removed all their selected sponsors.
      */
     protected void leaveEditModeIfNoSponsorSelected() {
-        if (getSelectedSponsorExternalIds().isEmpty()) {
+        if (getSelectedSponsorIds().isEmpty()) {
             getFlowController().removeVisitedStep(RegistrationFlowStep.VERIFICATION);
         }
     }
 
     /**
-     * @return the selectedSponsorExternalIds
+     * @return the selectedSponsorIds
      */
-    public Set<String> getSelectedSponsorExternalIds() {
-        return selectedSponsorExternalIds;
+    public Set<Long> getSelectedSponsorIds() {
+        return selectedSponsorIds;
     }
 
     /**
-     * @param selectedSponsorExternalIds the selectedSponsorExternalIds to set
+     * @param selectedSponsorIds the selectedSponsorIds to set
      */
-    public void setSelectedSponsorExternalIds(Set<String> selectedSponsorExternalIds) {
-        this.selectedSponsorExternalIds = selectedSponsorExternalIds;
+    public void setSelectedSponsorIds(Set<Long> selectedSponsorIds) {
+        this.selectedSponsorIds = selectedSponsorIds;
     }
 
     /**

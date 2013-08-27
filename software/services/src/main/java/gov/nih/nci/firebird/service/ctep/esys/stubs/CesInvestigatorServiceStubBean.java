@@ -96,10 +96,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 /**
  * Stubbed local implementation of ESYS investigator service.
@@ -109,7 +109,7 @@ public class CesInvestigatorServiceStubBean implements CesInvestigatorService {
 
     private FirebirdUserService userService;
 
-    @Resource(mappedName = "firebird/FirebirdUserServiceBean/local")
+    @Inject
     void setUserService(FirebirdUserService userService) {
         this.userService = userService;
     }
@@ -146,7 +146,7 @@ public class CesInvestigatorServiceStubBean implements CesInvestigatorService {
     private boolean hasExpiredRegistration(FirebirdUser investigator) {
         boolean hasApprovedRegistration = false;
         boolean hasCurrentRegistration = false;
-        Set<AnnualRegistration> registrations =
+        Set<AnnualRegistration> registrations = 
                 investigator.getInvestigatorRole().getProfile().getAnnualRegistrations();
         for (AnnualRegistration registration : registrations) {
             if (RegistrationStatus.APPROVED == registration.getStatus()) {

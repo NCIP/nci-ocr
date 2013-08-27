@@ -92,13 +92,13 @@ import gov.nih.nci.firebird.test.RegistrationFactory;
 import java.util.List;
 import java.util.Set;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.common.collect.Sets;
+import com.opensymphony.xwork2.interceptor.annotations.Before;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProtocolForm1572Test extends AbstractRegistrationFormTest {

@@ -82,15 +82,22 @@
  */
 package gov.nih.nci.firebird.nes.common;
 
-import static gov.nih.nci.firebird.common.FirebirdConstants.*;
+import static gov.nih.nci.firebird.common.FirebirdConstants.US_COUNTRY_CODE;
 import static org.junit.Assert.*;
+
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.iso21090.extensions.Id;
+import gov.nih.nci.iso21090.grid.dto.transform.iso.TSTransformer;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.iso._21090.CD;
 import org.iso._21090.II;
 import org.iso._21090.TELPhone;
+import org.iso._21090.TS;
 import org.junit.Test;
 
 public class NesTranslatorHelperUtilsTest {
@@ -133,13 +140,64 @@ public class NesTranslatorHelperUtilsTest {
         assertEquals("tel:" + unformattedNumber, telPhone.getValue());
     }
 
+    private final static SimpleDateFormat FORMAT = new SimpleDateFormat(TSTransformer.FORMAT_STRING);
+
+    @Test
+    public void testGetDate() {
+        Calendar c = Calendar.getInstance();
+        c.clear();
+        c.set(Calendar.YEAR, 1968);
+        c.set(Calendar.MONTH, 1);
+        c.set(Calendar.DAY_OF_MONTH, 24);
+        String iso = FORMAT.format(c.getTime());
+
+        TS ts = new TS();
+        ts.setValue(iso);
+        Date d = NesTranslatorHelperUtils.getDate(ts);
+        Calendar c2 = Calendar.getInstance();
+        c2.setTime(d);
+        assertEquals(c.get(Calendar.YEAR), c2.get(Calendar.YEAR));
+        assertEquals(c.get(Calendar.MONTH), c2.get(Calendar.MONTH));
+        assertEquals(c.get(Calendar.DAY_OF_MONTH), c2.get(Calendar.DAY_OF_MONTH));
+
+        ts.setValue(null);
+        d = NesTranslatorHelperUtils.getDate(ts);
+        assertNull(d);
+
+        ts = null;
+        d = NesTranslatorHelperUtils.getDate(ts);
+        assertNull(d);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetDate_Bad() {
+        TS ts = new TS();
+        ts.setValue("foo");
+        NesTranslatorHelperUtils.getDate(ts);
+    }
+
+    @Test
+    public void testCreateTimestamp() throws ParseException {
+        Calendar c = Calendar.getInstance();
+        c.clear();
+        c.set(Calendar.YEAR, 1968);
+        c.set(Calendar.MONTH, 1);
+        c.set(Calendar.DAY_OF_MONTH, 24);
+        TS ts = NesTranslatorHelperUtils.createDateTs(c.getTime());
+        String iso = ts.getValue();
+        Date d = FORMAT.parse(iso);
+        assertEquals(c.getTime(), d);
+
+        assertNull(NesTranslatorHelperUtils.createDateTs(null));
+    }
+
     @Test
     public void testBuildStatus() {
         CD status = NesTranslatorHelperUtils.buildStatus(CurationStatus.ACTIVE);
         assertNotNull(status);
         assertEquals(CurationStatus.ACTIVE.getCodeValue(), status.getCode());
 
-        status = NesTranslatorHelperUtils.buildStatus(CurationStatus.UNSAVED);
+        status = NesTranslatorHelperUtils.buildStatus(CurationStatus.PRE_NES_VALIDATION);
         assertNull(status);
     }
 

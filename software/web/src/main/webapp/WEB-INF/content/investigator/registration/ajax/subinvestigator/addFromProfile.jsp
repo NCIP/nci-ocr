@@ -39,10 +39,10 @@
     var _profileSubinvestigatorsPage = (function(){
         var page = {};
         page.createCheckColumn = function(person) {
-            var checkboxHtml = "<input type='checkbox' name='selectedExternalIds' ";
-            var checkboxId = "subInvestigator_"+ person.externalId;
+            var checkboxHtml = "<input type='checkbox' name='selectedIds' ";
+            var checkboxId = "subInvestigator_"+ person.id;
             checkboxHtml += "id='"+ checkboxId + "' ";
-            checkboxHtml += "value='" + person.externalId + "' ";
+            checkboxHtml += "value='" + person.id + "' ";
             checkboxHtml += "/>";
             return createHiddenCheckboxLabel(checkboxId) + checkboxHtml;
         };

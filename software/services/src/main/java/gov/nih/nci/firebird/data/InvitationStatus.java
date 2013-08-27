@@ -86,7 +86,7 @@ package gov.nih.nci.firebird.data;
  * Investigator Registration Invitation Status.
  */
 public enum InvitationStatus {
-
+    
     /**
      * Not Invited.
      */
@@ -101,7 +101,7 @@ public enum InvitationStatus {
      * Responded.
      */
     RESPONDED,
-
+    
     /**
      * Reactivated.
      */
@@ -110,7 +110,7 @@ public enum InvitationStatus {
     /**
      * column length.
      */
-    static final int MAX_LENGTH = 64;
+    public static final int MAX_LENGTH = 64;
 
     /**
      * @return ApplicationResources key.

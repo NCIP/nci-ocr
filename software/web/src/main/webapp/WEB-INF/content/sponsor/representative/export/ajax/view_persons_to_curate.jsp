@@ -11,23 +11,32 @@
                 This table displays the NES ID and the name of the Person.">
     <thead>
         <tr>
-            <s:iterator value="curationDataset.displayHeaderKeys" var="headerKey">
-                <th scope="col"><div><fmt:message key="${headerKey}"/></div></th>
-            </s:iterator>
+            <th scope="col" width="170px"><div><fmt:message key="label.nes.id"/></div></th>
+            <th scope="col" width="225px"><div><fmt:message key="label.name"/></div></th>
         </tr>
     </thead>
 </table>
 
 <script type="text/javascript">
     $(document).ready(function() {
-        var dataRows = ${curationDataRowsJson};
+        var dataRows = ${personsToBeCuratedJson};
         var isLongData = dataRows.length > ${minPaginationResults};
         $('#personsToBeCuratedTable').dataTable( {
             "aaData" : dataRows,
             "bInfo" : isLongData,
             "bLengthChange" : isLongData,
             "bPaginate" : isLongData,
-            "bFilter" : false
+            "bFilter" : false,
+            "aoColumns" : [
+                           {mDataProp: "nesId"},
+                           {mDataProp: "sortableName", bUseRendered: false, fnRender: function (obj) {
+                               return obj.aData.displayNameForList;
+                           }}
+                           ],
+            "fnRowCallback" : function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                $(nRow).attr("id", aData.id);
+                return nRow;
+                }
         } );
     });
 </script>

@@ -242,7 +242,6 @@ public class CreateLeadOrganizationDialog extends AbstractDialog<CreateLeadOrgan
                     getSectionCssSelector() + SEARCH_AGAIN_LINK_CLASS_CSS))) {
                 if (WebElementUtils.isVisible(link)) {
                     link.click();
-                    waitUntilReady();
                     return;
                 }
             }
@@ -349,7 +348,7 @@ public class CreateLeadOrganizationDialog extends AbstractDialog<CreateLeadOrgan
 
         public CreateOrganizationComponent clickCreateNew() {
             createNewButton.click();
-            return new CreateOrganizationComponent(getDriver(), "organization").waitUntilReady();
+            return new CreateOrganizationComponent(getDriver(), "organization");
         }
 
         @Override

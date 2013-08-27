@@ -124,7 +124,7 @@ public abstract class AbstractSpecialtyCredential<T extends AbstractSpecialtyCre
      * @param issuer issuer organization.
      * @param specialty Medical Specialty of this credential.
      */
-    AbstractSpecialtyCredential(InvestigatorProfile profile, Date effectiveDate, Date expirationDate,
+    public AbstractSpecialtyCredential(InvestigatorProfile profile, Date effectiveDate, Date expirationDate,
                                        Organization issuer, MedicalSpecialty specialty) {
         super(profile, effectiveDate, expirationDate, issuer);
         this.specialty = specialty;

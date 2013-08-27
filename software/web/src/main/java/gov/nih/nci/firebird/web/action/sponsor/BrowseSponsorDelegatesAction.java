@@ -153,8 +153,6 @@ public class BrowseSponsorDelegatesAction extends FirebirdActionSupport {
     /**
      * Table listing object for Sponsor Delegates.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
     protected final class SponsorDelegateListing {
 
         private final Long id;
@@ -165,7 +163,7 @@ public class BrowseSponsorDelegatesAction extends FirebirdActionSupport {
         /**
          * @param sponsorDelegateRole sponsor role to create listing for
          */
-        SponsorDelegateListing(SponsorRole sponsorDelegateRole) {
+        public SponsorDelegateListing(SponsorRole sponsorDelegateRole) {
             this.id = sponsorDelegateRole.getId();
             this.sponsor = sponsorDelegateRole.getSponsor().getName();
             Person person = sponsorDelegateRole.getUser().getPerson();

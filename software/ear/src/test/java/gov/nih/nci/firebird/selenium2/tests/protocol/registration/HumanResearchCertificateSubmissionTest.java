@@ -122,12 +122,12 @@ public class HumanResearchCertificateSubmissionTest extends AbstractFirebirdWebD
     private DataSetBuilder builder;
     
     @Test
-    public void testPhrcSubmission() throws IOException {
+    public void testPHRCSubmission() throws IOException {
         builder.createRegistration().complete();
         builder.createSponsor();
         DataSet dataSet = builder.build();
         File certFile = createTemporaryFile();
-        TrainingCertificate newCertificate = CredentialFactory.getInstance().createCertificate(certFile, getExistingExternalOrganization());
+        TrainingCertificate newCertificate = CredentialFactory.getInstance().createCertificate(certFile, getExistingNesOrganization());
         RegistrationOverviewTab overviewTab = openRegistration(dataSet);
         addCertificate(overviewTab, newCertificate, certFile);
         

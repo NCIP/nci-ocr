@@ -135,8 +135,6 @@ public class State implements Auditable, Comparable<State> {
      * @param name the name of the state
      * @param country the country the state is in.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public State(String code, String name, Country country) {
         this.code = code;
         this.name = name;
@@ -153,9 +151,7 @@ public class State implements Auditable, Comparable<State> {
     /**
      * @param id new database id
      */
-    @SuppressWarnings("unused")
-    // setter required by hbernate
-    private void setId(Long id) {
+    protected void setId(Long id) {
         this.id = id;
     }
 

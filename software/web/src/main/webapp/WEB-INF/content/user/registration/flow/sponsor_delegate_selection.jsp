@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/content/common/taglibs.jsp"%>
 <h1><fmt:message key="user.registration.sponsor.delegate.selection.title"/></h1>
-<s:set var="selectedSponsorExternalIds" value="%{selectedSponsors.{#this.id}}"/>
+<s:set var="selectedSponsorIds" value="%{selectedSponsors.{#this.id}}"/>
 <s:if test="currentUser.sponsorRepresentative">
     <s:set var="disabledSponsorIds" value="%{currentUser.sponsorRepresentativeOrganizations.{#this.id}}"/>
 </s:if>
@@ -9,6 +9,6 @@
 </s:else>
 <firebird:sponsorOrganizationSelection
     disabledSponsorIds="${disabledSponsorIds}"
-    selectedSponsorExternalIds="${selectedSponsorExternalIds}"
+    selectedSponsorIds="${selectedSponsorIds}"
     disabledSponsorKey="user.add.roles.sponsor.delegate.disabled.organizations.message"
 />

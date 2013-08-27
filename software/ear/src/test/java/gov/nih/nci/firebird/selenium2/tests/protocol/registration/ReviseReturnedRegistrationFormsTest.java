@@ -98,7 +98,6 @@ import gov.nih.nci.firebird.data.OrganizationAssociation;
 import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.PracticeSite;
-import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.TrainingCertificate;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
@@ -129,8 +128,7 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.S
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -145,7 +143,7 @@ import org.junit.Test;
 
 public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriverTest {
 
-    private DataSet dataSet;
+    private InvestigatorRegistrationTestDataSet dataSet;
     private InvestigatorRegistration registration;
     private HomePage homePage;
 
@@ -153,13 +151,8 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
-        registration = builder
-                .createRegistration()
-                .complete()
-                .withAllFormsRejected()
-                .withStatus(RegistrationStatus.RETURNED).get();
-        dataSet = builder.build();
+        dataSet = InvestigatorRegistrationTestDataSet.createReturned(getDataLoader(), getGridResources());
+        registration = dataSet.getRegistration();
         homePage = openHomePage(dataSet.getInvestigatorLogin());
     }
 
@@ -174,7 +167,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
 
     private void checkFormsAreRevised(FormTypeEnum... forms) {
         dataSet.reload();
-        registration = dataSet.getInvestigatorRegistration();
+        registration = dataSet.getRegistration();
         EnumSet<FormTypeEnum> revisedFormTypes;
         if (forms.length == 0) {
             revisedFormTypes = EnumSet.noneOf(FormTypeEnum.class);
@@ -322,7 +315,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
     private TrainingCertificate addCertificate(CredentialsTab credentialsTab) throws IOException {
         EditTrainingCertificateDialog addCertificateDialog = credentialsTab.getTrainingSection().clickAddCertificate();
         TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate(
-                getExistingExternalOrganization());
+                getExistingNesOrganization());
         addCertificateDialog.getHelper().enterTrainingCertificateData(certificate, createTemporaryFile(), false);
         addCertificateDialog.clickSave();
         return certificate;
@@ -339,7 +332,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
     public void testSavePracticeSite() {
         OrganizationAssociationsTab organizationAssociationsTab = openOrganizationAssociationsTab();
         AddOrganizationAssociationDialog addDialog = organizationAssociationsTab.getPracticeSiteSection().clickCreateNew();
-        PracticeSite practiceSite = getTestDataSource().getPracticeSite();
+        PracticeSite practiceSite = getNesTestDataSource().getPracticeSite();
         addDialog.getHelper().searchAndSelectOrganization(practiceSite);
         checkFormsAreRevised();
     }
@@ -366,7 +359,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
     public void testSaveClinicalLab() {
         OrganizationAssociationsTab organizationAssociationsTab = openOrganizationAssociationsTab();
         AddOrganizationAssociationDialog addDialog = organizationAssociationsTab.getClinicalLabSection().clickCreateNew();
-        ClinicalLaboratory lab = getTestDataSource().getClinicalLab();
+        ClinicalLaboratory lab = getNesTestDataSource().getClinicalLab();
         addDialog.getHelper().setOrganization(lab);
         checkFormsAreRevised();
     }
@@ -398,7 +391,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
     private void addIrb() {
         OrganizationAssociationsTab organizationAssociationsTab = openOrganizationAssociationsTab();
         AddOrganizationAssociationDialog addDialog = organizationAssociationsTab.getIrbSection().clickCreateNew();
-        InstitutionalReviewBoard irb = getTestDataSource().getIrb();
+        InstitutionalReviewBoard irb = getNesTestDataSource().getIrb();
         addDialog.getHelper().setOrganization(irb);
     }
 
@@ -466,7 +459,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
 
     private ClinicalLaboratory getNotInUseClinicalLab() {
         ClinicalLaboratory inUseLab = getInUseClinicalLab();
-        Set<OrganizationAssociation> labAssociations = registration.getProfile()
+        Set<OrganizationAssociation> labAssociations = dataSet.getRegistration().getProfile()
                 .getOrganizationAssociations(OrganizationRoleType.CLINICAL_LABORATORY);
         for (OrganizationAssociation labAssociation : labAssociations) {
             ClinicalLaboratory lab = (ClinicalLaboratory) labAssociation.getOrganizationRole();
@@ -573,7 +566,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
     private CertificateListing addCertificate(HumanResearchCertificateTab humanResearchTab) throws IOException {
         EditTrainingCertificateDialog certificateDialog = humanResearchTab.clickAddCertificate();
         File file = createTemporaryFile();
-        TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate(file, getExistingExternalOrganization());
+        TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate(file, getExistingNesOrganization());
         certificateDialog.getHelper().enterTrainingCertificateData(certificate, file, false);
         certificateDialog.clickSave();
         return humanResearchTab.getHelper().getListing(certificate);
@@ -628,7 +621,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
     }
 
     private Person addSubinvestigatorToProfile() throws AssociationAlreadyExistsException {
-        Person subinvestigator = getExistingExternalPerson();
+        Person subinvestigator = getExistingNesPerson();
         registration.getProfile().addSubInvestigator(subinvestigator);
         dataSet.update(registration.getProfile());
         return subinvestigator;
@@ -638,7 +631,7 @@ public class ReviseReturnedRegistrationFormsTest extends AbstractFirebirdWebDriv
     public void testAddSubinvestigator_New() {
         SubinvestigatorsTab subinvestigatorsTab = openRegistration().getPage().clickSubinvestigatorsTab();
         SubInvestigatorAssociationFormDialog newSubinvestigatorDialog = subinvestigatorsTab.clickAddNew();
-        Person subInvestigator = getExistingExternalPerson();
+        Person subInvestigator = getExistingNesPerson();
         newSubinvestigatorDialog.getHelper().searchAndSelectPerson(subInvestigator);
         checkFormsAreRevised(FORM_1572);
     }

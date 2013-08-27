@@ -9,7 +9,7 @@
             <firebird:messages/>
             <firebird:searchAgainLink id="orgAssociationSearchAgain"/>
             <s:form id="associatedOrgForm" action="save">
-                <s:if test="associatedOrganization.externalId in {null, ''}">
+                <s:if test="nesId in {null, ''}">
                     <div class="formcol">
                         <s:textfield id="associatedOrganization.name"
                                      name="associatedOrganization.name"
@@ -35,7 +35,7 @@
                     </div>
                     <div class="clear"><br></div>
 
-                    <s:if test="associatedOrganization.externalId in {null, ''}">
+                    <s:if test="nesId in {null, ''}">
                         <div class="formcol clear">
                             <s:select id="practiceSiteType"
                                       name="practiceSiteType"
@@ -51,7 +51,7 @@
                     </s:if>
                 </s:if>
 
-                <s:if test="associatedOrganization.externalId in {null, ''}">
+                <s:if test="nesId in {null, ''}">
                     <div class="dotted_line"></div>
 
                     <div class="formcol">
@@ -74,7 +74,7 @@
                 </s:else>
 
                 <s:hidden name="associationType" />
-                <s:hidden name="organizationExternalId"/>
+                <s:hidden name="searchKey"/>
 
                 <div class="btn_bar clear">
                     <a id="saveOrganizationAssociationBtn" href="javascript:void(0);" class="button"><fmt:message key="button.save"/></a>

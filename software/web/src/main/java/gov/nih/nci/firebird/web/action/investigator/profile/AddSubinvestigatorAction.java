@@ -121,21 +121,15 @@ public class AddSubinvestigatorAction extends AbstractProfileAction {
     private static final long serialVersionUID = 1L;
 
     private static final String JSP_PATH = "/WEB-INF/content";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String NAMESPACE = "/investigator/profile/associations/subinvestigators/ajax";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String JSP_FIELDS = JSP_PATH + NAMESPACE +  "/manage_subinvestigator_association_fields.jsp";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String JSP_SEARCH = JSP_PATH + NAMESPACE + "/manage_subinvestigator_association.jsp";
 
     static final String RETURN_SEARCH = "search";
     static final String RETURN_FIELDS = "fields";
     private static final String RESOURCE = "subinvestigator";
     private Person subinvestigator;
-    private String selectedPersonExternalId;
+    private String selectedPersonKey;
     private final StateLookupService stateLookup;
     private final CountryLookupService countryLookup;
     private List<Country> countries;
@@ -159,8 +153,8 @@ public class AddSubinvestigatorAction extends AbstractProfileAction {
     @Override
     public void prepare() {
         super.prepare();
-        if (!StringUtils.isEmpty(getSelectedPersonExternalId())) {
-            setSubinvestigator(getPerson(getSelectedPersonExternalId()));
+        if (!StringUtils.isEmpty(getSelectedPersonKey())) {
+            setSubinvestigator(getPersonSearchService().getPerson(getSelectedPersonKey()));
         }
         setStates(stateLookup.getAll());
         countries = countryLookup.getAll();
@@ -201,7 +195,7 @@ public class AddSubinvestigatorAction extends AbstractProfileAction {
      */
     @Validations(customValidators = { @CustomValidator(type = "hibernate", fieldName = RESOURCE, parameters = {
             @ValidationParameter(name = "resourceKeyBase", value = "person"),
-            @ValidationParameter(name = "excludes", value = "externalId") }) },
+            @ValidationParameter(name = "excludes", value = "nesId") }) },
             fieldExpressions = {
                 @FieldExpressionValidator(fieldName = "subinvestigator.postalAddress.stateOrProvince",
                         expression = "subinvestigator.postalAddress.stateOrProvinceValid",
@@ -222,11 +216,10 @@ public class AddSubinvestigatorAction extends AbstractProfileAction {
     protected String saveAction() {
         try {
             getProfileService().addSubInvestigator(getProfile(), subinvestigator);
+            getPersonSearchService().clearResults();
         } catch (AssociationAlreadyExistsException e) {
-            if (errorOnAssociationAlreadyExistsException()) {
-                handleAssociationAlreadyExists();
-                return INPUT;
-            }
+            handleAssociationAlreadyExists();
+            return INPUT;
         } catch (ValidationException e) {
             return handleValidationException(e);
         }
@@ -235,13 +228,9 @@ public class AddSubinvestigatorAction extends AbstractProfileAction {
     }
 
     /**
-     * @return whether or not it is an error if an AssociationAlreadyExistsException is caught
+     * Handles {@link AssociationAlreadyExistsException}. Default implementation is to add an action error.
      */
-    protected boolean errorOnAssociationAlreadyExistsException() {
-        return true;
-    }
-
-    private void handleAssociationAlreadyExists() {
+    protected void handleAssociationAlreadyExists() {
         addActionError(getText("duplicate.subinvestigator.error"));
     }
 
@@ -281,16 +270,16 @@ public class AddSubinvestigatorAction extends AbstractProfileAction {
     }
 
     /**
-     * @param selectedPersonExternalId the selectedPersonExternalId to set
+     * @param selectedPersonKey the selectedPersonKey to set
      */
-    public void setSelectedPersonExternalId(String selectedPersonExternalId) {
-        this.selectedPersonExternalId = selectedPersonExternalId;
+    public void setSelectedPersonKey(String selectedPersonKey) {
+        this.selectedPersonKey = selectedPersonKey;
     }
 
     /**
-     * @return the selectedPersonExternalId
+     * @return the selectedPersonKey
      */
-    public String getSelectedPersonExternalId() {
-        return selectedPersonExternalId;
+    public String getSelectedPersonKey() {
+        return selectedPersonKey;
     }
 }

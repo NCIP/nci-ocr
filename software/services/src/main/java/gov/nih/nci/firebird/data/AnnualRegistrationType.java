@@ -120,8 +120,6 @@ public enum AnnualRegistrationType {
      * @param display the display string to match
      * @return the type that matches the requested value or null
      */
-    @SuppressWarnings("ucd")
-    // convenience method used in Selenium test
     public static AnnualRegistrationType getByDisplay(String display) {
         for (AnnualRegistrationType type : AnnualRegistrationType.values()) {
             if (type.getDisplay().equals(display)) {

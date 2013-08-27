@@ -116,8 +116,6 @@ public interface Certificate extends PersistentObject {
     /**
      * @return true if the expiration date is older that the next coming month.
      */
-    @SuppressWarnings("ucd")
-    // used from JSP pages
     boolean isExpired();
 
     /**

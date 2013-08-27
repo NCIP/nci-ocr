@@ -147,7 +147,7 @@ class SupplementalInvestigatorDataFormPdfGenerator extends AbstractPdfWriterGene
         addCredentialsSection(lastIndex);
     }
 
-    private void addContactInformationSection() throws DocumentException {
+    void addContactInformationSection() throws DocumentException {
         contentHelper.addContactInformationHeader(getDocument());
         addSpacerRow();
         PdfPTable table = createTable(TWO_COLUMNS);
@@ -185,7 +185,7 @@ class SupplementalInvestigatorDataFormPdfGenerator extends AbstractPdfWriterGene
         return index;
     }
 
-    private void addCredentialsSection(int lastIndex) throws DocumentException {
+    void addCredentialsSection(int lastIndex) throws DocumentException {
         int index = lastIndex;
         contentHelper.addCredentialsHeader(getDocument());
         addSpacerRow();
@@ -238,7 +238,7 @@ class SupplementalInvestigatorDataFormPdfGenerator extends AbstractPdfWriterGene
 
     private void addPhrpCertificate(PdfPTable table, TrainingCertificate trainingCertificate) {
         Organization issuer = trainingCertificate.getIssuer();
-        addValues(table,
+        addValues(table, 
                 issuer != null ? issuer.getName() : "",
                 formatMonthAndYearDate(trainingCertificate.getEffectiveDate()));
     }

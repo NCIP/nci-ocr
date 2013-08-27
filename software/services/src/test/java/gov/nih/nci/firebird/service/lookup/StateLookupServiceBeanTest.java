@@ -123,4 +123,9 @@ public class StateLookupServiceBeanTest extends AbstractHibernateTestCase {
         assertTrue(0 > states.get(0).compareTo(states.get(1)));
     }
 
+    @Test
+    public void testGetStateByCode() {
+        assertEquals(mdState.getName(), bean.getStateByCode(mdState.getCode()).getName());
+        assertEquals(vaState.getName(), bean.getStateByCode(vaState.getCode()).getName());
+    }
 }

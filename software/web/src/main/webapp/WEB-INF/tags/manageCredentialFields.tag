@@ -25,13 +25,13 @@
                        onErrorTopics="ajaxError">
                    <fmt:message key="button.searchAgain" /></sj:a>
                </span>
-               <s:hidden name="issuingOrganizationExternalId"/>
-               <s:if  test="%{!#parameters.containsKey('issuingOrganizationExternalId') || issuingOrganizationExternalId not in #{null, ''}}" >
+               <s:hidden name="issuerSearchKey"/>
+               <s:if  test="%{!#parameters.containsKey('issuerSearchKey') || issuerSearchKey not in #{null, ''}}" >
                     <firebird:organizationDisplay organization="${credential.issuer}" />
                 </s:if>
                 <s:else>
                     <div class="formcol">
-                       <s:textfield id="%{#attr.organizationPrefix}.issuer.name" name="%{#attr.organizationPrefix}.issuer.name" maxlength="160" size="30" required="true"
+                       <s:textfield id="%{#attr.organizationPrefix}.issuer.name" name="%{#attr.organizationPrefix}.issuer.name" maxlength="160" size="30" requiredLabel="true"
                            cssStyle="width: 19em;" label="%{getText('textfield.organization.name')}"
                           />
                     </div>
@@ -40,7 +40,7 @@
 
                     <div class="formcol">
                        <s:textfield id="%{#attr.organizationPrefix}.issuer.email" name="%{#attr.organizationPrefix}.issuer.email" maxlength="50" size="30" cssStyle="width: 19em;"
-                           label="%{getText('textfield.emailAddress')}" required="true"/>
+                           label="%{getText('textfield.emailAddress')}" requiredLabel="true"/>
                     </div>
 
                     <div class="formcol">

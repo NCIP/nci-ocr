@@ -82,19 +82,25 @@
  */
 package gov.nih.nci.firebird.web.action.investigator.annual.registration;
 
-import static gov.nih.nci.firebird.web.action.investigator.annual.registration.ManagePharmaceuticalCompaniesAction.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static gov.nih.nci.firebird.web.action.investigator.annual.registration.ManagePharmaceuticalCompaniesAction.RETURN_MANAGE_PHARMACEUTICAL_COMPANY;
+import static gov.nih.nci.firebird.web.action.investigator.annual.registration.ManagePharmaceuticalCompaniesAction.RETURN_MANAGE_PHARMACEUTICAL_COMPANY_FIELDS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
 import gov.nih.nci.firebird.data.AnnualRegistration;
 import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
-import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationIntegrationService;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
 import gov.nih.nci.firebird.service.annual.registration.AnnualRegistrationService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
@@ -113,9 +119,11 @@ public class ManagePharmaceuticalCompaniesActionTest extends AbstractWebTest {
     @Inject
     private InvestigatorProfileService mockProfileService;
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockOrganizationSearchService;
     @Inject
     private ManagePharmaceuticalCompaniesAction action;
+    @Inject
+    private ResearchOrganizationIntegrationService mockResearchOrganizationService;
     @Inject
     private AnnualRegistrationService mockRegistrationService;
     private InvestigatorProfile profile = InvestigatorProfileFactory.getInstanceWithId().create();
@@ -129,30 +137,30 @@ public class ManagePharmaceuticalCompaniesActionTest extends AbstractWebTest {
         action.setServletRequest(getMockRequest());
         action.setRegistration(registration);
         when(mockProfileService.getById(profile.getId())).thenReturn(profile);
-        when(mockOrganizationService.getByExternalId(pharmaceuticalCompany.getExternalId())).thenReturn(
+        when(mockOrganizationSearchService.getOrganization(pharmaceuticalCompany.getId().toString())).thenReturn(
                 pharmaceuticalCompany);
     }
 
     @Test
-    public void testPrepare_hasPharmaceuticalCompanyExternalId() {
-        action.setPharmaceuticalCompanyExternalId(pharmaceuticalCompany.getExternalId());
+    public void testPrepare_hasPharmaceuticalCompanyId() {
+        action.setPharmaceuticalCompanyId(pharmaceuticalCompany.getId().toString());
         action.prepare();
         assertEquals(pharmaceuticalCompany, action.getPharmaceuticalCompany());
     }
 
     @Test
-    public void testPrepare_hasNonMatchingPharmaceuticalCompanyExternalId() {
-        action.setPharmaceuticalCompanyExternalId("2355wdgdsg");
+    public void testPrepare_hasNonMatchingPharmaceuticalCompanyId() {
+        action.setPharmaceuticalCompanyId("2355wdgdsg");
         action.prepare();
         assertNull(action.getPharmaceuticalCompany());
     }
 
     @Test
-    public void testPrepare_InvalidatedOrganizationException() throws Exception {
-        String organizationExternalId = "NES1";
-        when(mockOrganizationService.getByExternalId(organizationExternalId)).thenThrow(
-                new InvalidatedOrganizationException());
-        action.setPharmaceuticalCompanyExternalId(organizationExternalId);
+    public void testPrepare_UnavailableEntityException() throws UnavailableEntityException {
+        String searchKey = "NES1";
+        when(mockOrganizationSearchService.getOrganization(searchKey)).thenThrow(
+                new UnavailableEntityException(null, searchKey));
+        action.setPharmaceuticalCompanyId(searchKey);
         action.prepare();
         assertTrue(action.hasActionErrors());
     }
@@ -164,7 +172,7 @@ public class ManagePharmaceuticalCompaniesActionTest extends AbstractWebTest {
 
     @Test
     public void testSelectPharmaceuticalCompany_CreateNew() throws Exception {
-        action.setPharmaceuticalCompanyExternalId(StringUtils.EMPTY);
+        action.setPharmaceuticalCompanyId(StringUtils.EMPTY);
         assertEquals(RETURN_MANAGE_PHARMACEUTICAL_COMPANY_FIELDS, action.selectPharmaceuticalCompany());
         ComparisonUtil.assertEquivalent(new Organization(), action.getPharmaceuticalCompany());
         verifyZeroInteractions(mockRegistrationService);
@@ -172,8 +180,8 @@ public class ManagePharmaceuticalCompaniesActionTest extends AbstractWebTest {
 
     @Test
     public void testSelectPharmaceuticalCompany_SelectNewpharmaceuticalCompany() throws Exception {
-        action.setPharmaceuticalCompanyExternalId(pharmaceuticalCompany.getExternalId());
-        when(mockOrganizationService.getByExternalId(pharmaceuticalCompany.getExternalId())).thenReturn(
+        action.setPharmaceuticalCompanyId(pharmaceuticalCompany.getNesId());
+        when(mockOrganizationSearchService.getOrganization(pharmaceuticalCompany.getNesId())).thenReturn(
                 pharmaceuticalCompany);
         action.prepare();
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.selectPharmaceuticalCompany());
@@ -184,8 +192,8 @@ public class ManagePharmaceuticalCompaniesActionTest extends AbstractWebTest {
     @Test
     public void testSelectPharmaceuticalCompany_SelectExistingpharmaceuticalCompany() throws Exception {
         registration.getFinancialDisclosure().getPharmaceuticalCompanies().add(pharmaceuticalCompany);
-        action.setPharmaceuticalCompanyExternalId(pharmaceuticalCompany.getExternalId());
-        when(mockOrganizationService.getByExternalId(pharmaceuticalCompany.getExternalId())).thenReturn(
+        action.setPharmaceuticalCompanyId(pharmaceuticalCompany.getNesId());
+        when(mockOrganizationSearchService.getOrganization(pharmaceuticalCompany.getNesId())).thenReturn(
                 pharmaceuticalCompany);
         action.prepare();
         assertEquals(RETURN_MANAGE_PHARMACEUTICAL_COMPANY, action.selectPharmaceuticalCompany());
@@ -194,11 +202,11 @@ public class ManagePharmaceuticalCompaniesActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testSavePharmaceuticalCompany() throws ValidationException {
+    public void testSavePharmaceuticalCompany() {
         action.setPharmaceuticalCompany(pharmaceuticalCompany);
-        pharmaceuticalCompany.setExternalData(null);
+        pharmaceuticalCompany.setNesId(null);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.savePharmaceuticalCompany());
-        verify(mockOrganizationService).create(pharmaceuticalCompany, OrganizationRoleType.PHARMACEUTICAL_COMPANY);
+        verify(mockResearchOrganizationService).create(pharmaceuticalCompany, ResearchOrganizationType.DRUG_COMPANY);
         assertTrue(registration.getFinancialDisclosure().getPharmaceuticalCompanies().contains(pharmaceuticalCompany));
         verify(mockRegistrationService).save(registration, FormTypeEnum.CTEP_FINANCIAL_DISCLOSURE_FORM);
     }

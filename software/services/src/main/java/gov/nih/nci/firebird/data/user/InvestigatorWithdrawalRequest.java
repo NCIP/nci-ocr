@@ -82,8 +82,6 @@
  */
 package gov.nih.nci.firebird.data.user;
 
-import java.io.Serializable;
-
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -97,9 +95,7 @@ import org.hibernate.annotations.Parent;
  * Contains information related to a CTEP investigator's request to withdraw from further CTEP sponsored trials.
  */
 @Embeddable
-public class InvestigatorWithdrawalRequest implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class InvestigatorWithdrawalRequest {
 
     private FirebirdUser user;
 

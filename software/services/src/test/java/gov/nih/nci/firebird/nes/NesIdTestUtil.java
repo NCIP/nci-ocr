@@ -97,7 +97,7 @@ public final class NesIdTestUtil {
     }
 
     public static String getNesIdExtension(Organization organization) {
-        return getNesIdExtension(organization.getExternalId());
+        return getNesIdExtension(organization.getNesId());
     }
 
     public static String getNesIdExtension(String nesIdString) {

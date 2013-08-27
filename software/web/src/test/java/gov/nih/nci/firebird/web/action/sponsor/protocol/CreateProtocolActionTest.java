@@ -89,6 +89,7 @@ import gov.nih.nci.firebird.common.ValidationResult;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.ProtocolFactory;
@@ -106,6 +107,8 @@ public class CreateProtocolActionTest extends AbstractWebTest {
     @Inject
     private ProtocolService mockProtocolService;
     @Inject
+    OrganizationSearchService mockOrgSearchService;
+    @Inject
     private CreateProtocolAction action;
     private Protocol protocol = ProtocolFactory.getInstance().createWithForms();
     private Organization sponsor = OrganizationFactory.getInstance().create();
@@ -114,8 +117,10 @@ public class CreateProtocolActionTest extends AbstractWebTest {
     public void setUp() throws Exception {
         super.setUp();
         when(mockProtocolService.create()).thenReturn(new Protocol());
+        action.setOrganizationSearchService(mockOrgSearchService);
         action.setProtocol(protocol);
         action.setSponsor(sponsor);
+
     }
 
     @Test

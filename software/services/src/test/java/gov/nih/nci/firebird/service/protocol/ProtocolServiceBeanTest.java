@@ -82,10 +82,11 @@
  */
 package gov.nih.nci.firebird.service.protocol;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Provider;
+import static gov.nih.nci.firebird.data.FormOptionality.*;
+import static gov.nih.nci.firebird.data.FormStatus.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.common.ValidationUtility;
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
@@ -99,7 +100,6 @@ import gov.nih.nci.firebird.data.InvitationStatus;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.Protocol;
-import gov.nih.nci.firebird.data.ProtocolRevision;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.RegistrationType;
 import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
@@ -107,8 +107,11 @@ import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.SponsorRole;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.service.messages.FirebirdMessage;
+import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
+import gov.nih.nci.firebird.service.messages.TemplateService;
+import gov.nih.nci.firebird.service.messages.email.EmailService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
-import gov.nih.nci.firebird.service.sponsor.SponsorNotificationService;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.FormTypeFactory;
@@ -118,6 +121,17 @@ import gov.nih.nci.firebird.test.PersonFactory;
 import gov.nih.nci.firebird.test.ProtocolFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
+
 import org.apache.commons.lang.time.DateUtils;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -127,39 +141,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.Set;
-
-import static gov.nih.nci.firebird.data.FormOptionality.NONE;
-import static gov.nih.nci.firebird.data.FormOptionality.OPTIONAL;
-import static gov.nih.nci.firebird.data.FormOptionality.REQUIRED;
-import static gov.nih.nci.firebird.data.FormStatus.APPROVED;
-import static gov.nih.nci.firebird.data.FormStatus.INACTIVE;
-import static gov.nih.nci.firebird.data.FormStatus.IN_PROGRESS;
-import static gov.nih.nci.firebird.data.FormStatus.NOT_APPLICABLE;
-import static gov.nih.nci.firebird.data.FormStatus.NOT_STARTED;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Provider;
 
 @SuppressWarnings("unchecked")
 public class ProtocolServiceBeanTest {
@@ -169,19 +154,17 @@ public class ProtocolServiceBeanTest {
     @Mock
     private ProtocolRegistrationService mockRegistrationService;
     @Mock
-    private ProtocolValidationService mockProtocolValidationService;
-    @Mock
-    private ProtocolAgentService mockProtocolAgentService;
-
-    @Mock
-    private SponsorNotificationService mockSponsorNotificationService;
-    @Mock
     private Provider<Session> mockSessionProvider;
     @Mock
     private Session mockSession;
     @Mock
     private Query mockQuery;
-
+    @Mock
+    private TemplateService mockTemplateService;
+    @Mock
+    private EmailService mockEmailService;
+    @Mock
+    private SponsorService mockSponsorService;
     private ProtocolServiceBean bean = new ProtocolServiceBean();
     private Organization sponsorOrganization = OrganizationFactory.getInstance().create();
     private List<FormType> standardForms = new ArrayList<FormType>();
@@ -202,9 +185,9 @@ public class ProtocolServiceBeanTest {
         when(mockSession.createQuery(anyString())).thenReturn(mockQuery);
         bean.setSessionProvider(mockSessionProvider);
         bean.setRegistrationService(mockRegistrationService);
-        bean.setProtocolValidationService(mockProtocolValidationService);
-        bean.setProtocolAgentService(mockProtocolAgentService);
-        bean.setSponsorNotificationService(mockSponsorNotificationService);
+        bean.setTemplateService(mockTemplateService);
+        bean.setEmailService(mockEmailService);
+        bean.setSponsorService(mockSponsorService);
         sponsorUser.addSponsorRepresentativeRole(sponsorOrganization);
         delegateUser.addSponsorDelegateRole(sponsorOrganization);
         bean.setResources(resources);
@@ -300,11 +283,15 @@ public class ProtocolServiceBeanTest {
         assertTrue(DateUtils.isSameDay(registration.getApprovalDate(), subInvestigatorRegistration.getApprovalDate()));
         checkFormStatuses(registration, APPROVED);
         checkFormStatuses(subInvestigatorRegistration, APPROVED);
-        verify(mockSponsorNotificationService).notifyInvestigatorsOfApproval(registration);
+        verify(mockSponsorService).getSponsorEmailAddress(registration.getProtocol().getSponsor());
+        verify(mockTemplateService).generateMessage(eq(FirebirdMessageTemplate.REGISTRATION_PACKET_APPROVED_EMAIL),
+                any(Map.class));
+        verify(mockEmailService).sendMessage(any(Collection.class), any(Collection.class), anyString(),
+                any(FirebirdMessage.class));
     }
 
     private SubInvestigatorRegistration createSubinvestigatorRegistration(InvestigatorRegistration registration,
-                                                                          RegistrationStatus status) {
+            RegistrationStatus status) {
         SubInvestigatorRegistration subInvestigatorRegistration = RegistrationFactory.getInstance()
                 .createSubinvestigatorRegistration(registration);
         subInvestigatorRegistration.setStatus(status);
@@ -329,7 +316,11 @@ public class ProtocolServiceBeanTest {
         assertEquals(RegistrationStatus.APPROVED, subInvestigatorRegistration.getStatus());
         assertFalse(registration.getApprovalDate().equals(subInvestigatorRegistration.getApprovalDate()));
         checkFormStatuses(registration, APPROVED);
-        verify(mockSponsorNotificationService).notifyInvestigatorsOfApproval(registration);
+        verify(mockSponsorService).getSponsorEmailAddress(registration.getProtocol().getSponsor());
+        verify(mockTemplateService).generateMessage(eq(FirebirdMessageTemplate.REGISTRATION_PACKET_APPROVED_EMAIL),
+                any(Map.class));
+        verify(mockEmailService).sendMessage(any(Collection.class), any(Collection.class), anyString(),
+                any(FirebirdMessage.class));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -359,7 +350,11 @@ public class ProtocolServiceBeanTest {
         assertEquals(RegistrationStatus.INACTIVE, subRegistration.getStatus());
         checkRegistrationFormsForStatus(subRegistration, INACTIVE);
 
-        verify(mockSponsorNotificationService, times(2)).notifyOfDeactivation(any(AbstractProtocolRegistration.class), anyString());
+        verify(mockSponsorService, times(2)).getSponsorEmailAddress(protocol.getSponsor());
+        verify(mockTemplateService, times(2)).generateMessage(
+                eq(FirebirdMessageTemplate.REGISTRATION_PACKET_DEACTIVATED_EMAIL), any(Map.class));
+        verify(mockEmailService, times(2)).sendMessage(anyString(), anyCollection(), anyString(),
+                any(FirebirdMessage.class));
     }
 
     private void checkRegistrationFormsForStatus(AbstractProtocolRegistration registration, FormStatus status) {
@@ -408,8 +403,7 @@ public class ProtocolServiceBeanTest {
     }
 
     private Protocol peformReactivatePacketTest(InvitationStatus investigatorStatus,
-                                                InvitationStatus subinvestigatorStatus) {
-        String comments = "These are the comments of failure";
+            InvitationStatus subinvestigatorStatus) {
         Protocol protocol = ProtocolFactory.getInstance().createWithForms();
         InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
                 InvestigatorProfileFactory.getInstance().create(), protocol);
@@ -419,9 +413,14 @@ public class ProtocolServiceBeanTest {
                 .createSubinvestigatorRegistration(registration);
         subRegistration.getInvitation().setInvitationStatus(subinvestigatorStatus);
         subRegistration.getInvitation().setInvitationChangeDate(DateUtils.addDays(new Date(), -10));
-        bean.deactivatePacket(registration, comments);
+        bean.deactivatePacket(registration, "These are the comments of failure");
+        reset(mockEmailService);
         bean.reactivatePacket(registration, ValueGenerator.getUniqueString());
-        verify(mockSponsorNotificationService, times(2)).notifyOfReactivation(any(AbstractProtocolRegistration.class), anyString());
+        verify(mockSponsorService, times(4)).getSponsorEmailAddress(protocol.getSponsor());
+        verify(mockTemplateService, times(2)).generateMessage(
+                eq(FirebirdMessageTemplate.REGISTRATION_PACKET_REACTIVATED_EMAIL), any(Map.class));
+        verify(mockEmailService, times(2)).sendMessage(anyString(), anyCollection(), anyString(),
+                any(FirebirdMessage.class));
         return protocol;
     }
 
@@ -487,7 +486,7 @@ public class ProtocolServiceBeanTest {
     @Test
     public void testUpdateProtocol_Unchanged() throws ValidationException {
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
-        Protocol unmodifiedProtocol = protocol.createCopy();
+        Protocol unmodifiedProtocol = protocol.clone();
         bean.updateProtocol(protocol, unmodifiedProtocol, "No changes");
         verify(mockSession, never()).save(unmodifiedProtocol);
     }
@@ -497,13 +496,13 @@ public class ProtocolServiceBeanTest {
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
         InvestigatorRegistration registration = createTestRegistrationForAcceptance();
         registration.setStatus(RegistrationStatus.IN_PROGRESS);
-        Protocol modifiedProtocol = protocol.createCopy();
+        Protocol modifiedProtocol = protocol.clone();
         modifiedProtocol.addRegistration(registration);
         setFormsStatus(registration, FormStatus.COMPLETED);
         modifiedProtocol.setProtocolTitle("New Title");
         bean.updateProtocol(protocol, modifiedProtocol, "comments");
-        verify(mockSponsorNotificationService).sendProtocolUpdateEmail(any(AbstractProtocolRegistration.class),
-                any(ProtocolRevision.class));
+        verify(mockEmailService).sendMessage(anyString(), anyCollectionOf(String.class), anyString(),
+                any(FirebirdMessage.class));
         verifyFormStatuses(registration, FormStatus.COMPLETED);
     }
 
@@ -524,13 +523,13 @@ public class ProtocolServiceBeanTest {
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
         InvestigatorRegistration registration = createTestRegistrationForAcceptance();
         registration.setStatus(RegistrationStatus.SUBMITTED);
-        Protocol modifiedProtocol = protocol.createCopy();
+        Protocol modifiedProtocol = protocol.clone();
         modifiedProtocol.addRegistration(registration);
         modifiedProtocol.setProtocolTitle("New Title");
         setFormsStatus(registration, FormStatus.COMPLETED);
         bean.updateProtocol(protocol, modifiedProtocol, "comments");
-        verify(mockSponsorNotificationService).sendProtocolUpdateEmail(any(AbstractProtocolRegistration.class),
-                any(ProtocolRevision.class));
+        verify(mockEmailService).sendMessage(anyString(), anyCollectionOf(String.class), anyString(),
+                any(FirebirdMessage.class));
         verifyFormStatuses(registration, FormStatus.IN_PROGRESS);
     }
 
@@ -539,7 +538,7 @@ public class ProtocolServiceBeanTest {
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
         InvestigatorRegistration registration = createTestRegistrationForAcceptance();
         registration.setStatus(RegistrationStatus.SUBMITTED);
-        Protocol modifiedProtocol = protocol.createCopy();
+        Protocol modifiedProtocol = protocol.clone();
         protocol.addRegistration(registration);
         modifiedProtocol.addRegistration(registration);
 
@@ -552,8 +551,8 @@ public class ProtocolServiceBeanTest {
                 FormOptionality.REQUIRED);
 
         bean.updateProtocol(protocol, modifiedProtocol, "comments");
-        verify(mockSponsorNotificationService).sendProtocolUpdateEmail(any(AbstractProtocolRegistration.class),
-                any(ProtocolRevision.class));
+        verify(mockEmailService).sendMessage(anyString(), anyCollectionOf(String.class), anyString(),
+                any(FirebirdMessage.class));
         verify(mockSession, times(forms.size() - 1)).delete(any(AbstractRegistrationForm.class));
         assertEquals(1, registration.getForms().size());
         assertNotNull(registration.getForm(notRemovedFormType));
@@ -562,44 +561,73 @@ public class ProtocolServiceBeanTest {
     @Test
     public void testUpdateProtocol_NoComment() throws ValidationException {
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
-        Protocol modifiedProtocol = protocol.createCopy();
+        Protocol modifiedProtocol = protocol.clone();
         modifiedProtocol.setProtocolTitle("New Title");
-        bean.updateProtocol(protocol, modifiedProtocol, "comments");
-        verify(mockProtocolValidationService).validateChanges(modifiedProtocol, "comments");
+        try {
+            bean.updateProtocol(protocol, modifiedProtocol, "");
+            fail("Should have thrown a validation exception");
+        } catch (ValidationException e) {
+            assertEquals(1, e.getResult().getFailures().size());
+            ValidationUtility.checkForFailureByMessageKey(e.getResult(), "comment", "protocol.change.comment.required");
+            verify(mockSession).evict(modifiedProtocol);
+        }
     }
 
     @Test
     public void testUpdateProtocol_InvalidInvestigatorFormOptionalities() throws ValidationException {
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
-        Protocol modifiedProtocol = protocol.createCopy();
+        Protocol modifiedProtocol = protocol.clone();
         modifiedProtocol.getRegistrationConfiguration().getInvestigatorConfiguration().getFormOptionalities().clear();
         modifiedProtocol.getRegistrationConfiguration().setInvestigatorOptionality(new FormType("name"),
                 FormOptionality.OPTIONAL);
-        bean.updateProtocol(protocol, modifiedProtocol, "comments");
-        verify(mockProtocolValidationService).validateChanges(modifiedProtocol, "comments");
+        try {
+            bean.updateProtocol(protocol, modifiedProtocol, "comments");
+            fail("Should have thrown a validation exception");
+        } catch (ValidationException e) {
+            assertEquals(1, e.getResult().getFailures().size());
+            ValidationUtility.checkForFailureByMessageKey(e.getResult(), null,
+                    "protocol.investigator.optionalities.require.one.required.form");
+            verify(mockSession).evict(modifiedProtocol);
+        }
     }
 
     @Test
     public void testUpdateProtocol_InvalidSubinvestigatorFormOptionalities() throws ValidationException {
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
-        Protocol modifiedProtocol = protocol.createCopy();
+        Protocol modifiedProtocol = protocol.clone();
         modifiedProtocol.getRegistrationConfiguration().getSubinvestigatorConfiguration().getFormOptionalities()
                 .clear();
         modifiedProtocol.getRegistrationConfiguration().setSubinvestigatorOptionality(new FormType("name"),
                 FormOptionality.NONE);
-        bean.updateProtocol(protocol, modifiedProtocol, "comments");
-        verify(mockProtocolValidationService).validateChanges(modifiedProtocol, "comments");
+        try {
+            bean.updateProtocol(protocol, modifiedProtocol, "comments");
+            fail("Should have thrown a validation exception");
+        } catch (ValidationException e) {
+            assertEquals(1, e.getResult().getFailures().size());
+            ValidationUtility.checkForFailureByMessageKey(e.getResult(), null,
+                    "protocol.subinvestigator.optionalities.require.one.required.or.optional.form");
+            verify(mockSession).evict(modifiedProtocol);
+        }
     }
 
     @Test
     public void testUpdateProtocol_NoForms() throws ValidationException {
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
-        Protocol modifiedProtocol = protocol.createCopy();
+        Protocol modifiedProtocol = protocol.clone();
         modifiedProtocol.getRegistrationConfiguration().getInvestigatorConfiguration().getFormOptionalities().clear();
         modifiedProtocol.getRegistrationConfiguration().getSubinvestigatorConfiguration().getFormOptionalities()
                 .clear();
-        bean.updateProtocol(protocol, modifiedProtocol, "comments");
-        verify(mockProtocolValidationService).validateChanges(modifiedProtocol, "comments");
+        try {
+            bean.updateProtocol(protocol, modifiedProtocol, "comments");
+            fail("Should have thrown a validation exception");
+        } catch (ValidationException e) {
+            assertEquals(2, e.getResult().getFailures().size());
+            ValidationUtility.checkForFailureByMessageKey(e.getResult(), null,
+                    "protocol.investigator.optionalities.require.one.required.form");
+            ValidationUtility.checkForFailureByMessageKey(e.getResult(), null,
+                    "protocol.subinvestigator.optionalities.require.one.required.or.optional.form");
+            verify(mockSession).evict(modifiedProtocol);
+        }
     }
 
     @Test
@@ -608,7 +636,7 @@ public class ProtocolServiceBeanTest {
         registration.setStatus(RegistrationStatus.ACCEPTED);
         bean.removePacket(registration);
         verify(mockRegistrationService).delete(registration);
-        verify(mockSponsorNotificationService).sendPacketRemovedEmail(registration);
+        verify(mockTemplateService).generateMessage(eq(FirebirdMessageTemplate.PACKET_REMOVED_EMAIL), any(Map.class));
     }
 
     @Test
@@ -619,7 +647,7 @@ public class ProtocolServiceBeanTest {
             bean.removePacket(registration);
             fail("Should have thrown an exception");
         } catch (IllegalStateException e) {
-            verifyZeroInteractions(mockSponsorNotificationService);
+            verifyZeroInteractions(mockTemplateService);
         }
     }
 }

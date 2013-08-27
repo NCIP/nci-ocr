@@ -94,16 +94,16 @@ import org.openqa.selenium.support.FindBy;
 public class CredentialsTab extends AbstractTab<CredentialsTab> {
 
     public static final String TAB_ID = "credentialsTab";
-    private static final String LICENSES_SECTION_HEADER_SELECTOR = "#licensesSection a";
-    private static final String DEGREES_SECTION_HEADER_SELECTOR = "#degreesSection a";
-    private static final String SPECIALTIES_SECTION_HEADER_SELECTOR = "#specialtiesSection a";
-    private static final String CERTIFICATIONS_SECTION_HEADER_SELECTOR = "#certificationsSection a";
-    private static final String CERTIFICATES_SECTION_HEADER_SELECTOR = "#certificatesSection a";
-    private static final String EXPERIENCE_SECTION_HEADER_SELECTOR = "#experienceSection a";
-    private static final String INTERNSHIP_SECTION_HEADER_SELECTOR = "#internshipsSection a";
-    private static final String FELLOWSHIP_SECTION_HEADER_SELECTOR = "#fellowshipsSection a";
-    private static final String RESIDENCY_SECTION_HEADER_SELECTOR = "#residenciesSection a";
-    private static final String WORK_HISTORY_SECTION_HEADER_SELECTOR = "#workHistorySection a";
+    private static final String LICENSES_SECTION_HEADER_SELECTOR = "#licensesSection h3";
+    private static final String DEGREES_SECTION_HEADER_SELECTOR = "#degreesSection h3";
+    private static final String SPECIALTIES_SECTION_HEADER_SELECTOR = "#specialtiesSection h3";
+    private static final String CERTIFICATIONS_SECTION_HEADER_SELECTOR = "#certificationsSection h3";
+    private static final String CERTIFICATES_SECTION_HEADER_SELECTOR = "#certificatesSection h3";
+    private static final String EXPERIENCE_SECTION_HEADER_SELECTOR = "#experienceSection h3";
+    private static final String INTERNSHIP_SECTION_HEADER_SELECTOR = "#internshipsSection h3";
+    private static final String FELLOWSHIP_SECTION_HEADER_SELECTOR = "#fellowshipsSection h3";
+    private static final String RESIDENCY_SECTION_HEADER_SELECTOR = "#residenciesSection h3";
+    private static final String WORK_HISTORY_SECTION_HEADER_SELECTOR = "#workHistorySection h3";
 
     @FindBy(css = LICENSES_SECTION_HEADER_SELECTOR)
     private WebElement licensesSectionHeader;

@@ -124,7 +124,7 @@ public abstract class AbstractReviseRegistrationTest extends AbstractFirebirdWeb
     public void setUp() throws Exception {
         super.setUp();
         setUpData();
-        newIrb = getGridResources().getTestDataSource().getIrb();
+        newIrb = getGridResources().getNesTestDataSource().getIrb();
     }
 
     abstract BrowseRegistrationsPage navigateToBrowseRegistrations();

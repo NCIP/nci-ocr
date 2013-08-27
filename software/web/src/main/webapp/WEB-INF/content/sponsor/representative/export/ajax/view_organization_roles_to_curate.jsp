@@ -10,23 +10,34 @@
                 This table displays the NES ID of the role, the type of the role, the affected organization's NES ID, and the name of the organization">
     <thead>
         <tr>
-            <s:iterator value="curationDataset.displayHeaderKeys" var="headerKey">
-                <th scope="col"><div><fmt:message key="${headerKey}"/></div></th>
-            </s:iterator>
+            <th scope="col" width="170px"><div><fmt:message key="label.nes.id"/></div></th>
+            <th scope="col" width="225px"><div><fmt:message key="label.structural.role.type"/></div></th>
+            <th scope="col" width="225px"><div><fmt:message key="label.organization.player.nes.id"/></div></th>
+            <th scope="col" width="225px"><div><fmt:message key="label.organization.name"/></div></th>
         </tr>
     </thead>
 </table>
 
 <script type="text/javascript">
     $(document).ready(function() {
-        var dataRows = ${curationDataRowsJson};
+        var dataRows = ${rolesToBeCuratedJson};
         var isLongData = dataRows.length > ${minPaginationResults};
         $('#organizationRolesToBeCuratedTable').dataTable( {
             "aaData" : dataRows,
             "bInfo" : isLongData,
             "bLengthChange" : isLongData,
             "bPaginate" : isLongData,
-            "bFilter" : false
+            "bFilter" : false,
+            "aoColumns" : [
+                           {mDataProp: "roleNesId"},
+                           {mDataProp: "roleType"},
+                           {mDataProp: "organizationNesId"},
+                           {mDataProp: "name"}
+                           ],
+            "fnRowCallback" : function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                $(nRow).attr("id", aData.id);
+                return nRow;
+                }
         } );
     });
 </script>

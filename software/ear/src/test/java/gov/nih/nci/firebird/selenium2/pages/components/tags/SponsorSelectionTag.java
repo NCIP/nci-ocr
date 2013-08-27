@@ -93,9 +93,6 @@ import org.openqa.selenium.support.ui.Select;
 import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
 import gov.nih.nci.firebird.commons.selenium2.util.JavascriptUtils;
 
-/**
- * /tags/sponsorSelection.tag
- */
 public class SponsorSelectionTag extends AbstractLoadableComponent<SponsorSelectionTag> {
 
     private static final String SPONSOR_SELECT_CSS_SELECTOR = "select#protocolSponsorField";

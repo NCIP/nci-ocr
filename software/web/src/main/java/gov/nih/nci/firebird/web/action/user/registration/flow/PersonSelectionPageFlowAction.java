@@ -90,8 +90,8 @@ import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.service.account.AccountManagementService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
+import gov.nih.nci.firebird.service.person.PersonSearchResult;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.web.common.registration.RegistrationFlowStep;
 
 import java.util.List;
@@ -124,9 +124,9 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
 
     static final String CREATE_NEW = "NEW";
     static final String PERSON_SEARCH = "search";
-    private static final String FIELD_LOCATOR = "accountConfigurationData.person";
+    static final String FIELD_LOCATOR = "accountConfigurationData.person";
 
-    private String selectedPersonExternalId;
+    private String selectedPersonKey;
     private String prepopulatedSearchString;
     private String navigationOption;
     private final StateLookupService stateLookup;
@@ -158,7 +158,7 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
         super.prepare();
         states = stateLookup.getAll();
         countries = countryLookup.getAll();
-        selectedPersonExternalId = getExistingPersonId();
+        selectedPersonKey = getExistingPersonId();
     }
 
     /**
@@ -173,7 +173,7 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
                     "namespace", "/user/registration/nav" }) }) })
     @Validations(customValidators = { @CustomValidator(type = "hibernate", fieldName = FIELD_LOCATOR, parameters = {
             @ValidationParameter(name = "resourceKeyBase", value = "person"),
-            @ValidationParameter(name = "excludes", value = "externalId") }) },
+            @ValidationParameter(name = "excludes", value = "nesId") }) },
             requiredStrings = { @RequiredStringValidator(fieldName = "accountConfigurationData.person.phoneNumber",
                     key = "phone.number.required") },
             fieldExpressions = {
@@ -186,7 +186,7 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
     @Override
     public String saveAndProceedNext() {
         try {
-            personService.validate(getAccountConfigurationData().getPerson());
+            personService.validatePerson(getAccountConfigurationData().getPerson());
             return super.saveAndProceedNext();
         } catch (ValidationException e) {
             return handleValidationException(e, FIELD_LOCATOR);
@@ -205,7 +205,7 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
     private void removeReturnLinkIfInvalid() {
         if (getAccountConfigurationData().getPerson() != null) {
             try {
-                personService.validate(getAccountConfigurationData().getPerson());
+                personService.validatePerson(getAccountConfigurationData().getPerson());
             } catch (ValidationException e) {
                 getFlowController().removeVisitedStep(RegistrationFlowStep.VERIFICATION);
             }
@@ -235,9 +235,10 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
     }
 
     private String doInitialEntry() {
-        List<Person> results = doEmailSearch();
+        List<PersonSearchResult> results = doEmailSearch();
         if (results.size() == 1) {
-            configureAutoselectedResult(results);
+            getAccountConfigurationData().setPerson(results.get(0).getPerson());
+            setPersonAutoselected(true);
             return INPUT;
         } else if (results.size() > 1) {
             setPrepopulatedSearchString(getCurrentGridSessionInformation().getAccount().getEmailAddress());
@@ -247,19 +248,8 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
         }
     }
 
-    private void configureAutoselectedResult(List<Person> results) {
-        String externalId = results.get(0).getExternalId();
-        try {
-            Person person = personService.getByExternalId(externalId);
-            getAccountConfigurationData().setPerson(person);
-            setPersonAutoselected(true);
-        } catch (InvalidatedPersonException e) {
-            throw new IllegalStateException("Unexpected failure for person external id: " + externalId, e);
-        }
-    }
-
     private String handleNameSearch() {
-        List<Person> results = doNameSearch();
+        List<PersonSearchResult> results = doNameSearch();
         if (!results.isEmpty()) {
             String firstName = getCurrentGridSessionInformation().getAccount().getFirstName();
             String lastName = getCurrentGridSessionInformation().getAccount().getLastName();
@@ -269,15 +259,17 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
         return PERSON_SEARCH;
     }
 
-    private List<Person> doNameSearch() {
-        String lastName = getCurrentGridSessionInformation().getAccount().getLastName();
-        String firstName = getCurrentGridSessionInformation().getAccount().getFirstName();
-        return getPersonService().search(lastName + "," + firstName);
+    private List<PersonSearchResult> doNameSearch() {
+        Person searchPerson = new Person();
+        searchPerson.setFirstName(getCurrentGridSessionInformation().getAccount().getFirstName());
+        searchPerson.setLastName(getCurrentGridSessionInformation().getAccount().getLastName());
+        return getPersonSearchService().search(searchPerson);
     }
 
-    private List<Person> doEmailSearch() {
-        String emailAddress = getCurrentGridSessionInformation().getAccount().getEmailAddress();
-        return getPersonService().search(emailAddress);
+    private List<PersonSearchResult> doEmailSearch() {
+        Person searchPerson = new Person();
+        searchPerson.setEmail(getCurrentGridSessionInformation().getAccount().getEmailAddress());
+        return getPersonSearchService().search(searchPerson);
     }
 
     @Override
@@ -285,7 +277,7 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
         String strutsForward = SUCCESS;
         if (StringUtils.isNotEmpty(navigationOption)) {
             strutsForward = handleNavigation();
-        } else if (StringUtils.isNotEmpty(selectedPersonExternalId)) {
+        } else if (StringUtils.isNotEmpty(selectedPersonKey)) {
             strutsForward = handleExistingPerson();
         } else {
             removeReturnLinkIfInvalid();
@@ -312,13 +304,14 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
     }
 
     private String handleExistingPerson() {
-        Person selectedPerson = getPerson(getSelectedPersonExternalId());
+        Person selectedPerson = getPersonSearchService().getPerson(getSelectedPersonKey());
         if (selectedPerson == null) {
             selectedPerson = getAccountConfigurationData().getPerson();
         }
         if (getUserService().checkPersonAssociated(selectedPerson)) {
             return handlePersonAlreadyAssociated();
         } else {
+            getPersonSearchService().clearResults();
             getAccountConfigurationData().setPerson(selectedPerson);
         }
         return SUCCESS;
@@ -331,24 +324,24 @@ public class PersonSelectionPageFlowAction extends AbstractPageFlowAction {
 
     private String getExistingPersonId() {
         if (getAccountConfigurationData().getPerson() != null) {
-            return getAccountConfigurationData().getPerson().getExternalId();
+            return getAccountConfigurationData().getPerson().getNesId();
         } else {
             return null;
         }
     }
 
     /**
-     * @return the selectedPersonExternalId
+     * @return the selectedPersonKey
      */
-    public String getSelectedPersonExternalId() {
-        return selectedPersonExternalId;
+    public String getSelectedPersonKey() {
+        return selectedPersonKey;
     }
 
     /**
-     * @param selectedPersonExternalId the selectedPersonExternalId to set
+     * @param selectedPersonKey the selectedPersonKey to set
      */
-    public void setSelectedPersonExternalId(String selectedPersonExternalId) {
-        this.selectedPersonExternalId = selectedPersonExternalId;
+    public void setSelectedPersonKey(String selectedPersonKey) {
+        this.selectedPersonKey = selectedPersonKey;
     }
 
     /**

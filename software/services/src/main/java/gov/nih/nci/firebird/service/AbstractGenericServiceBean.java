@@ -138,26 +138,32 @@ public abstract class AbstractGenericServiceBean<T extends PersistentObject> ext
                 .getActualTypeArguments()[0];
     }
 
+    /**
+     * @param sessionProvider the sessionProvider to set
+     */
     @Inject
     public void setSessionProvider(Provider<Session> sessionProvider) {
         this.sessionProvider = sessionProvider;
     }
 
-    public Session getSession() {
-        return sessionProvider.get();
+    /**
+     * @return the sessionProvider
+     */
+    public Provider<Session> getSessionProvider() {
+        return sessionProvider;
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
     public void delete(T o) {
-        getSession().delete(o);
+        getSessionProvider().get().delete(o);
     }
 
     @SuppressWarnings("unchecked")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     @Override
     public List<T> getAll() {
-        return getSession().createQuery("select distinct obj from "
+        return getSessionProvider().get().createQuery("select distinct obj from "
                 + persistentClass.getName() + " obj").list();
     }
 
@@ -165,13 +171,13 @@ public abstract class AbstractGenericServiceBean<T extends PersistentObject> ext
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     @Override
     public T getById(Long id) {
-        return (T) getSession().get(persistentClass, id);
+        return (T) getSessionProvider().get().get(persistentClass, id);
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
     public Long save(T o) {
-        getSession().saveOrUpdate(o);
+        getSessionProvider().get().saveOrUpdate(o);
         return o.getId();
     }
 
@@ -200,11 +206,11 @@ public abstract class AbstractGenericServiceBean<T extends PersistentObject> ext
 
     /**
      * Deletes a collection of objects.
-     *
+     * 
      * @param objectsToDelete the objects to delete.
      */
     protected void deleteAll(Iterable<PersistentObject> objectsToDelete) {
-        Session session = getSession();
+        Session session = getSessionProvider().get();
         for (PersistentObject persistentObject : objectsToDelete) {
             session.delete(persistentObject);
         }

@@ -107,7 +107,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 
 import org.apache.log4j.Logger;
@@ -117,6 +116,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import com.google.inject.Inject;
 
 /**
  * Implementation of the ESYS integration service.
@@ -136,32 +136,32 @@ public class EsysIntegrationServiceBean implements EsysIntegrationService {
     private FileService fileService;
     private CountryLookupService countryLookupService;
 
-    @Resource(mappedName = "firebird/CesInvestigatorServiceStubBean/remote")
+    @Inject
     void setCesInvestigatorService(CesInvestigatorService cesInvestigatorService) {
         this.cesInvestigatorService = cesInvestigatorService;
     }
 
-    @Resource(mappedName = "firebird/DynamicPropertiesServiceBean/local")
+    @Inject
     void setPropertiesService(DynamicPropertiesService propertiesService) {
         this.propertiesService = propertiesService;
     }
 
-    @Resource(mappedName = "firebird/FirebirdUserServiceBean/local")
+    @Inject
     void setUserService(FirebirdUserService userService) {
         this.userService = userService;
     }
 
-    @Resource(mappedName = "firebird/InvestigatorServiceBean/local")
+    @Inject
     void setInvestigatorService(InvestigatorService investigatorService) {
         this.investigatorService = investigatorService;
     }
 
-    @Resource(mappedName = "firebird/FileServiceBean/local")
+    @Inject
     void setFileService(FileService fileService) {
         this.fileService = fileService;
     }
 
-    @Resource(mappedName = "firebird/CountryLookupServiceBean/local")
+    @Inject
     void setCountryLookupService(CountryLookupService countryLookupService) {
         this.countryLookupService = countryLookupService;
     }

@@ -82,16 +82,16 @@
  */
 package gov.nih.nci.firebird.selenium2.pages.sponsor.representative.export;
 
-import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.TableUtils;
+import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
+import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.util.List;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-
-import com.google.common.base.Function;
 
 /**
  * /sponsor/representative/export/ajax/view_persons_to_curate.jsp
@@ -129,13 +129,7 @@ public class OrganizationsTab extends AbstractExportCurationDataTab<Organization
     }
 
     public List<OrganizationListing> getListings() {
-        Function<WebElement, OrganizationListing> transformation = new Function<WebElement, OrganizationListing>() {
-            @Override
-            public OrganizationListing apply(WebElement row) {
-                return new OrganizationListing(row);
-            }
-        };
-        return JQueryUtils.transformDataTableRows(organizationsTable, transformation);
+        return FirebirdTableUtils.transformDataTableRows(this, organizationsTable, OrganizationListing.class);
     }
 
     @Override
@@ -149,22 +143,28 @@ public class OrganizationsTab extends AbstractExportCurationDataTab<Organization
         assertFindBysPresent();
     }
 
-    public class OrganizationListing {
+    public class OrganizationListing implements TableListing {
         
-        private static final int EXTERNAL_ID_COLUMN_INDEX = 0;
+        private static final int NES_ID_COLUMN_INDEX = 0;
         private static final int NAME_COLUMN_INDEX = 1;
 
-        private final String externalId;
+        private final Long id;
+        private final String nesId;
         private final String name;
 
         public OrganizationListing(WebElement row) {
+            this.id = Long.valueOf(WebElementUtils.getId(row));
             List<WebElement> cells = TableUtils.getCells(row);
-            this.externalId = cells.get(EXTERNAL_ID_COLUMN_INDEX).getText();
+            this.nesId = cells.get(NES_ID_COLUMN_INDEX).getText();
             this.name = cells.get(NAME_COLUMN_INDEX).getText();
         }
 
-        public String getExternalId() {
-            return externalId;
+        public Long getId() {
+            return id;
+        }
+
+        public String getNesId() {
+            return nesId;
         }
 
         public String getName() {

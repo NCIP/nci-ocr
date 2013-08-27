@@ -122,9 +122,7 @@ public class NesOrganizationFactory {
 
     public HealthCareFacility getTestHealthCareFacility() {
         gov.nih.nci.firebird.data.Organization firebirdOrganization = OrganizationFactory.getInstance().create();
-        HealthCareFacilityData healthCareFacilityData = new HealthCareFacilityData();
-        healthCareFacilityData.setExternalId(getTestNesIdString(NesIIRoot.HEALTH_CARE_FACILITY));
-        firebirdOrganization.setExternalData(healthCareFacilityData);
+        firebirdOrganization.setNesId(getTestNesIdString(NesIIRoot.HEALTH_CARE_FACILITY));
         HealthCareFacility healthCareFacility = facilityTranslator.toHealthCareFacility(firebirdOrganization);
         healthCareFacility.setPlayerIdentifier(getTestPlayerIdentifier());
         return healthCareFacility;
@@ -148,9 +146,7 @@ public class NesOrganizationFactory {
 
     public ResearchOrganization getTestResearchOrganization(ResearchOrganizationType type) {
         gov.nih.nci.firebird.data.Organization firebirdOrganization = OrganizationFactory.getInstance().create();
-        ResearchOrganizationData researchOrganizationData = new ResearchOrganizationData();
-        researchOrganizationData.setExternalId(getTestNesIdString(NesIIRoot.RESEARCH_ORGANIZATION));
-        firebirdOrganization.setExternalData(researchOrganizationData);
+        firebirdOrganization.setNesId(getTestNesIdString(NesIIRoot.RESEARCH_ORGANIZATION));
         ResearchOrganization researchOrganization = researchOrganizationTranslator.toResearchOrganization(
                 firebirdOrganization, type);
         researchOrganization.setPlayerIdentifier(getTestPlayerIdentifier());
@@ -159,9 +155,7 @@ public class NesOrganizationFactory {
 
     public OversightCommittee getTestOversightCommittee(OversightCommitteeType type) {
         gov.nih.nci.firebird.data.Organization firebirdOrganization = OrganizationFactory.getInstance().create();
-        OversightCommitteeData oversightCommitteeData = new OversightCommitteeData();
-        oversightCommitteeData.setExternalId(getTestNesIdString(NesIIRoot.OVERSIGHT_COMMITTEE));
-        firebirdOrganization.setExternalData(oversightCommitteeData);
+        firebirdOrganization.setNesId(getTestNesIdString(NesIIRoot.OVERSIGHT_COMMITTEE));
         OversightCommittee oversightCommittee = oversightCommitteeTranslator.toOversightCommittee(firebirdOrganization,
                 type);
         oversightCommittee.setPlayerIdentifier(getTestPlayerIdentifier());

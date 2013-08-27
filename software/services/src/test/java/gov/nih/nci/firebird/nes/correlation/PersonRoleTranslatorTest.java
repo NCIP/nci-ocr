@@ -103,7 +103,7 @@ public class PersonRoleTranslatorTest {
         HealthCareProvider healthCareProvider = PersonRoleTranslator.createHealthCareProvider(person,
                 NesIdTestUtil.TEST_NES_ID_STRING);
 
-        assertEquals(healthCareProvider.getPlayerIdentifier().getExtension(), person.getExternalId());
+        assertEquals(healthCareProvider.getPlayerIdentifier().getExtension(), person.getNesId());
         assertTrue(ComparisonUtil.areEquivalent(person.getPostalAddress(),
                 NesTranslatorHelperUtils.getAddress(healthCareProvider.getPostalAddress().getItem().get(0))));
         assertEquals(person.getEmail(),

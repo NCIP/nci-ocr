@@ -85,6 +85,7 @@ package gov.nih.nci.firebird.web.action.sponsor.annual.investigator;
 import gov.nih.nci.firebird.web.action.FirebirdActionSupport;
 
 import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.InterceptorRef;
 import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.Result;
 
@@ -92,6 +93,7 @@ import org.apache.struts2.convention.annotation.Result;
  * Action to search for CTEP investigators.
  */
 @Namespace("/sponsor/annual/investigator")
+@InterceptorRef("annualRegistrationManagementStack")
 @Result(location = "browse_ctep_investigators.jsp")
 public class BrowseCtepInvestigatorsAction extends FirebirdActionSupport {
 

@@ -84,7 +84,6 @@ package gov.nih.nci.firebird.selenium2.tests.sponsor.protocol.registration;
 
 import static org.junit.Assert.*;
 import gov.nih.nci.firebird.data.FormStatus;
-import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
@@ -95,61 +94,44 @@ import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewComple
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationOverviewTab;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab;
 import gov.nih.nci.firebird.test.LoginAccount;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.inject.Inject;
-
 public class ApproveRegistrationPacketTest extends AbstractFirebirdWebDriverTest {
 
-    @Inject
-    private DataSetBuilder builder;
-    private LoginAccount sponsorLogin;
-    private LoginAccount sponsorDelegateLogin;
-    private DataSet dataSet;
+    private InvestigatorRegistrationTestDataSet testData;
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        builder.createRegistration()
-            .complete()
-            .withAllFormsGivenStatus(FormStatus.ACCEPTED)
-            .withStatus(RegistrationStatus.IN_REVIEW);
-        sponsorLogin = builder.createSponsor().getLogin();
-        sponsorDelegateLogin = builder.createSponsor().asDelegate().getLogin();
-        dataSet = builder.build();
+        testData = InvestigatorRegistrationTestDataSet.createApprovable(getDataLoader(), getGridResources());
     }
 
     @Test
     public void testSponsorApproval() {
-        assertFalse(getRegistration().isApprovable());
-        ReviewRegistrationTab registrationTab = openReviewRegistrationTab(sponsorLogin);
+        assertFalse(testData.getRegistration().isApprovable());
+        ReviewRegistrationTab registrationTab = openReviewRegistrationTab(testData.getSponsorLogin());
         ReviewCompletionDialog reviewCompletionDialog = (ReviewCompletionDialog) registrationTab.clickCompleteReview();
-        dataSet.reload();
-        assertTrue(getRegistration().isApprovable());
-        reviewCompletionDialog.clickApproveRegistration().clickClose();
-        dataSet.reload();
-        assertEquals(RegistrationStatus.APPROVED, getRegistration().getStatus());
+        testData.reload();
+        assertTrue(testData.getRegistration().isApprovable());
+        reviewCompletionDialog.clickApproveRegistration();
+        testData.reload();
+        assertEquals(RegistrationStatus.APPROVED, testData.getRegistration().getStatus());
         registrationTab.getHelper().checkForRegistrationStatus(RegistrationStatus.APPROVED);
-        registrationTab.getHelper().checkFormStatuses(getRegistration(), FormStatus.APPROVED);
-    }
-
-    private InvestigatorRegistration getRegistration() {
-        return dataSet.getInvestigatorRegistration();
+        registrationTab.getHelper().checkFormStatuses(testData.getRegistration(), FormStatus.APPROVED);
     }
 
     @Test
     public void testSponsorDelegateCantApprove() {
-        assertFalse(getRegistration().isApprovable());
-        ReviewRegistrationTab registrationTab = openReviewRegistrationTab(sponsorDelegateLogin);
+        assertFalse(testData.getRegistration().isApprovable());
+        ReviewRegistrationTab registrationTab = openReviewRegistrationTab(testData.getSponsorDelegateLogin());
         registrationTab = (ReviewRegistrationTab) registrationTab.clickCompleteReview();
-        dataSet.reload();
-        assertTrue(getRegistration().isApprovable());
-        assertFalse(registrationTab.isCompleteReviewButtonPresent());
-        assertEquals(RegistrationStatus.ACCEPTED, getRegistration().getStatus());
+        testData.reload();
+        assertTrue(testData.getRegistration().isApprovable());
+        assertFalse(registrationTab.isCompleteReviewButtonEnabled());
+        assertEquals(RegistrationStatus.ACCEPTED, testData.getRegistration().getStatus());
         registrationTab.getHelper().checkForRegistrationStatus(RegistrationStatus.ACCEPTED);
         ReviewRegistrationOverviewTab overviewTab = registrationTab.getPage().clickOverviewTab();
         assertFalse(overviewTab.isApprovePacketButtonEnabled());
@@ -159,11 +141,11 @@ public class ApproveRegistrationPacketTest extends AbstractFirebirdWebDriverTest
 
     @Test
     public void testSponsorApprovalFromOverviewPage() {
-        ReviewRegistrationTab registrationTab = openReviewRegistrationTab(sponsorLogin);
+        ReviewRegistrationTab registrationTab = openReviewRegistrationTab(testData.getSponsorLogin());
         ReviewCompletionDialog reviewCompletionDialog = (ReviewCompletionDialog) registrationTab.clickCompleteReview();
         reviewCompletionDialog.clickReturnToOverview();
-        dataSet.reload();
-        assertTrue(getRegistration().isApprovable());
+        testData.reload();
+        assertTrue(testData.getRegistration().isApprovable());
         ReviewRegistrationOverviewTab overviewTab = registrationTab.getPage().clickOverviewTab();
         overviewTab.clickApprove();
     }
@@ -171,9 +153,9 @@ public class ApproveRegistrationPacketTest extends AbstractFirebirdWebDriverTest
     private ReviewRegistrationTab openReviewRegistrationTab(LoginAccount loginAccount) {
         HomePage homePage = openHomePage(loginAccount);
         ProtocolsListPage protocolsPage = homePage.getProtocolsMenu().clickBrowse();
-        ProtocolInformationTab protocolInformationTab = protocolsPage.getHelper().clickLink(dataSet.getProtocol());
+        ProtocolInformationTab protocolInformationTab = protocolsPage.getHelper().clickLink(testData.getProtocol());
         ProtocolInvestigatorsTab investigatorsTab = protocolInformationTab.getPage().clickInvestigatorsTab();
-        return investigatorsTab.getHelper().clickInvestigator(getRegistration());
+        return investigatorsTab.getHelper().clickInvestigator(testData.getRegistration());
     }
 
 }

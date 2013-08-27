@@ -111,7 +111,7 @@ import com.google.inject.name.Named;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class DailyJobServiceBean implements DailyJobService {
-
+    
     static final String DAILY_JOB_SERVICE_BEAN_TIMER_MARKER = DailyJobServiceBean.class.getName();
 
     private TimerService timerService;
@@ -148,7 +148,7 @@ public class DailyJobServiceBean implements DailyJobService {
     @Timeout
     @Override
     public void executeJobs(Timer timer) {
-        if (!isEmpty(sponsorService.getSponsorWithAnnualRegistrationsExternalId())) {
+        if (!isEmpty(sponsorService.getSponsorWithAnnualRegistrationsNesId())) {
             hibernateHelper.openAndBindSession();
             try {
                 annualRegistrationService.createPendingRenewals();
@@ -183,7 +183,7 @@ public class DailyJobServiceBean implements DailyJobService {
         }
     }
 
-    @Resource(mappedName = "firebird/AnnualRegistrationServiceBean/local")
+    @Inject
     void setAnnualRegistrationService(AnnualRegistrationService annualRegistrationService) {
         this.annualRegistrationService = annualRegistrationService;
     }
@@ -193,12 +193,12 @@ public class DailyJobServiceBean implements DailyJobService {
         this.hibernateHelper = hibernateHelper;
     }
 
-    @Resource(mappedName = "firebird/EsysIntegrationServiceBean/local")
+    @Inject
     void setEsysIntegrationService(EsysIntegrationService esysIntegrationService) {
         this.esysIntegrationService = esysIntegrationService;
     }
 
-    @Resource(mappedName = "firebird/SponsorServiceBean/local")
+    @Inject
     void setSponsorService(SponsorService sponsorService) {
         this.sponsorService = sponsorService;
     }

@@ -82,12 +82,13 @@
  */
 package gov.nih.nci.firebird.web.action.investigator.registration;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
 import gov.nih.nci.firebird.common.RichTextUtil;
 import gov.nih.nci.firebird.data.AbstractCredential;
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
 import gov.nih.nci.firebird.data.CredentialType;
+import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.FormType;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.InvestigatorRegistration;
@@ -99,6 +100,10 @@ import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 import gov.nih.nci.firebird.web.action.investigator.registration.common.RegistrationTabActionProcessor;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
@@ -113,8 +118,8 @@ import org.apache.struts2.convention.annotation.Results;
 import org.apache.struts2.json.JSONException;
 import org.apache.struts2.json.JSONUtil;
 
-
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 /**
@@ -123,21 +128,20 @@ import com.google.inject.Inject;
 @Namespace("/investigator/registration/ajax")
 @Results(@Result(name = RegistrationTabAction.VIEW_OVERVIEW, location = RegistrationTabAction.VIEW_OVERVIEW_PAGE))
 @InterceptorRef(value = "registrationManagementStack")
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
-// need to suppress UCDetector warnings multiple times
 public class RegistrationTabAction extends AbstractRegistrationTabAction {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String RETURN_1572 = "FORM_1572";
-    private static final String RETURN_CV = "CV";
-    private static final String RETURN_DISCLOSURE = "FINANCIAL_DISCLOSURE_FORM";
-    private static final String RETURN_H_R_CERT = "HUMAN_RESEARCH_CERTIFICATE";
-    private static final String RETURN_ADDITIONAL_ATTACHMENTS = "ADDITIONAL_ATTACHMENTS";
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat(getText("date.format.timestamp"),
+                                                                     Locale.getDefault());
+
+    static final String RETURN_1572 = "FORM_1572";
+    static final String RETURN_CV = "CV";
+    static final String RETURN_DISCLOSURE = "FINANCIAL_DISCLOSURE_FORM";
+    static final String RETURN_H_R_CERT = "HUMAN_RESEARCH_CERTIFICATE";
+    static final String RETURN_ADDITIONAL_ATTACHMENTS = "ADDITIONAL_ATTACHMENTS";
 
     static final String VIEW_PROTOCOL_INFORMATION = "ProtocolInformation";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String VIEW_OVERVIEW_PAGE = "view_overview.jsp";
     static final String VIEW_OVERVIEW = "OVERVIEW";
 
@@ -203,7 +207,7 @@ public class RegistrationTabAction extends AbstractRegistrationTabAction {
     @Action("viewOverview")
     @SuppressWarnings("PMD.EmptyCatchBlock")
     public String viewOverview() {
-        if (isRegistrationDeleted()) {
+        if (getId(getRegistration()) == null) {
             return FirebirdUIConstants.RETURN_ACCESS_DENIED_ENTER;
         }
         if (!getRegistration().isLockedForInvestigator()
@@ -258,6 +262,38 @@ public class RegistrationTabAction extends AbstractRegistrationTabAction {
     }
 
     /**
+     * @return Registration forms as JSON
+     * @throws JSONException If error occurs during serialization
+     */
+    public String getRegistrationFormsJson() throws JSONException {
+        List<Map<String, Object>> registrationForms = Lists.newArrayList();
+        for (AbstractRegistrationForm form : getRegistration().getForms()) {
+            registrationForms.add(getRegistrationFormRow(form));
+        }
+        return JSONUtil.serialize(registrationForms);
+    }
+
+    private Map<String, Object> getRegistrationFormRow(AbstractRegistrationForm form) {
+        Map<String, Object> row = Maps.newHashMap();
+        row.put("id", form.getId());
+        row.put("formTypeId", form.getFormType().getId());
+        row.put("description", form.getFormType().getDescription());
+        row.put("optionality", form.getFormOptionality().getDisplay());
+        row.put("name", form.getFormType().getName().replaceAll(" ", "_"));
+        row.put("comments", form.getComments());
+        if (form.getFormStatus() != FormStatus.NOT_APPLICABLE) {
+            row.put("modificationDate", dateFormat.format(form.getFormStatusDate()));
+        }
+        FormStatus status = form.getFormStatus();
+        if (status != null) {
+            row.put("status", status.getDisplay());
+        } else {
+            row.put("status", "Unknown");
+        }
+        return row;
+    }
+
+    /**
      * @return the JSON string of the protocol changes.
      * @throws JSONException if a serialization exception occurs.
      */
@@ -306,8 +342,6 @@ public class RegistrationTabAction extends AbstractRegistrationTabAction {
      * @param type get credentials of this type
      * @return list of credentials to display
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public SortedSet<AbstractCredential<?>> getCvCredentials(CredentialType type) {
         return getRegistration().getProfile().getCredentials(type);
     }
@@ -315,8 +349,6 @@ public class RegistrationTabAction extends AbstractRegistrationTabAction {
     /**
      * @return if there are any expired credentials in the profile.
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public boolean profileContainsExpiredCredentials() {
         InvestigatorProfile profile = getRegistration().getProfile();
         return CollectionUtils.exists(profile.getCredentials(), new Predicate() {
@@ -353,10 +385,7 @@ public class RegistrationTabAction extends AbstractRegistrationTabAction {
     /**
      * @param processor the processor to set
      */
-    @SuppressWarnings("ucd")
-    // used to inject mock processor from tests
-    void setProcessor(RegistrationTabActionProcessor<AbstractProtocolRegistration> processor) {
+    protected void setProcessor(RegistrationTabActionProcessor<AbstractProtocolRegistration> processor) {
         this.processor = processor;
     }
-
 }

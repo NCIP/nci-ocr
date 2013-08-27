@@ -118,7 +118,7 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 
 public class RemoveInvestigatorsTest extends AbstractFirebirdWebDriverTest {
-
+    
     @Inject
     private DataSetBuilder builder;
     private DataSet dataSet;
@@ -157,7 +157,7 @@ public class RemoveInvestigatorsTest extends AbstractFirebirdWebDriverTest {
 
     private InvestigatorRegistration createRegistrationSharingDocuments(InvestigatorRegistration registration1) {
         InvestigatorProfile profile = registration1.getProfile();
-        InvestigatorRegistration registration2 =
+        InvestigatorRegistration registration2 = 
                 builder.createRegistration(profile).complete().get();
         registration2.getHumanResearchCertificateForm().getCertificates().clear();
         Set<? extends Certificate> certificates = registration1.getHumanResearchCertificateForm().getCertificates();
@@ -221,7 +221,7 @@ public class RemoveInvestigatorsTest extends AbstractFirebirdWebDriverTest {
         Person investigator = registration.getProfile().getPerson();
         String expectedTo = investigator.getEmail();
         String expectedSubject = FirebirdPropertyUtils
-                .evaluateAndReturnVelocityProperty(FirebirdMessageTemplate.PACKET_REMOVED_EMAIL.getSubjectTemplate(),
+                .evaluateAndReturnVelocityProperty(FirebirdMessageTemplate.PACKET_REMOVED_EMAIL.getSubjectTemplate(), 
                         registration);
         assertNotNull(getEmailChecker().getSentEmail(expectedTo, expectedSubject));
     }
@@ -248,7 +248,7 @@ public class RemoveInvestigatorsTest extends AbstractFirebirdWebDriverTest {
         ProtocolInformationTab protocolInformationTab = navigateToProtocolInfoTab(sponsorDelegateLogin);
         ProtocolInvestigatorsTab investigatorsTab = protocolInformationTab.getPage().clickInvestigatorsTab();
         InvestigatorRegistrationListing listing = investigatorsTab.getHelper().getListing(investigatorRegistration);
-        assertFalse("Sponsor Delegates should not be able to remove an investigator from a registration",
+        assertFalse("Sponsor Delegates should not be able to remove an investigator from a registration", 
                 listing.hasRemoveButton());
     }
 
@@ -260,7 +260,7 @@ public class RemoveInvestigatorsTest extends AbstractFirebirdWebDriverTest {
         LoginAccount login = dataSet.getInvestigatorLogin();
         openHomePage(login).getHelper().openInProgressTask(registration);
         dataSet.delete(registration);
-        getDriver().findElement(By.cssSelector("#form_cv_tab > a")).click();
+        getDriver().findElement(By.cssSelector("#form_CVTab > a")).click();
         AccessDeniedPage.FACTORY.isDisplayed(getDriver());
     }
 }

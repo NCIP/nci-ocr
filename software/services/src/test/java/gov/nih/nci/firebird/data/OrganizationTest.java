@@ -157,9 +157,11 @@ public class OrganizationTest {
         assertEquals(organization.getCtepId(), snapshot.getCtepId());
         assertEquals(organization.getEmail(), snapshot.getEmail());
         assertEquals(organization.getName(), snapshot.getName());
-        assertEquals(organization.getExternalId(), snapshot.getExternalId());
+        assertEquals(organization.getNesId(), snapshot.getNesId());
         assertEquals(organization.getPhoneNumber(), snapshot.getPhoneNumber());
-        assertEquals(organization.getCurationStatus(), snapshot.getCurationStatus());
+        assertEquals(organization.getPlayerIdentifier(), snapshot.getPlayerIdentifier());
+        assertEquals(organization.getLastNesRefresh(), snapshot.getLastNesRefresh());
+        assertEquals(organization.getNesStatus(), snapshot.getNesStatus());
         assertEquals(organization.getPostalAddress(), snapshot.getPostalAddress());
     }
 

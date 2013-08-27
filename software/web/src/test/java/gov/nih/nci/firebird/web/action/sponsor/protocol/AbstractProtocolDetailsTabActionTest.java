@@ -88,7 +88,7 @@ import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
+import gov.nih.nci.firebird.service.investigatorprofile.ProfileNesRefreshService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.ProtocolFactory;
@@ -103,7 +103,7 @@ public class AbstractProtocolDetailsTabActionTest extends AbstractWebTest {
     @Inject
     private ProtocolService mockProtocolService;
     @Inject
-    private ProfileRefreshService mockProfileRefreshService;
+    private ProfileNesRefreshService mockProfileRefreshService;
     private AbstractProtocolDetailsTabAction action;
     private Protocol protocol = ProtocolFactory.getInstanceWithId().createWithForms();
 

@@ -98,7 +98,6 @@ import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.service.AbstractGenericServiceBean;
 import gov.nih.nci.firebird.service.file.FileMetadata;
 import gov.nih.nci.firebird.service.file.FileService;
-import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.messages.FirebirdMessage;
 import gov.nih.nci.firebird.service.messages.TemplateService;
 import gov.nih.nci.firebird.service.messages.email.EmailService;
@@ -122,8 +121,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
-
-import javax.annotation.Resource;
 
 import org.apache.commons.io.IOUtils;
 import org.hibernate.Query;
@@ -154,14 +151,13 @@ public abstract class AbstractBaseRegistrationServiceBean<T extends AbstractRegi
     private TemplateService templateService;
     private DigitalSigningService digitalSigningService;
     private SponsorService sponsorService;
-    private InvestigatorProfileService profileService;
     private CertificateAuthorityManager certificateAuthorityManager;
     private ResourceBundle resources;
 
     @SuppressWarnings("unchecked")  // Hibernate list() method is unchecked
     @Override
     public List<T> getByStatus(RegistrationStatus status) {
-        Query query = getSession().createQuery("from " + getRegistrationClass().getName()
+        Query query = getSessionProvider().get().createQuery("from " + getRegistrationClass().getName()
                 + " where status = :status");
         query.setParameter("status", status);
         return query.list();
@@ -232,7 +228,13 @@ public abstract class AbstractBaseRegistrationServiceBean<T extends AbstractRegi
         }
     }
 
-    private void prepareDocumentsForReview(T registration, Keystore keystore, String password) {
+    /**
+     *
+     * @param registration Registration
+     * @param keystore Keystore
+     * @param password Password
+     */
+    protected void prepareDocumentsForReview(T registration, Keystore keystore, String password) {
         for (AbstractRegistrationForm form : registration.getForms()) {
             form.submitForm();
             if (supportsPdfOutput(form)) {
@@ -288,12 +290,12 @@ public abstract class AbstractBaseRegistrationServiceBean<T extends AbstractRegi
             refreshFromNes(organization);
         }
         for (Person person : registration.getPersons()) {
-            personService.refreshNow(person);
+            personService.refreshFromNes(person);
         }
     }
 
     private void refreshFromNes(Organization organization) {
-        organizationService.refreshNow(organization);
+        organizationService.refreshFromNes(organization);
     }
 
     @Override
@@ -442,7 +444,7 @@ public abstract class AbstractBaseRegistrationServiceBean<T extends AbstractRegi
     @Override
     public void uploadAndSelectAdditionalAttachment(T registration, File file, FileMetadata fileMetadata)
             throws IOException {
-        FirebirdFile addedFile = profileService.addFile(registration.getProfile(), file, fileMetadata);
+        FirebirdFile addedFile = fileService.addFileToProfile(registration.getProfile(), file, fileMetadata);
         selectAdditionalAttachment(registration, addedFile);
     }
 
@@ -477,86 +479,133 @@ public abstract class AbstractBaseRegistrationServiceBean<T extends AbstractRegi
         emailService.sendMessage(investigatorEmail, null, null, message);
     }
 
-    @Resource(mappedName = "firebird/FileServiceBean/local")
+    /**
+     *
+     * @param fileService File Service
+     */
+    @Inject
     public void setFileService(FileService fileService) {
         this.fileService = fileService;
     }
 
+    /**
+     *
+     * @param pdfService PDF Service
+     */
     @Inject
     public void setPdfService(PdfService pdfService) {
         this.pdfService = pdfService;
     }
 
+    /**
+     *
+     * @param digitalSigningService Digital Signing Service
+     */
     @Inject
     public void setDigitalSigningService(DigitalSigningService digitalSigningService) {
         this.digitalSigningService = digitalSigningService;
     }
 
+    /**
+     * @param emailService email service
+     */
     @Inject
     public void setEmailService(@Named("jmsEmailService") EmailService emailService) {
         this.emailService = emailService;
     }
 
+    /**
+     * @param templateService template service
+     */
     @Inject
     public void setTemplateService(TemplateService templateService) {
         this.templateService = templateService;
     }
 
-    @Resource(mappedName = "firebird/CertificateAuthorityManagerBean/local")
+    /**
+     *
+     * @param certificateAuthorityManager CA Manager Service
+     */
+    @Inject
     public void setCertificateAuthorityManager(CertificateAuthorityManager certificateAuthorityManager) {
         this.certificateAuthorityManager = certificateAuthorityManager;
     }
 
+    /**
+     *
+     * @param resources Resource Bundle
+     */
     @Inject
     public void setResources(ResourceBundle resources) {
         this.resources = resources;
     }
 
-    @Resource(mappedName = "firebird/PersonServiceBean/local")
+    @Inject
     void setPersonService(PersonService personService) {
         this.personService = personService;
     }
 
-    @Resource(mappedName = "firebird/OrganizationServiceBean/local")
+    @Inject
     void setOrganizationService(OrganizationService organizationService) {
         this.organizationService = organizationService;
     }
 
-    @Resource(mappedName = "firebird/SponsorServiceBean/local")
+    /**
+     * @param sponsorService sponsor service
+     */
+    @Inject
     public void setSponsorService(SponsorService sponsorService) {
         this.sponsorService = sponsorService;
     }
 
-    @Resource(mappedName = "firebird/InvestigatorProfileServiceBean/local")
-    public void setProfileService(InvestigatorProfileService profileService) {
-        this.profileService = profileService;
-    }
-
-    public InvestigatorProfileService getProfileService() {
-        return profileService;
-    }
-
+    /**
+     * @return the personService
+     */
     protected PersonService getPersonService() {
         return personService;
     }
 
+    /**
+     * @return the sponsorService
+     */
     protected SponsorService getSponsorService() {
         return sponsorService;
     }
 
-    private FileService getFileService() {
+    /**
+     * @return file service
+     */
+    protected FileService getFileService() {
         return fileService;
     }
 
+    PdfService getPdfService() {
+        return pdfService;
+    }
+
+    /**
+     * @return the email service
+     */
     protected EmailService getEmailService() {
         return emailService;
     }
 
+    /**
+     * @return the template service
+     */
     protected TemplateService getTemplateService() {
         return templateService;
     }
 
-    private ResourceBundle getResources() {
+    DigitalSigningService getDigitalSigningService() {
+        return digitalSigningService;
+    }
+
+    CertificateAuthorityManager getCertificateAuthorityManager() {
+        return certificateAuthorityManager;
+    }
+
+    ResourceBundle getResources() {
         return resources;
     }
 

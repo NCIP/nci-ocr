@@ -104,7 +104,7 @@ implements CountryLookupService {
 
     @Override
     public Country getByThreeLetterCode(String alpha3Code) {
-        Criteria criteria = getSession().createCriteria(Country.class);
+        Criteria criteria = getSessionProvider().get().createCriteria(Country.class);
         criteria.add(Restrictions.eq("alpha3", alpha3Code));
         return (Country) criteria.uniqueResult();
     }
@@ -112,7 +112,7 @@ implements CountryLookupService {
     @SuppressWarnings("unchecked")  // Hibernate queries return untyped lists
     @Override
     public List<Country> getAll() {
-        return getSession().createQuery("from "
+        return getSessionProvider().get().createQuery("from "
                 + Country.class.getName() + " order by name").list();
     }
 

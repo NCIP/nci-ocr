@@ -3,7 +3,7 @@
 <h2 class="clear"><fmt:message key="registration.cv.title"/></h2>
 <firebird:messages/>
 
-<s:if test="readOnly">
+<s:if test="registration.lockedForInvestigator">
     <div>
         <firebird:viewGeneratedFormButton buttonId="viewCvPdfButtonTop" form="${form}"/>
     </div>
@@ -43,8 +43,8 @@
             <p>${registration.profile.person.displayName}</p>
         </firebird:sectionDisplay>
         <s:set var="fieldNum" value="#fieldNum + 1"/>
-        <firebird:sectionDisplay id="externalIdSection" sectionTitleKey="label.person.nes.id"  sectionNum="${fieldNum}">
-            <p>${registration.profile.person.externalId}</p>
+        <firebird:sectionDisplay id="nesIdSection" sectionTitleKey="label.person.nes.id"  sectionNum="${fieldNum}">
+            <p>${registration.profile.person.nesId}</p>
         </firebird:sectionDisplay>
         <s:set var="fieldNum" value="#fieldNum + 1"/>
         <firebird:sectionDisplay id="primaryAddressSection" sectionTitleKey="label.primary.address"  sectionNum="${fieldNum}">
@@ -415,7 +415,6 @@
     <div>
         <firebird:viewGeneratedFormButton buttonId="viewCvPdfButtonBottom" form="${form}"/>
     </div>
-    <firebird:nextTabButton form="${form}" />
     <div class="clear"></div>
 
 </s:else>

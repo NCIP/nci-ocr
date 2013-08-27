@@ -82,9 +82,9 @@
  */
 package gov.nih.nci.firebird.service.annual.registration;
 
-import static com.google.common.base.Preconditions.*;
-import static gov.nih.nci.firebird.common.FirebirdDateUtils.*;
-import static gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static gov.nih.nci.firebird.common.FirebirdDateUtils.isCurrentDateBeforeAndWithinRangeOfDate;
+import static gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter.ANNUAL_REGISTRATION;
 import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.data.AbstractAnnualRegistrationForm;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
@@ -108,7 +108,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -132,7 +131,7 @@ public class AnnualRegistrationServiceBean extends AbstractBaseRegistrationServi
 
     private static final String REGISTRATIONS_REQUIRING_RENEWAL_HQL = "from "
             + AnnualRegistration.class.getName()
-            + " where renewed = false and renewalDate <= :renewalDate "
+            + " where renewal is null and renewalDate <= :renewalDate "
             + "and profile.user.investigatorRole.status not in ('"
             + InvestigatorStatus.WITHDRAWN + "','" + InvestigatorStatus.DISQUALIFIED + "')";
     private static final String UNSUBMITTED_WITHOUT_REMINDER_SENT_REGISTRATIONS_WITH_DUE_DATES_BEFORE_DATE_HQL = "from "
@@ -146,7 +145,7 @@ public class AnnualRegistrationServiceBean extends AbstractBaseRegistrationServi
     private Integer daysBeforeDueDateToSendSecondNotification;
     private Integer daysAfterDueDateToUseAsBasisForRenewalDate;
 
-    @Resource(mappedName = "firebird/AnnualRegistrationConfigurationServiceBean/local")
+    @Inject
     void setConfigurationService(AnnualRegistrationConfigurationService configurationService) {
         this.configurationService = configurationService;
     }
@@ -180,41 +179,6 @@ public class AnnualRegistrationServiceBean extends AbstractBaseRegistrationServi
         this.daysAfterDueDateToUseAsBasisForRenewalDate = daysAfterDueDateToUseAsBasisForRenewalDate;
     }
 
-    @Override
-    public AnnualRegistration createRegistration(InvestigatorProfile profile) {
-        checkArgument(profile.canCreateAnnualRegistration(), "Cannot create annual registration for profile");
-        if (profile.getAnnualRegistrations().isEmpty()) {
-            return createInitial(profile);
-        } else {
-            return createRenewal(profile.getCurrentAnnualRegistration());
-        }
-    }
-
-    /**
-     * Creates the initial annual registration for an investigator.
-     *
-     * @param profile the investigator's profile.
-     * @return the new registration.
-     */
-    AnnualRegistration createInitial(InvestigatorProfile profile) {
-        AnnualRegistration registration = createRegistrationWithCurrentConfiguration(profile,
-                AnnualRegistrationType.INITIAL);
-        save(registration);
-        return registration;
-    }
-
-    private AnnualRegistration createRegistrationWithCurrentConfiguration(InvestigatorProfile profile,
-            AnnualRegistrationType type) {
-        AnnualRegistration registration = new AnnualRegistration();
-        registration.setAnnualRegistrationType(type);
-        registration.setStatus(RegistrationStatus.NOT_STARTED);
-        registration.setConfiguration(configurationService.getCurrentConfiguration());
-        registration.setProfile(profile);
-        profile.addRegistration(registration);
-        registration.configureForms();
-        return registration;
-    }
-
     AnnualRegistration createRenewal(AnnualRegistration registration) {
         AnnualRegistration renewalRegistration = new AnnualRegistration();
         renewalRegistration.setAnnualRegistrationType(AnnualRegistrationType.RENEWAL);
@@ -241,6 +205,26 @@ public class AnnualRegistrationServiceBean extends AbstractBaseRegistrationServi
                 }
             }
         }
+    }
+
+    @Override
+    public AnnualRegistration createInitial(InvestigatorProfile profile) {
+        AnnualRegistration registration = createRegistrationWithCurrentConfiguration(profile,
+                AnnualRegistrationType.INITIAL);
+        save(registration);
+        return registration;
+    }
+
+    private AnnualRegistration createRegistrationWithCurrentConfiguration(InvestigatorProfile profile,
+            AnnualRegistrationType type) {
+        AnnualRegistration registration = new AnnualRegistration();
+        registration.setAnnualRegistrationType(type);
+        registration.setStatus(RegistrationStatus.NOT_STARTED);
+        registration.setConfiguration(configurationService.getCurrentConfiguration());
+        registration.setProfile(profile);
+        profile.addRegistration(registration);
+        registration.configureForms();
+        return registration;
     }
 
     @Override
@@ -299,7 +283,7 @@ public class AnnualRegistrationServiceBean extends AbstractBaseRegistrationServi
     // Hibernate list() method is untyped
     private List<AnnualRegistration> getRegistrationsRequiringRenewal() {
         Date renewalDate = DateUtils.addDays(new Date(), daysBeforeDueDateToSendFirstNotification);
-        Query query = getSession().createQuery(REGISTRATIONS_REQUIRING_RENEWAL_HQL);
+        Query query = getSessionProvider().get().createQuery(REGISTRATIONS_REQUIRING_RENEWAL_HQL);
         query.setDate("renewalDate", renewalDate);
         return query.list();
     }
@@ -348,7 +332,7 @@ public class AnnualRegistrationServiceBean extends AbstractBaseRegistrationServi
     @SuppressWarnings("unchecked")
     // Hibernate list() method is untyped
     private List<AnnualRegistration> getUnSubmittedWithoutReminderSentRegistrationsWithinSecondNotificationWindow() {
-        Query query = getSession().createQuery(
+        Query query = getSessionProvider().get().createQuery(
                 UNSUBMITTED_WITHOUT_REMINDER_SENT_REGISTRATIONS_WITH_DUE_DATES_BEFORE_DATE_HQL);
         Date date = DateUtils.addDays(new Date(), daysBeforeDueDateToSendSecondNotification);
         query.setDate("date", date);
@@ -478,40 +462,6 @@ public class AnnualRegistrationServiceBean extends AbstractBaseRegistrationServi
                 registration.prepareForDeletion();
                 delete(registration);
             }
-        }
-    }
-
-    @Override
-    public void delete(AnnualRegistration registration, FirebirdUser currentUser) {
-        checkArgument(isCurrentUsersRegistration(registration, currentUser),
-                "Only investigator can delete their registration");
-        removeRenewalReferences(registration);
-        super.delete(registration);
-        sendRegistrationDeletionEmailToCoordinator(registration);
-    }
-
-    private boolean isCurrentUsersRegistration(AnnualRegistration registration, FirebirdUser currentUser) {
-        return currentUser.isInvestigator()
-                && currentUser.getInvestigatorRole().getProfile().equals(registration.getProfile());
-    }
-
-    private void removeRenewalReferences(AnnualRegistration registration) {
-        if (registration.getParent() != null) {
-            registration.getParent().setRenewal(null);
-            registration.setParent(null);
-        }
-    }
-
-    private void sendRegistrationDeletionEmailToCoordinator(AnnualRegistration registration) {
-        if (registration.getProfile().hasCtepRegistrationCoordinator()) {
-            String coordinatorEmail = registration.getProfile().getCtepRegistrationCoordinatorMapping().getUser()
-                    .getPerson().getEmail();
-            Map<FirebirdTemplateParameter, Object> parameterValues = new EnumMap<FirebirdTemplateParameter, Object>(
-                    FirebirdTemplateParameter.class);
-            parameterValues.put(FirebirdTemplateParameter.INVESTIGATOR, registration.getProfile().getPerson());
-            FirebirdMessage message = getTemplateService().generateMessage(
-                    FirebirdMessageTemplate.INVESTIGATOR_DELETED_ANNUAL_REGISTRATION_EMAIL_TO_OTHERS, parameterValues);
-            getEmailService().sendMessage(coordinatorEmail, null, null, message);
         }
     }
 

@@ -109,13 +109,11 @@ public class DataSet {
     private final List<AbstractDataComponentBuilder<? extends PersistentObject>> componentBuilders;
     private final TestDataLoader dataLoader;
     private final CredentialTypesData credentialTypesData;
-    private final FormTypesData formTypesData;
 
-    DataSet(TestDataLoader dataLoader, CredentialTypesData credentialTypesData,
-            FormTypesData formTypesData, List<AbstractDataComponentBuilder<? extends PersistentObject>> componentBuilders) {
+    DataSet(TestDataLoader dataLoader, CredentialTypesData credentialTypesData, 
+            List<AbstractDataComponentBuilder<? extends PersistentObject>> componentBuilders) {
         this.dataLoader = dataLoader;
         this.credentialTypesData = credentialTypesData;
-        this.formTypesData = formTypesData;
         this.componentBuilders = componentBuilders;
     }
 
@@ -308,10 +306,6 @@ public class DataSet {
 
     public CredentialTypesData getCredentialTypesData() {
         return credentialTypesData;
-    }
-
-    public FormTypesData getFormTypesData() {
-        return formTypesData;
     }
 
     public void reload() {

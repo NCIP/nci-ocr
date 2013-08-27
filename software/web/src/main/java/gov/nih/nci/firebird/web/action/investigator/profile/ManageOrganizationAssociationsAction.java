@@ -93,10 +93,10 @@ import gov.nih.nci.firebird.data.PracticeSiteType;
 import gov.nih.nci.firebird.data.State;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 
 import java.util.List;
 
@@ -142,7 +142,7 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
     private OrganizationRoleType associationType;
     private String associationOhrp;
     private PracticeSiteType practiceSiteType;
-    private String organizationExternalId;
+    private String searchKey;
     private boolean ohrpRequired;
 
     /**
@@ -163,10 +163,10 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
     @Override
     public void prepare() {
         super.prepare();
-        if (StringUtils.isNotBlank(getOrganizationExternalId())) {
+        if (StringUtils.isNotBlank(getSearchKey())) {
             try {
-                setAssociatedOrganization(getOrganizationService().getByExternalId(getOrganizationExternalId()));
-            } catch (InvalidatedOrganizationException e) {
+                setAssociatedOrganization(getOrganizationSearchService().getOrganization(getSearchKey()));
+            } catch (UnavailableEntityException e) {
                 addActionError(getText("organization.search.selected.organization.unavailable"));
             }
         }
@@ -191,8 +191,8 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
     }
 
     /**
-     * Directs traffic to the Manage Associations ajax page. External ID
-     * corresponds to either an existing Association or the externalId of a queried Organization
+     * Directs traffic to the Manage Associations ajax page. Nes ID
+     * corresponds to either an existing Association or the nesID of a queried Organization
      *
      * @return the struts forward.
      */
@@ -204,7 +204,7 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
 
         if (hasActionErrors()) {
             return RETURN_MANAGE_ASSOCIATION;
-        } else if (!getAssociatedOrganization().hasExternalRecord()) {
+        } else if (!getAssociatedOrganization().hasNesRecord()) {
             setAssociatedOrganization(new Organization());
         } else if (!isAdditionalDataRequired()) {
             return saveAction();
@@ -234,13 +234,13 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
     }
 
     /**
-     * Saves the Investigator Profile to the db and the Organization / association to the external service.
+     * Saves the Investigator Profile to the db and the Organization / association to NES.
      *
      * @return the struts forward
      */
     @Validations(customValidators = { @CustomValidator(type = "hibernate", fieldName = RESOURCE, parameters = {
             @ValidationParameter(name = "resourceKeyBase", value = "organization"),
-            @ValidationParameter(name = "excludes", value = "externalId") }) },
+            @ValidationParameter(name = "excludes", value = "nesId") }) },
             fieldExpressions = {
                 @FieldExpressionValidator(
                         fieldName = "associatedOrganization.postalAddress.stateOrProvince",
@@ -268,7 +268,7 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
     }
 
     private boolean isPracticeSiteTypeValid() {
-        if (associationType == OrganizationRoleType.PRACTICE_SITE && associatedOrganization.getExternalId() == null
+        if (associationType == OrganizationRoleType.PRACTICE_SITE && associatedOrganization.getNesId() == null
                 && getPracticeSiteType() == null) {
             addFieldError(PRACTICE_SITE_TYPE_FIELD_NAME,
                     getText("organization.association.error.practice.site.type.required"));
@@ -278,7 +278,7 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
     }
 
     private boolean isPhoneNumberValid() {
-        boolean isCreatingNew = getAssociatedOrganization().getExternalId() == null;
+        boolean isCreatingNew = getAssociatedOrganization().getNesId() == null;
         if (isCreatingNew && getProfile().getUser().isCtepUser()
                 && getAssociationType() == OrganizationRoleType.PRACTICE_SITE
                 && isEmpty(getAssociatedOrganization().getPhoneNumber())) {
@@ -293,7 +293,7 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
      *
      * @return FirebirdUIConstants.RETURN_CLOSE_DIALOG
      */
-    private String saveAction() {
+    protected String saveAction() {
         try {
             saveAssociation();
         } catch (AssociationAlreadyExistsException e) {
@@ -335,15 +335,16 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
 
         OrganizationAssociation association = findAssociation();
 
-        if (!hasActionErrors()) {
-            getProfileService().updateAssociationOhrp(association, associationOhrp);
+        if (hasActionErrors()) {
+            return INPUT;
         }
 
-        return INPUT;
+        getProfileService().updateAssociationOhrp(association, associationOhrp);
+        return NONE;
     }
 
     private void checkOrganizationValid() {
-        if (getAssociatedOrganization().getId() == null || !getAssociatedOrganization().hasExternalRecord()) {
+        if (getAssociatedOrganization().getId() == null || !getAssociatedOrganization().hasNesRecord()) {
             addActionError(getText("organization.association.error.ohrp.update"));
         }
     }
@@ -381,54 +382,107 @@ public class ManageOrganizationAssociationsAction extends AbstractProfileAction 
         return closeDialog();
     }
 
+    /**
+     * @param nesId the nesId of the association to set
+     */
+    public void setNesId(String nesId) {
+        associatedOrganization.setNesId(nesId);
+    }
+
+    /**
+     * @return the nesId of the association
+     */
+    public String getNesId() {
+        return associatedOrganization.getNesId();
+    }
+
+    /**
+     * @param associatedOrganization the associatedOrganization to set
+     */
     public void setAssociatedOrganization(Organization associatedOrganization) {
         this.associatedOrganization = associatedOrganization;
     }
 
+    /**
+     * @return the associatedOrganization
+     */
     public Organization getAssociatedOrganization() {
         return associatedOrganization;
     }
 
+    /**
+     * @return the associationType
+     */
     public OrganizationRoleType getAssociationType() {
         return associationType;
     }
 
+    /**
+     * @param associationType the associationType to set
+     */
     public void setAssociationType(OrganizationRoleType associationType) {
         this.associationType = associationType;
     }
 
+    /**
+     * @return The Practice Site sub type.
+     */
     public PracticeSiteType getPracticeSiteType() {
         return practiceSiteType;
     }
 
+    /**
+     * @param practiceSiteType the subtype of the Practice Site
+     */
     public void setPracticeSiteType(PracticeSiteType practiceSiteType) {
         this.practiceSiteType = practiceSiteType;
     }
 
+    /**
+     * @return the associationDataField
+     */
     public String getAssociationOhrp() {
         return associationOhrp;
     }
 
+    /**
+     * @param associationOhrp the associationOhrp to set
+     */
     public void setAssociationOhrp(String associationOhrp) {
         this.associationOhrp = associationOhrp;
     }
 
-    public String getOrganizationExternalId() {
-        return organizationExternalId;
+    /**
+     * @return the searchKey
+     */
+    public String getSearchKey() {
+        return searchKey;
     }
 
-    public void setOrganizationExternalId(String organizationExternalId) {
-        this.organizationExternalId = organizationExternalId;
+    /**
+     * @param searchKey the searchKey to set
+     */
+    public void setSearchKey(String searchKey) {
+        this.searchKey = searchKey;
     }
 
+    /**
+     * @return the states
+     */
     public List<State> getStates() {
         return states;
     }
 
+    /**
+     * @return the list of all countries.
+     */
     public List<Country> getCountries() {
         return countries;
     }
 
+    /**
+     * @return boolean value indicating if the Organization requires a OHRP number.
+     */
     public boolean isOhrpRequired() {
         return ohrpRequired;
     }

@@ -83,7 +83,9 @@
 package gov.nih.nci.firebird.service;
 
 import static org.junit.Assert.*;
+
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.service.pdf.PdfService;
 import gov.nih.nci.firebird.test.FirebirdTestModule;
 import gov.nih.nci.firebird.test.MockContainerProvidedServicesModule;
@@ -113,6 +115,7 @@ public class LocalServiceModuleTest {
         assertNotNull(injector.getProvider(InvestigatorProfileService.class));
         assertNotNull(injector.getProvider(VelocityEngine.class));
         assertNotNull(injector.getProvider(PdfService.class));
+        assertNotNull(injector.getProvider(OrganizationSearchService.class));
         assertNotNull(injector.getProvider(Queue.class));
         assertNotNull(injector.getProvider(QueueConnectionFactory.class));
     }

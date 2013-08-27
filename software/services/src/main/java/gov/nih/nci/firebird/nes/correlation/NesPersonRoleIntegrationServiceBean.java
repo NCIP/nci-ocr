@@ -95,7 +95,6 @@ import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
 import gov.nih.nci.firebird.nes.common.AbstractBaseNesService;
-import gov.nih.nci.firebird.nes.organization.AbstractNesRoleData;
 import gov.nih.nci.firebird.nes.person.PersonTranslator;
 import gov.nih.nci.iso21090.extensions.Id;
 
@@ -133,8 +132,7 @@ public class NesPersonRoleIntegrationServiceBean extends AbstractBaseNesService 
     @Override
     public String ensureCorrelated(Person person, Organization organization, PersonRoleType type)
             throws ValidationException {
-        AbstractNesRoleData nesRoleData = (AbstractNesRoleData) organization.getExternalData();
-        String organizationNesId = defaultIfBlank(nesRoleData.getPlayerId(), organization.getExternalId());
+        String organizationNesId = defaultIfBlank(organization.getPlayerIdentifier(), organization.getNesId());
         try {
             String personRoleId = getExistingRoleId(person, organizationNesId, type);
             if (personRoleId == null) {
@@ -153,7 +151,7 @@ public class NesPersonRoleIntegrationServiceBean extends AbstractBaseNesService 
 
     private String getExistingRoleId(Person person, String organizationNesId, PersonRoleType type)
             throws RemoteException {
-        Id[] playerIdAsArray = new Id[] {PersonTranslator.buildId(person.getExternalId())};
+        Id[] playerIdAsArray = new Id[] {PersonTranslator.buildId(person.getNesId())};
         switch (type) {
         case HEALTH_CARE_PROVIDER:
             HealthCareProvider[] providers = healthCareProviderClient.getByPlayerIds(playerIdAsArray);

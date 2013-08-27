@@ -94,6 +94,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.InterceptorRef;
 import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.Result;
 import org.apache.struts2.json.JSONException;
@@ -106,6 +107,7 @@ import com.google.inject.Inject;
  * Browse annual registrations tab action.
  */
 @Namespace("/sponsor/annual/registration")
+@InterceptorRef("annualRegistrationManagementStack")
 public class BrowseRegistrationsAction extends FirebirdActionSupport {
 
     private static final long serialVersionUID = 1L;
@@ -152,9 +154,7 @@ public class BrowseRegistrationsAction extends FirebirdActionSupport {
     /**
      * Registration Listing.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
-    public final class RegistrationListing {
+    public class RegistrationListing {
 
         private final Long id;
         private final String name;

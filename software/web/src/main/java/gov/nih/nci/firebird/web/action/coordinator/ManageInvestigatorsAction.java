@@ -107,14 +107,14 @@ public class ManageInvestigatorsAction extends AbstractProfileAction {
 
     private static final long serialVersionUID = 1L;
 
-    private List<Long> selectedInvestigatorsProfileIds = Lists.newArrayList();
+    private List<Long> selectedInvestigators = Lists.newArrayList();
     private List<InvestigatorProfile> selectedInvestigatorProfiles = Lists.newArrayList();
 
     private final AccountManagementService accountManagementService;
 
     /**
      * Constructor.
-     *
+     * 
      * @param profileService the profileService to set
      * @param accountManagementService the accountManagementService to set
      */
@@ -128,14 +128,14 @@ public class ManageInvestigatorsAction extends AbstractProfileAction {
     @Override
     public void prepare() {
         super.prepare();
-        if (CollectionUtils.isNotEmpty(selectedInvestigatorsProfileIds)) {
+        if (CollectionUtils.isNotEmpty(selectedInvestigators)) {
             loadProfiles();
         }
     }
 
     private void loadProfiles() {
         selectedInvestigatorProfiles = Lists.newArrayList();
-        for (Long id : selectedInvestigatorsProfileIds) {
+        for (Long id : selectedInvestigators) {
             InvestigatorProfile foundProfile = getProfileService().getById(id);
             if (foundProfile != null) {
                 selectedInvestigatorProfiles.add(foundProfile);
@@ -145,7 +145,7 @@ public class ManageInvestigatorsAction extends AbstractProfileAction {
 
     /**
      * Enter the Dialog to add new Investigators to manage.
-     *
+     * 
      * @return the struts result
      */
     @Action(value = "enterAddInvestigators", results = @Result(location = "search_new_investigators.jsp"))
@@ -155,7 +155,7 @@ public class ManageInvestigatorsAction extends AbstractProfileAction {
 
     /**
      * After the user has selected Investigators this will process the users and return the confirmation screen.
-     *
+     * 
      * @return the struts forward.
      */
     @Action(value = "continueSelection", results = { @Result(location = "confirm_new_investigators.jsp"),
@@ -168,7 +168,7 @@ public class ManageInvestigatorsAction extends AbstractProfileAction {
 
     /**
      * Save the selected investigators to the registration coordinator.
-     *
+     * 
      * @return the struts forward.
      */
     @Action(value = "confirmSelection", results = @Result(location = "add_new_investigators_success.jsp"))
@@ -180,15 +180,15 @@ public class ManageInvestigatorsAction extends AbstractProfileAction {
     /**
      * @return the selectedInvestigators
      */
-    public List<Long> getSelectedInvestigatorsProfileIds() {
-        return selectedInvestigatorsProfileIds;
+    public List<Long> getSelectedInvestigators() {
+        return selectedInvestigators;
     }
 
     /**
-     * @param selectedInvestigatorsProfileIds the selectedInvestigatorsProfileIds to set
+     * @param selectedInvestigators the selectedInvestigators to set
      */
-    public void setSelectedInvestigatorsProfileIds(List<Long> selectedInvestigatorsProfileIds) {
-        this.selectedInvestigatorsProfileIds = selectedInvestigatorsProfileIds;
+    public void setSelectedInvestigators(List<Long> selectedInvestigators) {
+        this.selectedInvestigators = selectedInvestigators;
     }
 
     /**

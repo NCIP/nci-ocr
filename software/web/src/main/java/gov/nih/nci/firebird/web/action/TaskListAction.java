@@ -82,12 +82,15 @@
  */
 package gov.nih.nci.firebird.web.action;
 
+import static gov.nih.nci.firebird.service.task.TaskType.*;
 import gov.nih.nci.firebird.service.task.Task;
 import gov.nih.nci.firebird.service.task.TaskService;
+import gov.nih.nci.firebird.service.task.TaskType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.struts2.convention.annotation.Action;
@@ -155,8 +158,8 @@ public class TaskListAction extends FirebirdActionSupport {
     /**
      * Task model for use in JSON result.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
+    @SuppressWarnings("PMD.CyclomaticComplexity")
+    // Switch statement expected to have multiple paths
     public final class TaskRow implements Serializable {
 
         private static final long serialVersionUID = 1L;
@@ -165,32 +168,170 @@ public class TaskListAction extends FirebirdActionSupport {
         private final String taskActionUrl;
         private final Long taskActionTargetId;
         private final boolean modal;
+        private final EnumSet<TaskType> modalTasks = EnumSet.of(REGISTRATION_INVITATION,
+                REGISTRATION_COORDINATOR_REQUEST, SPONSOR_ROLE_AWAITING_VERIFICATION,
+                INVESTIGATOR_ROLE_AWAITING_VERIFICATION,
+                MISSING_EXPECTED_INVESTIGATOR_ROLE_WITH_INVESTIGATOR_REGISTRATION_INVITES,
+                MISSING_EXPECTED_INVESTIGATOR_ROLE_WITH_SUBINVESTIGATOR_REGISTRATION_INVITES,
+                ANNUAL_REGISTRATION_APPROVED, REGISTRATION_WITHDRAW_REQUEST);
+        private final EnumSet<TaskType> registrationTasks = EnumSet.of(REGISTRATION_INVITATION,
+                REGISTRATION_IN_PROGRESS, REGISTRATION_RETURNED, REGISTRATION_READY_FOR_SIGNING);
+        private final EnumSet<TaskType> annualRegistrationTasks = EnumSet.of(REGISTRATION_RENEWAL,
+                ANNUAL_REGISTRATION_READY_FOR_SIGNING, ANNUAL_REGISTRATION_APPROVED, INVESTIGATOR_SUSPENSION_NOTICE,
+                INVESTIGATOR_DISQUALIFICATION_NOTICE, ANNUAL_REGISTRATION_RETURNED);
+        private final EnumSet<TaskType> protocolTasks = EnumSet.of(REGISTRATION_FOR_REVIEW,
+                REGISTRATION_PACKET_AWAITING_APPROVAL);
+        private final EnumSet<TaskType> sponsorAnnualRegistrationTasks = EnumSet.of(ANNUAL_REGISTRATION_FOR_REVIEW);
+        private final EnumSet<TaskType> settingsTasks = EnumSet.of(REGISTRATION_COORDINATOR_REQUEST);
+        private final EnumSet<TaskType> userAccountTasks = EnumSet.of(SPONSOR_ROLE_AWAITING_VERIFICATION,
+                INVESTIGATOR_ROLE_AWAITING_VERIFICATION,
+                MISSING_EXPECTED_INVESTIGATOR_ROLE_WITH_INVESTIGATOR_REGISTRATION_INVITES,
+                MISSING_EXPECTED_INVESTIGATOR_ROLE_WITH_SUBINVESTIGATOR_REGISTRATION_INVITES);
+        private final EnumSet<TaskType> coordinatorTasks = EnumSet.of(COORDINATOR_ROLE_AWAITING_VERIFICATION);
+        private final EnumSet<TaskType> registrationWithdrawalTasks = EnumSet.of(REGISTRATION_WITHDRAW_REQUEST);
+
+        private static final String REGISTRATION_ACTION_NAMESPACE = "/investigator/registration";
+        private static final String INVESTIGATOR_ANNUAL_REGISTRATION_ACTION_NAMESPACE =
+                                                        "/investigator/annual/registration";
+        private static final String PROTOCOL_ACTION_NAMESPACE = "/sponsor/protocol";
+        private static final String SPONSOR_ANNUAL_REGISTRATION_ACTION_NAMESPACE = "/sponsor/annual/registration";
+        private static final String REGISTRATION_WITHDRAWAL_ACTION_NAMESPACE = "/sponsor/annual/investigator";
+        private static final String SETTINGS_ACTION_NAMESPACE = "/investigator/settings";
+        private static final String USER_ACCOUNT_ACTION_NAMESPACE = "/user";
+        private static final String AJAX_ACTION_NAMESPACE = "/ajax";
+        private static final String COORDINATOR_ACTION_NAMESPACE = "/coordinator";
 
         TaskRow(Task task) {
             dateAdded = task.getDateAdded();
             description = task.getDescription();
             taskActionTargetId = task.getTargetId();
-            TaskUrlGenerator taskUrlGenerator = new TaskUrlGenerator(task);
-            taskActionUrl = taskUrlGenerator.buildUrl();
-            modal = taskUrlGenerator.isModal();
+            taskActionUrl = buildUrl(task.getType());
+            modal = modalTasks.contains(task.getType());
         }
 
+        private String buildUrl(TaskType type) {
+            StringBuilder url = new StringBuilder();
+            getUrlRoot(url, type);
+
+            if (modalTasks.contains(type)) {
+                url.append(AJAX_ACTION_NAMESPACE);
+            }
+            getUrlAction(url, type);
+            return url.toString();
+        }
+
+        private void getUrlRoot(StringBuilder builder, TaskType type) {
+            if (registrationTasks.contains(type)) {
+                builder.append(REGISTRATION_ACTION_NAMESPACE);
+            } else if (annualRegistrationTasks.contains(type)) {
+                builder.append(INVESTIGATOR_ANNUAL_REGISTRATION_ACTION_NAMESPACE);
+            } else if (protocolTasks.contains(type)) {
+                builder.append(PROTOCOL_ACTION_NAMESPACE);
+            } else if (settingsTasks.contains(type)) {
+                builder.append(SETTINGS_ACTION_NAMESPACE);
+            } else if (userAccountTasks.contains(type)) {
+                builder.append(USER_ACCOUNT_ACTION_NAMESPACE);
+            } else if (coordinatorTasks.contains(type)) {
+                builder.append(COORDINATOR_ACTION_NAMESPACE);
+            } else if (sponsorAnnualRegistrationTasks.contains(type)) {
+                builder.append(SPONSOR_ANNUAL_REGISTRATION_ACTION_NAMESPACE);
+            } else if (registrationWithdrawalTasks.contains(type)) {
+                builder.append(REGISTRATION_WITHDRAWAL_ACTION_NAMESPACE);
+            }
+        }
+
+        @SuppressWarnings("PMD.ExcessiveMethodLength")
+        // switch needs to account for all types
+        private void getUrlAction(StringBuilder builder, TaskType type) {
+            switch (type) {
+            case REGISTRATION_INVITATION:
+                builder.append("/viewInvitation.action?id=").append(taskActionTargetId);
+                break;
+            case REGISTRATION_IN_PROGRESS:
+            case REGISTRATION_READY_FOR_SIGNING:
+            case REGISTRATION_RETURNED:
+                builder.append("/enterRegistrations.action?id=").append(taskActionTargetId);
+                break;
+            case REGISTRATION_RENEWAL:
+            case INVESTIGATOR_SUSPENSION_NOTICE:
+            case INVESTIGATOR_DISQUALIFICATION_NOTICE:
+            case ANNUAL_REGISTRATION_READY_FOR_SIGNING:
+            case ANNUAL_REGISTRATION_RETURNED:
+                builder.append("/enterViewRegistration.action?registration.id=").append(taskActionTargetId);
+                break;
+            case ANNUAL_REGISTRATION_APPROVED:
+                builder.append("/enterViewRegistrationApprovedNotification.action?registration.id=").append(
+                        taskActionTargetId);
+                break;
+            case REGISTRATION_FOR_REVIEW:
+                builder.append("/review/enter.action?registration.id=").append(taskActionTargetId);
+                break;
+            case REGISTRATION_PACKET_AWAITING_APPROVAL:
+                builder.append("/review/enter.action?registration.id=").append(taskActionTargetId + "&selectedTab=0");
+                break;
+            case REGISTRATION_COORDINATOR_REQUEST:
+                builder.append("/viewCoordinatorRequest.action?managedInvestigatorId=").append(taskActionTargetId);
+                break;
+            case SPONSOR_ROLE_AWAITING_VERIFICATION:
+                builder.append("/sponsorVerificationPending.action");
+                break;
+            case INVESTIGATOR_ROLE_AWAITING_VERIFICATION:
+                builder.append("/investigatorVerificationPending.action");
+                break;
+            case COORDINATOR_ROLE_AWAITING_VERIFICATION:
+                builder.append("/investigators/browse.action");
+                break;
+            case MISSING_EXPECTED_INVESTIGATOR_ROLE_WITH_INVESTIGATOR_REGISTRATION_INVITES:
+                builder.append("/unselectedExpectedRole.action?investigatorType=")
+                        .append(getText("label.investigator"));
+                break;
+            case MISSING_EXPECTED_INVESTIGATOR_ROLE_WITH_SUBINVESTIGATOR_REGISTRATION_INVITES:
+                builder.append("/unselectedExpectedRole.action?investigatorType=").append(
+                        getText("label.subinvestigator"));
+                break;
+            case ANNUAL_REGISTRATION_FOR_REVIEW:
+                builder.append("/review/enterReviewRegistration.action?registration.id=").append(taskActionTargetId);
+                break;
+            case REGISTRATION_WITHDRAW_REQUEST:
+                builder.append("/viewRegistrationWithdrawalRequest.action?user.id=").append(taskActionTargetId);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported type: " + type);
+            }
+
+        }
+
+        /**
+         * @return the dateAdded
+         */
         public Date getDateAdded() {
             return dateAdded;
         }
 
+        /**
+         * @return the description
+         */
         public String getDescription() {
             return description;
         }
 
+        /**
+         * @return the taskActionUrl
+         */
         public String getTaskActionUrl() {
             return taskActionUrl;
         }
 
+        /**
+         * @return the taskActionTargetId
+         */
         public Long getTaskActionTargetId() {
             return taskActionTargetId;
         }
 
+        /**
+         * @return the modal
+         */
         public boolean isModal() {
             return modal;
         }

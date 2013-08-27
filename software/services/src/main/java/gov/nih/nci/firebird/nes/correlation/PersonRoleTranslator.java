@@ -106,7 +106,7 @@ class PersonRoleTranslator {
             throws ValidationException {
         HealthCareProvider provider = new HealthCareProvider();
         gov.nih.nci.coppa.po.Person poPerson = PersonTranslator.buildNesPerson(person);
-        provider.setPlayerIdentifier(PersonTranslator.buildIi(person.getExternalId()));
+        provider.setPlayerIdentifier(PersonTranslator.buildIi(person.getNesId()));
         provider.getPlayerIdentifier().setIdentifierName(PERSON_IDENTIFIER_NAME);
         provider.setScoperIdentifier(new NesId(organizationNesId).toIi());
         provider.getScoperIdentifier().setIdentifierName(ORG_IDENTIFIER_NAME);
@@ -122,7 +122,7 @@ class PersonRoleTranslator {
             throws ValidationException {
         OrganizationalContact contact = new OrganizationalContact();
         gov.nih.nci.coppa.po.Person poPerson = PersonTranslator.buildNesPerson(person);
-        contact.setPlayerIdentifier(PersonTranslator.buildIi(person.getExternalId()));
+        contact.setPlayerIdentifier(PersonTranslator.buildIi(person.getNesId()));
         contact.getPlayerIdentifier().setIdentifierName(PERSON_IDENTIFIER_NAME);
         contact.setScoperIdentifier(new NesId(organizationNesId).toIi());
         contact.getScoperIdentifier().setIdentifierName(ORG_IDENTIFIER_NAME);

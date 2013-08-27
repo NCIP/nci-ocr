@@ -4,7 +4,6 @@
     <div class="ui-tabs">
         <div class="ui-tabs-panel">
             <firebird:messages/>
-            <s:form id="investigatorSelectionForm" action="nextStep" onsubmit="return false" />
             <firebird:investigatorSearchSelect />
             <div class="btn_bar clear">
                 <firebird:userRegistrationPreviousButton/>

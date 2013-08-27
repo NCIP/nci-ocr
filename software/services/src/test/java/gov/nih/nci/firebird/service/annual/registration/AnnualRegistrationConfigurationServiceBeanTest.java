@@ -89,6 +89,7 @@ import gov.nih.nci.firebird.data.FormType;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.RegistrationFormSetConfiguration;
 import gov.nih.nci.firebird.data.RegistrationType;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.protocol.FormTypeService;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.test.AbstractHibernateTestCase;
@@ -110,9 +111,6 @@ public class AnnualRegistrationConfigurationServiceBeanTest extends AbstractHibe
     @Inject
     private AnnualRegistrationConfigurationServiceBean service;
 
-    @Inject
-    private SponsorService sponsorService;
-
     private FormTypeService mockFormTypeService = mock(FormTypeService.class);
 
     private Organization sponsorOrganization = OrganizationFactory.getInstance().create();
@@ -121,7 +119,6 @@ public class AnnualRegistrationConfigurationServiceBeanTest extends AbstractHibe
     public void setUp() throws Exception {
         super.setUp();
         service.setFormTypeService(mockFormTypeService);
-        service.setSponsorService(sponsorService);
         save(sponsorOrganization);
     }
 
@@ -153,7 +150,7 @@ public class AnnualRegistrationConfigurationServiceBeanTest extends AbstractHibe
     }
 
     @Test
-    public void testInitializeAnnualRegistrationConfiguration() {
+    public void testInitializeAnnualRegistrationConfiguration() throws UnavailableEntityException {
         setUpMockSponsorService();
         FormType formType1 = FormTypeFactory.getInstance().create();
         FormType formType2 = FormTypeFactory.getInstance().create();
@@ -176,13 +173,14 @@ public class AnnualRegistrationConfigurationServiceBeanTest extends AbstractHibe
     }
 
     @Test
-    public void testInitializeAnnualRegistrationConfiguration_NullSponsor() {
+    public void testInitializeAnnualRegistrationConfiguration_NullSponsor() throws UnavailableEntityException {
         service.initializeAnnualRegistrationConfiguration();
         assertNull(service.getCurrentConfiguration());
     }
 
     @Test
-    public void testInitializeAnnualRegistrationConfiguration_ConfigurationAlreadyExists() {
+    public void testInitializeAnnualRegistrationConfiguration_ConfigurationAlreadyExists()
+            throws UnavailableEntityException {
         setUpMockSponsorService();
         Date date = DateUtils.addDays(new Date(), -1);
         AnnualRegistrationConfiguration expectedConfiguration = createAndSaveConfiguration(date, sponsorOrganization);

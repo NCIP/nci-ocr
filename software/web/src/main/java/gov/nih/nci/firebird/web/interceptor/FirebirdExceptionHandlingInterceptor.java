@@ -82,21 +82,21 @@
  */
 package gov.nih.nci.firebird.web.interceptor;
 
+import gov.nih.nci.firebird.security.UserSessionInformation;
 import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.security.UserSessionInformation;
 import gov.nih.nci.firebird.service.messages.FirebirdMessage;
 import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
 import gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter;
 import gov.nih.nci.firebird.service.messages.TemplateService;
 import gov.nih.nci.firebird.service.messages.email.EmailService;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
+import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ejb.EJBException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
@@ -111,8 +111,8 @@ import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.interceptor.AbstractInterceptor;
 
 /**
- * Handles unexpected exceptions by logging the error, emailing details to a support email address and directing the
- * user to an error page.
+ * Handles unexpected exceptions by logging the error, emailing details to a support email address and directing
+ * the user to an error page.
  */
 public class FirebirdExceptionHandlingInterceptor extends AbstractInterceptor {
 
@@ -131,9 +131,10 @@ public class FirebirdExceptionHandlingInterceptor extends AbstractInterceptor {
      * @param supportEmail .
      */
     @Inject
-    public FirebirdExceptionHandlingInterceptor(TemplateService templateService, @Named("jmsEmailService")
-    EmailService emailService, FirebirdUserService userService, @Named("firebird.email.support.address")
-    String supportEmail) {
+    public FirebirdExceptionHandlingInterceptor(TemplateService templateService,
+            @Named("jmsEmailService") EmailService emailService,
+            FirebirdUserService userService,
+            @Named("firebird.email.support.address") String supportEmail) {
         this.templateService = templateService;
         this.emailService = emailService;
         this.userService = userService;
@@ -141,18 +142,13 @@ public class FirebirdExceptionHandlingInterceptor extends AbstractInterceptor {
     }
 
     @Override
-    @SuppressWarnings({ "PMD.AvoidCatchingGenericException", "PMD.SignatureDeclareThrowsException" })
-    // Need to handle all exceptions
-    // possible failure from invoke.
-    public String intercept(ActionInvocation invocation) throws Exception {
+    @SuppressWarnings("PMD.AvoidCatchingGenericException") // Need to handle all exceptions
+    public String intercept(ActionInvocation invocation) {
         try {
             return invocation.invoke();
-        } catch (EJBException exception) {
-            handleException(exception, invocation);
-            throw exception.getCausedByException();
-        } catch (Exception exception) {
-            handleException(exception, invocation);
-            throw exception;
+        } catch (Exception e) {
+            handleException(e, invocation);
+            return FirebirdUIConstants.RETURN_ERROR;
         }
     }
 
@@ -176,8 +172,7 @@ public class FirebirdExceptionHandlingInterceptor extends AbstractInterceptor {
         }
     }
 
-    @SuppressWarnings("rawtypes")
-    // parameters map is untyped
+    @SuppressWarnings("rawtypes")   // parameters map is untyped
     private String getRequestParametersString() {
         HttpServletRequest request = ServletActionContext.getRequest();
         StringBuilder sb = new StringBuilder();

@@ -103,8 +103,8 @@ import org.openqa.selenium.support.FindBy;
  */
 public class CurriculumVitaeTab extends AbstractFormTab<CurriculumVitaeTab> {
 
-    private static final String TAB_ID = "form_cv_tab";
-    static final String TAB_LINK_CSS_SELECTOR = "#" + TAB_ID + " > a";
+    static final String TAB_LINK_CSS_SELECTOR = "#form_CVTab > a";
+    private static final String TAB_ID = "form_CVTab";
     private static final String VIEW_PDF_BUTTON_ID = "viewCvPdfButtonTop";
     private static final String MODIFY_PERSON_INFORMATION_BUTTON_ID = "manageContactInfoButton";
     private static final String MODIFY_PERSON_CREDENTIALS_BUTTON_ID = "manageCredentialsButton";
@@ -160,6 +160,7 @@ public class CurriculumVitaeTab extends AbstractFormTab<CurriculumVitaeTab> {
     public boolean isExpiredCredentialMessagePresent() {
         return isPresent(By.id(EXPIRED_CREDENTIAL_MESSAGE_DIV_ID));
     }
+
 
     @Override
     public boolean isReadOnly() {

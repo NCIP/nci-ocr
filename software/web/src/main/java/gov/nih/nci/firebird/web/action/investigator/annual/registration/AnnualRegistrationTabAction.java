@@ -104,23 +104,13 @@ import com.google.inject.Inject;
  */
 @Namespace("/investigator/annual/registration/ajax")
 @InterceptorRef("registrationManagementStack")
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
-//need to suppress UCDetector warnings multiple times
 public class AnnualRegistrationTabAction extends AbstractAnnualRegistrationTabAction {
 
     private static final long serialVersionUID = 1L;
 
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String RETURN_1572 = "CTEP_FORM_1572";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String RETURN_DISCLOSURE = "CTEP_FINANCIAL_DISCLOSURE_FORM";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String RETURN_IDF = "SUPPLEMENTAL_INVESTIGATOR_DATA_FORM";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String RETURN_ADDITIONAL_ATTACHMENTS = "ADDITIONAL_ATTACHMENTS";
     private final GenericDataRetrievalService dataService;
     private FormType formType = new FormType();
@@ -194,8 +184,6 @@ public class AnnualRegistrationTabAction extends AbstractAnnualRegistrationTabAc
     /**
      * @param processor the processor to set
      */
-    @SuppressWarnings("ucd")
-    // used to inject mock processor from tests
     protected void setProcessor(RegistrationTabActionProcessor<AnnualRegistration> processor) {
         this.processor = processor;
     }

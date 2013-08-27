@@ -137,7 +137,7 @@ public class SubmittedTrainingCertificate implements Certificate, Auditable {
         this.effectiveDate = cert.getEffectiveDate();
         this.expirationDate = cert.getExpirationDate();
         this.certificateType = cert.getCertificateType();
-        this.file = cert.getFile().createCopy();
+        this.file = cert.getFile().clone();
         this.issuer = cert.getIssuer();
     }
 
@@ -175,7 +175,7 @@ public class SubmittedTrainingCertificate implements Certificate, Auditable {
      * removed from the users profile and the original certificate no longer exists in the
      * database.
      */
-    void removeLinkToOrginalCertificate() {
+    public void removeLinkToOrginalCertificate() {
         setOriginalCertificate(null);
     }
 

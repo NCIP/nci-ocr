@@ -135,8 +135,6 @@ public enum ProtocolImportDetailStatus {
      * @param display the display string to match
      * @return the status that matches the requested value or null
      */
-    @SuppressWarnings("ucd")
-    // convenience method used in Selenium tests
     public static ProtocolImportDetailStatus getByDisplay(String display) {
         for (ProtocolImportDetailStatus status : values()) {
             if (status.getDisplay().equals(display)) {

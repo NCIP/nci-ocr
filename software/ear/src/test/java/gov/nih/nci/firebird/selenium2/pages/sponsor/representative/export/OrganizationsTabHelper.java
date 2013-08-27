@@ -84,8 +84,7 @@ package gov.nih.nci.firebird.selenium2.pages.sponsor.representative.export;
 
 import static gov.nih.nci.firebird.nes.NesIdTestUtil.*;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.nes.NesId;
-import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.export.OrganizationsTab.OrganizationListing;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -104,18 +103,12 @@ public class OrganizationsTabHelper extends AbstractExportCurationDataTabHelper 
     }
 
     public boolean contains(Organization organization) {
-        for (OrganizationListing listing : tab.getListings()) {
-            String externalIdExtension = new NesId(organization.getExternalId()).getExtension();
-            if (listing.getExternalId().equals(externalIdExtension)) {
-                return true;
-            }
-        }
-        return false;
+        return FirebirdTableUtils.getListing(tab.getListings(), organization) != null;
     }
 
     public void downloadAndCheckCsvFile(Organization organization) throws IOException {
         List<String> fileContents = getCsvFileContents();
-        String expectedLine = getNesIdExtension(organization.getExternalId()) + "," + organization.getName();
+        String expectedLine = getNesIdExtension(organization.getNesId()) + "," + organization.getName();
         assertLineIsPresent(expectedLine, fileContents);
     }
 

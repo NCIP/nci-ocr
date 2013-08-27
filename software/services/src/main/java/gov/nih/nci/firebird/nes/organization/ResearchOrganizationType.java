@@ -135,8 +135,6 @@ public enum ResearchOrganizationType {
      * Research base.
      */
     RESEARCH_BASE("RSB");
-    
-    static final int MAX_LENGTH = 17;
 
     private static final Map<String, ResearchOrganizationType> CODE_TYPE_MAPPINGS = Maps.newHashMap();
     static {
@@ -162,7 +160,7 @@ public enum ResearchOrganizationType {
      * @param code get enum matching this code
      * @return the type enum.
      */
-    static ResearchOrganizationType getByCode(String code) {
+    public static ResearchOrganizationType getByCode(String code) {
         return CODE_TYPE_MAPPINGS.get(code);
     }
 

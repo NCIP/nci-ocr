@@ -82,7 +82,7 @@
  */
 package gov.nih.nci.firebird.web.action.investigator.profile;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
 import gov.nih.nci.firebird.data.Country;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.State;
@@ -119,7 +119,7 @@ public class AddOrderingDesigneeAction extends AbstractProfileAction {
     private final StateLookupService stateLookup;
     private final CountryLookupService countryLookup;
     private Person orderingDesignee;
-    private String selectedPersonExternalId;
+    private String selectedPersonKey;
     private List<Country> countries;
     private List<State> states;
 
@@ -141,8 +141,8 @@ public class AddOrderingDesigneeAction extends AbstractProfileAction {
     @Override
     public void prepare() {
         super.prepare();
-        if (!StringUtils.isEmpty(getSelectedPersonExternalId())) {
-            orderingDesignee = getPerson(getSelectedPersonExternalId());
+        if (!StringUtils.isEmpty(getSelectedPersonKey())) {
+            orderingDesignee = getPersonSearchService().getPerson(getSelectedPersonKey());
         }
         states = stateLookup.getAll();
         countries = countryLookup.getAll();
@@ -178,7 +178,7 @@ public class AddOrderingDesigneeAction extends AbstractProfileAction {
     @Validations(customValidators = {
             @CustomValidator(type = "hibernate", fieldName = "orderingDesignee", parameters = {
             @ValidationParameter(name = "resourceKeyBase", value = "person"),
-            @ValidationParameter(name = "excludes", value = "externalId") }) },
+            @ValidationParameter(name = "excludes", value = "nesId") }) },
             fieldExpressions = {
             @FieldExpressionValidator(fieldName = "orderingDesignee.postalAddress.stateOrProvince",
              expression = "orderingDesignee.postalAddress.stateOrProvinceValid", key = "stateOrProvince.required") })
@@ -200,17 +200,17 @@ public class AddOrderingDesigneeAction extends AbstractProfileAction {
     }
 
     /**
-     * @return the selectedPersonExternalId
+     * @return the selectedPersonKey
      */
-    public String getSelectedPersonExternalId() {
-        return selectedPersonExternalId;
+    public String getSelectedPersonKey() {
+        return selectedPersonKey;
     }
 
     /**
-     * @param selectedPersonExternalId the selectedPersonExternalId to set
+     * @param selectedPersonKey the selectedPersonKey to set
      */
-    public void setSelectedPersonExternalId(String selectedPersonExternalId) {
-        this.selectedPersonExternalId = selectedPersonExternalId;
+    public void setSelectedPersonKey(String selectedPersonKey) {
+        this.selectedPersonKey = selectedPersonKey;
     }
 
     /**

@@ -83,12 +83,13 @@
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+
+import java.io.File;
+
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.protocol.ProtocolImportDetail;
 import gov.nih.nci.firebird.service.protocol.ProtocolImportJob;
@@ -99,8 +100,6 @@ import gov.nih.nci.firebird.test.ValidationExceptionFactory;
 import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
-
-import java.io.File;
 
 import org.junit.Test;
 
@@ -129,30 +128,28 @@ public class ImportProtocolsActionTest extends AbstractWebTest {
 
     @Test
     public void testPrepare_NoSponsor() {
-        action.setSponsorExternalId(null);
+        action.setSponsor(null);
         action.prepare();
         verifyZeroInteractions(mockOrgService);
     }
 
     @Test
-    public void testPrepare_SponsorWithExternalId() throws Exception {
-        Organization sponsor = OrganizationFactory.getInstanceWithId().create();
-        action.setSponsorExternalId(sponsor.getExternalId());
-        when(mockOrgService.getByExternalId(sponsor.getExternalId())).thenReturn(sponsor);
-
+    public void testPrepare_SponsorNoId() {
+        action.setSponsor(new Organization());
         action.prepare();
-        assertSame(action.getSponsor(), sponsor);
+        verifyZeroInteractions(mockOrgService);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testPrepare_SponsorWithExternalId_InvalidatedOrganizationException() throws Exception {
+    @Test
+    public void testPrepare_ValidSponsorId() {
         Organization sponsor = OrganizationFactory.getInstanceWithId().create();
-        action.setSponsorExternalId(sponsor.getExternalId());
-        when(mockOrgService.getByExternalId(sponsor.getExternalId())).thenThrow(
-                new InvalidatedOrganizationException());
+        action.setSponsor(new Organization());
+        action.getSponsor().setId(sponsor.getId());
+        when(mockOrgService.getById(sponsor.getId())).thenReturn(sponsor);
 
         action.prepare();
         assertSame(action.getSponsor(), sponsor);
+
     }
 
     @Test

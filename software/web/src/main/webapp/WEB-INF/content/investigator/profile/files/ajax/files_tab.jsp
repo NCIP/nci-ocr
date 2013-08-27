@@ -1,57 +1,50 @@
 <%@ include file="/WEB-INF/content/common/taglibs.jsp"%>
-<div id="files_tab">
-    <h2>
-        <fmt:message key="investigator.profile.files"/>
-    </h2>
-    <firebird:messages/>
+<h2>
+    <fmt:message key="investigator.profile.files"/>
+</h2>
+<firebird:messages/>
 
-    <firebird:instructionBubble messageKey="investigator.profile.files.instructions"/>
+<firebird:instructionBubble messageKey="investigator.profile.files.instructions"/>
 
-    <s:form action="upload" id="uploadForm" namespace="/investigator/profile/files/ajax" enctype="multipart/form-data" method="POST" >
-        <div class="formcol_wide">
-            <s:file name="dataFile.data" id="data" requiredPosition="right" size="30" requiredLabel="true"
-                    label="%{getText('label.file')}" labelposition="top" labelSeparator="" onKeyDown="this.blur()" onContextMenu="return false;"/>
-        </div>
-        <div class="formcol">
-            <s:textfield name="dataFile.description" id="description" label="%{getText('label.description')}" size="40" maxlength="%{@gov.nih.nci.firebird.data.FirebirdFile@DESCRIPTION_LENGTH}"/>
-        </div>
-        <div class="formcol">
-            <sj:submit id="upload" cssClass="btn_upload" value="Upload" onclick="indicateLoading();" targets="files_tab" />
-        </div>
-        <s:hidden name="profile.id" value="%{profile.id}"/>
-    </s:form>
+<s:form action="upload" id="uploadForm" namespace="/investigator/profile/files/ajax" enctype="multipart/form-data" method="POST" >
+    <div class="formcol_wide">
+        <s:file name="dataFile.data" id="data" requiredPosition="right" size="30" requiredLabel="true"
+                label="%{getText('label.file')}" labelposition="top" labelSeparator="" onKeyDown="this.blur()" onContextMenu="return false;"/>
+    </div>
+    <div class="formcol">
+        <s:textfield name="dataFile.description" id="description" label="%{getText('label.description')}" size="40" maxlength="%{@gov.nih.nci.firebird.data.FirebirdFile@DESCRIPTION_LENGTH}"/>
+    </div>
+    <div class="formcol">
+        <sj:submit id="upload" cssClass="btn_upload" targets="Files" value="Upload" onclick="indicateLoading();"/>
+    </div>
+    <s:hidden name="profile.id" value="%{profile.id}"/>
+</s:form>
 
-    <div class="clear"><br></div>
+<div class="clear"><br></div>
 
-    <s:url var="downloadLink" action="download" namespace="/investigator/profile/files/ajax" >
-        <s:param name="profile.id" value="%{profile.id}"/>
-    </s:url>
-    <s:url var="deleteLink" action="delete" namespace="/investigator/profile/files/ajax" >
-        <s:param name="profile.id" value="%{profile.id}"/>
-    </s:url>
+<s:url var="downloadLink" action="download" namespace="/investigator/profile/files/ajax" >
+    <s:param name="profile.id" value="%{profile.id}"/>
+</s:url>
+<s:url var="deleteLink" action="delete" namespace="/investigator/profile/files/ajax" >
+    <s:param name="profile.id" value="%{profile.id}"/>
+</s:url>
 
-    <table id="gridtable" class="ui-jqgrid-htable ui-jqgrid-btable"
-            summary="This table displays files which have been uploaded to the user's profile. It displays the file name,
-                    which can be clicked to download the file, the entered description, the date uploaded, and a link to delete
-                    the file from the profile if necessary.">
-        <thead>
-            <tr>
-                <th scope="col" width="225px"><div><fmt:message key="label.file"/></div></th>
-                <th scope="col" width="225px"><div><fmt:message key="label.description"/></div></th>
-                <th scope="col" width="225px"><div><fmt:message key="label.upload.date"/></div></th>
-                <th scope="col" width="30px"><%--Delete column--%></th>
-            </tr>
-        </thead>
-    </table>
-</div>
+<table id="gridtable" class="ui-jqgrid-htable ui-jqgrid-btable"
+        summary="This table displays files which have been uploaded to the user's profile. It displays the file name,
+                which can be clicked to download the file, the entered description, the date uploaded, and a link to delete
+                the file from the profile if necessary.">
+    <thead>
+        <tr>
+            <th scope="col" width="225px"><div><fmt:message key="label.file"/></div></th>
+            <th scope="col" width="225px"><div><fmt:message key="label.description"/></div></th>
+            <th scope="col" width="225px"><div><fmt:message key="label.upload.date"/></div></th>
+            <th scope="col" width="30px"><%--Delete column--%></th>
+        </tr>
+    </thead>
+</table>
 
 <script type="text/javascript">
     $(document).ready(function() {
-        createUploadedFilesTable();
-        $.publish('injectCsrfTokens');
-    });
-
-    function createUploadedFilesTable() {
         var dataRows = ${filesJson};
         var isLongData = dataRows.length > ${minPaginationResults};
         $('#gridtable').dataTable( {
@@ -80,7 +73,7 @@
                               var options = { id :  obj.aData.id,
                                       action : 'delete',
                                       url:'<s:property value="deleteLink"/>',
-                                      target: 'files_tab',
+                                      target: 'Files',
                                       imageUrl : '<s:url value="/images/ico_delete.gif" />',
                                       imageTitle : 'Delete',
                                       paramName:'id',
@@ -99,5 +92,5 @@
                 $("input").keydown(testForEnter);
            }
         });
-    }
+    });
 </script>

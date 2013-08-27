@@ -104,8 +104,6 @@ public class AnnualRegistrationServiceBeanHibernateTest extends AbstractHibernat
 
     @Inject
     private AnnualRegistrationServiceBean bean;
-    @Inject
-    private AnnualRegistrationConfigurationService configurationService;
     private AnnualRegistrationConfiguration configuration;
     private InvestigatorProfile profile;
     private InvestigatorProfile withdrawnProfile;
@@ -114,7 +112,6 @@ public class AnnualRegistrationServiceBeanHibernateTest extends AbstractHibernat
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        bean.setConfigurationService(configurationService);
         configuration = AnnualRegistrationConfigurationFactory.getInstance().create();
         profile = InvestigatorProfileFactory.getInstance().create();
         profile.getUser().getInvestigatorRole().setStatus(InvestigatorStatus.ACTIVE);
@@ -165,26 +162,6 @@ public class AnnualRegistrationServiceBeanHibernateTest extends AbstractHibernat
         registration.setDueDate(dueDate);
         profile.addRegistration(registration);
         return registration;
-    }
-
-    @Test
-    public void testCreatePendingRenewals_DeletedRenewal() {
-        AnnualRegistration expiringRegistration = createTestRegistration(profile, configuration,
-                DateUtils.addDays(new Date(), -60), null);
-        saveAndFlush(expiringRegistration);
-
-        bean.createPendingRenewals();
-        flushAndClearSession();
-        expiringRegistration = reloadObject(expiringRegistration);
-        assertNotNull(expiringRegistration.getRenewal());
-
-        bean.delete(expiringRegistration.getRenewal(), expiringRegistration.getRenewal().getProfile().getUser());
-        expiringRegistration = reloadObject(expiringRegistration);
-        assertNull(expiringRegistration.getRenewal());
-
-        bean.createPendingRenewals();
-        expiringRegistration = reloadObject(expiringRegistration);
-        assertNull(expiringRegistration.getRenewal());
     }
 
     @Test

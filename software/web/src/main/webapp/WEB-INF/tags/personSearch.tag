@@ -67,18 +67,18 @@
             },
             aoColumns: [
                 {mDataProp: null, sWidth: 75, fnRender: function (obj) {
-                    return personSearch.createSelectButtonColumn(obj.aData.externalId, '<fmt:message key="button.select"/>');
+                    return personSearch.createSelectButtonColumn(obj.aData.person.nesId, '<fmt:message key="button.select"/>');
                 }},
-                {mDataProp: "sortableName", bUseRendered: false, fnRender: function (obj) {
-                    return obj.aData.displayNameForList;
+                {mDataProp: "person.sortableName", bUseRendered: false, fnRender: function (obj) {
+                    return obj.aData.person.displayNameForList;
                 }},
                 {mDataProp: null, fnRender: function (obj) {
-                    return addressFormatter(obj.aData.postalAddress);
+                    return __addressFormatter(obj.aData.person.postalAddress);
                 }},
-                {mDataProp: "email"}
+                {mDataProp: "person.email"}
             ],
-            fnRowCallback: function (nRow, person) {
-                return personSearch.completeRow(nRow, person);
+            fnRowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                return personSearch.completeRow(nRow, aData.person.nesId, aData.key, aData);
             },
             fnDrawCallback: function () {
                 personSearch.finishTable();

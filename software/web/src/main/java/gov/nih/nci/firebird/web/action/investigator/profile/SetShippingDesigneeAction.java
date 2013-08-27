@@ -87,10 +87,10 @@ import gov.nih.nci.firebird.data.Country;
 import gov.nih.nci.firebird.data.ShippingDesignee;
 import gov.nih.nci.firebird.data.State;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 
 import java.util.List;
 
@@ -120,8 +120,8 @@ public class SetShippingDesigneeAction extends AbstractProfileAction {
     private final StateLookupService stateLookup;
     private final CountryLookupService countryLookup;
     private ShippingDesignee shippingDesignee = new ShippingDesignee();
-    private String selectedPersonExternalId;
-    private String selectedOrganizationExternalId;
+    private String selectedPersonKey;
+    private String selectedOrganizationKey;
     private List<Country> countries;
     private List<State> states;
     private Boolean createNewPerson;
@@ -145,14 +145,14 @@ public class SetShippingDesigneeAction extends AbstractProfileAction {
     @Override
     public void prepare() {
         super.prepare();
-        if (StringUtils.isNotEmpty(getSelectedPersonExternalId())) {
-            shippingDesignee.setPerson(getPerson(getSelectedPersonExternalId()));
+        if (StringUtils.isNotEmpty(getSelectedPersonKey())) {
+            shippingDesignee.setPerson(getPersonSearchService().getPerson(getSelectedPersonKey()));
         }
-        if (StringUtils.isNotEmpty(getSelectedOrganizationExternalId())) {
+        if (StringUtils.isNotEmpty(getSelectedOrganizationKey())) {
             try {
-                shippingDesignee.setOrganization(getOrganizationService().getByExternalId(
-                        getSelectedOrganizationExternalId()));
-            } catch (InvalidatedOrganizationException e) {
+                shippingDesignee.setOrganization(getOrganizationSearchService().getOrganization(
+                        getSelectedOrganizationKey()));
+            } catch (UnavailableEntityException e) {
                 addActionError(getText("profile.organization.nullified"));
             }
         }
@@ -180,29 +180,27 @@ public class SetShippingDesigneeAction extends AbstractProfileAction {
     @Validations(customValidators = {
             @CustomValidator(type = "hibernate", fieldName = "shippingDesignee.person", parameters = {
                     @ValidationParameter(name = "resourceKeyBase", value = "person"),
-                    @ValidationParameter(name = "excludes", value = "externalId") }),
+                    @ValidationParameter(name = "excludes", value = "nesId") }),
             @CustomValidator(type = "hibernate", fieldName = "shippingDesignee.organization", parameters = {
                     @ValidationParameter(name = "resourceKeyBase", value = "organization"),
-                    @ValidationParameter(name = "excludes", value = "externalId") }),
+                    @ValidationParameter(name = "excludes", value = "nesId") }),
             @CustomValidator(type = "hibernate", fieldName = "shippingDesignee.shippingAddress", parameters = {
                     @ValidationParameter(name = "resourceKeyBase", value = "person.postalAddress") }) },
             fieldExpressions = {
             @FieldExpressionValidator(fieldName = "personSearch",
-                    expression = "createNewPerson || selectedPersonExternalId != null",
+                    expression = "createNewPerson || selectedPersonKey != null",
                     key = "person.search.no.selection.error"),
             @FieldExpressionValidator(fieldName = "organizationSearch",
-                    expression = "createNewOrganization || selectedOrganizationExternalId != null",
+                    expression = "createNewOrganization || selectedOrganizationKey != null",
                     key = "organization.search.no.selection.error"),
             @FieldExpressionValidator(fieldName = "shippingDesignee.shippingAddress.stateOrProvince",
                                       expression = "shippingDesignee.shippingAddress.stateOrProvinceValid",
                                       key = "stateOrProvince.required"),
             @FieldExpressionValidator(fieldName = "shippingDesignee.organization.postalAddress.stateOrProvince",
-                                      expression = "shippingDesignee.organization != null"
-                                              + " && shippingDesignee.organization.postalAddress.stateOrProvinceValid",
+                                      expression = "shippingDesignee.organization.postalAddress.stateOrProvinceValid",
                                       key = "stateOrProvince.required"),
             @FieldExpressionValidator(fieldName = "shippingDesignee.person.postalAddress.stateOrProvince",
-                                      expression = "shippingDesignee.person != null"
-                                              + " && shippingDesignee.person.postalAddress.stateOrProvinceValid",
+                                      expression = "shippingDesignee.person.postalAddress.stateOrProvinceValid",
                                       key = "stateOrProvince.required")
             }
     )
@@ -217,31 +215,31 @@ public class SetShippingDesigneeAction extends AbstractProfileAction {
     }
 
     /**
-     * @return the selectedPersonExternalId
+     * @return the selectedPersonKey
      */
-    public String getSelectedPersonExternalId() {
-        return selectedPersonExternalId;
+    public String getSelectedPersonKey() {
+        return selectedPersonKey;
     }
 
     /**
-     * @param selectedPersonExternalId the selectedPersonExternalId to set
+     * @param selectedPersonKey the selectedPersonKey to set
      */
-    public void setSelectedPersonExternalId(String selectedPersonExternalId) {
-        this.selectedPersonExternalId = selectedPersonExternalId;
+    public void setSelectedPersonKey(String selectedPersonKey) {
+        this.selectedPersonKey = selectedPersonKey;
     }
 
     /**
-     * @return the selectedOrganizationExternalId
+     * @return the selectedOrganizationKey
      */
-    public String getSelectedOrganizationExternalId() {
-        return selectedOrganizationExternalId;
+    public String getSelectedOrganizationKey() {
+        return selectedOrganizationKey;
     }
 
     /**
-     * @param selectedOrganizationExternalId the selectedOrganizationExternalId to set
+     * @param selectedOrganizationKey the selectedOrganizationKey to set
      */
-    public void setSelectedOrganizationExternalId(String selectedOrganizationExternalId) {
-        this.selectedOrganizationExternalId = selectedOrganizationExternalId;
+    public void setSelectedOrganizationKey(String selectedOrganizationKey) {
+        this.selectedOrganizationKey = selectedOrganizationKey;
     }
 
     /**
@@ -275,8 +273,6 @@ public class SetShippingDesigneeAction extends AbstractProfileAction {
     /**
      * @return the createNewOrganization
      */
-    @SuppressWarnings("ucd")
-    // Used in JSP pages
     public Boolean isCreateNewOrganization() {
         return createNewOrganization;
     }
@@ -291,8 +287,6 @@ public class SetShippingDesigneeAction extends AbstractProfileAction {
     /**
      * @return the createNewPerson
      */
-    @SuppressWarnings("ucd")
-    // Used in JSP pages
     public Boolean isCreateNewPerson() {
         return createNewPerson;
     }

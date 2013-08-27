@@ -89,7 +89,6 @@ import static org.mockito.Mockito.*;
 import gov.nih.nci.coppa.common.LimitOffset;
 import gov.nih.nci.coppa.po.CorrelationNode;
 import gov.nih.nci.coppa.po.HealthCareFacility;
-import gov.nih.nci.coppa.po.IdentifiedOrganization;
 import gov.nih.nci.coppa.po.StringMap;
 import gov.nih.nci.coppa.po.StringMapType.Entry;
 import gov.nih.nci.coppa.services.business.business.common.BusinessI;
@@ -112,8 +111,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import com.google.common.collect.Lists;
 
 public class HealthCareFacilityIntegrationServiceBeanTest {
 
@@ -145,9 +142,8 @@ public class HealthCareFacilityIntegrationServiceBeanTest {
                 mockErrorTranslator, mockOrganizationService, mockHealthCareFacilityService, mockTranslator);
         when(mockTranslator.toHealthCareFacility(any(Organization.class))).thenReturn(mockHealthCareFacility);
         when(mockTranslator.toNesOrganization(any(Organization.class))).thenReturn(mockNesOrganization);
-        when(
-                mockTranslator.toFirebirdOrganization(any(HealthCareFacility.class),
-                        any(gov.nih.nci.coppa.po.Organization.class))).thenReturn(mockOrganization);
+        when(mockTranslator.toFirebirdOrganization(any(HealthCareFacility.class), any(gov.nih.nci.coppa.po.Organization.class)))
+            .thenReturn(mockOrganization);
     }
 
     @Test
@@ -155,37 +151,48 @@ public class HealthCareFacilityIntegrationServiceBeanTest {
         Id facilityId = nesObjectFactory.getTestIdentifier(NesIIRoot.RESEARCH_ORGANIZATION);
         when(mockHealthCareFacilityService.create(mockHealthCareFacility)).thenReturn(facilityId);
         when(mockOrganizationService.create(mockNesOrganization)).thenReturn(TEST_NES_ID.toId());
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
 
         bean.create(organization);
-        assertEquals(CurationStatus.PENDING, organization.getCurationStatus());
+
+        assertEquals(new NesId(facilityId).toString(), organization.getNesId());
+        assertEquals(TEST_NES_ID.toString(), organization.getPlayerIdentifier());
+        assertEquals(CurationStatus.PENDING, organization.getNesStatus());
         verify(mockOrganizationService).create(mockNesOrganization);
         verify(mockHealthCareFacilityService).create(mockHealthCareFacility);
+    }
 
-        assertTrue(organization.getExternalData() instanceof HealthCareFacilityData);
-        HealthCareFacilityData healthCareFacilityData = (HealthCareFacilityData) organization.getExternalData();
-        assertEquals(new NesId(facilityId).toString(), healthCareFacilityData.getExternalId());
-        assertEquals(TEST_NES_ID.toString(), healthCareFacilityData.getPlayerId());
+    @Test
+    public void testCreate_ExistingPlayer() throws Exception {
+        Id facilityId = nesObjectFactory.getTestIdentifier(NesIIRoot.RESEARCH_ORGANIZATION);
+        when(mockOrganization.getPlayerIdentifier()).thenReturn(TEST_NES_ID_STRING);
+        when(mockHealthCareFacilityService.create(mockHealthCareFacility)).thenReturn(facilityId);
+
+        bean.create(mockOrganization);
+        verify(mockHealthCareFacilityService).create(mockHealthCareFacility);
+        verifyZeroInteractions(mockOrganizationService);
     }
 
     @Test
     public void testGetOrganization() throws RemoteException {
-        HealthCareFacilityData mockHealthCareFacilityData = mock(HealthCareFacilityData.class);
-        when(mockHealthCareFacilityData.getPlayerId()).thenReturn(TEST_NES_ID_STRING);
-        when(mockOrganization.getExternalData()).thenReturn(mockHealthCareFacilityData);
         CorrelationNode node = nesObjectFactory.createNode(mockHealthCareFacility, mockNesOrganization);
-        when(mockBusinessService.getCorrelationByIdWithEntities(any(Id.class), any(Bl.class), any(Bl.class)))
-                .thenReturn(node);
+        when(mockBusinessService.getCorrelationByIdWithEntities(any(Id.class), any(Bl.class), any(Bl.class))).thenReturn(node);
+        when(mockOrganization.getPlayerIdentifier()).thenReturn(TEST_NES_ID_STRING);
         Organization organization = bean.getOrganization(TEST_NES_ID);
         assertEquals(mockOrganization, organization);
     }
 
     @Test
+    public void testGetNesIIRoot() {
+        assertEquals(NesIIRoot.HEALTH_CARE_FACILITY, bean.getNesIIRoot());
+    }
+
+    @Test
     public void testSearchByName() throws RemoteException {
         CorrelationNode resultNode = nesObjectFactory.createNode(mockHealthCareFacility, mockNesOrganization);
-        when(
-                mockBusinessService.searchCorrelationsWithEntities(any(CorrelationNode.class), any(Bl.class),
-                        any(Bl.class), any(LimitOffset.class))).thenReturn(new CorrelationNode[] { resultNode });
+        when(mockBusinessService.searchCorrelationsWithEntities(
+                any(CorrelationNode.class), any(Bl.class), any(Bl.class), any(LimitOffset.class)))
+                .thenReturn(new CorrelationNode[] {resultNode});
         String searchName = "name";
         List<Organization> nameMatches = bean.searchByName(searchName);
         verify(mockTranslator).toNesName(searchName);
@@ -194,19 +201,30 @@ public class HealthCareFacilityIntegrationServiceBeanTest {
     }
 
     @Test
-    public void testSearchByAssignedIdentifier() throws Exception {
-        when(mockHealthCareFacilityService.getByPlayerIds(any(Id[].class))).thenReturn(
-                new HealthCareFacility[] { mockHealthCareFacility });
-
-        IdentifiedOrganization identifiedOrganization = new IdentifiedOrganization();
-        identifiedOrganization.setPlayerIdentifier(TEST_NES_ID.toIi());
-        List<IdentifiedOrganization> identifiedOrganizations = Lists.newArrayList(identifiedOrganization);
-        when(mockIdentifiedOrganizationService.getIdentifiedOrganizations(TEST_EXTENSION)).thenReturn(
-                identifiedOrganizations);
-
-        List<Organization> organizations = bean.searchByAssignedIdentifier(TEST_EXTENSION);
-        assertEquals(Lists.newArrayList(mockOrganization), organizations);
+    public void testSearchByAssignedIdentifier() {
+        bean.searchByAssignedIdentifier(TEST_EXTENSION);
         verify(mockIdentifiedOrganizationService).getIdentifiedOrganizations(TEST_EXTENSION);
+    }
+
+    @Test
+    public void testGetByIdentifiedOrganizationPlayerId() throws RemoteException {
+        when(mockHealthCareFacilityService.getByPlayerIds(any(Id[].class)))
+            .thenReturn(new HealthCareFacility[] {mockHealthCareFacility});
+        List<Organization> organizations = bean.getByIdentifiedOrganizationPlayerId(TEST_NES_ID_STRING);
+        assertEquals(1, organizations.size());
+        assertEquals(mockOrganization, organizations.get(0));
+    }
+
+    @Test
+    public void testGetByIdentifiedOrganizationPlayerId_NoMatch() throws RemoteException {
+        List<Organization> organizations = bean.getByIdentifiedOrganizationPlayerId(TEST_NES_ID_STRING);
+        assertTrue(organizations.isEmpty());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testGetByIdentifiedOrganizationPlayerId_RemoteException() throws RemoteException {
+        when(mockHealthCareFacilityService.getByPlayerIds(any(Id[].class))).thenThrow(new RemoteException());
+        bean.getByIdentifiedOrganizationPlayerId(TEST_NES_ID_STRING);
     }
 
     @Test

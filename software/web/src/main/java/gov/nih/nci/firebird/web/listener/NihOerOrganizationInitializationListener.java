@@ -83,30 +83,28 @@
 
 package gov.nih.nci.firebird.web.listener;
 
-import gov.nih.nci.firebird.inject.GuiceInjectorHolder;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
-
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-
-import org.apache.log4j.Logger;
-
 import com.fiveamsolutions.nci.commons.util.HibernateHelper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
+import gov.nih.nci.firebird.inject.GuiceInjectorHolder;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
+import org.apache.log4j.Logger;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
 /**
  * Initializes the NIH OER Organization from CTRP on application startup.
  */
 public class NihOerOrganizationInitializationListener implements ServletContextListener {
 
-    private static final Logger LOG = Logger.getLogger(NihOerOrganizationInitializationListener.class);
-
     private HibernateHelper hibernateHelper;
     private OrganizationService organizationService;
-    private String nihOerOrganizationExternalId;
+    private String nihOerOrganizationNesId;
+
+    private static final Logger LOG = Logger.getLogger(NihOerOrganizationInitializationListener.class);
 
     /**
      * Creates a listener instance.
@@ -118,11 +116,9 @@ public class NihOerOrganizationInitializationListener implements ServletContextL
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         try {
-            LOG.info("Initializing Nih Oer Organization");
             hibernateHelper.openAndBindSession();
-            organizationService.getByExternalId(nihOerOrganizationExternalId);
-            LOG.info("Initialization of Nih Oer Organization successful");
-        } catch (InvalidatedOrganizationException e) {
+            organizationService.getByNesId(nihOerOrganizationNesId);
+        } catch (UnavailableEntityException e) {
             String message = "Unexpected error initializing NIH OER Organization";
             LOG.error(message, e);
             throw new IllegalStateException(message, e);
@@ -166,11 +162,10 @@ public class NihOerOrganizationInitializationListener implements ServletContextL
 
     /**
      *
-     * @param nihOerOrganizationExternalId NIH OER external identifier
+     * @param nihOerOrganizationNesId NIH OER NES identifier
      */
     @Inject
-    public void setNihOerOrganizationExternalId(
-            @Named("nih.oer.organization.nes.id") String nihOerOrganizationExternalId) {
-        this.nihOerOrganizationExternalId = nihOerOrganizationExternalId;
+    public void setNihOerOrganizationNesId(@Named("nih.oer.organization.nes.id") String nihOerOrganizationNesId) {
+        this.nihOerOrganizationNesId = nihOerOrganizationNesId;
     }
 }

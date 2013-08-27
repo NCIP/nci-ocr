@@ -97,7 +97,7 @@ public class OrganizationEntityTranslatorTest {
                 .translateOrganization(organization);
         assertEquals(organization.getCtepId(), esysOrganization.getCtepId());
         assertEquals(organization.getName(), esysOrganization.getName());
-        assertEquals(organization.getExternalId(), esysOrganization.getNesId());
+        assertEquals(organization.getNesId(), esysOrganization.getNesId());
         assertEquals(null, esysOrganization.getStructuralRoleNesId());
     }
 

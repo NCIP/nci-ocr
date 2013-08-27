@@ -82,27 +82,28 @@
  */
 package gov.nih.nci.firebird.nes.organization;
 
+import java.util.List;
+
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.iso21090.extensions.Id;
 
-import java.util.List;
-
-public class OrganizationEntityIntegrationServiceBeanIntegrationTest extends
-        AbstractOrganizationIntegrationServiceBeanIntegrationTest {
-
+public class OrganizationEntityIntegrationServiceBeanIntegrationTest extends AbstractOrganizationIntegrationServiceBeanIntegrationTest {
+    
     @Override
     void callCreate(Organization organization) {
         getService().create(organization);
     }
 
     @Override
-    Organization getOrganizationForPlayerId(Id id) throws InvalidatedOrganizationException {
+    Organization getOrCreateOrganizationForPlayerId(Id id) throws UnavailableEntityException,
+            ReplacedEntityException {
         return getService().getById(new NesId(id).toString());
     }
-
+    
     @Override
     List<Organization> callSearchByName(String name) {
         return getService().searchByName(name);
@@ -122,5 +123,5 @@ public class OrganizationEntityIntegrationServiceBeanIntegrationTest extends
     OrganizationEntityIntegrationService getService() {
         return getOrganizationEntityService();
     }
-
+  
 }

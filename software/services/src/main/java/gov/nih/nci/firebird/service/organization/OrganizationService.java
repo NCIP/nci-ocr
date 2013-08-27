@@ -82,29 +82,72 @@
  */
 package gov.nih.nci.firebird.service.organization;
 
-import gov.nih.nci.firebird.data.CurationDataset;
+
+import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.service.GenericService;
+
+import java.util.List;
 
 import javax.ejb.Local;
 
 /**
- * Service interface for working with Organization entities.
+ * Interface for a Service handling Organization functions.
  */
 @Local
-public interface OrganizationService extends BaseOrganizationService {
+public interface OrganizationService extends GenericService<Organization> {
 
     /**
-     * Returns information about organizations requiring curation.
-     * 
-     * @return the curation information result.
+     * Retrieves an organization by NES id either from the local data store or from
+     * the PO Organization service if not found locally.
+     *
+     * @param nesId the nes id.
+     * @return the organization or null if none were found.
+     * @throws UnavailableEntityException if the corresponding organization has been nullified in NES.
      */
-    CurationDataset getOrganizationsToBeCurated();
+    Organization getByNesId(String nesId) throws UnavailableEntityException;
 
     /**
-     * Returns information about organization roles requiring curation.
-     * 
-     * @return the curation information result.
+     * Searches for an NES id match in the local database (as opposed to NES).
+     *
+     * @param nesId the NES identifier to search for
+     * @return the matching organization or null if not found
      */
-    CurationDataset getRolesToBeCurated();
+    Organization getByNesIdLocal(String nesId);
 
+    /**
+     * Creates a new Organization in the integrated organization source, updating the Organization
+     * object passed in with its source assigned identifier and status. Note that this method
+     * will only create NES Organization entities and may not be used for Practice Sites, etc.
+     *
+     * @param organization organization to create in the organization source.
+     * @throws ValidationException if the organization is invalid in the underlying source.
+     */
+    void create(Organization organization) throws ValidationException;
 
+    /**
+     * Refreshes a Organization record with the current data from the corresponding record in NES.
+     *
+     * @param organization record to refresh from NES
+     */
+    void refreshFromNes(Organization organization);
+
+    /**
+     * Validate a Organization object against NES and throws a Validation Exception if there
+     * are problems found.Note that this method will only validate NES Organization entities 
+     * and may not be used for Practice Sites, etc.
+     *
+     * @param organization The organization to validate.
+     * @throws ValidationException if there are NES Validation problems.
+     */
+    void validateOrganization(Organization organization) throws ValidationException;
+
+    /**
+     * Obtains a list of all Organizations within Firebird that are currently in a PENDING state in
+     * NES.
+     *
+     * @return the Set of all matching organizations.
+     */
+    List<Organization> getOrganizationsToBeCurated();
 }

@@ -139,7 +139,7 @@ public class SponsorDelegatePageFlowActionTest extends AbstractFlowActionTestBas
 
     @Test
     public void testPerformSave() {
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(dcpSponsorOrganization.getExternalId(), otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(dcpSponsorOrganization.getId(), otherSponsorOrganization.getId()));
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertTrue(action.getAccountConfigurationData().getDelegateOrganizations().contains(dcpSponsorOrganization));
         assertTrue(action.getAccountConfigurationData().getDelegateOrganizations().contains(otherSponsorOrganization));
@@ -148,7 +148,7 @@ public class SponsorDelegatePageFlowActionTest extends AbstractFlowActionTestBas
     @Test
     public void testPerformSave_ReplaceOldSelection() {
         getAccountConfigurationData().getDelegateOrganizations().add(dcpSponsorOrganization);
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(otherSponsorOrganization.getId()));
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertFalse(action.getAccountConfigurationData().getDelegateOrganizations().contains(dcpSponsorOrganization));
         assertTrue(action.getAccountConfigurationData().getDelegateOrganizations().contains(otherSponsorOrganization));
@@ -157,7 +157,7 @@ public class SponsorDelegatePageFlowActionTest extends AbstractFlowActionTestBas
     @Test
     public void testPerformSave_DoesNotReplaceRepresentatives() {
         getAccountConfigurationData().getSponsorOrganizations().add(dcpSponsorOrganization);
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(otherSponsorOrganization.getId()));
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertTrue(action.getAccountConfigurationData().getSponsorOrganizations().contains(dcpSponsorOrganization));
         assertTrue(action.getAccountConfigurationData().getDelegateOrganizations().contains(otherSponsorOrganization));

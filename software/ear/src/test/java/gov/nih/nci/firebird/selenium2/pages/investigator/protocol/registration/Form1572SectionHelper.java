@@ -85,9 +85,10 @@ package gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration;
 import static org.apache.commons.lang3.StringUtils.*;
 import gov.nih.nci.firebird.data.AbstractOrganizationRole;
 import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
+
 import java.util.Collection;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import com.google.common.base.Predicate;
@@ -107,20 +108,11 @@ public class Form1572SectionHelper {
     }
 
     public Form1572OrganizationAssociationListing getListing(Organization organization) {
-        if (organization.getExternalId() != null) {
-            return getByExternalId(organization);
+        if (organization.getId() != null) {
+            return FirebirdTableUtils.getListing(section.getListings(), organization);
         } else {
             return getListingByValues(organization);
         }
-    }
-
-    private Form1572OrganizationAssociationListing getByExternalId(final Organization organization) {
-        return Iterables.find(section.getListings(), new Predicate<Form1572OrganizationAssociationListing>() {
-            @Override
-            public boolean apply(Form1572OrganizationAssociationListing listing) {
-                return ObjectUtils.equals(listing.getId(), organization.getExternalId());
-            }
-        }, null);
     }
 
     private Form1572OrganizationAssociationListing getListingByValues(final Organization organization) {

@@ -83,158 +83,315 @@
 package gov.nih.nci.firebird.service.person;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.data.CurationDataset;
-import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.coppa.po.faults.EntityValidationFault;
+import gov.nih.nci.coppa.services.entities.person.common.PersonI;
+import gov.nih.nci.coppa.services.structuralroles.identifiedperson.common.IdentifiedPersonI;
+import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.nes.correlation.PersonRoleType;
-import gov.nih.nci.firebird.service.person.external.ExternalPersonService;
-import gov.nih.nci.firebird.service.person.local.LocalPersonDataService;
-import gov.nih.nci.firebird.test.OrganizationFactory;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationServiceBean;
+import gov.nih.nci.firebird.test.AbstractHibernateTestCase;
 import gov.nih.nci.firebird.test.PersonFactory;
+import gov.nih.nci.firebird.test.ValueGenerator;
 
+import java.rmi.RemoteException;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.ArgumentCaptor;
 
-import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
-@RunWith(MockitoJUnitRunner.class)
-public class PersonServiceBeanTest {
+public class PersonServiceBeanTest extends AbstractHibernateTestCase {
 
-    private static final String SEARCH_TERM = "term";
+    private static final String VALID_NES_ID = "1";
+    private static final String INVALID_NES_ID = "5";
 
-    @Mock
-    private ExternalPersonService mockExternalService;
-    @Mock
-    private LocalPersonDataService mockLocalService;
-    private PersonServiceBean service = new PersonServiceBean();
+    @Inject
+    private PersonServiceBean bean;
+    private NesPersonIntegrationService mockNesPersonService = mock(NesPersonIntegrationService.class);
+    private Person person = PersonFactory.getInstance().create();
 
     @Before
-    public void setUp() {
-        service.setExternalService(mockExternalService);
-        service.setLocalService(mockLocalService);
+    public void setUp() throws Exception {
+        super.setUp();
+        person.setNesId(VALID_NES_ID);
+        bean.setNesIntegrationService(mockNesPersonService);
+        when(mockNesPersonService.getById(VALID_NES_ID)).thenReturn(person);
+        when(mockNesPersonService.createPerson(any(Person.class))).thenReturn(VALID_NES_ID);
     }
 
+    /**
+     * Test the person display name.
+     */
     @Test
-    public void testSearch_OnlyExternalResults() {
-        Person externalPerson = PersonFactory.getInstance().create();
-        List<Person> externalResults = Lists.newArrayList(externalPerson);
-        when(mockExternalService.search(SEARCH_TERM)).thenReturn(externalResults);
-        when(mockLocalService.getByExternalId(externalPerson.getExternalId())).thenReturn(null);
-        assertEquals(externalResults, service.search(SEARCH_TERM));
+    public void testDisplayName() {
+        Person person = new Person();
+        person.setFirstName("fname");
+        assertEquals("fname", person.getDisplayName());
+
+        person.setLastName("lname");
+        assertEquals("fname lname", person.getDisplayName());
+
+        person.setPrefix("Mr");
+        assertEquals("Mr fname lname", person.getDisplayName());
+
+        person.setMiddleName("     ");
+        assertEquals("Mr fname lname", person.getDisplayName());
     }
 
+    /**
+     * test the crud methods.
+     */
     @Test
-    public void testSearch_ExternalResultsReplacedWithLocal() {
-        Person externalPerson = PersonFactory.getInstance().create();
-        Person localPerson = PersonFactory.getInstance().create();
-        List<Person> externalResults = Lists.newArrayList(externalPerson);
-        when(mockExternalService.search(SEARCH_TERM)).thenReturn(externalResults);
-        when(mockLocalService.getByExternalId(externalPerson.getExternalId())).thenReturn(localPerson);
-        assertEquals(Lists.newArrayList(localPerson), service.search(SEARCH_TERM));
-    }
-
-    @Test
-    public void testSearch_ResultsAreOrdered() {
+    public void testCreateRetrieveUpdateDelete() {
         Person person1 = PersonFactory.getInstance().create();
-        Person person2 = PersonFactory.getInstance().create();
-        person1.setLastName("Aaaaa");
-        person2.setLastName("Zzzzz");
-        List<Person> externalResults = Lists.newArrayList(person2, person1);
-        when(mockExternalService.search(SEARCH_TERM)).thenReturn(externalResults);
-        List<Person> results = service.search(SEARCH_TERM);
-        assertEquals(person1, results.get(0));
-        assertEquals(person2, results.get(1));
+
+        Long id = bean.save(person1);
+        flushAndClearSession();
+
+        Person person2 = (Person) getCurrentSession().get(Person.class, id);
+        assertTrue(person1.isEquivalent(person2));
+        getCurrentSession().clear();
+
+        List<Person> results = bean.getAll();
+        assertEquals(1, results.size());
+
+        Person person3 = PersonFactory.getInstance().create();
+        bean.save(person3);
+        flushAndClearSession();
+
+        results = bean.getAll();
+        assertEquals(2, results.size());
+
+        person2 = bean.getById(id);
+        bean.delete(person2);
+
+        results = bean.getAll();
+        assertEquals(1, results.size());
+        flushAndClearSession();
+
+        assertNull(getCurrentSession().get(Person.class, id));
+    }
+
+    @Test
+    public void testImportNewOrExistingNesPerson() throws UnavailableEntityException {
+        // import person with invalid NES_ID. This should return null, and not insert FB person in DB
+        Person person1 = bean.importNesPerson(INVALID_NES_ID);
+        assertNull(person1);
+        List<Person> people = bean.getAll();
+        assertEquals(0, people.size());
+        flushAndClearSession();
+
+        // import person with known NES_ID. This person should end up in DB.
+        person1 = bean.importNesPerson(VALID_NES_ID);
+        assertNotNull(person1);
+        people = bean.getAll();
+        assertEquals(1, people.size());
+        assertEquals(person1, people.get(0));
+
+        // import person with same NES_ID. Should update, not add person
+        person1 = bean.importNesPerson(VALID_NES_ID);
+        assertNotNull(person1);
+        people = bean.getAll();
+        assertEquals(1, people.size());
+        flushAndClearSession();
+
+        // Does retrieved instance equal imported instance
+        Person person2 = bean.getById(person1.getId());
+        assertTrue(person1.isEquivalent(person2));
+
+        // Modify value in person instance, save, then import again to insure value changes
+        String lastName = person2.getLastName();
+        person2.setLastName("testvaluechanged");
+        assertFalse(person1.isEquivalent(person2));
+        bean.save(person2);
+        flushAndClearSession();
+
+        person1 = bean.importNesPerson(VALID_NES_ID);
+        assertNotNull(person1);
+        assertEquals(lastName, person1.getLastName());
+    }
+
+    @Test
+    public void testCreateNesPerson() throws ValidationException {
+        Person person = PersonFactory.getInstance().create();
+        person.setNesId(null);
+        person = bean.createNesPerson(person);
+
+        assertNotNull(person.getNesId());
+    }
+
+    @Test
+    public void testUpdateNesPerson() throws ValidationException {
+        Person personCopy = new Person();
+        bean.copyPersonFields(personCopy, person);
+        String updatedLastName = ValueGenerator.getUniqueString();
+        ArgumentCaptor<Person> personCaptor = ArgumentCaptor.forClass(Person.class);
+
+        bean.save(person);
+        flushAndClearSession();
+
+        personCopy.setId(person.getId());
+        personCopy.setLastName(updatedLastName);
+
+        bean.updateNesPerson(personCopy);
+
+        person = reloadObject(person);
+        verify(mockNesPersonService).updatePerson(personCaptor.capture());
+        assertFalse(person.isEquivalent(personCaptor.getValue()));
+        assertFalse(person.getLastName().equals(updatedLastName));
+        assertNotNull(person.getUpdateRequested());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testUpdateNesPersonFail() throws EntityValidationFault, RemoteException, ValidationException {
+        PersonI mockPersonClient = mock(PersonI.class);
+        ValidationErrorTranslator translator = mock(ValidationErrorTranslator.class);
+        doThrow(new RemoteException()).when(mockPersonClient).update(any(gov.nih.nci.coppa.po.Person.class));
+
+        NesPersonIntegrationService nesService = new NesPersonIntegrationServiceBean(mockPersonClient,
+                mock(IdentifiedPersonI.class), translator);
+        bean = new PersonServiceBean();
+        bean.setNesIntegrationService(nesService);
+
+        bean.updateNesPerson(PersonFactory.getInstance().create());
+    }
+
+    @Test
+    public void testRefreshFromNes_WithChanges() throws UnavailableEntityException, ReplacedEntityException {
+        Person person = getPersonWithPendingUpdates();
+        Person updatedPerson = PersonFactory.getInstance().create();
+        when(mockNesPersonService.getById(person.getNesId())).thenReturn(updatedPerson);
+        bean.refreshFromNes(person);
+        assertTrue(person.isEquivalent(updatedPerson));
+        assertTrue(updatedPerson.isEquivalent(person));
+        assertFalse(person.isUpdatePending());
+        assertNotNull(person.getLastNesRefresh());
+    }
+
+    private Person getPersonWithPendingUpdates() {
+        Person person = PersonFactory.getInstance().create();
+        person.requestUpdate();
+        return person;
+    }
+
+    @Test
+    public void testRefreshFromNes_NoChanges() throws UnavailableEntityException, ReplacedEntityException {
+        Person person = getPersonWithPendingUpdates();
+        when(mockNesPersonService.getById(person.getNesId())).thenReturn(person);
+        bean.refreshFromNes(person);
+        assertTrue(person.isUpdatePending());
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testSearch_Empty() throws Exception {
-        service.search("");
+    public void testRefreshFromNes_NoNesId() {
+        Person person = new Person();
+        bean.refreshFromNes(person);
     }
 
     @Test
-    public void testGetByExternalId_Local() throws Exception {
-        String identifier = "1234";
-        Person person = PersonFactory.getInstanceWithId().create();
-        when(mockLocalService.getByExternalId(identifier)).thenReturn(person);
-
-        assertEquals(person, service.getByExternalId(identifier));
-        verifyZeroInteractions(mockExternalService);
+    public void testRefreshFromNes_UnavailableEntityException() throws UnavailableEntityException,
+            ReplacedEntityException {
+        Person person = getPersonWithPendingUpdates();
+        when(mockNesPersonService.getById(person.getNesId())).thenThrow(
+                new UnavailableEntityException(null, person.getNesId()));
+        bean.refreshFromNes(person);
+        assertEquals(CurationStatus.NULLIFIED, person.getNesStatus());
+        assertTrue(person.isUpdatePending());
     }
 
     @Test
-    public void testGetByExternalId_External() throws Exception {
-        String identifier = "1234";
-        Person person = PersonFactory.getInstanceWithId().create();
-        when(mockLocalService.getByExternalId(identifier)).thenReturn(null);
-        when(mockExternalService.getByExternalId(identifier)).thenReturn(person);
-
-        assertEquals(person, service.getByExternalId(identifier));
-        verify(mockExternalService).getByExternalId(identifier);
-        verify(mockLocalService).save(person);
+    public void testRefreshFromNes_ReplacedEntityException() throws UnavailableEntityException, ReplacedEntityException {
+        Person person = getPersonWithPendingUpdates();
+        String nesId = person.getNesId();
+        when(mockNesPersonService.getById(nesId)).thenThrow(new ReplacedEntityException(null, nesId, null));
+        bean.refreshFromNes(person);
+        assertEquals(CurationStatus.NULLIFIED, person.getNesStatus());
+        assertTrue(person.isUpdatePending());
     }
 
     @Test
-    public void testValidate() throws Exception {
-        Person person = PersonFactory.getInstanceWithId().create();
-        service.validate(person);
-        verify(mockExternalService).validate(person);
+    public void testValidatePerson() throws ValidationException {
+        bean.validatePerson(person);
+        verify(mockNesPersonService).validate(person);
     }
 
-    @Test(expected = ValidationException.class)
-    public void testValidate_ValidationException() throws Exception {
-        Person person = PersonFactory.getInstanceWithId().create();
-        doThrow(ValidationException.class).when(mockExternalService).validate(person);
-        service.validate(person);
-    }
-
-    @Test
-    public void testSave() throws Exception {
-        Person person = PersonFactory.getInstance().create();
-        service.save(person);
-        verify(mockExternalService).save(person);
-        verify(mockLocalService).save(person);
-    }
-
-    @Test
-    public void testRefreshNow() throws Exception {
-        Person person = PersonFactory.getInstance().create();
-        service.refreshNow(person);
-        verify(mockExternalService).refreshNow(person);
-        verify(mockLocalService).save(person);
-    }
-
-    @Test
-    public void testRefreshIfStale() throws Exception {
-        Person person = PersonFactory.getInstance().create();
-        service.refreshIfStale(person);
-        verify(mockExternalService).refreshIfStale(person);
-        verify(mockLocalService).save(person);
-    }
-
-    @Test
-    public void testCheckCorrelation() throws Exception {
-        Person person = PersonFactory.getInstance().create();
-        Organization organization = OrganizationFactory.getInstance().create();
-        PersonRoleType type = PersonRoleType.HEALTH_CARE_PROVIDER;
-
-        service.checkCorrelation(person, organization, type);
-        verify(mockExternalService).checkCorrelation(person, organization, type);
-    }
-    
     @Test
     public void testGetPersonsToBeCurated() {
-        List<Person> candidates = Lists.newArrayList();
-        when(mockLocalService.getCandidatePersonsToBeCurated()).thenReturn(candidates);
-        CurationDataset mockResult = mock(CurationDataset.class);
-        when(mockExternalService.getPersonsToBeCurated(candidates)).thenReturn(mockResult);
-        assertEquals(mockResult, service.getPersonsToBeCurated());
+        Person curatedPerson = PersonFactory.getInstance().create();
+        curatedPerson.setNesStatus(CurationStatus.ACTIVE);
+        Person uncuratedPerson = PersonFactory.getInstance().create();
+        uncuratedPerson.setNesStatus(CurationStatus.PENDING);
+        Person inactivePerson = PersonFactory.getInstance().create();
+        inactivePerson.setNesStatus(CurationStatus.INACTIVE);
+        Person pendingUpdatesPerson = getPersonWithPendingUpdates();
+        save(curatedPerson, uncuratedPerson, inactivePerson, pendingUpdatesPerson);
+
+        List<Person> personsWaitingForCuration = bean.getPersonsToBeCurated();
+        assertEquals(2, personsWaitingForCuration.size());
+        assertTrue(personsWaitingForCuration.contains(uncuratedPerson));
+        assertTrue(personsWaitingForCuration.contains(pendingUpdatesPerson));
     }
-    
+
+    @Test
+    public void testSaveProviderNumberPass() {
+        Person curatedPerson = PersonFactory.getInstance().create();
+        curatedPerson.setProviderNumber("1234");
+
+        Long id = bean.save(curatedPerson);
+        flushAndClearSession();
+
+        Person loadedPerson = (Person) getCurrentSession().get(Person.class, id);
+        assertSame(curatedPerson.getProviderNumber(), loadedPerson.getProviderNumber());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testSaveProviderNumberFailValidation() {
+        Person curatedPerson = PersonFactory.getInstance().create();
+        curatedPerson.setProviderNumber(ValueGenerator.getUniqueString(51));
+
+        bean.save(curatedPerson);
+    }
+
+    @Test
+    public void testGetByCtepId_LocalResult() {
+        Person person = PersonFactory.getInstance().create();
+        String ctepId = ValueGenerator.getUniqueString(5);
+        person.setCtepId(ctepId);
+        saveAndFlush(person);
+        
+        assertSamePersistentObjects(person, bean.getByCtepId(ctepId));
+    }
+
+    @Test
+    public void testGetByCtepId_NesResult() throws UnavailableEntityException {
+        Person person = PersonFactory.getInstance().create();
+        String ctepId = ValueGenerator.getUniqueString(5);
+        person.setCtepId(ctepId);
+        when(mockNesPersonService.getByCtepId(ctepId)).thenReturn(person);
+        assertSame(person, bean.getByCtepId(ctepId));
+    }
+
+    @Test
+    public void testGetByCtepId_NoResults() throws UnavailableEntityException {
+        String ctepId = ValueGenerator.getUniqueString(5);
+        when(mockNesPersonService.getByCtepId(ctepId)).thenReturn(null);
+        assertNull(bean.getByCtepId(ctepId));
+    }
+
+    @Test
+    public void testGetByCtepId_UnavailableEntityException() throws UnavailableEntityException {
+        String ctepId = ValueGenerator.getUniqueString(5);
+        when(mockNesPersonService.getByCtepId(ctepId)).thenThrow(new UnavailableEntityException(null, null));
+        assertNull(bean.getByCtepId(ctepId));
+    }
+
 }

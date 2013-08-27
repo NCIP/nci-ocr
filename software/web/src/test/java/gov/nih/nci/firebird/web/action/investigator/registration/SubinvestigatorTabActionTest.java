@@ -96,7 +96,6 @@ import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
@@ -173,17 +172,17 @@ public class SubinvestigatorTabActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testAddFromProfile_Single() throws InvalidatedPersonException {
+    public void testAddFromProfile_Single() {
         InvestigatorRegistration registration = getSearchableInvestigatorRegistration();
         Person person1 = getSearchablePerson();
 
         action.setRegistration(new InvestigatorRegistration());
         action.getRegistration().setId(registration.getId());
-        action.setSelectedExternalIds(Collections.singletonList(person1.getExternalId()));
+        action.setSelectedIds(Collections.singletonList(person1.getId()));
 
         action.prepare();
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.addFromProfile());
-        verify(registrationService).createSubinvestigatorRegistrations(eq(registration), anyListOf(String.class));
+        verify(registrationService).createSubinvestigatorRegistrations(eq(registration), anyListOf(Long.class));
         verify(registrationService).setReturnedOrRevisedRegistrationsFormStatusesToRevised(
                 action.getRegistration().getProfile(), FormTypeEnum.FORM_1572);
     }
@@ -195,22 +194,22 @@ public class SubinvestigatorTabActionTest extends AbstractWebTest {
         return registration;
     }
 
-    private Person getSearchablePerson() throws InvalidatedPersonException {
+    private Person getSearchablePerson() {
         Person person = PersonFactory.getInstanceWithId().create();
-        when(personService.getByExternalId(person.getExternalId())).thenReturn(person);
+        when(personService.getById(person.getId())).thenReturn(person);
 
         return person;
     }
 
     @Test
-    public void testAddFromProfile_Multiple() throws InvalidatedPersonException {
+    public void testAddFromProfile_Multiple() {
         InvestigatorRegistration registration = getSearchableInvestigatorRegistration();
         Person person1 = getSearchablePerson();
         Person person2 = getSearchablePerson();
 
         action.setRegistration(new InvestigatorRegistration());
         action.getRegistration().setId(registration.getId());
-        action.setSelectedExternalIds(Lists.newArrayList(person1.getExternalId(), person2.getExternalId()));
+        action.setSelectedIds(Lists.newArrayList(person1.getId(), person2.getId()));
 
         action.prepare();
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.addFromProfile());
@@ -309,7 +308,7 @@ public class SubinvestigatorTabActionTest extends AbstractWebTest {
 
         action.setRegistration(new InvestigatorRegistration());
         action.getRegistration().setId(registration.getId());
-        action.setInvitedRegistrationIds(Collections.singletonList(subReg1.getId()));
+        action.setInvitedRegistrations(Collections.singletonList(subReg1.getId()));
 
         action.prepare();
         verify(registrationService).getById(registration.getId());
@@ -329,8 +328,7 @@ public class SubinvestigatorTabActionTest extends AbstractWebTest {
                 subinvestigator);
         assertEquals(expectedErrorMessage, Iterables.getOnlyElement(action.getActionErrors()));
         assertEquals(1, action.getInvalidSubinvestigatorIds().size());
-        Long subinvestigatorId = Iterables.getOnlyElement(registration.getSubinvestigatorRegistrations()).getProfile()
-                .getPerson().getId();
+        Long subinvestigatorId = Iterables.getOnlyElement(registration.getSubinvestigatorRegistrations()).getProfile().getPerson().getId();
         assertTrue(action.getInvalidSubinvestigatorIds().contains(subinvestigatorId));
     }
 

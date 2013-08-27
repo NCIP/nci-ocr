@@ -120,7 +120,7 @@ import com.itextpdf.text.pdf.PdfString;
 /**
  * Implementation of DigitalSigningService Interface.
  */
-class DigitalSigningServiceBean implements DigitalSigningService {
+public class DigitalSigningServiceBean implements DigitalSigningService {
 
     private final DigitalSigningHelper digitalSigningHelper;
 

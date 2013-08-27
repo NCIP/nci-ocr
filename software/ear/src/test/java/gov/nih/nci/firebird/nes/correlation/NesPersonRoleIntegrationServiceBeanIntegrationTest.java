@@ -82,15 +82,15 @@
  */
 package gov.nih.nci.firebird.nes.correlation;
 
-import static gov.nih.nci.firebird.nes.correlation.PersonRoleType.*;
-import static org.junit.Assert.*;
+import static gov.nih.nci.firebird.nes.correlation.PersonRoleType.HEALTH_CARE_PROVIDER;
+import static gov.nih.nci.firebird.nes.correlation.PersonRoleType.ORGANIZATIONAL_CONTACT;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.Person;
-import gov.nih.nci.firebird.data.PracticeSiteType;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.external.ExternalOrganizationService;
-import gov.nih.nci.firebird.service.person.external.ExternalPersonService;
+import gov.nih.nci.firebird.nes.organization.OrganizationEntityIntegrationService;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
 import gov.nih.nci.firebird.test.AbstractIntegrationTest;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
@@ -103,12 +103,9 @@ import com.google.inject.Inject;
 
 public class NesPersonRoleIntegrationServiceBeanIntegrationTest extends AbstractIntegrationTest {
 
-    @Inject
-    private NesPersonRoleIntegrationService service;
-    @Inject
-    private ExternalOrganizationService nesOrganizationService;
-    @Inject
-    private ExternalPersonService nesPersonService;
+    @Inject private NesPersonRoleIntegrationService service;
+    @Inject private OrganizationEntityIntegrationService nesOrganizationService;
+    @Inject private NesPersonIntegrationService nesPersonIntegrationService;
 
     @Test
     public void testEnsureRoleExistsNes() throws ValidationException {
@@ -122,14 +119,16 @@ public class NesPersonRoleIntegrationServiceBeanIntegrationTest extends Abstract
     }
 
     private Person createPerson() throws ValidationException {
-        Person person = PersonFactory.getInstance().createWithoutExternalData();
-        nesPersonService.save(person);
+        Person person = PersonFactory.getInstance().create();
+        person.setNesId(null);
+        String nesId = nesPersonIntegrationService.createPerson(person);
+        person.setNesId(nesId);
         return person;
     }
 
     private Organization createOrganization() throws ValidationException {
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
-        nesOrganizationService.create(organization, OrganizationRoleType.PRACTICE_SITE, PracticeSiteType.HEALTH_CARE_FACILITY);
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
+        nesOrganizationService.create(organization);
         return organization;
     }
 

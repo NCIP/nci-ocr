@@ -111,8 +111,6 @@ public class CertifiedSpecialtyBoard extends AbstractListItem {
      * minimal ctor.
      * @param name name
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public CertifiedSpecialtyBoard(String name) {
         super(name);
     }

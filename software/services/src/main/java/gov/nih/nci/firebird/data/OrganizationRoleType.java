@@ -107,17 +107,7 @@ public enum OrganizationRoleType {
     /**
      * A primary organization.
      */
-    PRIMARY_ORGANIZATION("organization.association.type.primary.organization.name"),
-
-    /**
-     * A pharmaceutical company.
-     */
-    PHARMACEUTICAL_COMPANY("organization.association.type.pharmaceutical.organization.name"),
-
-    /**
-     * A generic organization (general type).
-     */
-    GENERIC_ORGANIZATION("organization.association.type.generic.organization.name");
+    PRIMARY_ORGANIZATION("organization.association.type.primary.organization.name");
 
     /**
      * Maximum length of toString() for all instances.

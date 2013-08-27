@@ -83,9 +83,6 @@
 package gov.nih.nci.firebird.web.action.investigator.profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import org.apache.struts2.convention.annotation.Action;
-
 import gov.nih.nci.firebird.data.AbstractPersonAssociation;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.person.PersonAssociationService;
@@ -95,7 +92,7 @@ import gov.nih.nci.firebird.service.person.PersonAssociationService;
  *
  * @param <T> person association type
  */
-abstract class AbstractRemovePersonAssociationAction<T extends AbstractPersonAssociation> extends
+public abstract class AbstractRemovePersonAssociationAction<T extends AbstractPersonAssociation> extends
         AbstractProfileAction {
 
     private static final long serialVersionUID = 1L;
@@ -136,7 +133,6 @@ abstract class AbstractRemovePersonAssociationAction<T extends AbstractPersonAss
      *
      * @return close dialog
      */
-    @Action
     public abstract String removePersonAssociation();
 
     /**

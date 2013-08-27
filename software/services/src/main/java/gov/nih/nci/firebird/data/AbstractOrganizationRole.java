@@ -207,19 +207,19 @@ public abstract class AbstractOrganizationRole implements Auditable {
     }
 
     /**
-     * @return the organization's external ID
+     * @return the organization's NES ID
      */
     @Transient
-    public String getExternalId() {
-        return getOrganization().getExternalId();
+    public String getNesId() {
+        return getOrganization().getNesId();
     }
 
     /**
      * @return the organization's curation status
      */
     @Transient
-    public CurationStatus getCurationStatus() {
-        return getOrganization().getCurationStatus();
+    public CurationStatus getNesStatus() {
+        return getOrganization().getNesStatus();
     }
 
     void copyRoleData(AbstractOrganizationRoleSnapshot snapshot) {

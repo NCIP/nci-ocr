@@ -9,7 +9,7 @@
 <s:set name="namespace" value="@com.opensymphony.xwork2.ActionContext@getContext().actionInvocation.proxy.namespace"></s:set>
 <firebird:messages/>
 <h2 class="clear"><fmt:message key="registration.fda1572.title"/> </h2>
-<s:if test="readOnly">
+<s:if test="registration.lockedForInvestigator">
     <div id="lockedView1572PdfButtonTopDiv">
         <firebird:viewGeneratedFormButton buttonId="view1572PdfButtonTop" form="${form}" useName="true"/>
     </div>
@@ -54,5 +54,4 @@
     <div>
         <firebird:viewGeneratedFormButton buttonId="view1572PdfButtonBottom" form="${form}" useName="true"/>
     </div>
-    <firebird:nextTabButton form="${form}" />
 </s:else>

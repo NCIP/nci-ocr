@@ -216,8 +216,6 @@ public class AdditionalAttachmentsTabActionProcessor<T extends AbstractRegistrat
     /**
      * an inner class to provide a structure for tabular data.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
     public static final class FileListing extends FirebirdFile {
 
         private static final long serialVersionUID = 1L;

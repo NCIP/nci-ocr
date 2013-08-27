@@ -14,7 +14,7 @@
 
         $("#addButton").click( function(){
             indicateLoading(true);
-            $.post("${addInvestigatorUrl}",{ selectedPersonExternalId: $("#selectedPersonExternalId").val() }, function(data) {
+            $.post("${addInvestigatorUrl}",{ selectedPersonKey: $("#selectedPersonKey").val() }, function(data) {
                 $('#investigatorInfoContent').html(data);
                 indicateLoading(false);
                 var auto = $("#investigatorAutoComplete");

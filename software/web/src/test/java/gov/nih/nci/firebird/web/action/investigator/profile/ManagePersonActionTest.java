@@ -92,18 +92,20 @@ import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.person.PersonService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
-import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
+import gov.nih.nci.firebird.test.PersonFactory;
+import gov.nih.nci.firebird.test.ValueGenerator;
 import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
 import java.util.Set;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -117,20 +119,18 @@ public class ManagePersonActionTest extends AbstractWebTest {
     @Inject
     private ProtocolRegistrationService mockRegistrationService;
     @Inject
-    private InvestigatorProfileService mockProfileService;
-    @Inject
     private ManagePersonAction action;
-    private InvestigatorProfile profile = InvestigatorProfileFactory.getInstanceWithId().create();
+    private InvestigatorProfile profile = new InvestigatorProfile();
     private ValidationException validationException;
     private static final String ERROR_MESSAGE = "This is an error";
-    private Person person = profile.getPerson();
+    private Person person = PersonFactory.getInstance().create();
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
         FirebirdWebTestUtility.setupMockRequest(action);
         action.setProfile(profile);
-        when(mockProfileService.getById(profile.getId())).thenReturn(profile);
+        profile.setPerson(person);
         ValidationResult result = new ValidationResult(new ValidationFailure(ERROR_MESSAGE));
         validationException = new ValidationException(result);
     }
@@ -144,20 +144,30 @@ public class ManagePersonActionTest extends AbstractWebTest {
 
     @Test
     public void testUpdatePersonAjax() throws ValidationException {
-        action.prepare();
-        person.setLastName("lastName");
+        ArgumentCaptor<Person> personCaptor = ArgumentCaptor.forClass(Person.class);
+        Person clonedPerson = SerializationUtils.clone(person);
+        clonedPerson.setLastName(ValueGenerator.getUniqueString());
+        action.setPerson(clonedPerson);
         Set<AbstractProtocolRegistration> registrations = Sets.newHashSet();
         when(mockRegistrationService.getReturnedOrRevisedRegistrations(profile)).thenReturn(registrations);
 
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.updatePersonAjax());
-        verify(mockPersonService).save(person);
+        verify(mockPersonService).updateNesPerson(personCaptor.capture());
+        assertFalse(person.isEquivalent(personCaptor.getValue()));
         verify(mockRegistrationService).setRegistrationFormStatusesToRevisedIfReviewed(registrations, FormTypeEnum.CV,
                 FormTypeEnum.FINANCIAL_DISCLOSURE_FORM, FormTypeEnum.FORM_1572);
     }
 
     @Test
     public void testUpdatePersonAjax_NoChanges() throws ValidationException {
-        action.prepare();
+        Person clonedPerson = SerializationUtils.clone(person);
+        assertTrue(
+                "Cloned Person " + clonedPerson.toString() + "was not equivalen to the original person "
+                        + person.toString(), person.isEquivalent(clonedPerson));
+        action.setPerson(clonedPerson);
+        Set<AbstractProtocolRegistration> registrations = Sets.newHashSet();
+        when(mockRegistrationService.getReturnedOrRevisedRegistrations(profile)).thenReturn(registrations);
+
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.updatePersonAjax());
         verifyZeroInteractions(mockPersonService, mockRegistrationService);
         assertTrue(action.hasActionErrors());
@@ -167,11 +177,12 @@ public class ManagePersonActionTest extends AbstractWebTest {
 
     @Test
     public void testUpdatePersonAjax_NesValidationError() throws ValidationException {
-        action.prepare();
-        person.setLastName("lastName");
-        doThrow(validationException).when(mockPersonService).save(any(Person.class));
+        Person clonedPerson = SerializationUtils.clone(person);
+        clonedPerson.setLastName(ValueGenerator.getUniqueString());
+        action.setPerson(clonedPerson);
+        doThrow(validationException).when(mockPersonService).updateNesPerson(any(Person.class));
         assertEquals(ActionSupport.INPUT, action.updatePersonAjax());
-        verify(mockPersonService).save(any(Person.class));
+        verify(mockPersonService).updateNesPerson(any(Person.class));
         assertTrue(action.hasActionErrors());
         assertEquals(ERROR_MESSAGE, action.getActionErrors().iterator().next());
     }

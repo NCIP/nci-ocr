@@ -108,8 +108,6 @@ public class MedicalSpecialtyCertifyingBoard extends AbstractListItem implements
     /**
      * @param name name of medical specialty certifying board.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public MedicalSpecialtyCertifyingBoard(String name) {
         super(name);
     }

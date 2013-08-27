@@ -131,15 +131,8 @@ public abstract class AbstractRegistrationTabAction extends AbstractProtocolRegi
     /**
      * @param validationHandler the validationHandler to set
      */
-    @SuppressWarnings("ucd")
-    // used to inject mock validation handler from tests
     protected void setValidationHandler(
             RegistrationTabActionValidationHandler<AbstractProtocolRegistration> validationHandler) {
         this.validationHandler = validationHandler;
     }
-
-    public boolean isReadOnly() {
-        return getRegistration().isLockedForInvestigator();
-    }
-
 }

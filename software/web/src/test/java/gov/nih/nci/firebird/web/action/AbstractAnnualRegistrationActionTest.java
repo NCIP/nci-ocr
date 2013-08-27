@@ -85,10 +85,7 @@ package gov.nih.nci.firebird.web.action;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.cagrid.UserSessionInformationFactory;
 import gov.nih.nci.firebird.data.AnnualRegistration;
-import gov.nih.nci.firebird.data.user.UserRoleType;
-import gov.nih.nci.firebird.security.UserSessionInformation;
 import gov.nih.nci.firebird.service.annual.registration.AnnualRegistrationService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
@@ -138,20 +135,6 @@ public class AbstractAnnualRegistrationActionTest extends AbstractWebTest {
         action.setRegistration(null);
         action.prepare();
         assertNull(action.getRegistration());
-    }
-    
-    @Test
-    public void testIsCtepReviewer() {
-        assertTrue(isCtepReviewer(UserRoleType.CTEP_SPONSOR));
-        assertTrue(isCtepReviewer(UserRoleType.CTEP_SPONSOR_DELEGATE));
-        assertFalse(isCtepReviewer(UserRoleType.SPONSOR));
-    }
-
-    private boolean isCtepReviewer(UserRoleType roleType) {
-        UserSessionInformation sessionInformation = UserSessionInformationFactory.getInstance().create("username", 
-                roleType.getGroupName());
-        FirebirdWebTestUtility.setUpGridSessionInformation(action, sessionInformation);
-        return action.isCtepReviewer();
     }
 
 }

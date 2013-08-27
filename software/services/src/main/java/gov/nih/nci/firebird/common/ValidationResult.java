@@ -82,7 +82,6 @@
  */
 package gov.nih.nci.firebird.common;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -90,9 +89,7 @@ import java.util.Set;
 /**
  * Contains the result of validating an entity in FIREBIRD.
  */
-public class ValidationResult implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class ValidationResult {
 
     private final Set<ValidationFailure> failures = new HashSet<ValidationFailure>();
 

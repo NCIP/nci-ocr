@@ -120,8 +120,6 @@ public class ShippingDesignee extends AbstractPersonAssociation {
      * @param profile Investigator profile
      * @param person Person to associate as a shipping designee
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public ShippingDesignee(InvestigatorProfile profile, Person person) {
         super(profile, person);
     }

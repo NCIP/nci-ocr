@@ -85,7 +85,6 @@ package gov.nih.nci.firebird.service.investigatorprofile;
 import gov.nih.nci.firebird.data.AbstractCredential;
 import gov.nih.nci.firebird.data.CertifiedSpecialtyBoard;
 import gov.nih.nci.firebird.data.CertifiedSpecialtyType;
-import gov.nih.nci.firebird.data.FirebirdFile;
 import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.OrderingDesignee;
@@ -118,7 +117,17 @@ import javax.ejb.Local;
 public interface InvestigatorProfileService extends GenericService<InvestigatorProfile> {
 
     /**
-     * Retrieve the latest external organization data indexed by externalId and associate to the profile as a Firebird
+     * Associate a person to an investigator's profile.
+     *
+     * @param profile is the collection of professional information for an Investigator
+     * @param person the primary person to associate with the profile. Must exist either in the database or in NES.
+     * @throws ValidationException if association fails (due to person already being bound to someone else's profile)
+     */
+    void setPrimaryPerson(InvestigatorProfile profile, Person person)
+            throws ValidationException;
+
+    /**
+     * Retrieve the latest NES organization data indexed by nesId and associate to the profile as a Firebird
      * Organization.
      *
      * @param profile is the collection of professional information for an Investigator
@@ -135,7 +144,8 @@ public interface InvestigatorProfileService extends GenericService<InvestigatorP
      * @param profile the profile containing the new or updated organization.
      * @throws ValidationException If NES Validation Exceptions occur.
      */
-    void createPrimaryOrganization(InvestigatorProfile profile) throws ValidationException;
+    void createPrimaryOrganization(InvestigatorProfile profile)
+            throws ValidationException;
 
     /**
      * Creates a Practice Site association from a profile to new or existing organization. The new association will
@@ -150,12 +160,12 @@ public interface InvestigatorProfileService extends GenericService<InvestigatorP
      * @throws ValidationException If NES Validation Exceptions Occur.
      */
     OrganizationAssociation addAssociatedPracticeSite(InvestigatorProfile profile, Organization organization,
-            String dataField, PracticeSiteType practiceSiteType) throws AssociationAlreadyExistsException,
-            ValidationException;
+            String dataField, PracticeSiteType practiceSiteType)
+            throws AssociationAlreadyExistsException, ValidationException;
 
     /**
-     * Creates an IRB association from a profile to new or existing organization. The new association will automatically
-     * be added to the profile.
+     * Creates an IRB association from a profile to new or existing organization. The new association will
+     * automatically be added to the profile.
      *
      * @param profile the investigator profile
      * @param organization the organization to associate
@@ -164,7 +174,8 @@ public interface InvestigatorProfileService extends GenericService<InvestigatorP
      * @throws ValidationException If NES Validation Exceptions Occur.
      */
     OrganizationAssociation addAssociatedInstitutionalReviewBoard(InvestigatorProfile profile,
-            Organization organization) throws AssociationAlreadyExistsException, ValidationException;
+                                                                  Organization organization)
+            throws AssociationAlreadyExistsException, ValidationException;
 
     /**
      * Creates a Clinical Lab association from a profile to new or existing organization. The new association will
@@ -333,24 +344,5 @@ public interface InvestigatorProfileService extends GenericService<InvestigatorP
      * @param shippingDesignee the shipping designee association
      */
     void deleteAssociatedShippingDesignee(InvestigatorProfile profile, ShippingDesignee shippingDesignee);
-
-    /**
-     * save the file data in a compressed blob, and add it to a profile.
-     *
-     * @param profile the profile to add the new file to.
-     * @param file contents to be included in the FirebirdFile
-     * @param fileMetadata information and data of the file to add.
-     * @return the created file.
-     * @throws IOException if reading or compression fails.
-     */
-    FirebirdFile addFile(InvestigatorProfile profile, File file, FileMetadata fileMetadata) throws IOException;
-
-    /**
-     * removes a file from a profile.
-     *
-     * @param profile the profile to remove from.
-     * @param file the file to delete.
-     */
-    void removeFile(InvestigatorProfile profile, FirebirdFile file);
 
 }

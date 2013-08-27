@@ -166,7 +166,7 @@ public class UserSessionInformation implements Serializable {
      *
      * @param groupName group name to add
      */
-    void addGroupName(String groupName) {
+    public void addGroupName(String groupName) {
         groupNames.add(groupName);
     }
 

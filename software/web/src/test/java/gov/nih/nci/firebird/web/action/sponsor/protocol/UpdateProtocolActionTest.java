@@ -93,7 +93,7 @@ import gov.nih.nci.firebird.data.ProtocolModification;
 import gov.nih.nci.firebird.data.ProtocolRevision;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
@@ -115,7 +115,7 @@ public class UpdateProtocolActionTest extends AbstractWebTest {
     @Inject
     private ProtocolService mockProtocolService;
     @Inject
-    private OrganizationService mockOrganizationService;
+    OrganizationSearchService mockOrgSearchService;
     @Inject
     private UpdateProtocolAction action;
 
@@ -124,6 +124,7 @@ public class UpdateProtocolActionTest extends AbstractWebTest {
         super.setUp();
         FirebirdUser user = FirebirdUserFactory.getInstance().create();
         FirebirdWebTestUtility.setCurrentUser(action, user);
+        action.setOrganizationSearchService(mockOrgSearchService);
         when(mockProtocolService.create()).thenReturn(new Protocol());
     }
 
@@ -177,7 +178,7 @@ public class UpdateProtocolActionTest extends AbstractWebTest {
         action.prepare();
         assertEquals(ActionSupport.INPUT, action.updateProtocol());
         verify(mockProtocolService, never()).updateProtocol(any(Protocol.class), any(Protocol.class), anyString());
-        verifyZeroInteractions(mockOrganizationService);
+        verifyZeroInteractions(mockOrgSearchService);
     }
 
     @Test

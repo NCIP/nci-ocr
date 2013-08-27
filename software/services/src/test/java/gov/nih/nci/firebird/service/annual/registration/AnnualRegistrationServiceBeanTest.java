@@ -86,7 +86,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.common.FirebirdConstants;
-import gov.nih.nci.firebird.common.MockVerificationUtils;
 import gov.nih.nci.firebird.data.AbstractRegistration;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
 import gov.nih.nci.firebird.data.AnnualRegistration;
@@ -366,8 +365,7 @@ public class AnnualRegistrationServiceBeanTest {
         verify(mockDigitalSigningService).signPdf(any(InputStream.class), any(OutputStream.class),
                 any(DigitalSigningAttributes.class));
         verify(mockPdfService, times(3)).flattenPdf(any(InputStream.class), any(OutputStream.class));
-        verify(mockPdfService, times(2)).fillOutForm(any(InputStream.class), any(OutputStream.class),
-                any(PdfFormValues.class));
+        verify(mockPdfService, times(2)).fillOutForm(any(InputStream.class), any(OutputStream.class), any(PdfFormValues.class));
     }
 
     protected String getTestClassesDirectory() {
@@ -622,69 +620,6 @@ public class AnnualRegistrationServiceBeanTest {
         registration.setStatus(status);
         investigator.getInvestigatorRole().getProfile().addRegistration(registration);
         return registration;
-    }
-
-    @Test
-    public void testDelete() throws Exception {
-        AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
-        AnnualRegistration parentRegistration = AnnualRegistrationFactory.getInstance().create();
-        parentRegistration.setRenewal(registration);
-        registration.setParent(parentRegistration);
-        bean.delete(registration, registration.getProfile().getUser());
-        verify(mockSession).delete(registration);
-        verifyZeroInteractions(mockEmailService, mockTemplateService);
-        assertNull(parentRegistration.getRenewal());
-        assertNull(registration.getParent());
-    }
-
-    @Test
-    public void testDelete_WithCoordinator() throws Exception {
-        AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
-        FirebirdUser coordinator = FirebirdUserFactory.getInstance().createRegistrationCoordinator();
-        coordinator.setCtepUser(true);
-        ManagedInvestigator managedInvestigator = coordinator.getRegistrationCoordinatorRole().addManagedInvestigator(
-                registration.getProfile());
-        managedInvestigator.setStatus(ManagedInvestigatorStatus.APPROVED);
-        managedInvestigator.setCtepAssociate(true);
-        bean.delete(registration, registration.getProfile().getUser());
-        verify(mockSession).delete(registration);
-        MockVerificationUtils.verifyEmailMessageSent(coordinator.getPerson().getEmail(),
-                FirebirdMessageTemplate.INVESTIGATOR_DELETED_ANNUAL_REGISTRATION_EMAIL_TO_OTHERS, mockEmailService,
-                mockTemplateService);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testDelete_NotInvestigator() throws Exception {
-        AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
-        FirebirdUser coordinator = FirebirdUserFactory.getInstance().createRegistrationCoordinator();
-        bean.delete(registration, coordinator);
-    }
-
-    @Test
-    public void testCreateRegistration_Initial() throws Exception {
-        when(mockConfigurationService.getCurrentConfiguration()).thenReturn(
-                AnnualRegistrationConfigurationFactory.getInstance().create());
-        profile.getUser().setCtepUser(true);
-        AnnualRegistration registration = bean.createRegistration(profile);
-        assertEquals(AnnualRegistrationType.INITIAL, registration.getAnnualRegistrationType());
-    }
-
-    @Test
-    public void testCreateRegistration_Renewal() throws Exception {
-        when(mockConfigurationService.getCurrentConfiguration()).thenReturn(
-                AnnualRegistrationConfigurationFactory.getInstance().create());
-        profile.getUser().setCtepUser(true);
-        AnnualRegistration parent = AnnualRegistrationFactory.getInstanceWithId().create();
-        parent.setRenewal(new AnnualRegistration());
-        parent.setRenewal(null);
-        profile.addRegistration(parent);
-        AnnualRegistration registration = bean.createRegistration(profile);
-        assertEquals(AnnualRegistrationType.RENEWAL, registration.getAnnualRegistrationType());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testCreateRegistration_NotCtepUser() throws Exception {
-        bean.createRegistration(profile);
     }
 
 }

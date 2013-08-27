@@ -6,10 +6,12 @@
 <script type="text/javascript" src="<s:url value="/scripts/search_support.js"/>"></script>
 
 <div class="formcol">
-    <firebird:instructionBubble messageKey="user.registration.investigator.selection.search.label"/>
-    <input id="investigatorSearchInput" class="autosearch"/>
-    <div class="search_icon"><img src="<c:url value='/images/ico_search.gif'/>" alt="Search" /></div>
-    <div class="loading_icon hide"><img src="<c:url value='/images/loading.gif'/>" alt="Searching" /></div>
+    <s:form id="investigatorSelectionForm" action="nextStep" onsubmit="return false">
+        <firebird:instructionBubble messageKey="user.registration.investigator.selection.search.label"/>
+        <input id="investigatorSearchInput" class="autosearch"/>
+        <div class="search_icon"><img src="<c:url value='/images/ico_search.gif'/>" alt="Search" /></div>
+        <div class="loading_icon hide"><img src="<c:url value='/images/loading.gif'/>" alt="Searching" /></div>
+    </s:form>
 </div>
 <div class="dotted_line2 blank_space"></div>
 <div class="clear blank_space">
@@ -50,16 +52,16 @@ var _investigatorSelectionPage = (function() {
 
     investigatorSelectionPage.selectedInvestigators = [];
 
-    investigatorSelectionPage.addInvestigatorToList = function(profileId, investigatorName, isRemoveable) {
+    investigatorSelectionPage.addInvestigatorToList = function(id, investigatorName, isRemoveable) {
         $('#noneSelected').remove();
-        this.addToAlreadySelectedList(profileId);
+        this.addToAlreadySelectedList(id);
         var list = $('#selectedInvestigators')
-        var li = $("<li></li>").attr('id', "profile_" + profileId);
+        var li = $("<li></li>").attr('id', "profile_" + id);
         var investigatorNameSpan = $("<span />").addClass("float").append(investigatorName);
         var div = $("<div />").css("width","22em").append(investigatorNameSpan).addClass("clear");
         if(isRemoveable !== false) {
             var linkSpan = $("<span />").css("float","right");
-            var link = $("<a />").attr("href","javascript:void(0)").attr("id", "delete_" + profileId);
+            var link = $("<a />").attr("href","javascript:void(0)").attr("id", "delete_" + id);
             link.click(function() {
                 _investigatorSelectionPage.removeFromList(this);
             });
@@ -74,7 +76,7 @@ var _investigatorSelectionPage = (function() {
     }
 
     investigatorSelectionPage.addToAlreadySelectedList = function(profileId){
-        _investigatorSelectionPage.selectedInvestigators.push(profileId.toString());
+        _investigatorSelectionPage.selectedInvestigators.push(profileId);
     }
 
     investigatorSelectionPage.removeFromList = function(item) {
@@ -120,7 +122,7 @@ var _investigatorSelectionPage = (function() {
     }
 
     investigatorSelectionPage.createAddButtonColumn = function (profileId) {
-        if(_.contains(this.selectedInvestigators, profileId.toString())) {
+        if(_.indexOf(this.selectedInvestigators, profileId) >= 0) {
             return this.getCheckMark(profileId);
         } else {
             return this.createAddButton(profileId);
@@ -137,41 +139,41 @@ var _investigatorSelectionPage = (function() {
 
     investigatorSelectionPage.createPersonDisplayColumn = function(person) {
         var personString = person.displayNameForList + "<br>";
-        personString += addressFormatter(person.postalAddress);
+        personString += __addressFormatter(person.postalAddress);
         return personString;
     };
 
-    investigatorSelectionPage.completeRow = function(row, profile) {
-        $(row).attr("profileId", profile.id);
+    investigatorSelectionPage.completeRow = function(row, profileId, person) {
+        $(row).attr("profileId", profileId);
         var parent = $(row).find("td").first();
-        var addButtonLink = this.getOrCreateAddButton(row, profile);
+        var addButtonLink = this.getOrCreateAddButton(row, profileId);
 
         $(addButtonLink).click(function() {
-            _investigatorSelectionPage.clickAddButton(this, profile);
+            _investigatorSelectionPage.clickAddButton(this, profileId, person);
         });
         $(parent).data("link", addButtonLink);
         return row;
     }
 
-    investigatorSelectionPage.getOrCreateAddButton = function(row, profile) {
+    investigatorSelectionPage.getOrCreateAddButton = function(row, profileId) {
         var addButtonLink = $(row).find("a");
         if($(addButtonLink).length === 0) {
-            addButtonLink = $(this.createAddButton(profile.id));
+            addButtonLink = $(this.createAddButton(profileId));
         }
         return addButtonLink;
     }
 
-    investigatorSelectionPage.clickAddButton = function(addButton, profile) {
+    investigatorSelectionPage.clickAddButton = function(addButton, profileId, person) {
         switchToLoading(addButton);
-        var isSuccessful = this.saveAddition(profile.id);
+        var isSuccessful = this.saveAddition(profileId);
         if (isSuccessful) {
-            _investigatorSelectionPage.addInvestigatorToList(profile.id, profile.person.displayName);
-            switchFromLoading(_investigatorSelectionPage.getCheckMark(profile.id));
-            setPageSuccessMessage(profile.person.displayName + ' <fmt:message key="user.registration.investigator.selection.person.added"/>');
+            _investigatorSelectionPage.addInvestigatorToList(profileId, person.displayName);
+            switchFromLoading(_investigatorSelectionPage.getCheckMark(profileId));
+            setPageSuccessMessage(person.displayName + ' <fmt:message key="user.registration.investigator.selection.person.added"/>');
             $('#investigatorSearchInput').val('');
         } else {
             switchFromLoading(addButton);
-            setPageErrorMessages('<fmt:message key="user.registration.investigator.selection.problem.adding"/> ' + profile.person.displayName);
+            setPageErrorMessages('<fmt:message key="user.registration.investigator.selection.problem.adding"/> ' + person.displayName);
         };
     }
 
@@ -201,15 +203,15 @@ $(document).ready(function() {
         aoColumns:
         [
             {mDataProp: null, bSortable: false, sWidth : "195px", fnRender : function(obj) {
-                return _investigatorSelectionPage.createAddButtonColumn(obj.aData.id);
+                return _investigatorSelectionPage.createAddButtonColumn(obj.aData.key);
             }},
             {mDataProp: null, fnRender : function(obj) {
                 return _investigatorSelectionPage.createPersonDisplayColumn(obj.aData.person);
             }},
             {mDataProp: 'person.email'}
         ],
-       fnRowCallback: function( nRow, profile, iDisplayIndex, iDisplayIndexFull ) {
-           return _investigatorSelectionPage.completeRow(nRow, profile);
+       fnRowCallback: function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+           return _investigatorSelectionPage.completeRow(nRow, aData.key, aData.person);
        },
        fnDrawCallback: function() {
            _investigatorSearch.finishTable();

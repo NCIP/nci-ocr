@@ -1,15 +1,7 @@
 <%@ include file="/WEB-INF/content/common/taglibs.jsp"%>
-<firebird:dialogLayout>
-    <div id="validationErrorMessages">
-        <firebird:dialogHeader><span class="ui-icon ui-icon-alert"></span><fmt:message key="registration.protocol.updated.submission.warning.title"/></firebird:dialogHeader>
-        <ul class="fielderror">
-            <li><fmt:message key="registration.protocol.updated.submission.warning" /></li>
-        </ul>
-        <div class="btn_bar">
-            <s:a id="closeBtn" href="#" cssClass="button" onclick="closeDialogAndReload();"><fmt:message key="button.close"/></s:a>
-        </div>
-    </div>
-</firebird:dialogLayout>
+
+<firebird:messageDialog titleKey="registration.protocol.updated.submission.warning.title"
+    messageKey="registration.protocol.updated.submission.warning" />
 
 <script>
   $('#registrationDialog').unbind("dialogclose");

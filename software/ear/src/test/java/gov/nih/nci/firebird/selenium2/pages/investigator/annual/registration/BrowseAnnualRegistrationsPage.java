@@ -109,19 +109,15 @@ import static org.junit.Assert.*;
  */
 public class BrowseAnnualRegistrationsPage extends AbstractMenuPage<BrowseAnnualRegistrationsPage> {
     private static final String REGISTRATION_TABLE_EXPAND_BUTTON_SELECTOR = ".accordionToggle";
-    private static final String TABLE_ID = "annualRegistrationsAccordionTable";
     private static final String REGISTRATION_ROWS_SELECTOR = ".accordionHeader";
     private static final String FORMS_TABLE_ID_PREFIX = "annualRegistrationsTable_";
     public static final String WITHDRAW_SUBMISSION_BUTTON_ID = "withdrawSubmission";
     public static final String REACTIVATE_BUTTON_ID = "reactivateButton";
-    public static final String CREATE_REGISTRATION_BUTTON_ID = "createAnnualRegistration";
 
     @FindBy(id = WITHDRAW_SUBMISSION_BUTTON_ID)
     private WebElement withdrawSubmissionButton;
     @FindBy(id = REACTIVATE_BUTTON_ID)
     private WebElement reactivateButton;
-    @FindBy(id = CREATE_REGISTRATION_BUTTON_ID)
-    private WebElement createRegistrationButton;
 
     private BrowseAnnualRegistrationsPageHelper helper;
 
@@ -171,21 +167,12 @@ public class BrowseAnnualRegistrationsPage extends AbstractMenuPage<BrowseAnnual
         waitUntilReady();
     }
 
-    public boolean isCreateRegistrationButtonPresent() {
-        return isPresent(By.id(CREATE_REGISTRATION_BUTTON_ID));
-    }
-
-    public void clickCreateRegistration() {
-        createRegistrationButton.click();
-        waitUntilReady();
-    }
-
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
         assertFalse(JQueryUtils.isAjaxCallExecuting(getDriver()));
         assertFalse(JQueryUtils.isLoadingIconDisplayed(getDriver()));
-        assertElementWithIdPresent(TABLE_ID);
+        assertPresent(By.cssSelector(REGISTRATION_TABLE_EXPAND_BUTTON_SELECTOR));
         openAllRegistrationTables();
     }
 

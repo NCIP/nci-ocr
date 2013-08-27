@@ -82,15 +82,19 @@
  */
 package gov.nih.nci.firebird.service.organization;
 
+import gov.nih.nci.firebird.data.AbstractOrganizationRole;
 import gov.nih.nci.firebird.data.LaboratoryCertificate;
+import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.OrganizationAssociation;
 import gov.nih.nci.firebird.data.PrimaryOrganization;
+import gov.nih.nci.firebird.data.PrimaryOrganizationType;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.service.GenericService;
 import gov.nih.nci.firebird.service.file.FileMetadata;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import javax.ejb.Local;
 
@@ -121,11 +125,25 @@ public interface OrganizationAssociationService extends GenericService<Organizat
             FileMetadata fileMetadata) throws IOException;
 
     /**
+     * Obtains a list of all Structural Roles within Firebird that are currently in a PENDING state in NES.
+     *
+     * @return the Set of all matching roles.
+     */
+    List<AbstractOrganizationRole> getRolesToBeCurated();
+
+    /**
      * Creates a new primary organization with the given type.
      *
      * @param primaryOrganization primary organization to create
-     * @throws ValidationException If NES Validation errors occur.
      */
-    void createNewPrimaryOrganization(PrimaryOrganization primaryOrganization) throws ValidationException;
+    void createNewPrimaryOrganization(PrimaryOrganization primaryOrganization);
+
+    /**
+     * Retrieves and returns the type of the given primaryOrganization.
+     *
+     * @param primaryOrganization primary organization to retrieve type of
+     * @return type of the given primaryOrganization
+     */
+    PrimaryOrganizationType getExistingPrimaryOrganizationType(Organization primaryOrganization);
 
 }

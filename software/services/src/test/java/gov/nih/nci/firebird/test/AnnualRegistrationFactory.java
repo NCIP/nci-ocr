@@ -114,11 +114,9 @@ public final class AnnualRegistrationFactory {
         AnnualRegistrationConfiguration configuration;
         if (withId) {
             profile = InvestigatorProfileFactory.getInstanceWithId().create();
-            profile.getUser().setCtepUser(true);
             configuration = AnnualRegistrationConfigurationFactory.getInstanceWithId().create();
         } else {
             profile = InvestigatorProfileFactory.getInstance().create();
-            profile.getUser().setCtepUser(true);
             configuration = AnnualRegistrationConfigurationFactory.getInstance().create();
         }
         return create(profile, configuration);

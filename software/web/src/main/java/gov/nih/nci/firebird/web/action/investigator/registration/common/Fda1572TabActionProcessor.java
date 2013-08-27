@@ -103,7 +103,7 @@ import com.google.common.collect.Sets;
  */
 public class Fda1572TabActionProcessor<T extends AbstractRegistration>  {
 
-    private static final String ACTION_ERRORS = "actionErrors";
+    static final String ACTION_ERRORS = "actionErrors";
     private final BaseRegistrationService<T> registrationService;
     private final CanAddValidationFailures action;
     private T registration;

@@ -86,20 +86,32 @@ import static gov.nih.nci.firebird.commons.selenium2.support.IdentifiableCompone
 import static org.junit.Assert.*;
 import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
+import gov.nih.nci.firebird.commons.selenium2.util.FileDownloadUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
+import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
 import gov.nih.nci.firebird.selenium2.pages.base.AbstractMenuPage;
+import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag.CommentType;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.RegistrationReviewCommentDialog;
+import gov.nih.nci.firebird.selenium2.pages.registration.common.FormRejectionCommentsDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.AdditionalAttachmentsDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FinancialDisclosuresSupportingDocumentsDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FormReviewCommentDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.RegistrationClinicalLabCertificatesDialog;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
+
+import com.google.common.collect.Lists;
 
 /**
  * /sponsor/annual/registration/review/review_registration.jsp
@@ -108,24 +120,25 @@ public class ReviewAnnualRegistrationPage extends AbstractMenuPage<ReviewAnnualR
 
     public static final IdentifiableComponentFactory<ReviewAnnualRegistrationPage> FACTORY = createFactory(
             ReviewAnnualRegistrationPage.class);
+    private static final String TABLE_ID = "reviewRegistrationFormsTable";
+    private static final String TABLE_ROWS_CLASS = "form";
     private static final String REGISTRATION_STATUS_ID = "registrationStatus";
-    private static final String TITLE_ID = "reviewAnnualRegistrationTitle";
     private static final By DISQUALIFY_INVESTIGATOR_BUTTON_LOCATOR = By.id("disqualifyInvestigatorButton");
     private static final By COMPLETE_REVIEW_BUTTON_LOCATOR = By.id("completeReviewButton");
     private static final By APPROVE_REGISTRATION_BUTTON_LOCATOR = By.id("approveRegistrationButton");
     private static final By COMPLETE_REVIEW_BUTTON_INSTRUCTIONS_LOCATOR = By.className("instructions");
 
+    @FindBy(id = TABLE_ID)
+    private WebElement table;
     @FindBy(id = REGISTRATION_STATUS_ID)
     private WebElement registrationStatus;
 
     private final RegistrationCommentsTag commentsTag = new RegistrationCommentsTag(getDriver());
     private final ToggleSwitch onHoldToggle = new ToggleSwitch(getDriver());
-    private final SponsorReviewRegistrationFormsTable table;
     private final ReviewAnnualRegistrationPageHelper helper;
 
     public ReviewAnnualRegistrationPage(WebDriver driver) {
         super(driver);
-        table = new SponsorReviewRegistrationFormsTable(getDriver(), this);
         helper = new ReviewAnnualRegistrationPageHelper(this);
     }
 
@@ -160,7 +173,11 @@ public class ReviewAnnualRegistrationPage extends AbstractMenuPage<ReviewAnnualR
     }
 
     public List<RegistrationListing> getListings() {
-        return table.getListings();
+        List<RegistrationListing> listings = Lists.newArrayList();
+        for (WebElement row : table.findElements(By.className(TABLE_ROWS_CLASS))) {
+            listings.add(new RegistrationListing(row));
+        }
+        return listings;
     }
 
     public String getRegistrationStatus() {
@@ -196,10 +213,6 @@ public class ReviewAnnualRegistrationPage extends AbstractMenuPage<ReviewAnnualR
         return isPresent(DISQUALIFY_INVESTIGATOR_BUTTON_LOCATOR);
     }
 
-    public boolean hasReviewOnHoldToggle() {
-        return onHoldToggle.isPresent();
-    }
-
     public DisqualifyInvestigatorDialog clickDisqualifyInvestigator() {
         getDriver().findElement(DISQUALIFY_INVESTIGATOR_BUTTON_LOCATOR).click();
         return new DisqualifyInvestigatorDialog(getDriver(), this).waitUntilReady();
@@ -217,11 +230,155 @@ public class ReviewAnnualRegistrationPage extends AbstractMenuPage<ReviewAnnualR
     protected void assertLoaded() {
         super.assertLoaded();
         pause(100);
-        table.assertLoaded();
         assertFindBysPresent();
-        assertElementWithIdPresent(TITLE_ID);
         assertFalse(JQueryUtils.isDialogDisplayed(getDriver()));
         assertFalse(JQueryUtils.isLoadingIconDisplayed(getDriver()));
+    }
+
+    public class RegistrationListing implements TableListing {
+
+        private static final String DOWNLOAD_BUTTON_CLASS_NAME = "downloadButton";
+        private static final String RADIO_PREFIX = "review_";
+        private static final String ACCEPT_RADIO_SUFFIX = "ACCEPTED";
+        private static final String REJECT_RADIO_SUFFIX = "REJECTED";
+        private static final String FORM_DESCRIPTION_ID = "formDescription";
+        private static final String FORM_STATUS_ID = "formStatus";
+        private static final String FORM_STATUS_DATE_ID = "formStatusDate";
+        private static final String VIEW_ATTACHMENTS_BUTTON_CLASS = "viewAttachments";
+        private static final String VIEW_COMMENTS_BUTTON_CLASS = "viewComments";
+        private static final String EDIT_BUTTON_CLASS = "editForm";
+
+        private final WebElement row;
+        private final Long id;
+        private final WebElement downloadButton;
+        private final WebElement acceptRadio;
+        private final WebElement rejectRadio;
+        private final String form;
+        private final String status;
+        private final String statusDate;
+        private final WebElement viewAttachmentsButton;
+        private final WebElement viewCommentsButton;
+        private final WebElement editButton;
+
+        public RegistrationListing(WebElement row) {
+            this.row = row;
+            id = Long.valueOf(WebElementUtils.getId(row));
+            downloadButton = getElementIfPresent(row, (By.className(DOWNLOAD_BUTTON_CLASS_NAME)));
+            acceptRadio = getElementIfPresent(row,
+                                              By.cssSelector(
+                                                      "label[for='" + RADIO_PREFIX + id + ACCEPT_RADIO_SUFFIX + "']"));
+            rejectRadio = getElementIfPresent(row,
+                                              By.cssSelector(
+                                                      "label[for='" + RADIO_PREFIX + id + REJECT_RADIO_SUFFIX + "']"));
+            form = row.findElement(By.id(FORM_DESCRIPTION_ID)).getText();
+            status = row.findElement(By.id(FORM_STATUS_ID)).getText();
+            statusDate = row.findElement(By.id(FORM_STATUS_DATE_ID)).getText();
+            viewAttachmentsButton = getElementIfPresent(row, By.className(VIEW_ATTACHMENTS_BUTTON_CLASS));
+            viewCommentsButton = getElementIfPresent(row, By.className(VIEW_COMMENTS_BUTTON_CLASS));
+            editButton = getElementIfPresent(row, By.className(EDIT_BUTTON_CLASS));
+        }
+
+        @Override
+        public Long getId() {
+            return id;
+        }
+
+        public File clickDownload() throws IOException {
+            File formPdf = FileDownloadUtils.clickDownloadLink(getDriver(), downloadButton).getFile();
+            pause(100);
+            waitUntilReady();
+            return formPdf;
+        }
+
+        public void clickAcceptRadio() {
+            acceptRadio.click();
+            pause(500);
+            waitUntilReady();
+        }
+
+        public boolean isAcceptSelected() {
+            return acceptRadio == null ? false : acceptRadio.isSelected();
+        }
+
+        public FormReviewCommentDialog clickRejectRadio() {
+            if (isRejectRadioSelected()) {
+                rejectRadio.click();
+                pause(200);
+                waitUntilReady();
+                return null;
+            } else {
+                rejectRadio.click();
+                return new FormReviewCommentDialog(getDriver(), ReviewAnnualRegistrationPage.this).waitUntilReady();
+            }
+        }
+
+        private boolean isRejectRadioSelected() {
+            return row.findElement(By.id(RADIO_PREFIX + id + REJECT_RADIO_SUFFIX)).isSelected();
+        }
+
+        public boolean isRejectSelected() {
+            return rejectRadio == null ? false : rejectRadio.isSelected();
+        }
+
+        public Boolean getDisposition() {
+            if (isAcceptSelected()) {
+                return true;
+            } else if (isRejectSelected()) {
+                return false;
+            } else {
+                return null;
+            }
+        }
+
+        public String getForm() {
+            return form;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public String getStatusDate() {
+            return statusDate;
+        }
+
+        public AbstractLoadableComponent<?> clickViewAttachments() {
+            viewAttachmentsButton.click();
+            return identifyDisplayedComponent(
+                    RegistrationClinicalLabCertificatesDialog.getFactory(ReviewAnnualRegistrationPage.this),
+                    FinancialDisclosuresSupportingDocumentsDialog.getFactory(ReviewAnnualRegistrationPage.this),
+                    AdditionalAttachmentsDialog.getFactory(ReviewAnnualRegistrationPage.this));
+        }
+
+        public boolean hasViewAttachmentsButton() {
+            return viewAttachmentsButton != null;
+        }
+
+        public AbstractLoadableComponent<?> clickViewComments() {
+            viewCommentsButton.click();
+            return identifyDisplayedComponent(FormReviewCommentDialog.getFactory(ReviewAnnualRegistrationPage.this),
+                                              FormRejectionCommentsDialog.getFactory(ReviewAnnualRegistrationPage.this));
+        }
+
+        public boolean hasViewCommentsButton() {
+            return viewCommentsButton != null;
+        }
+
+        public void clickEdit() {
+            editButton.click();
+        }
+
+        public int getNumberOfAdditionalDocuments() {
+            if (!hasViewAttachmentsButton()) {
+                return 0;
+            }
+            String regExToRetrieveAttachmentCount = "\\((.*?)\\)";
+            Pattern pattern = Pattern.compile(regExToRetrieveAttachmentCount);
+            Matcher matcher = pattern.matcher(viewAttachmentsButton.getText());
+            matcher.find();
+            return Integer.parseInt(matcher.group(1));
+        }
+
     }
 
 }

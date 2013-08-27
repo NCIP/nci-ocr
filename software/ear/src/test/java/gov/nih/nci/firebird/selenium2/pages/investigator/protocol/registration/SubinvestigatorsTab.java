@@ -223,7 +223,7 @@ public class SubinvestigatorsTab extends AbstractFormTab<SubinvestigatorsTab> {
         public SubinvestigatorListing(WebElement row) {
             id = Long.valueOf(WebElementUtils.getId(row));
             List<WebElement> cells = getCells(row);
-            validationError = !cells.get(VALIDATION_ERROR_COLUMN).getText().isEmpty();
+            validationError = !cells.get(VALIDATION_ERROR_COLUMN).getText().isEmpty(); // TODO: fix
             name = cells.get(NAME_COLUMN).getText();
             email = cells.get(EMAIL_COLUMN).getText();
             phone = cells.get(PHONE_COLUMN).getText();

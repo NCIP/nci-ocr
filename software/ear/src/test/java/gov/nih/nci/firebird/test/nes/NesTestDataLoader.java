@@ -97,18 +97,16 @@ import gov.nih.nci.firebird.data.InstitutionalReviewBoard;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.PracticeSite;
 import gov.nih.nci.firebird.data.PracticeSiteType;
-import gov.nih.nci.firebird.nes.AbstractNesData;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
-import gov.nih.nci.firebird.nes.organization.AbstractNesRoleData;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.nes.organization.IdentifiedOrganizationIntegrationService;
 import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
 import gov.nih.nci.firebird.nes.organization.ResearchOrganizationIntegrationService;
 import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
 import gov.nih.nci.firebird.nes.person.PersonTranslator;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
-import gov.nih.nci.firebird.service.person.external.ExternalPersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -138,18 +136,22 @@ import com.google.inject.name.Named;
 public class NesTestDataLoader {
 
     /**
-     * This email address has well over 500 results. Will slow down tests.
+     * This email address has well over 500 results.  Will slow down tests.
      */
     private static final String PROBLEMATIC_EMAIL_ADDRESS = "unknown@example.com";
 
     private static final int MAX_RESULT_COUNT = 500;
 
     private static final List<String> QUARANTINED_ORGANIZATION_NAMES = Lists.newArrayList(
-            "Hospital Israelita Buenos Aires", "Instituto De Oncologia", "Hospital Italiano of Buenos Aires",
-            "Colegio San Martin de Tours", "Hospitales Privado Guemes", "Deutsches Hospital",
+            "Hospital Israelita Buenos Aires",
+            "Instituto De Oncologia",
+            "Hospital Italiano of Buenos Aires",
+            "Colegio San Martin de Tours",
+            "Hospitales Privado Guemes",
+            "Deutsches Hospital",
             "Universidad Nacional Del Sur");
 
-    private ExternalEntityTestDataSource dataSource;
+    private NesTestDataSource dataSource;
     private final File cacheFile;
     private final Provider<PersonI> personServiceProvider;
     private final Provider<OrganizationI> organizationServiceProvider;
@@ -161,9 +163,9 @@ public class NesTestDataLoader {
     private final int requestedClinicalLabCount;
     private final int requestedIrbCount;
     private Set<String> retrievedOrganizationIds = Sets.newHashSet();
-    private final ExternalPersonService nesPersonService;
-    private final Set<String> protocolSponsorExternalIds;
-    private final String annualRegistrationSponsorExternalId;
+    private final NesPersonIntegrationService nesPersonIntegrationService;
+    private final Set<String> protocolSponsorNesIds;
+    private final String annualRegistrationSponsorNesId;
     private final NesOrganizationIntegrationServiceFactory nesServiceFactory;
     private final IdentifiedOrganizationIntegrationService identifiedOrganizationService;
 
@@ -172,30 +174,30 @@ public class NesTestDataLoader {
             Provider<HealthCareFacilityI> healthCareFacilityProvider,
             Provider<OversightCommitteeI> oversightCommitteeProvider,
             NesOrganizationIntegrationServiceFactory nesServiceFactory,
-            ExternalPersonService nesPersonService,
+            NesPersonIntegrationService nesPersonIntegrationService,
             IdentifiedOrganizationIntegrationService identifiedOrganizationService,
             @Named("nes.service.hostname") String nesHostname,
-            @Named("cached.external.organization.count") int requestedOrganizationCount,
-            @Named("cached.external.person.count") int requestedPersonCount,
-            @Named("cached.external.practiceSite.count") int requestedPracticeSiteCount,
+            @Named("cached.nes.organization.count") int requestedOrganizationCount,
+            @Named("cached.nes.person.count") int requestedPersonCount,
+            @Named("cached.nes.practiceSite.count") int requestedPracticeSiteCount,
             @Named("cached.nes.clinicalLab.count") int requestedClinicalLabCount,
-            @Named("cached.external.irb.count") int requestedIrbCount,
-            @Named("sponsor.organization.with.protocol.registrations.nes.ids") Set<String> protocolSponsorExternalIds,
-            @Named("sponsor.organization.with.annual.registrations.nes.id") String annualRegistrationSponsorExternalId) {
+            @Named("cached.nes.irb.count") int requestedIrbCount,
+            @Named("sponsor.organization.with.protocol.registrations.nes.ids") Set<String> protocolSponsorNesIds,
+            @Named("sponsor.organization.with.annual.registrations.nes.id") String annualRegistrationSponsorNesId) {
         this.personServiceProvider = personServiceProvider;
         this.organizationServiceProvider = organizationServiceProvider;
         this.healthCareFacilityProvider = healthCareFacilityProvider;
         this.oversightCommitteeProvider = oversightCommitteeProvider;
         this.nesServiceFactory = nesServiceFactory;
-        this.nesPersonService = nesPersonService;
+        this.nesPersonIntegrationService = nesPersonIntegrationService;
         this.identifiedOrganizationService = identifiedOrganizationService;
         this.requestedOrganizationCount = requestedOrganizationCount;
         this.requestedPersonCount = requestedPersonCount;
         this.requestedPracticeSiteCount = requestedPracticeSiteCount;
         this.requestedClinicalLabCount = requestedClinicalLabCount;
         this.requestedIrbCount = requestedIrbCount;
-        this.protocolSponsorExternalIds = protocolSponsorExternalIds;
-        this.annualRegistrationSponsorExternalId = annualRegistrationSponsorExternalId;
+        this.protocolSponsorNesIds = protocolSponsorNesIds;
+        this.annualRegistrationSponsorNesId = annualRegistrationSponsorNesId;
         cacheFile = getCacheFile(nesHostname);
     }
 
@@ -204,7 +206,7 @@ public class NesTestDataLoader {
         return new File(targetDir, nesHostname + "_data.ser");
     }
 
-    public ExternalEntityTestDataSource getCache() {
+    public NesTestDataSource getCache() {
         if (dataSource == null) {
             initializeCache();
         }
@@ -237,7 +239,7 @@ public class NesTestDataLoader {
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(getCacheFile());
-            dataSource = (ExternalEntityTestDataSource) SerializationUtils.deserialize(fis);
+            dataSource = (NesTestDataSource) SerializationUtils.deserialize(fis);
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException(getCacheFile() + " not found", e);
         } finally {
@@ -247,7 +249,7 @@ public class NesTestDataLoader {
 
     private void loadDataSource() {
         try {
-            dataSource = new ExternalEntityTestDataSource();
+            dataSource = new NesTestDataSource();
             loadPersons();
             loadProtocolSponsorOrganizations();
             loadAnnualRegistrationSponsorOrganization();
@@ -257,14 +259,12 @@ public class NesTestDataLoader {
             loadPharmaceuticalCompanies();
         } catch (RemoteException e) {
             throw new IllegalStateException("Loading cache from NES failed", e);
-        } catch (InvalidatedOrganizationException e) {
-            throw new IllegalStateException("Loading cache from NES failed", e);
-        } catch (InvalidatedPersonException e) {
+        } catch (UnavailableEntityException e) {
             throw new IllegalStateException("Loading cache from NES failed", e);
         }
     }
 
-    private void loadPersons() throws RemoteException, InvalidatedPersonException {
+    private void loadPersons() throws RemoteException {
         Person searchPerson = PersonTranslator.buildNesPerson("%", "%");
         searchPerson.setStatusCode(getActiveStatusCode());
         int searchSize = requestedPersonCount > MAX_RESULT_COUNT ? MAX_RESULT_COUNT : requestedPersonCount;
@@ -281,16 +281,20 @@ public class NesTestDataLoader {
         dataSource.setPersons(persons);
     }
 
-    private void addPersons(Person[] personResults, List<gov.nih.nci.firebird.data.Person> persons)
-            throws InvalidatedPersonException {
+    private void addPersons(Person[] personResults, List<gov.nih.nci.firebird.data.Person> persons) {
         for (Person nesPerson : personResults) {
-            String identifier = nesPerson.getIdentifier().getExtension();
-            gov.nih.nci.firebird.data.Person firebirdPerson = nesPersonService.getByExternalId(identifier);
+            gov.nih.nci.firebird.data.Person firebirdPerson = PersonTranslator.buildFirebirdPerson(nesPerson);
             if (StringUtils.isNotBlank(firebirdPerson.getPhoneNumber())
                     && !firebirdPerson.getEmail().equalsIgnoreCase(PROBLEMATIC_EMAIL_ADDRESS)) {
+                addCtepId(firebirdPerson);
                 persons.add(firebirdPerson);
             }
         }
+    }
+
+    private void addCtepId(gov.nih.nci.firebird.data.Person person) {
+        String ctepId = nesPersonIntegrationService.getCtepId(person.getNesId());
+        person.setCtepId(ctepId);
     }
 
     private CD getActiveStatusCode() {
@@ -310,21 +314,21 @@ public class NesTestDataLoader {
         return 0;
     }
 
-    private void loadProtocolSponsorOrganizations() throws InvalidatedOrganizationException {
+    private void loadProtocolSponsorOrganizations() throws UnavailableEntityException {
         Map<String, Organization> protocolSponsorOrganizationMap = new HashMap<String, Organization>();
-        for (String sponsorExternalId : protocolSponsorExternalIds) {
-            protocolSponsorOrganizationMap.put(sponsorExternalId, getOrganization(sponsorExternalId));
+        for (String sponsorNesId : protocolSponsorNesIds) {
+            protocolSponsorOrganizationMap.put(sponsorNesId, getOrganization(sponsorNesId));
         }
         dataSource.setProtocolSponsorOrganizationMap(protocolSponsorOrganizationMap);
     }
 
-    private void loadAnnualRegistrationSponsorOrganization() throws InvalidatedOrganizationException {
-        if (!isEmpty(annualRegistrationSponsorExternalId)) {
-            dataSource.setAnnualRegistrationSponsor(getOrganization(annualRegistrationSponsorExternalId));
+    private void loadAnnualRegistrationSponsorOrganization() throws UnavailableEntityException {
+        if (!isEmpty(annualRegistrationSponsorNesId)) {
+            dataSource.setAnnualRegistrationSponsor(getOrganization(annualRegistrationSponsorNesId));
         }
     }
 
-    private void loadIrbs() throws RemoteException, InvalidatedOrganizationException {
+    private void loadIrbs() throws RemoteException, UnavailableEntityException {
         OversightCommittee searchOversightCommittee = new OversightCommittee();
         searchOversightCommittee.setStatus(getActiveStatusCode());
         List<InstitutionalReviewBoard> irbs = new ArrayList<InstitutionalReviewBoard>();
@@ -336,7 +340,6 @@ public class NesTestDataLoader {
             Organization organization = getOrganization(ii);
             InstitutionalReviewBoard irb = new InstitutionalReviewBoard();
             organization.addRole(irb);
-            getNesData(organization).setLastNesRefresh(new Date());
             irbs.add(irb);
         }
         dataSource.setIrbs(irbs);
@@ -351,40 +354,43 @@ public class NesTestDataLoader {
         throw new IllegalArgumentException("No II in Correlation for root " + expectedRoot);
     }
 
-    private Organization getOrganization(II identifier) throws InvalidatedOrganizationException {
+    private Organization getOrganization(II identifier) throws RemoteException, UnavailableEntityException {
         return getOrganization(new NesId(identifier).toString());
     }
 
-    private Organization getOrganization(String externalId) throws InvalidatedOrganizationException {
-        retrievedOrganizationIds.add(externalId);
-        return nesServiceFactory.getService(externalId).getById(externalId);
+    private Organization getOrganization(String nesId) throws UnavailableEntityException {
+        retrievedOrganizationIds.add(nesId);
+        try {
+            return nesServiceFactory.getService(nesId).getById(nesId);
+        } catch (ReplacedEntityException e) {
+            return getOrganization(e.getReplacmentNesId());
+        }
     }
 
-    private void loadOrganizations() throws RemoteException, InvalidatedOrganizationException {
+    private void loadOrganizations() throws RemoteException, UnavailableEntityException {
         List<Organization> organizations = new ArrayList<Organization>();
         gov.nih.nci.coppa.po.Organization searchOrganization = new gov.nih.nci.coppa.po.Organization();
         searchOrganization.setStatusCode(getActiveStatusCode());
         int searchSize = requestedOrganizationCount > MAX_RESULT_COUNT ? MAX_RESULT_COUNT : requestedOrganizationCount;
         LimitOffset limitOffset = buildLimitOffset(searchSize);
-        gov.nih.nci.coppa.po.Organization[] externalOrganizations = new gov.nih.nci.coppa.po.Organization[0];
-        while (externalOrganizations != null && organizations.size() < requestedOrganizationCount) {
-            externalOrganizations = organizationServiceProvider.get().query(searchOrganization, limitOffset);
-            if (externalOrganizations != null) {
-                addOrganizations(externalOrganizations, organizations);
+        gov.nih.nci.coppa.po.Organization[] nesOrganizations = new gov.nih.nci.coppa.po.Organization[0];
+        while (nesOrganizations != null && organizations.size() < requestedOrganizationCount) {
+            nesOrganizations = organizationServiceProvider.get().query(searchOrganization, limitOffset);
+            if (nesOrganizations != null) {
+                addOrganizations(nesOrganizations, organizations);
                 limitOffset.setOffset(limitOffset.getOffset() + limitOffset.getLimit());
             }
         }
         dataSource.setOrganizations(organizations);
     }
 
-    private void addOrganizations(gov.nih.nci.coppa.po.Organization[] externalOrganizations,
-            List<Organization> organizations) throws InvalidatedOrganizationException {
-        for (gov.nih.nci.coppa.po.Organization externalOrganization : externalOrganizations) {
-            String externalId = new NesId(externalOrganization.getIdentifier()).toString();
-            if (!retrievedOrganizationIds.contains(externalId)) {
-                Organization organization = getOrganization(externalId);
+    private void addOrganizations(gov.nih.nci.coppa.po.Organization[] nesOrganizations, List<Organization> organizations)
+            throws UnavailableEntityException {
+        for (gov.nih.nci.coppa.po.Organization nesOrganization : nesOrganizations) {
+            String nesId = new NesId(nesOrganization.getIdentifier()).toString();
+            if (!retrievedOrganizationIds.contains(nesId)) {
+                Organization organization = getOrganization(nesId);
                 if (!isNameProblematic(organization)) {
-                    getNesData(organization).setLastNesRefresh(new Date());
                     organizations.add(organization);
                 }
             }
@@ -402,29 +408,13 @@ public class NesTestDataLoader {
                 ResearchOrganizationType.DRUG_COMPANY);
         filterOutProblematicNames(pharmaceuticalCompanies);
         addCtepIds(pharmaceuticalCompanies);
-        addLastNesRefreshDates(pharmaceuticalCompanies);
         dataSource.setPharmaceuticalCompanies(pharmaceuticalCompanies);
     }
 
     private void addCtepIds(List<Organization> pharmaceuticalCompanies) {
         for (Organization organization : pharmaceuticalCompanies) {
-            String playerId = getNesRoleData(organization).getPlayerId();
-            organization.setCtepId(identifiedOrganizationService.getCtepId(playerId));
+            organization.setCtepId(identifiedOrganizationService.getCtepId(organization.getPlayerIdentifier()));
         }
-    }
-
-    private AbstractNesRoleData getNesRoleData(Organization organization) {
-        return (AbstractNesRoleData) organization.getExternalData();
-    }
-
-    private void addLastNesRefreshDates(List<Organization> pharmaceuticalCompanies) {
-        for (Organization organization : pharmaceuticalCompanies) {
-            getNesData(organization).setLastNesRefresh(new Date());
-        }
-    }
-
-    private AbstractNesData getNesData(Organization organization) {
-        return (AbstractNesData) organization.getExternalData();
     }
 
     private ResearchOrganizationIntegrationService getResearchOrganization() {
@@ -441,7 +431,7 @@ public class NesTestDataLoader {
         }
     }
 
-    private void loadHealthCareFacilities() throws RemoteException, InvalidatedOrganizationException {
+    private void loadHealthCareFacilities() throws RemoteException, UnavailableEntityException {
         List<HealthCareFacility> facilities = getHealthCareFacilities();
         List<HealthCareFacility> practiceSiteFacilities = facilities.subList(0, facilities.size() / 2);
         List<HealthCareFacility> clinicalLabFacilities = facilities.subList(facilities.size() / 2, facilities.size());
@@ -471,7 +461,7 @@ public class NesTestDataLoader {
     }
 
     private void loadPracticeSites(List<HealthCareFacility> facilities) throws RemoteException,
-            InvalidatedOrganizationException {
+            UnavailableEntityException {
         List<PracticeSite> practiceSites = new ArrayList<PracticeSite>();
         for (HealthCareFacility facility : facilities) {
             II ii = getIi(facility, NesIIRoot.HEALTH_CARE_FACILITY);
@@ -479,21 +469,19 @@ public class NesTestDataLoader {
             PracticeSite practiceSite = new PracticeSite();
             practiceSite.setType(PracticeSiteType.HEALTH_CARE_FACILITY);
             organization.addRole(practiceSite);
-            getNesData(organization).setLastNesRefresh(new Date());
             practiceSites.add(practiceSite);
         }
         dataSource.setPracticeSites(practiceSites);
     }
 
     private void loadClinicalLabs(List<HealthCareFacility> facilities) throws RemoteException,
-            InvalidatedOrganizationException {
+            UnavailableEntityException {
         List<ClinicalLaboratory> labs = new ArrayList<ClinicalLaboratory>();
         for (HealthCareFacility facility : facilities) {
             II ii = getIi(facility, NesIIRoot.HEALTH_CARE_FACILITY);
             Organization organization = getOrganization(ii);
             ClinicalLaboratory lab = new ClinicalLaboratory();
             organization.addRole(lab);
-            getNesData(organization).setLastNesRefresh(new Date());
             labs.add(lab);
         }
         dataSource.setClinicalLabs(labs);

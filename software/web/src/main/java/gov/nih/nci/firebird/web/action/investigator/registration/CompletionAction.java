@@ -292,8 +292,6 @@ public class CompletionAction extends AbstractProtocolRegistrationAction {
         this.comments = comments;
     }
 
-    @SuppressWarnings("ucd")
-    // used to inject mock processor from tests
     void setProcessor(CompletionActionProcessor<AbstractProtocolRegistration> processor) {
         this.processor = processor;
     }

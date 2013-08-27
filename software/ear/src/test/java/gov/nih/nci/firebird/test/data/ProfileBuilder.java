@@ -109,7 +109,7 @@ import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
-import gov.nih.nci.firebird.test.nes.ExternalEntityTestDataSource;
+import gov.nih.nci.firebird.test.nes.NesTestDataSource;
 import gov.nih.nci.firebird.test.nes.TargetGridResources;
 
 import java.util.Date;
@@ -130,8 +130,8 @@ public class ProfileBuilder extends AbstractDataComponentBuilder<InvestigatorPro
             CredentialTypesData credentialTypesData) {
         super(gridResources, dataLoader);
         this.credentialTypesData = credentialTypesData;
-        profile.setPerson(getTestDataSource().getPerson());
-        Organization primaryOrganization = getGridResources().getTestDataSource().getPracticeSite()
+        profile.setPerson(getNesDataSource().getPerson());
+        Organization primaryOrganization = getGridResources().getNesTestDataSource().getPracticeSite()
                 .getOrganization();
         profile.setPrimaryOrganization(new PrimaryOrganization(primaryOrganization,
                 PrimaryOrganizationType.HEALTH_CARE_FACILITY));
@@ -160,7 +160,7 @@ public class ProfileBuilder extends AbstractDataComponentBuilder<InvestigatorPro
         addPracticeSite();
         addClinicalLab();
         addClinicalLab();
-        profile.addOrganizationAssociation(getTestDataSource().getIrb().getOrganization(), OrganizationRoleType.IRB);
+        profile.addOrganizationAssociation(getNesDataSource().getIrb().getOrganization(), OrganizationRoleType.IRB);
         profile.addOrganizationAssociation(createNewIrb().getOrganization(), OrganizationRoleType.IRB);
     }
 
@@ -171,7 +171,7 @@ public class ProfileBuilder extends AbstractDataComponentBuilder<InvestigatorPro
     }
     private void addClinicalLab() throws AssociationAlreadyExistsException {
         OrganizationAssociation association = profile.addOrganizationAssociation(
-                getTestDataSource().getClinicalLab().getOrganization(),
+                getNesDataSource().getClinicalLab().getOrganization(),
                 OrganizationRoleType.CLINICAL_LABORATORY);
         ClinicalLaboratory lab = (ClinicalLaboratory) association.getOrganizationRole();
         LaboratoryCertificate certificate = new LaboratoryCertificate(LaboratoryCertificateType.CAP);
@@ -183,20 +183,20 @@ public class ProfileBuilder extends AbstractDataComponentBuilder<InvestigatorPro
 
 
     private void setupDesigneeAssociations() throws AssociationAlreadyExistsException {
-        profile.addOrderingDesignee(getTestDataSource().getPerson());
-        profile.addOrderingDesignee(getTestDataSource().getPerson());
-        ShippingDesignee shippingDesignee = new ShippingDesignee(profile, getTestDataSource().getPerson());
+        profile.addOrderingDesignee(getNesDataSource().getPerson());
+        profile.addOrderingDesignee(getNesDataSource().getPerson());
+        ShippingDesignee shippingDesignee = new ShippingDesignee(profile, getNesDataSource().getPerson());
         shippingDesignee.setOrganization(getNesOrganization());
         shippingDesignee.setShippingAddress(ValueGenerator.getUniqueAddress());
         profile.setShippingDesignee(shippingDesignee);
     }
 
-    private ExternalEntityTestDataSource getTestDataSource() {
-        return getGridResources().getTestDataSource();
+    private NesTestDataSource getNesDataSource() {
+        return getGridResources().getNesTestDataSource();
     }
 
     private Organization setUpPracticeSiteWithOhrp() {
-        PracticeSite practiceSite = getTestDataSource().getPracticeSite();
+        PracticeSite practiceSite = getNesDataSource().getPracticeSite();
         practiceSite.setOhrpAssuranceNumber(ValueGenerator.getUniqueOhrpNumber());
         return practiceSite.getOrganization();
     }
@@ -213,7 +213,7 @@ public class ProfileBuilder extends AbstractDataComponentBuilder<InvestigatorPro
     }
 
     private Organization getNesOrganization() {
-        return getTestDataSource().getOrganization();
+        return getNesDataSource().getOrganization();
     }
 
     private void setUpCredentialsNoMd() throws CredentialAlreadyExistsException {

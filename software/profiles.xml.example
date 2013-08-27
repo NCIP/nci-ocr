@@ -24,7 +24,6 @@
                 <log.level.default>WARN</log.level.default>
                 <log.level.nci-commons>WARN</log.level.nci-commons>
                 <log.level.firebird>WARN</log.level.firebird>
-                <log.level.struts.validator>WARN</log.level.struts.validator>
                 <struts.devMode>false</struts.devMode>
 
                 <test.selenium.driver.type>firefox</test.selenium.driver.type>
@@ -32,9 +31,6 @@
                 <test.selenium.firefox.profile.location>/Users/<USER>/Library/Application Support/Firefox/Profiles/selenium.default</test.selenium.firefox.profile.location>
                 <test.selenium.firefox.binary.location>/Applications/Firefox.app/Contents/MacOS/firefox-bin</test.selenium.firefox.binary.location>
                 <test.selenium.captureScreenShotOnFailure>false</test.selenium.captureScreenShotOnFailure>
-                <test.fail.on.logged.error>false</test.fail.on.logged.error>
-                <test.fail.on.logged.warning>false</test.fail.on.logged.warning>
-
                 <ca.keystore.require.https>false</ca.keystore.require.https>
                 <registration.validation.require.nes.status.active>true</registration.validation.require.nes.status.active>
 

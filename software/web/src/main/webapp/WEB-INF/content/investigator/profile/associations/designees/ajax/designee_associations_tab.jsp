@@ -23,16 +23,16 @@
 <div class="clear"><br></div>
 
 <s:if test="%{profile.shippingDesignee == null}">
-  <sj:a id="changeShippingDesignee" openDialog="profileDialog" href="%{#setShippingDesigneeUrl}" cssClass="button">
-      <fmt:message key="button.select"/>
-  </sj:a>
+	<sj:a id="changeShippingDesignee" openDialog="profileDialog" href="%{#setShippingDesigneeUrl}" cssClass="button">
+	    <fmt:message key="button.select"/>
+	</sj:a>
 </s:if>
 
 <div class="clear"><br></div>
 
 <table id="shippingDesignee" class="ui-jqgrid-htable ui-jqgrid-btable"
         summary="This table displays the information for the Shipping Designee you selected. It shows the person's name,
-                email, mailing address, phone number, along with the organization name and a shipping address. You can also
+                email, mailing address, phone number, along with the organization name and a shipping address. You can also 
                 remove this entry via a link at the end.">
     <thead><tr>
         <th scope="col" width="250px"><div><fmt:message key="label.name" /></div></th>
@@ -76,7 +76,7 @@
       }};
       var personEmailColumn = {mDataProp: "person.email"};
       var personAddressColumn = {mDataProp: "person.postalAddress", fnRender : function(obj) {
-          return addressFormatter(obj.aData.person.postalAddress);
+          return __addressFormatter(obj.aData.person.postalAddress);
       }};
       var personPhoneColumn = {mDataProp: "person.phoneNumber"};
 
@@ -105,7 +105,7 @@
               personPhoneColumn,
               {mDataProp: "organization.name"},
               {mDataProp: "shippingAddress", fnRender : function(obj) {
-                  return addressFormatter(obj.aData.shippingAddress);
+                  return __addressFormatter(obj.aData.shippingAddress);
               }},
               {mDataProp : null, fnRender : function(obj) {
                   return buildRemoveAssociationColumn(obj.aData, "${removeShippingDesigneeConfirmUrl}");

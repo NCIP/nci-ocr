@@ -82,6 +82,8 @@
  */
 package gov.nih.nci.firebird.data;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.EnumType;
@@ -90,7 +92,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.validator.Email;
 import org.hibernate.validator.NotEmpty;
 import org.hibernate.validator.NotNull;
@@ -110,12 +115,15 @@ public abstract class AbstractOrganizationData implements PersistentObject {
     private static final int MAX_NAME_LENGTH = 160;
 
     private Long id;
+    private String nesId;
+    private String playerIdentifier;
     private String ctepId;
-    private CurationStatus curationStatus = CurationStatus.UNSAVED;
+    private CurationStatus nesStatus = CurationStatus.PRE_NES_VALIDATION;
     private String name;
     private String email;
     private String phoneNumber;
     private Address postalAddress = new Address();
+    private Date lastNesRefresh;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -129,6 +137,38 @@ public abstract class AbstractOrganizationData implements PersistentObject {
      */
     public void setId(Long id) {
         this.id = id;
+    }
+
+    /**
+     * @return the nesId
+     */
+    @NotEmpty
+    @Column(name = "nes_id", unique = true)
+    @Searchable
+    public String getNesId() {
+        return nesId;
+    }
+
+    /**
+     * @param nesId the nesId to set
+     */
+    public void setNesId(String nesId) {
+        this.nesId = nesId;
+    }
+
+    /**
+     * @return the playerIdentifier
+     */
+    @Column(name = "player_identifier")
+    public String getPlayerIdentifier() {
+        return playerIdentifier;
+    }
+
+    /**
+     * @param playerIdentifier the playerIdentifier to set
+     */
+    public void setPlayerIdentifier(String playerIdentifier) {
+        this.playerIdentifier = playerIdentifier;
     }
 
     /**
@@ -147,20 +187,20 @@ public abstract class AbstractOrganizationData implements PersistentObject {
     }
 
     /**
-     * @return the curationStatus
+     * @return the nesStatus
      */
     @Column(name = "curation_status", length = CurationStatus.MAXIMUM_NAME_LENGTH)
     @Enumerated(EnumType.STRING)
     @NotNull
-    public CurationStatus getCurationStatus() {
-        return curationStatus;
+    public CurationStatus getNesStatus() {
+        return nesStatus;
     }
 
     /**
-     * @param curationStatus the curationStatus to set
+     * @param nesStatus the nesStatus to set
      */
-    public void setCurationStatus(CurationStatus curationStatus) {
-        this.curationStatus = curationStatus;
+    public void setNesStatus(CurationStatus nesStatus) {
+        this.nesStatus = nesStatus;
     }
 
     /**
@@ -228,9 +268,32 @@ public abstract class AbstractOrganizationData implements PersistentObject {
         return postalAddress;
     }
 
+    /**
+     * @return the lastNesRefresh
+     */
+    @Column(name = "last_nes_refresh")
+    @Temporal(TemporalType.TIMESTAMP)
+    public Date getLastNesRefresh() {
+        return lastNesRefresh;
+    }
+
+    /**
+     * @param lastNesRefresh the lastNesRefresh to set
+     */
+    public void setLastNesRefresh(Date lastNesRefresh) {
+        this.lastNesRefresh = lastNesRefresh;
+    }
+
+    /**
+     * @return whether the organization has a record in NES.
+     */
+    public boolean hasNesRecord() {
+        return StringUtils.isNotEmpty(nesId);
+    }
+
     @Override
     public String toString() {
         return new StringBuilder().append(getName()).toString();
     }
-
+    
 }

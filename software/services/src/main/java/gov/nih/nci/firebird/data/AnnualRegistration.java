@@ -82,7 +82,6 @@
  */
 package gov.nih.nci.firebird.data;
 
-import gov.nih.nci.firebird.common.FirebirdCollectionUtils;
 import gov.nih.nci.firebird.data.user.ManagedInvestigator;
 
 import java.util.Collection;
@@ -124,9 +123,8 @@ import com.google.common.collect.Sets;
  */
 @Entity
 @DiscriminatorValue("ANNUAL")
-@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.TooManyMethods" })
+@SuppressWarnings("PMD.CyclomaticComplexity")
 // switch statements for form handling must handle possible cases
-// methods broken down for clarity
 public class AnnualRegistration extends AbstractRegistration {
 
     private static final long serialVersionUID = 1L;
@@ -143,8 +141,6 @@ public class AnnualRegistration extends AbstractRegistration {
     private AnnualRegistration renewal;
     private boolean approvalAcknowledgedByInvestigator;
     private boolean approvalAcknowledgedByCoordinator;
-    private AnnualRegistration parent;
-    private boolean renewed;
 
     private static final EnumSet<RegistrationStatus> FINALIZED_STATES = EnumSet.of(RegistrationStatus.APPROVED);
 
@@ -273,10 +269,10 @@ public class AnnualRegistration extends AbstractRegistration {
     @Transient
     public Set<AbstractRegistrationForm> getForms() {
         Set<AbstractRegistrationForm> forms = Sets.newLinkedHashSet();
-        FirebirdCollectionUtils.addIgnoreNull(forms, getForm1572());
-        FirebirdCollectionUtils.addIgnoreNull(forms, getFinancialDisclosure());
-        FirebirdCollectionUtils.addIgnoreNull(forms, getSupplementalInvestigatorDataForm());
-        FirebirdCollectionUtils.addIgnoreNull(forms, getAdditionalAttachmentsForm());
+        addIfNotNull(forms, getForm1572());
+        addIfNotNull(forms, getFinancialDisclosure());
+        addIfNotNull(forms, getSupplementalInvestigatorDataForm());
+        addIfNotNull(forms, getAdditionalAttachmentsForm());
         return forms;
     }
 
@@ -322,41 +318,6 @@ public class AnnualRegistration extends AbstractRegistration {
      */
     public void setRenewal(AnnualRegistration renewal) {
         this.renewal = renewal;
-        setRenewed(true);
-        if (renewal != null) {
-            renewal.parent = this;
-        }
-    }
-
-    /**
-     * @param renewed the renewed to set
-     */
-    private void setRenewed(boolean renewed) {
-        this.renewed = renewed;
-    }
-
-    /**
-     * @return the renewed
-     */
-    @Column(name = "renewed")
-    public boolean isRenewed() {
-        return renewed;
-    }
-
-    @OneToOne(mappedBy = "renewal")
-    @Cascade({ org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
-    public AnnualRegistration getParent() {
-        return parent;
-    }
-
-    /**
-     * @param parent the parent registration to set
-     */
-    public void setParent(AnnualRegistration parent) {
-        this.parent = parent;
-        if (parent != null) {
-            parent.renewal = this;
-        }
     }
 
     @Override
@@ -536,15 +497,6 @@ public class AnnualRegistration extends AbstractRegistration {
                         return certificate.getCertificateFile();
                     }
                 });
-    }
-
-    @Override
-    public void prepareForDeletion() {
-        super.prepareForDeletion();
-        if (getParent() != null) {
-            getParent().setRenewal(null);
-            setParent(null);
-        }
     }
 
 }

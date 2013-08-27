@@ -82,12 +82,21 @@
  */
 package gov.nih.nci.firebird.selenium2.tests.sponsor;
 
-import static gov.nih.nci.firebird.selenium2.pages.util.VerificationUtils.*;
-import static gov.nih.nci.firebird.service.protocol.ProtocolImportDetailStatus.*;
+import static gov.nih.nci.firebird.selenium2.pages.util.VerificationUtils.checkForMessage;
+import static gov.nih.nci.firebird.service.protocol.ProtocolImportDetailStatus.IMPORT_COMPLETE;
+import static gov.nih.nci.firebird.service.protocol.ProtocolImportDetailStatus.INVALID;
+import static gov.nih.nci.firebird.service.protocol.ProtocolImportDetailStatus.VALID;
+import static gov.nih.nci.firebird.service.protocol.ProtocolImportDetailStatus.VALIDATING;
 import static org.apache.commons.lang.StringUtils.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import gov.nih.nci.firebird.data.ProtocolLeadOrganization;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.nes.organization.OrganizationEntityIntegrationService;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.base.ValidationException;
 import gov.nih.nci.firebird.selenium2.pages.base.ValidationMessageDialog;
@@ -99,8 +108,6 @@ import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.protocol.Prot
 import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.protocol.SelectImportFilePage;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.FailingAction;
-import gov.nih.nci.firebird.service.person.external.ExternalPersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.service.protocol.ImportTestFile;
 import gov.nih.nci.firebird.service.protocol.ImportTestFileHelper;
 import gov.nih.nci.firebird.service.protocol.ProtocolImportDetailStatus;
@@ -121,7 +128,7 @@ import com.google.inject.Inject;
 public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
 
     private static final String TEST_DATA_LEAD_ORGANIZATION_CTEP_ID = "VA166";
-    private static final String TEST_DATA_PRINCIPAL_INVESTIGATOR_EXTERNAL_ID = "269510";
+    private static final String TEST_DATA_PRINCIPAL_INVESTIGATOR_NES_ID = "269510";
 
     private LoginAccount sponsorLogin;
     private JobDetailListing validListing1;
@@ -135,15 +142,14 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
 
     @Inject
     private ImportTestFileHelper testFileHelper;
-
+    
     @Inject
     private DataSetBuilder builder;
 
     @Inject
     private OrganizationEntityIntegrationService nesOrganizationService;
-
     @Inject
-    private ExternalPersonService personService;
+    private NesPersonIntegrationService personService;
 
     private ImportProtocolPage importProtocolPage;
 
@@ -156,10 +162,11 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         expectedLeadOrganization = getExpectedLeadOrganization();
     }
 
-    private ProtocolLeadOrganization getExpectedLeadOrganization() throws InvalidatedPersonException {
-        return new ProtocolLeadOrganization(null, Iterables.getOnlyElement(nesOrganizationService
-                .searchByAssignedIdentifier(TEST_DATA_LEAD_ORGANIZATION_CTEP_ID)),
-                personService.getByExternalId(TEST_DATA_PRINCIPAL_INVESTIGATOR_EXTERNAL_ID));
+    private ProtocolLeadOrganization getExpectedLeadOrganization()
+            throws UnavailableEntityException, ReplacedEntityException {
+        return new ProtocolLeadOrganization(null, Iterables.getOnlyElement(
+                nesOrganizationService.searchByAssignedIdentifier(TEST_DATA_LEAD_ORGANIZATION_CTEP_ID)),
+                personService.getById(TEST_DATA_PRINCIPAL_INVESTIGATOR_NES_ID));
     }
 
     @Test
@@ -168,7 +175,7 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         checkForEmptyFile();
         checkForInvalidLength();
         checkForInvalidPhase();
-        checkForInvalidIvestigatorExternalIdFormat();
+        checkForInvalidIvestigatorNesIdFormat();
         checkForMissingValues();
     }
 
@@ -189,6 +196,7 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         return selectImportFile.clickContinue();
     }
 
+
     private void checkForEmptyFile() {
         try {
             selectFile(ImportTestFile.TEST_IMPORT_EMPTY_FILE);
@@ -203,10 +211,9 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         List<String> messages = validationMessagesDialog.getMessages();
         assertEquals("Incorrect # of messages found: " + messages, 3, messages.size());
         checkForMessage(messages, "validation.failure.protocol.import.invalid.length", "1", "1", "Sponsor Protocol ID",
-                "200", "201");
-        checkForMessage(messages, "validation.failure.protocol.import.invalid.length", "1", "2", "Title", "4,000",
-                "4,001");
-        checkForMessage(messages, "validation.failure.protocol.import.invalid.length", "1", "5", "Agent", "200", "201");
+                        "200", "201");
+        checkForMessage(messages, "validation.failure.protocol.import.invalid.length", "1", "2", "Title", "4,000", "4,001");
+        checkForMessage(messages, "validation.failure.protocol.import.invalid.length", "1", "5", "Agent", "200","201");
         validationMessagesDialog.clickClose();
         importProtocolPage.clickCancel();
     }
@@ -230,12 +237,11 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         importProtocolPage.clickCancel();
     }
 
-    private void checkForInvalidIvestigatorExternalIdFormat() {
+    private void checkForInvalidIvestigatorNesIdFormat() {
         ValidationMessageDialog validationMessagesDialog = selectFileAndOpenValidationMessages(ImportTestFile.TEST_IMPORT_INVALID_INVESTIGATOR_ID_FORMAT);
         List<String> messages = validationMessagesDialog.getMessages();
         assertEquals(1, messages.size());
-        checkForMessage(messages, "validation.failure.protocol.import.invalid.investigator.id.format", "1", "6",
-                "23XZ4");
+        checkForMessage(messages, "validation.failure.protocol.import.invalid.investigator.id.format", "1", "6", "23XZ4");
         validationMessagesDialog.clickClose();
         importProtocolPage.clickCancel();
     }
@@ -259,8 +265,7 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         checkPreImportValues(totalRecordsInFile, validRecordsInFile);
 
         importProtocolPage = importProtocolPage.clickHome().getProtocolsMenu().clickImportInProgress();
-        importProtocolPage.getHelper().checkReadyForImportStatus(totalRecordsInFile, validRecordsInFile,
-                validRecordsInFile);
+        importProtocolPage.getHelper().checkReadyForImportStatus(totalRecordsInFile, validRecordsInFile, validRecordsInFile);
 
         populateListings();
         validListing3.deselect();
@@ -277,8 +282,7 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         importProtocolPage.getHelper().clickRefreshAndAssertStatusChange(ProtocolImportJobStatus.VALIDATION_COMPLETE);
         List<JobDetailListing> listings = populateListings();
         checkTableValues(validListing1);
-        importProtocolPage.getHelper().checkReadyForImportStatus(totalRecordsInFile, validRecordsInFile,
-                validRecordsInFile);
+        importProtocolPage.getHelper().checkReadyForImportStatus(totalRecordsInFile, validRecordsInFile, validRecordsInFile);
         checkViewProtocolDetails(validListing1);
         checkForDuplicateMessage(duplicateListing1, 2);
         checkForDuplicateMessage(duplicateListing2, 4);
@@ -306,7 +310,8 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         }
     }
 
-    private void checkListingsForStatus(ProtocolImportDetailStatus status, JobDetailListing... listings) {
+    private void checkListingsForStatus(ProtocolImportDetailStatus status,
+            JobDetailListing... listings) {
         checkListingsForStatus(EnumSet.of(status), listings);
     }
 
@@ -333,33 +338,41 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         importProtocolPage.clickImport();
         String importStatus = importProtocolPage.getJobStatus();
         assertTrue("Expected import status to be 'Import Complete', 'Importing' or 'Validation Complete' but it was "
-                + importStatus, ProtocolImportJobStatus.IMPORTING.getDisplay().equals(importStatus)
-                || ProtocolImportJobStatus.VALIDATION_COMPLETE.getDisplay().equals(importStatus)
-                || ProtocolImportJobStatus.IMPORT_COMPLETE.getDisplay().equals(importStatus));
+                + importStatus,
+                    ProtocolImportJobStatus.IMPORTING.getDisplay().equals(importStatus)
+                        || ProtocolImportJobStatus.VALIDATION_COMPLETE.getDisplay().equals(importStatus)
+                        || ProtocolImportJobStatus.IMPORT_COMPLETE.getDisplay().equals(importStatus));
         importProtocolPage.getHelper().clickRefreshAndAssertStatusChange(ProtocolImportJobStatus.IMPORT_COMPLETE);
     }
 
     private void checkForDuplicateMessage(JobDetailListing listing, int lineNumber) {
         ValidationMessageDialog dialog = listing.clickValidationMessagesLink();
-        checkForMessage(dialog.getMessages(), "validation.failure.protocol.import.duplicate.number.in.file",
-                lineNumber, "1", listing.getSponsorProtocolId());
+        checkForMessage(dialog.getMessages(),
+                "validation.failure.protocol.import.duplicate.number.in.file",
+                lineNumber,
+                "1",
+                listing.getSponsorProtocolId());
         dialog.clickClose();
     }
 
     private void checkForInvalidTitleLength(JobDetailListing listing) {
         assertEquals(ProtocolImportDetailStatus.INVALID.getDisplay(), listing.getStatus());
         ValidationMessageDialog dialog = listing.clickValidationMessagesLink();
-        checkForMessage(dialog.getMessages(), "validation.failure.protocol.import.invalid.length", "5", "1",
-                "Sponsor Protocol ID", "200", "201");
+        checkForMessage(dialog.getMessages(),
+                "validation.failure.protocol.import.invalid.length",
+                "5",
+                "1",
+                "Sponsor Protocol ID",
+                "200",
+                "201");
         dialog.clickClose();
     }
 
-    private void checkAreListingsSelected(List<JobDetailListing> listingsExpectedToBeSelected,
-            List<JobDetailListing> allListings) {
+    private void checkAreListingsSelected(List<JobDetailListing> listingsExpectedToBeSelected, List<JobDetailListing> allListings) {
         for (JobDetailListing listing : allListings) {
             boolean isSelectedExpected = listingsExpectedToBeSelected.contains(listing);
-            assertEquals("Expected listing for " + listing.getSponsorProtocolId() + " to be "
-                    + (isSelectedExpected ? "selected" : "unselected"), isSelectedExpected, listing.isSelected());
+            assertEquals("Expected listing for " + listing.getSponsorProtocolId() + " to be " + (isSelectedExpected ? "selected" : "unselected"),
+                    isSelectedExpected, listing.isSelected());
         }
     }
 
@@ -393,8 +406,8 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         return false;
     }
 
-    private boolean isEqual(String sponsor, String agents, JobDetailListing protocolImportListing,
-            ProtocolListing protocolListing) {
+    private boolean isEqual(String sponsor, String agents,
+            JobDetailListing protocolImportListing, ProtocolListing protocolListing) {
         boolean isEqual = false;
         if (protocolImportListing.getSponsorProtocolId().equals(protocolListing.getSponsorProtocolId())) {
             assertEquals(trim(sponsor), trim(protocolListing.getSponsorName()));
@@ -408,25 +421,27 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         importProtocolPage = selectFile(ImportTestFile.TEST_IMPORT_MULTIPLE_PROTOCOL_DUPLICATE);
         importProtocolPage.getHelper().clickRefreshAndAssertStatusChange(ProtocolImportJobStatus.VALIDATION_COMPLETE);
         List<JobDetailListing> listings = populateListings();
-        checkListingsForStatus(INVALID, validListing1, validListing2, duplicateListing1, duplicateListing2,
-                invalidListing);
+        checkListingsForStatus(INVALID, validListing1, validListing2, duplicateListing1,
+                duplicateListing2, invalidListing);
         checkListingsForStatus(VALID, validListing3);
         checkForProtocolExistsMessage(validListing1, 1);
         checkForProtocolExistsMessage(validListing2, 3);
         checkAreListingsSelected(listings, Lists.newArrayList(validListing3));
         clickImportAndVerifyStatusChange();
         populateListings();
-        checkListingsForStatus(INVALID, validListing1, validListing2, duplicateListing1, duplicateListing2,
-                invalidListing);
+        checkListingsForStatus(INVALID, validListing1, validListing2, duplicateListing1,
+                duplicateListing2, invalidListing);
         checkListingsForStatus(IMPORT_COMPLETE, validListing3);
         ProtocolsListPage browseProtocolsPage = importProtocolPage.getProtocolsMenu().clickBrowse();
-        assertTrue(isImportedProtocolListed(browseProtocolsPage.getListings(), selectedSponsor, "Anethole Trithione",
-                validListing3));
+        assertTrue(isImportedProtocolListed(browseProtocolsPage.getListings(), selectedSponsor, "Anethole Trithione", validListing3));
     }
 
     private void checkForProtocolExistsMessage(JobDetailListing listing, int lineNumber) {
         ValidationMessageDialog dialog = listing.clickValidationMessagesLink();
-        checkForMessage(dialog.getMessages(), "validation.failure.protocol.import.duplicate.number", lineNumber, "1",
+        checkForMessage(dialog.getMessages(),
+                "validation.failure.protocol.import.duplicate.number",
+                lineNumber,
+                "1",
                 listing.getSponsorProtocolId());
         dialog.clickClose();
     }
@@ -437,7 +452,8 @@ public class ImportProtocolTest extends AbstractFirebirdWebDriverTest {
         checkForValidatingOrValidationCompleteStatus();
         List<JobDetailListing> listings = importProtocolPage.getListings();
         assertEquals(1, listings.size());
-        checkListingsForStatus(EnumSet.of(VALIDATING, VALID), listings.toArray(new JobDetailListing[listings.size()]));
+        checkListingsForStatus(EnumSet.of(VALIDATING, VALID),
+                listings.toArray(new JobDetailListing[listings.size()]));
         importProtocolPage.getHelper().clickRefreshAndAssertStatusChange(ProtocolImportJobStatus.VALIDATION_COMPLETE);
         JobDetailListing listing = importProtocolPage.getListings().get(0);
         checkTableValues(listing);

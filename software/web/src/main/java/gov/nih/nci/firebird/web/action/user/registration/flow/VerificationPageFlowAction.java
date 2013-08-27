@@ -108,6 +108,8 @@ public class VerificationPageFlowAction extends AbstractPageFlowAction {
     static final String MY_ACCOUNT_RETURN = "myAccount";
     static final String FUNCTIONALITY_WARNING_RETURN = "functionalityWarning";
     static final String USER_HOME_RETURN = "userHome";
+    
+    private boolean eulaAccepted;
 
     /**
      * @param accountService the account service
@@ -124,12 +126,12 @@ public class VerificationPageFlowAction extends AbstractPageFlowAction {
      * @return the forward to the appropriate step or to the task list
      */
     @Action(value = "nextStep", results = {
-            @Result(name = USER_HOME_RETURN, type = REDIRECT_ACTION_TYPE,
+            @Result(name = USER_HOME_RETURN, type = REDIRECT_ACTION_TYPE, 
                 params = { ACTION_NAME, "index", NAMESPACE, "/" }),
-            @Result(name = MY_ACCOUNT_RETURN, type = REDIRECT_ACTION_TYPE,
+            @Result(name = MY_ACCOUNT_RETURN, type = REDIRECT_ACTION_TYPE, 
                 params = { ACTION_NAME, "enterMyAccount", NAMESPACE, "/user" }),
-            @Result(name = FUNCTIONALITY_WARNING_RETURN, type = REDIRECT_ACTION_TYPE,
-                params = { ACTION_NAME, FunctionalityWarningAction.FUNCTIONALITY_WARNING_ACTION,
+            @Result(name = FUNCTIONALITY_WARNING_RETURN, type = REDIRECT_ACTION_TYPE, 
+                params = { ACTION_NAME, FunctionalityWarningAction.FUNCTIONALITY_WARNING_ACTION, 
                     NAMESPACE, "/user/registration/flow/ajax" }),
             @Result(name = INPUT, type = REDIRECT_ACTION_TYPE,
                 params = { ACTION_NAME, "enterExistingFlow", NAMESPACE, "/user/registration" }) })
@@ -173,11 +175,25 @@ public class VerificationPageFlowAction extends AbstractPageFlowAction {
     }
 
     /**
+     * @return the acceptEULA
+     */
+    public Boolean isEulaAccepted() {
+        return eulaAccepted;
+    }
+
+    /**
+     * @param acceptEula the acceptEULA to set
+     */
+    public void setEulaAccepted(Boolean acceptEula) {
+        this.eulaAccepted = acceptEula;
+    }
+
+    /**
      * @return true if a Limited Functionality Warning needs to be displayed to the user.
      */
     public boolean isVerificationRequiredForRoles() {
-        return VerificationRequirementChecker.isVerificationRequiredForRoles(getAccountConfigurationData(),
+        return VerificationRequirementChecker.isVerificationRequiredForRoles(getAccountConfigurationData(), 
                 getCurrentUserGroupNames());
     }
-
+    
 }

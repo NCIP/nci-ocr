@@ -150,7 +150,7 @@ public abstract class AbstractFirebirdUserBuilder<T extends AbstractFirebirdUser
 
     private void setPerson() {
         if (user.getPerson() == null) {
-            user.setPerson(getGridResources().getTestDataSource().getPerson());
+            user.setPerson(getGridResources().getNesTestDataSource().getPerson());
         }
     }
 

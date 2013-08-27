@@ -138,9 +138,4 @@ public abstract class AbstractAnnualRegistrationAction extends AbstractRegistrat
     protected boolean isVerifiedForRegistrationSigning() {
         return isVerifiedCtepInvestigator();
     }
-
-    public boolean isCtepReviewer() {
-        return isCtepSponsor() || isCtepSponsorDelegate();
-    }
-
 }

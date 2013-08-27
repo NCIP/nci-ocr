@@ -82,8 +82,6 @@
  */
 package gov.nih.nci.firebird.selenium2.pages.base;
 
-import static org.junit.Assert.*;
-
 import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
 
@@ -97,7 +95,7 @@ public class ValidationMessageDialog extends
         AbstractDialog<ValidationMessageDialog> {
 
     private static final String CLOSE_BUTTON_ID = "closeBtn";
-    private static final String VALIDATION_MESSAGE_ITEM_SELECTOR = "#validationErrorMessages ul.fielderror li";
+    private static final String VALIDATION_MESSAGE_ITEM_SELECTOR = "ul.fielderror li";
 
     @FindBy(css = VALIDATION_MESSAGE_ITEM_SELECTOR)
     private List<WebElement> messageItems;
@@ -131,7 +129,6 @@ public class ValidationMessageDialog extends
     protected void assertLoaded() {
         super.assertLoaded();
         assertFindBysPresent();
-        assertFalse(messageItems.isEmpty());
     }
 
     public static IdentifiableComponentFactory<ValidationMessageDialog> getFactory(final AbstractLoadableComponent<?> parent) {

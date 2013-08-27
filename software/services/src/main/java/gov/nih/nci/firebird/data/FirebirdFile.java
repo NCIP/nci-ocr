@@ -262,9 +262,12 @@ public class FirebirdFile implements Auditable, Cloneable {
     }
 
     /**
-     * @return a copy without Ids.
+     * @return a clone w/o Ids.
      */
-    public FirebirdFile createCopy() {
+    @SuppressWarnings({ "PMD.ProperCloneImplementation", "PMD.CloneThrowsCloneNotSupportedException" })
+    // this clone() doesnt need to call super.clone(), and never throws an CloneNotSupportedException.
+    @Override
+    public FirebirdFile clone() {
         FirebirdFile file = new FirebirdFile(null, getLength(), getName(), getContentType(), getDescription());
         file.setByteDataSource(new LobHolder(getByteDataSource().getData()));
         return file;

@@ -194,7 +194,7 @@ public abstract class AbstractReviseApprovedRegistrationTest extends AbstractRev
         assertEquals(isRevisedRegistration, hasRemovedSubinvestigator);
         assertEquals(!isRevisedRegistration, hasNewSubinvestigator);
 
-        registrationOverviewTab.getPage().getProtocolsMenu().clickBrowse().getHelper()
+        investigatorsTab = registrationOverviewTab.getPage().getProtocolsMenu().clickBrowse().getHelper()
                 .clickLink(getPrimaryRegistration().getProtocol()).getPage().clickInvestigatorsTab();
     }
 
@@ -203,11 +203,11 @@ public abstract class AbstractReviseApprovedRegistrationTest extends AbstractRev
     private void completeAddedSubinvestigatorRegistration() {
         HomePage homePage = openHomePage(getNewSubinvestigatorLogin());
         BrowseRegistrationsPage registrationsPage = homePage.getInvestigatorMenu().clickProtocolRegistrations();
-        InvestigatorRegistrationPage registrationPage =
+        InvestigatorRegistrationPage registrationPage = 
                 registrationsPage.getHelper().clickRegistrationLink(getNewSubinvestigatorRegistration()).getPage();
         registrationPage.clickFinancialDisclosureTab().answerQuestion(Question.Q5_NO_FINANCIAL_INTEREST, true);
         registrationPage.clickHumanResearchCertificateTab().getCertificates().get(0).select();
-        SignAndSubmitRegistrationDialog signingDialog =
+        SignAndSubmitRegistrationDialog signingDialog = 
                 (SignAndSubmitRegistrationDialog) registrationPage.clickOverviewTab().clickSubmitRegistration();
         signingDialog.getHelper().signAndSubmit(getNewSubinvestigatorLogin());
     }
@@ -215,14 +215,14 @@ public abstract class AbstractReviseApprovedRegistrationTest extends AbstractRev
     private void checkThatSponsorCanApprove() {
         HomePage homePage = openHomePage(getDataSet().getSponsorLogin());
         ProtocolRegistrationPage protocolPage = goToProtocol(homePage);
-        ReviewRegistrationTab reviewTab =
+        ReviewRegistrationTab reviewTab = 
                 protocolPage.clickInvestigatorsTab().getHelper().clickInvestigator(getPrimaryRegistration());
         reviewTab.getHelper().acceptRegistration(getPrimaryRegistration());
         protocolPage = goToProtocol(reviewTab.getPage());
-        SubInvestigatorRegistrationListing listing =
+        SubInvestigatorRegistrationListing listing = 
                 protocolPage.clickSubInvestigatorsTab().getHelper().getListing(getNewSubinvestigatorRegistration());
         reviewTab = listing.clickSubinvestigatorLink();
-        ReviewCompletionDialog completionDialog =
+        ReviewCompletionDialog completionDialog = 
                 (ReviewCompletionDialog) reviewTab.getHelper().acceptRegistration(getNewSubinvestigatorRegistration());
         completionDialog.clickApproveRegistration();
     }

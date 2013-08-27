@@ -92,6 +92,7 @@ import gov.nih.nci.firebird.test.RegistrationFactory;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
+import org.dom4j.DocumentException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -155,7 +156,7 @@ public class RegistrationPacketAccessActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testLongText() {
+    public void testLongText() throws DocumentException {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 51; i++) {
             sb.append("<b>01234<u>56789</u></b>");
@@ -163,13 +164,8 @@ public class RegistrationPacketAccessActionTest extends AbstractWebTest {
         action.setRegistration(RegistrationFactory.getInstance().createInvestigatorRegistration());
         action.getRegistration().setSponsorComments(sb.toString());
         assertEquals(ActionSupport.INPUT, action.deactivateRegistrationPacket());
-        String[] args = { String.valueOf(RegistrationPacketAccessAction.MAX_CHAR_COUNT), String.valueOf(51 * 10) };
+        String[] args = { String.valueOf(ReviewRegistrationAjaxAction.MAX_CHAR_COUNT), String.valueOf(51 * 10) };
         String expected = action.getText("error.rich.text.size", args);
         assertEquals(expected, action.getActionErrors().iterator().next());
-    }
-
-    @Test
-    public void testManageRegistrationPacketStatusEnter() throws Exception {
-        assertEquals(ActionSupport.SUCCESS, action.manageRegistrationPacketStatusEnter());
     }
 }

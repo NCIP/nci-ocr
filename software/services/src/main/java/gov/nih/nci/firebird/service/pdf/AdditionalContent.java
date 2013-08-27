@@ -99,23 +99,23 @@ import com.itextpdf.text.pdf.PdfStamper;
 /**
  * Represents additional content to be added to a PDF.
  */
-class AdditionalContent {
+public class AdditionalContent {
 
     private static final float MARGIN_SIZE = 40f;
     private static final Font HEADER_FONT = new Font(FontFamily.HELVETICA, 10, Font.BOLD);
     private static final Font CONTENT_FONT = new Font(FontFamily.HELVETICA, 9);
     private static final float CONTENT_INDENTATION = 18.0f;
     private static final float CONTENT_SPACING = 18.0f;
-
+    
     private final List<PageSection> sections = Lists.newArrayList();
-
+    
     /**
      * Adds a new section to the content.
-     *
+     * 
      * @param header the section header.
      * @param content the section content.
      */
-    void addSection(String header, String content) {
+    public void addSection(String header, String content) {
         sections.add(new PageSection(header, content));
     }
 
@@ -137,7 +137,7 @@ class AdditionalContent {
         return text;
     }
 
-    private void addText(PdfReader reader, PdfStamper stamper, ColumnText text)
+    private void addText(PdfReader reader, PdfStamper stamper, ColumnText text) 
             throws DocumentException {
         Rectangle pageSize = reader.getPageSize(1);
         int newPageNumber = reader.getNumberOfPages() + 1;
@@ -147,8 +147,8 @@ class AdditionalContent {
             text.setCanvas(newContent);
             text.setSimpleColumn(
                     pageSize.getLeft(MARGIN_SIZE),
-                    pageSize.getTop(MARGIN_SIZE),
-                    pageSize.getRight(MARGIN_SIZE),
+                    pageSize.getTop(MARGIN_SIZE), 
+                    pageSize.getRight(MARGIN_SIZE), 
                     pageSize.getBottom(MARGIN_SIZE));
             newPageNumber++;
         } while (ColumnText.hasMoreText(text.go()));
@@ -176,7 +176,7 @@ class AdditionalContent {
         }
 
     }
-
+    
     boolean isEmpty() {
         return sections.isEmpty();
     }

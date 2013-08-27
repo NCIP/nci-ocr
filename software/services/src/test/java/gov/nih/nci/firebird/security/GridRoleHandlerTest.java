@@ -93,10 +93,13 @@ import gov.nih.nci.firebird.cagrid.GridGrouperService;
 import gov.nih.nci.firebird.cagrid.GridInvocationException;
 import gov.nih.nci.firebird.cagrid.UserSessionInformationFactory;
 import gov.nih.nci.firebird.common.FirebirdConstants;
+import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
+import gov.nih.nci.firebird.data.user.SponsorRole;
 import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
+import gov.nih.nci.firebird.test.OrganizationFactory;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -133,9 +136,40 @@ public class GridRoleHandlerTest {
 
     @Test
     public void testHandleRoles() throws LoginException {
+        assertFalse(user.getInvestigatorRole().isVerified());
         roleHandler.handleRoles(sessionInformation);
         assertTrue(sessionInformation.getGroupNames().containsAll(TEST_GROUPS));
         assertTrue(sessionInformation.getGroupNames().contains(FirebirdConstants.AUTHENTICATED_USER_ROLE));
+        assertTrue(user.getInvestigatorRole().isVerified());
+        verify(mockUserService).save(user);
+    }
+
+    @Test
+    public void testHandleRoles_NotVerified() throws LoginException, GridInvocationException {
+        assertFalse(user.getInvestigatorRole().isVerified());
+        TEST_GROUPS.remove(UserRoleType.INVESTIGATOR.getVerifiedGroupName());
+        roleHandler.handleRoles(sessionInformation);
+        assertTrue(sessionInformation.getGroupNames().containsAll(TEST_GROUPS));
+        assertTrue(sessionInformation.getGroupNames().contains(FirebirdConstants.AUTHENTICATED_USER_ROLE));
+        assertFalse(user.getInvestigatorRole().isVerified());
+        verify(mockUserService).save(user);
+    }
+
+    @Test
+    public void testHandleRoles_Sponsor() throws LoginException, GridInvocationException {
+        user = FirebirdUserFactory.getInstance().create();
+        when(mockUserService.getUserInfo(sessionInformation)).thenReturn(user);
+        Organization sponsor = OrganizationFactory.getInstance().create();
+        Organization sponsor2 = OrganizationFactory.getInstance().create();
+        SponsorRole verifiedRole = user.addSponsorRepresentativeRole(sponsor);
+        SponsorRole unverifiedRole = user.addSponsorRepresentativeRole(sponsor2);
+        TEST_GROUPS.add(verifiedRole.getVerifiedSponsorGroupName());
+        roleHandler.handleRoles(sessionInformation);
+        assertTrue(sessionInformation.getGroupNames().containsAll(TEST_GROUPS));
+        assertTrue(sessionInformation.getGroupNames().contains(FirebirdConstants.AUTHENTICATED_USER_ROLE));
+        assertTrue(verifiedRole.isVerfied());
+        assertFalse(unverifiedRole.isVerfied());
+        verify(mockUserService).save(user);
     }
 
     @Test
@@ -144,6 +178,7 @@ public class GridRoleHandlerTest {
         roleHandler.handleRoles(sessionInformation);
         assertTrue(sessionInformation.getGroupNames().containsAll(TEST_GROUPS));
         assertTrue(sessionInformation.getGroupNames().contains(FirebirdConstants.AUTHENTICATED_USER_ROLE));
+        assertFalse(user.getInvestigatorRole().isVerified());
         verify(mockUserService, never()).save(user);
     }
 

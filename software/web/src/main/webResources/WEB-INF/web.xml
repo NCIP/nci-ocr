@@ -127,6 +127,11 @@
         <listener-class>gov.nih.nci.firebird.web.listener.DailyJobTimerCreationSerlvetContextListener</listener-class>
     </listener>
 
+    <listener>
+    <description>Migrates the existing investigator's primary organizations to point to health care facility structural roles (creates them if necessary).</description>
+    <listener-class>gov.nih.nci.firebird.web.listener.PrimaryOrganizationMigrationListener</listener-class>
+  </listener>
+
     <!-- Welcome file lists -->
   <welcome-file-list>
     <welcome-file>/WEB-INF/index.jsp</welcome-file>
@@ -164,7 +169,7 @@
   <!-- Security constraints and roles -->
   <security-constraint>
     <web-resource-collection>
-      <web-resource-name>Investigator pages</web-resource-name>
+      <web-resource-name>investigator pages</web-resource-name>
       <url-pattern>/investigator/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
@@ -178,23 +183,7 @@
   </security-constraint>
   <security-constraint>
     <web-resource-collection>
-      <web-resource-name>Investigator annual registration pages</web-resource-name>
-      <url-pattern>/investigator/annual/registration/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>investigator</role-name>
-      <role-name>ctep_investigator</role-name>
-      <role-name>registration_coordinator</role-name>
-      <role-name>ctep_registration_coordinator</role-name>
-      <role-name>ctep_sponsor</role-name>
-      <role-name>ctep_sponsor_delegate</role-name>
-      <role-name>verified_sponsor</role-name>
-      <role-name>verified_sponsor_delegate</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>Verified investigator pages</web-resource-name>
+      <web-resource-name>verified investigator pages</web-resource-name>
       <url-pattern>/investigator/registration/ajax/sign.jsp</url-pattern>
     </web-resource-collection>
     <auth-constraint>
@@ -229,27 +218,6 @@
     <auth-constraint>
       <role-name>ctep_sponsor</role-name>
       <role-name>ctep_sponsor_delegate</role-name>
-      <role-name>verified_sponsor</role-name>
-      <role-name>verified_sponsor_delegate</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>CTEP-only annual registration sponsor pages</web-resource-name>
-      <url-pattern>/sponsor/annual/ctep/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>ctep_sponsor</role-name>
-      <role-name>ctep_sponsor_delegate</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <security-constraint>
-    <web-resource-collection>
-      <web-resource-name>CTEP sponsor representative only annual registration sponsor pages</web-resource-name>
-      <url-pattern>/sponsor/annual/ctep/representative/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <role-name>ctep_sponsor</role-name>
     </auth-constraint>
   </security-constraint>
   <security-constraint>

@@ -82,9 +82,10 @@
  */
 package gov.nih.nci.firebird.web.action.search;
 
-import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchResult;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.struts2.convention.annotation.Action;
@@ -93,9 +94,13 @@ import org.apache.struts2.convention.annotation.Result;
 /**
  * Searches for Pharmaceutical Companies (either in local database or NES) matching the given name substring(s).
  */
-public class PharmaceuticalCompanySearchAction extends AbstractOrganizationSearchAction {
+public class PharmaceuticalCompanySearchAction extends AbstractTextBoxSearchAction {
 
     private static final long serialVersionUID = 1L;
+    private static final int MIN_INPUT_LENGTH = 3;
+
+    private List<OrganizationSearchResult> results;
+    private Exception searchFailure;
 
     /**
      * @return the struts forward
@@ -103,12 +108,33 @@ public class PharmaceuticalCompanySearchAction extends AbstractOrganizationSearc
     @Action(value = "searchPharmaceuticalCompanies", results = @Result(type = "json", params = { "root", "results",
             "excludeProperties", ".*\\.roles" }))
     public String searchPharmaceuticalCompanies() {
-        return doSearch();
+        String strutsForward = doSearch();
+        if (searchFailure != null) {
+            throw new IllegalStateException(searchFailure);
+        }
+        return strutsForward;
     }
 
-    @Override
-    List<Organization> lookupSearchResults() {
-        return getOrganizationService().search(getTerm(), OrganizationRoleType.PHARMACEUTICAL_COMPANY);
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")  // need to handle any unexpected exception
+    private String doSearch() {
+        if (getTerm() != null && getTerm().length() >= MIN_INPUT_LENGTH) {
+            try {
+                results = getOrganizationSearchService().searchForResearchOrganizations(getTerm(),
+                        ResearchOrganizationType.DRUG_COMPANY);
+            } catch (RuntimeException e) {
+                searchFailure = e;
+            }
+        } else {
+            results = Collections.emptyList();
+        }
+        return SUCCESS;
+    }
+
+    /**
+     * @return the results
+     */
+    public List<OrganizationSearchResult> getResults() {
+        return results;
     }
 
 }

@@ -90,7 +90,7 @@ import gov.nih.nci.firebird.data.AnnualRegistration;
 import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag.CommentType;
 import gov.nih.nci.firebird.selenium2.pages.registration.common.FormRejectionCommentsDialog;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable.RegistrationListing;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ReviewAnnualRegistrationPage.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FormReviewCommentDialog;
 
 import java.io.File;
@@ -147,25 +147,13 @@ public class ReviewAnnualRegistrationPageHelper {
     }
 
     public void downloadAllForms(AnnualRegistration registration) throws IOException {
-        downloadAllForms(registration, FormStatus.IN_REVIEW);
-    }
-
-    public void downloadAllForms(AnnualRegistration registration, FormStatus expectedStatusAfterDownload) throws IOException {
         for (AbstractRegistrationForm form : registration.getFormsForSponsorReview()) {
             if (form.isReviewRequired()) {
-                File formPdf = getListingById(form).downloadFormPdf();
+                File formPdf = getListingById(form).clickDownload();
                 assertTrue(formPdf.length() > 0);
-                assertEquals(expectedStatusAfterDownload.getDisplay(), getListingById(form).getStatus());
+                assertEquals(FormStatus.IN_REVIEW.getDisplay(), getListingById(form).getStatus());
             } else {
                 assertEquals(FormStatus.NOT_APPLICABLE.getDisplay(), getListingById(form).getStatus());
-            }
-        }
-    }
-
-    public void checkAllDispositionButtonsDisabled(AnnualRegistration registration) {
-        for (AbstractRegistrationForm form : registration.getFormsForSponsorReview()) {
-            if (form.isReviewRequired()) {
-                assertFalse(getListingById(form).isDispositionSelectionEnabled());
             }
         }
     }
@@ -182,7 +170,7 @@ public class ReviewAnnualRegistrationPageHelper {
     public void acceptAllForms(AnnualRegistration registration) {
         for (AbstractRegistrationForm form : registration.getFormsForSponsorReview()) {
             if (form.isReviewRequired()) {
-                getListingById(form).clickAccept();
+                getListingById(form).clickAcceptRadio();
             }
         }
     }
@@ -190,7 +178,7 @@ public class ReviewAnnualRegistrationPageHelper {
     public void rejectAllForms(AnnualRegistration registration) {
         for (AbstractRegistrationForm form : registration.getFormsForSponsorReview()) {
             if (form.isReviewRequired()) {
-                FormReviewCommentDialog commentsDialog = getListingById(form).clickReject();
+                FormReviewCommentDialog commentsDialog = getListingById(form).clickRejectRadio();
                 commentsDialog.typeComments(getFormRejectionComments(form));
                 commentsDialog.clickSave();
             }

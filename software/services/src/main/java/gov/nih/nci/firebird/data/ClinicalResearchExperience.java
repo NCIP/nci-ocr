@@ -103,8 +103,6 @@ public final class ClinicalResearchExperience implements Serializable {
      * useful ctor.
      * @param text user entered free-form text.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public ClinicalResearchExperience(String text) {
         this.text = text;
     }

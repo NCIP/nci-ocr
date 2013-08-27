@@ -99,15 +99,11 @@ import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
-import java.util.Date;
-
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.struts2.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Inject;
-import com.opensymphony.xwork2.ActionSupport;
 
 public class HumanResearchCertificateTabActionTest extends AbstractWebTest {
 
@@ -231,14 +227,6 @@ public class HumanResearchCertificateTabActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testGetCertificatesAsJson_ExpiredCertificate() throws Exception {
-        profile.addCredential(certificate);
-        certificate.setExpirationDate(DateUtils.addMonths(new Date(), -1));
-        String json = action.getCertificatesAsJson();
-        assertEquals("[]", json);
-    }
-
-    @Test
     public void testGetCertificatesAsJson_locked() throws CredentialAlreadyExistsException, JSONException {
         TrainingCertificate cert2 = CredentialFactory.getInstance().createCertificate(
                 CertificateType.HUMAN_RESEARCH_CERTIFICATE);
@@ -256,10 +244,5 @@ public class HumanResearchCertificateTabActionTest extends AbstractWebTest {
     @Test
     public void testGetForm() {
         assertEquals(registration.getHumanResearchCertificateForm(), action.getForm());
-    }
-
-    @Test
-    public void testEnterHumanResearchCertificateTab() throws Exception {
-        assertEquals(ActionSupport.SUCCESS, action.enterHumanResearchCertificateTab());
     }
 }

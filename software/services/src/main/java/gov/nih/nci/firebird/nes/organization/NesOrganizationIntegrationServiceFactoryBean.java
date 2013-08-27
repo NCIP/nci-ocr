@@ -112,7 +112,7 @@ public class NesOrganizationIntegrationServiceFactoryBean implements NesOrganiza
     @Override
     public BaseOrganizationIntegrationService getService(Organization organization) {
         Preconditions.checkNotNull(organization);
-        return getService(organization.getExternalId());
+        return getService(organization.getNesId());
     }
 
     @Override

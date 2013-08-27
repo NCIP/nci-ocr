@@ -202,7 +202,7 @@ public class CertificateGenerationAttributes {
      *
      * @return DigitalSigningDistinguishedName DigitalSigningDistinguishedName
      */
-    DigitalSigningDistinguishedName generateUserDistinguishedName() {
+    public DigitalSigningDistinguishedName generateUserDistinguishedName() {
         DigitalSigningDistinguishedName userDn = new DigitalSigningDistinguishedName();
 
         userDn.setCommonName(this.constructCommonName());

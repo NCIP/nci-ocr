@@ -86,7 +86,7 @@ import gov.nih.nci.coppa.po.IdentifiedOrganization;
 import gov.nih.nci.coppa.po.StringMap;
 import gov.nih.nci.coppa.services.entities.organization.common.OrganizationI;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.nes.AbstractNesData;
+import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
 import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
 import gov.nih.nci.iso21090.extensions.Id;
@@ -101,7 +101,6 @@ import com.google.inject.Inject;
 /**
  * NES Organization integration service implementation for Organization entities.
  */
-@SuppressWarnings("PMD.TooManyMethods") // private helper methods for readability
 public class OrganizationEntityIntegrationServiceBean extends AbstractOrganizationIntegrationServiceBean
 implements OrganizationEntityIntegrationService {
 
@@ -145,6 +144,11 @@ implements OrganizationEntityIntegrationService {
     }
 
     @Override
+    NesIIRoot getNesIIRoot() {
+        return NesIIRoot.ORGANIZATION;
+    }
+
+    @Override
     StringMap getValidationResults(Organization organization) throws RemoteException {
         return getOrganizationService().validate(translator.toNesOrganization(organization));
     }
@@ -155,7 +159,7 @@ implements OrganizationEntityIntegrationService {
         return performSearch(search);
     }
 
-    private OrganizationSearcher createNameSearch(final String searchName) {
+    OrganizationSearcher createNameSearch(final String searchName) {
         return new OrganizationSearcher() {
             public List<Organization> search() throws RemoteException {
                 return getNameMatches(searchName);
@@ -172,9 +176,9 @@ implements OrganizationEntityIntegrationService {
     }
 
     @Override
-    public List<Organization> searchByAssignedIdentifier(String assignedIdentifier) {
-        OrganizationSearcher searcher = createIdentifiedOrganizationExtensionSearch(assignedIdentifier);
-        return searchByAssignedIdentifier(searcher, assignedIdentifier);
+    public List<Organization> searchByAssignedIdentifier(final String extension) {
+        OrganizationSearcher searcher = createIdentifiedOrganizationExtensionSearch(extension);
+        return performSearch(searcher);
     }
 
     private OrganizationSearcher createIdentifiedOrganizationExtensionSearch(final String extension) {
@@ -206,9 +210,5 @@ implements OrganizationEntityIntegrationService {
         }
         return firebirdOrganizations;
     }
-    
-    @Override
-    AbstractNesData createNesExternalData() {
-        return new NesOrganizationData();
-    }
+
 }

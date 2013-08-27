@@ -83,12 +83,8 @@
 package gov.nih.nci.firebird.test;
 
 import static gov.nih.nci.firebird.test.ValueGenerator.*;
-
-import java.util.Date;
-
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Person;
-import gov.nih.nci.firebird.nes.person.NesPersonData;
 
 public final class PersonFactory {
     private static final PersonFactory NO_ID_INSTANCE = new PersonFactory(false);
@@ -107,20 +103,19 @@ public final class PersonFactory {
         this.withId = withId;
     }
 
+    /**
+     * Create the profile.
+     *
+     * @return the profile.
+     */
     public Person create() {
         return create(getUniqueString(5), getUniqueString(5));
     }
 
-    public Person createWithProviderNumber() {
-        Person person = create(getUniqueString(5), getUniqueString(5));
-        person.setProviderNumber(getUniqueString());
-        return person;
-    }
-
-    public Person createWithoutExternalData() {
+    public Person createWithoutNesData() {
         Person person = create();
-        person.setExternalData(null);
-        person.setCtepId(null);
+        person.setNesId("");
+        person.setCtepId("");
         return person;
     }
 
@@ -132,12 +127,9 @@ public final class PersonFactory {
     public Person create(String firstName, String lastName) {
         Person person = new Person();
         person.setId(getId());
-        NesPersonData nesPersonData = new NesPersonData();
-        nesPersonData.setLastNesRefresh(new Date());
-        nesPersonData.setExternalId(String.valueOf(getUniqueInt()));
-        person.setExternalData(nesPersonData);
+        person.setNesId(String.valueOf(getUniqueInt()));
         person.setCtepId(getUniqueString());
-        person.setCurationStatus(CurationStatus.ACTIVE);
+        person.setNesStatus(CurationStatus.ACTIVE);
         person.setFirstName(firstName);
         person.setMiddleName(getUniqueString());
         person.setLastName(lastName);

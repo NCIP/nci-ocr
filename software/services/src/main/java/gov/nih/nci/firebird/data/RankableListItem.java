@@ -90,7 +90,5 @@ public interface RankableListItem {
     /**
      * @return the sortRanking
      */
-    @SuppressWarnings("ucd")
-    // Used in JSP Pages
     Integer getSortRanking();
 }

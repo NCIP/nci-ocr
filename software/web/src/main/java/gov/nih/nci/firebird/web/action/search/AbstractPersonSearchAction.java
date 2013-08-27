@@ -82,15 +82,17 @@
  */
 package gov.nih.nci.firebird.web.action.search;
 
+import gov.nih.nci.firebird.data.Person;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.validator.EmailValidator;
 import org.apache.struts2.convention.annotation.Result;
 
 /**
  * This action supports autocompleter person searches.
  */
-@Result(type = "json", params = { "root", "results", "excludeProperties", ".*\\.roles" })
-abstract class AbstractPersonSearchAction extends AbstractTextBoxSearchAction {
+@Result(type = "json", name = "success", params = { "root", "results" })
+public abstract class AbstractPersonSearchAction extends AbstractTextBoxSearchAction {
 
     private static final long serialVersionUID = 1L;
 
@@ -107,6 +109,52 @@ abstract class AbstractPersonSearchAction extends AbstractTextBoxSearchAction {
      */
     @Override
     public abstract String execute();
+
+
+    /**
+     * Converts the Search Term Provided into a Person object for querying.
+     *
+     * @return the Person object with first and last name set.
+     */
+    protected Person getTermAsPerson() {
+        Person searchPerson = null;
+        if (StringUtils.isNotBlank(getTerm())) {
+            if (isEmailSearch()) {
+                searchPerson = configureEmailSearch();
+            } else {
+                searchPerson = configureNameSearch();
+            }
+        }
+
+        return searchPerson;
+    }
+
+    private boolean isEmailSearch() {
+        return EmailValidator.getInstance().isValid(getTerm());
+    }
+
+    private Person configureEmailSearch() {
+        Person searchPerson = new Person();
+        searchPerson.setEmail(getTerm());
+        return searchPerson;
+    }
+
+
+    private Person configureNameSearch() {
+        Person searchPerson = new Person();
+        String[] names = getTerm().split(",");
+        String firstName = "";
+        String lastName = "";
+        if (names.length > 0) {
+            lastName = names[0].trim();
+        }
+        if (names.length > 1) {
+            firstName = names[1].trim();
+        }
+        searchPerson.setLastName(lastName);
+        searchPerson.setFirstName(firstName);
+        return searchPerson;
+    }
 
     /**
      * @return Search Term with non-search characters removed.

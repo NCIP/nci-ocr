@@ -83,25 +83,24 @@
 
 package gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.opensymphony.xwork2.validator.annotations.RequiredFieldValidator;
+import com.opensymphony.xwork2.validator.annotations.Validations;
+
 import gov.nih.nci.firebird.security.Authenticator;
 import gov.nih.nci.firebird.security.CredentialsHandlerFactory;
 import gov.nih.nci.firebird.service.annual.registration.AnnualRegistrationService;
 import gov.nih.nci.firebird.service.annual.registration.RegistrationWithdrawalService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.web.action.AbstractAnnualRegistrationAction;
-
-import javax.security.auth.login.FailedLoginException;
-import javax.security.auth.login.LoginException;
-
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.InterceptorRef;
 import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.Result;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.opensymphony.xwork2.validator.annotations.RequiredFieldValidator;
-import com.opensymphony.xwork2.validator.annotations.Validations;
+import javax.security.auth.login.FailedLoginException;
+import javax.security.auth.login.LoginException;
 
 /**
  * Manages Withdrawing of Investigator Submissions.
@@ -191,6 +190,10 @@ public class WithdrawSubmissionAction extends AbstractAnnualRegistrationAction {
      */
     private boolean checkSecureConnection() {
         return getRequest().isSecure();
+    }
+
+    CredentialsHandlerFactory getCredentialsHandlerFactory() {
+        return credentialsHandlerFactory;
     }
 
     /**

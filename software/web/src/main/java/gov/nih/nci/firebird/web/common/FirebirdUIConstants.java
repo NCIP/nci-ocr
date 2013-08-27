@@ -119,6 +119,11 @@ public class FirebirdUIConstants {
     public static final String NAME_TABSET = "tabset";
 
     /**
+     * Request attribute name indicating a reload of page on close dialog.
+     */
+    public static final String RELOAD_PAGE = "reloadPage";
+
+    /**
      * Request attribute name indicating a reload of current display is necessary.
      */
     public static final String RELOAD = "reload";
@@ -172,5 +177,10 @@ public class FirebirdUIConstants {
      * Constant for storing / retrieving the current import job from the session.
      */
     public static final String PROTOCOL_IMPORT_JOB = "protocolImportJob";
+
+    /**
+     * Constant Struts result for forwarding to the error page.
+     */
+    public static final String RETURN_ERROR = "error";
 
 }

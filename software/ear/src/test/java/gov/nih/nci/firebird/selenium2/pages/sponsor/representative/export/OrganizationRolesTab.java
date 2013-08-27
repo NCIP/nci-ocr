@@ -82,16 +82,16 @@
  */
 package gov.nih.nci.firebird.selenium2.pages.sponsor.representative.export;
 
-import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.TableUtils;
+import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
+import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.util.List;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-
-import com.google.common.base.Function;
 
 /**
  * /sponsor/representative/export/ajax/view_persons_to_curate.jsp
@@ -129,13 +129,7 @@ public class OrganizationRolesTab extends AbstractExportCurationDataTab<Organiza
     }
 
     public List<OrganizationRoleListing> getListings() {
-        Function<WebElement, OrganizationRoleListing> transformation = new Function<WebElement, OrganizationRoleListing>() {
-            @Override
-            public OrganizationRoleListing apply(WebElement row) {
-                return new OrganizationRoleListing(row);
-            }
-        };
-        return JQueryUtils.transformDataTableRows(organizationRolesTable, transformation);
+        return FirebirdTableUtils.transformDataTableRows(this, organizationRolesTable, OrganizationRoleListing.class);
     }
 
     @Override
@@ -149,36 +143,42 @@ public class OrganizationRolesTab extends AbstractExportCurationDataTab<Organiza
         assertFindBysPresent();
     }
 
-    public class OrganizationRoleListing {
+    public class OrganizationRoleListing implements TableListing {
         
-        private static final int EXTERNAL_ID_COLUMN_INDEX = 0;
+        private static final int NES_ID_COLUMN_INDEX = 0;
         private static final int STRUCTURAL_ROLE_TYPE_COLUMN_INDEX = 1;
         private static final int PLAYER_ID_COLUMN_INDEX = 2;
         private static final int ORGANIZATION_NAME_COLUMN_INDEX = 3;
 
-        private final String externalId;
+        private final Long id;
+        private final String nesId;
         private final String roleType;
-        private final String organizationExternalId;
+        private final String organizationNesId;
         private final String organizationName;
 
         public OrganizationRoleListing(WebElement row) {
+            this.id = Long.valueOf(WebElementUtils.getId(row));
             List<WebElement> cells = TableUtils.getCells(row);
-            this.externalId = cells.get(EXTERNAL_ID_COLUMN_INDEX).getText();
+            this.nesId = cells.get(NES_ID_COLUMN_INDEX).getText();
             this.roleType = cells.get(STRUCTURAL_ROLE_TYPE_COLUMN_INDEX).getText();
-            this.organizationExternalId = cells.get(PLAYER_ID_COLUMN_INDEX).getText();
+            this.organizationNesId = cells.get(PLAYER_ID_COLUMN_INDEX).getText();
             this.organizationName = cells.get(ORGANIZATION_NAME_COLUMN_INDEX).getText();
         }
 
-        public String getExternalId() {
-            return externalId;
+        public Long getId() {
+            return id;
+        }
+
+        public String getNesId() {
+            return nesId;
         }
 
         public String getRoleType() {
             return roleType;
         }
 
-        public String getOrganizationExternalId() {
-            return organizationExternalId;
+        public String getOrganizationNesId() {
+            return organizationNesId;
         }
 
         public String getOrganizationName() {

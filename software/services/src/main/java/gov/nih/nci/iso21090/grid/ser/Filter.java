@@ -184,8 +184,6 @@ import org.xml.sax.helpers.AttributesImpl;
  * Source code for patched version of Filter with empty namespace fix in startElement. This can be removed when a new
  * version of PO JARs are made available that use the 2.1 or later iso-datatypes JARs.
  */
-@SuppressWarnings("ucd")
-// patch for NES integration functionality
 public class Filter implements ContentHandler {
     private final SerializationContext context;
 

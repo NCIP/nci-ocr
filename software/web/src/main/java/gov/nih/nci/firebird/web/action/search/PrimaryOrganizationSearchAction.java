@@ -82,8 +82,7 @@
  */
 package gov.nih.nci.firebird.web.action.search;
 
-import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchResult;
 
 import java.util.List;
 
@@ -107,8 +106,8 @@ public class PrimaryOrganizationSearchAction extends AbstractOrganizationSearchA
     }
 
     @Override
-    List<Organization> lookupSearchResults() {
-        return getOrganizationService().search(getTerm(), OrganizationRoleType.PRIMARY_ORGANIZATION);
+    List<OrganizationSearchResult> lookupSearchResults() {
+        return getOrganizationSearchService().searchForPracticeSites(getTerm());
     }
 
 }

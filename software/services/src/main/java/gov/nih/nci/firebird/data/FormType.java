@@ -133,8 +133,6 @@ public class FormType extends AbstractListItem {
      *
      * @param name the name of the form type
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public FormType(String name) {
         super(name);
         description = name;

@@ -132,6 +132,7 @@ public class SponsorRole implements Auditable {
     private FirebirdUser user;
     private Organization sponsor;
     private boolean delegate;
+    private boolean verified;
 
     SponsorRole() {
         // no-arg constructor required by Hibernate
@@ -292,11 +293,27 @@ public class SponsorRole implements Auditable {
     }
 
     /**
+     * @param nesId get group name for verified sponsor representatives for this NES ID
+     * @return the group name
+     */
+    public static String getVerifiedSponsorRepresentativeOrganizationGroupName(String nesId) {
+        return buildSponsorGroupName(nesId, false, true);
+    }
+
+    /**
      * @param sponsor get group name for verified sponsor delegates for this organization
      * @return the group name
      */
     public static String getVerifiedSponsorDelegateOrganizationGroupName(Organization sponsor) {
         return buildSponsorGroupName(sponsor, true, true);
+    }
+
+    /**
+     * @param nesId get group name for verified sponsor delegates for this NES ID
+     * @return the group name
+     */
+    public static String getVerifiedSponsorDelegateOrganizationGroupName(String nesId) {
+        return buildSponsorGroupName(nesId, true, true);
     }
 
     /**
@@ -332,11 +349,11 @@ public class SponsorRole implements Auditable {
     }
 
     private static String buildSponsorGroupName(Organization sponsor, boolean delegate, boolean verifiedGroup) {
-        return buildSponsorGroupName(sponsor.getExternalId(), delegate, verifiedGroup);
+        return buildSponsorGroupName(sponsor.getNesId(), delegate, verifiedGroup);
     }
 
-    private static String buildSponsorGroupName(String externalId, boolean delegate, boolean verifiedGroup) {
-        String externalIdExtesion = new NesId(externalId).getExtension();
+    private static String buildSponsorGroupName(String nesId, boolean delegate, boolean verifiedGroup) {
+        String nesIdExtesion = new NesId(nesId).getExtension();
         StringBuilder builder = new StringBuilder();
         if (verifiedGroup) {
             builder.append("verified_");
@@ -345,7 +362,7 @@ public class SponsorRole implements Auditable {
         if (delegate) {
             builder.append("delegate_");
         }
-        builder.append(externalIdExtesion);
+        builder.append(nesIdExtesion);
         return builder.toString();
     }
 
@@ -382,6 +399,21 @@ public class SponsorRole implements Auditable {
             builder.append(" Sponsors");
         }
         return builder.toString();
+    }
+
+    /**
+     * @return true if the user has been verified in Grid Grouper for this role
+     */
+    @Transient
+    public boolean isVerfied() {
+        return verified;
+    }
+
+    /**
+     * @param verified the verified to set
+     */
+    public void setVerified(boolean verified) {
+        this.verified = verified;
     }
 
 }

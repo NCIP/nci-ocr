@@ -159,7 +159,7 @@ public class ManageDegreeCredentialsAction extends AbstractManageCredentialsActi
     public String manageCredentialsAjaxEnter() {
         if (getPage() == null || FirebirdUIConstants.RETURN_SEARCH_PAGE.equals(getPage())) {
             setPage(FirebirdUIConstants.RETURN_SEARCH_PAGE);
-            setIssuingOrganizationExternalId(null);
+            setIssuerSearchKey(null);
         }
 
         return getPage();
@@ -174,7 +174,7 @@ public class ManageDegreeCredentialsAction extends AbstractManageCredentialsActi
     @Validations(
             customValidators = { @CustomValidator(type = "hibernate", fieldName = "degree.issuer", parameters = {
                 @ValidationParameter(name = "resourceKeyBase", value = "profile.organization"),
-                @ValidationParameter(name = "excludes", value = "externalId") }) },
+                @ValidationParameter(name = "excludes", value = "nesId") }) },
             requiredStrings = { @RequiredStringValidator(fieldName = "effectiveDate",
                     key = "error.effective.date.required.degree") },
             requiredFields = { @RequiredFieldValidator(

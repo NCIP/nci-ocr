@@ -87,7 +87,6 @@ import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
 import gov.nih.nci.firebird.data.ClinicalLaboratory;
 import gov.nih.nci.firebird.data.FormStatus;
-import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.data.InvitationStatus;
 import gov.nih.nci.firebird.data.LaboratoryCertificate;
 import gov.nih.nci.firebird.data.LaboratoryCertificateType;
@@ -107,9 +106,6 @@ import org.hibernate.Hibernate;
 public abstract class AbstractProtocolRegistrationBuilder<OBJECT_TYPE extends AbstractProtocolRegistration, BUILDER_TYPE extends AbstractProtocolRegistrationBuilder<?, ?>>
         extends AbstractDataComponentBuilder<OBJECT_TYPE> {
 
-    private static final EnumSet<FormTypeEnum> FORMS_WITH_PDF_OUTPUT = EnumSet.of(FormTypeEnum.CV,
-            FormTypeEnum.CTEP_FORM_1572, FormTypeEnum.FORM_1572, FormTypeEnum.FINANCIAL_DISCLOSURE_FORM,
-            FormTypeEnum.CTEP_FINANCIAL_DISCLOSURE_FORM, FormTypeEnum.SUPPLEMENTAL_INVESTIGATOR_DATA_FORM);
     private static final String FORM_COMMENTS_PREFIX = "I did not like this form: ";
 
     protected AbstractProtocolRegistrationBuilder(TargetGridResources gridResources, TestDataLoader dataLoader) {
@@ -173,25 +169,13 @@ public abstract class AbstractProtocolRegistrationBuilder<OBJECT_TYPE extends Ab
     @SuppressWarnings("unchecked")
     // Will always be BUILDER_TYPE
     public BUILDER_TYPE withAllFormsRejected() {
-        return withAllFormsGivenStatus(FormStatus.REJECTED);
-    }
-
-    @SuppressWarnings("unchecked")
-    // Will always be BUILDER_TYPE
-    public BUILDER_TYPE withAllFormsGivenStatus(FormStatus status) {
         for (AbstractRegistrationForm form : getRegistration().getForms()) {
             if (form.isReviewRequired()) {
-                setFormStatus(form, status);
+                form.setFormStatus(FormStatus.REJECTED);
+                form.setComments(FORM_COMMENTS_PREFIX + form.getFormType().getName());
             }
         }
         return (BUILDER_TYPE) this;
-    }
-
-    private void setFormStatus(AbstractRegistrationForm form, FormStatus status) {
-        form.setFormStatus(status);
-        if (status == FormStatus.REJECTED) {
-            form.setComments(FORM_COMMENTS_PREFIX + form.getFormType().getName());
-        }
     }
 
     @Override
@@ -212,16 +196,9 @@ public abstract class AbstractProtocolRegistrationBuilder<OBJECT_TYPE extends Ab
     private void addPdfFilesToForms() {
         for (AbstractRegistrationForm form : getRegistration().getForms()) {
             form.submitForm();
-            if (supportsPdfOutput(form)) {
-                form.setFlattenedPdf(FirebirdFileFactory.getInstance().create());
-                form.setSignedPdf(FirebirdFileFactory.getInstance().create());
-            }
+            form.setFlattenedPdf(FirebirdFileFactory.getInstance().create());
+            form.setSignedPdf(FirebirdFileFactory.getInstance().create());
         }
-    }
-
-    private boolean supportsPdfOutput(AbstractRegistrationForm form) {
-        FormTypeEnum formTypeEnum = form.getFormType().getFormTypeEnum();
-        return FORMS_WITH_PDF_OUTPUT.contains(formTypeEnum);
     }
 
     private void setFormsStatus(FormStatus status) {
@@ -250,16 +227,13 @@ public abstract class AbstractProtocolRegistrationBuilder<OBJECT_TYPE extends Ab
         Hibernate.initialize(registration.getAdditionalAttachmentsForm().getAdditionalAttachments());
         Hibernate.initialize(registration.getCurriculumVitaeForm());
         Hibernate.initialize(registration.getFinancialDisclosure());
-        Hibernate.initialize(registration.getFinancialDisclosure().getSupportingDocumentation());
         if (registration.isInvestigatorRegistration()) {
             Hibernate.initialize(registration.getForm1572().getPracticeSites());
             Hibernate.initialize(registration.getForm1572().getIrbs());
             Hibernate.initialize(registration.getForm1572().getLabs());
         }
         Hibernate.initialize(registration.getHumanResearchCertificateForm());
-        Hibernate.initialize(registration.getHumanResearchCertificateForm().getCertificates());
         Hibernate.initialize(registration.getProtocol().getAgents());
-        Hibernate.initialize(registration.getProfile());
     }
 
 }

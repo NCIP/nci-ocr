@@ -4,10 +4,14 @@
 
 <s:url value="/jqueryui" var="jqueryui" />
 <sj:head jquerytheme="custom-theme" customBasepath="%{jqueryui}" loadAtOnce="true" />
+<script type="text/javascript" language="javascript" src="<s:url value="/struts/i18n/grid.locale-en.js"/>"></script>
+<script type="text/javascript" language="javascript" src="<s:url value="/struts/js/plugins/jquery.jqGrid.js"/>"></script>
 <script type="text/javascript" language="javascript" src="<s:url value="/scripts/jquery.dataTables.min.js"/>"></script>
-<script type="text/javascript" language="javascript" src="<s:url value="/scripts/jquery.maskedinput-1.3.1.min.js"/>"></script>
+<script type="text/javascript" language="javascript" src="<s:url value="/scripts/jquery.maskedinput-1.3.min.js"/>"></script>
 <script type="text/javascript" language="javascript" src="<s:url value="/scripts/underscore-min.js"/>"></script>
+<script type="text/javascript" language="javascript" src="<s:url value="/scripts/jquery.ui.dialog.patch.js"/>"></script>
 <script type="text/javascript" src="<c:url value='/scripts/jquery.cookie.js'/>"></script>
+<link href="<c:url value='/struts/themes/ui.jqgrid.css'/>" rel="stylesheet" type="text/css" />
 <link href="<c:url value='/styles/demo_table.css'/>" rel="stylesheet" type="text/css" />
 
 <!--Dropdown Menus-->

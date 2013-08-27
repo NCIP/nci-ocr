@@ -32,7 +32,7 @@
             <interceptor name="parameterTrim"
                 class="com.fiveamsolutions.nci.commons.web.struts2.interceptor.ParameterTrimInterceptor" />
 
-            <interceptor name="firebirdExceptionHandler"
+            <interceptor name="exception"
                 class="gov.nih.nci.firebird.web.interceptor.FirebirdExceptionHandlingInterceptor" />
 
             <interceptor name="userRegistration" class="gov.nih.nci.firebird.web.interceptor.RegistrationRequiredInterceptor" />
@@ -40,6 +40,8 @@
             <interceptor name="registrationManagement" class="gov.nih.nci.firebird.web.interceptor.RegistrationManagementInterceptor" />
             <interceptor name="protocolManagement" class="gov.nih.nci.firebird.web.interceptor.ProtocolManagementInterceptor" />
             <interceptor name="sponsorRepresentativeProtocolManagement" class="gov.nih.nci.firebird.web.interceptor.SponsorRepresentativeProtocolManagementInterceptor" />
+            <interceptor name="annualRegistrationManagement" class="gov.nih.nci.firebird.web.interceptor.AnnualRegistrationManagementInterceptor" />
+            <interceptor name="sponsorRepresentativeAnnualRegistrationManagement" class="gov.nih.nci.firebird.web.interceptor.SponsorRepresentativeAnnualRegistrationManagementInterceptor" />
             <interceptor name="firebirdParams" class="gov.nih.nci.firebird.web.interceptor.FirebirdParametersInterceptor" />
 
             <interceptor name="showDisclaimer"
@@ -52,7 +54,6 @@
             <interceptor-stack name="firebirdPrePrepareStack">
                 <interceptor-ref name="logger"/>
                 <interceptor-ref name="exception" />
-                <interceptor-ref name="firebirdExceptionHandler" />
                 <interceptor-ref name="accountRequestRequired" />
                 <interceptor-ref name="showDisclaimer" />
                 <interceptor-ref name="userRegistration" />
@@ -152,10 +153,23 @@
                 <interceptor-ref name="firebirdPostPrepareStack" />
             </interceptor-stack>
 
+            <interceptor-stack name="annualRegistrationManagementStack">
+                <interceptor-ref name="firebirdPrePrepareStack" />
+                <interceptor-ref name="annualRegistrationManagement" />
+                <interceptor-ref name="prepare" />
+                <interceptor-ref name="firebirdPostPrepareStack" />
+            </interceptor-stack>
+
+            <interceptor-stack name="sponsorRepresentativeAnnualRegistrationManagementStack">
+                <interceptor-ref name="firebirdPrePrepareStack" />
+                <interceptor-ref name="sponsorRepresentativeAnnualRegistrationManagement" />
+                <interceptor-ref name="prepare" />
+                <interceptor-ref name="firebirdPostPrepareStack" />
+            </interceptor-stack>
+
             <interceptor-stack name="firebirdNoDisclaimerStack">
                 <interceptor-ref name="logger"/>
                 <interceptor-ref name="exception" />
-                <interceptor-ref name="firebirdExceptionHandler" />
                 <interceptor-ref name="alias" />
                 <interceptor-ref name="servletConfig" />
                 <interceptor-ref name="prepare" />
@@ -198,7 +212,6 @@
 
         <global-results>
             <result name="error">/WEB-INF/error.jsp</result>
-            <result name="remoteException">/WEB-INF/remoteException.jsp</result>
             <result name="profileAccessSuspended">/WEB-INF/suspended_from_profile.jsp</result>
             <result name="registrationAccessSuspended">/WEB-INF/suspended_from_registrations.jsp</result>
             <result name="accessDenied">/WEB-INF/403.jsp</result>
@@ -220,8 +233,6 @@
 
         <global-exception-mappings>
             <exception-mapping result="error" exception="java.lang.Throwable" />
-            <exception-mapping result="remoteException" exception="gov.nih.nci.firebird.common.RemoteServiceException" />
         </global-exception-mappings>
-
     </package>
 </struts>

@@ -114,8 +114,6 @@ public class Degree extends AbstractCredential<Degree> {
      * @param issuer issuer organization
      * @param degreeType degree type
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public Degree(InvestigatorProfile profile, Date effectiveDate, Organization issuer, DegreeType degreeType) {
         super(profile, effectiveDate, null, issuer);
         this.degreeType = degreeType;
@@ -176,7 +174,7 @@ public class Degree extends AbstractCredential<Degree> {
                 .append(getEffectiveDate(), degree2.getEffectiveDate()).append(getIssuer(), degree2.getIssuer())
                 .toComparison();
     }
-
+    
     @Override
     public DegreeSnapshot createSnapshot() {
         DegreeSnapshot snapshot = new DegreeSnapshot();

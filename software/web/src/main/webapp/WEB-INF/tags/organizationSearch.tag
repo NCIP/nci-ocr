@@ -69,24 +69,24 @@
                 },
                 aoColumns: [
                     {mDataProp: null, sWidth: 75, fnRender: function (obj) {
-                        return organizationSearch.createSelectButtonColumn(obj.aData.externalId, '<fmt:message key="button.select"/>');
+                        return organizationSearch.createSelectButtonColumn(obj.aData.organization.nesId, '<fmt:message key="button.select"/>');
                     }},
-                    {mDataProp: "name"},
+                    {mDataProp: "organization.name"},
                     {mDataProp: null, fnRender: function (obj) {
-                        return addressFormatter(obj.aData.postalAddress);
+                        return __addressFormatter(obj.aData.organization.postalAddress);
                     }},
-                    {mDataProp: "email"},
-                    {mDataProp: "postalAddress.streetAddress", bVisible: false},
-                    {mDataProp: "postalAddress.deliveryAddress", bVisible: false},
-                    {mDataProp: "postalAddress.city", bVisible: false},
-                    {mDataProp: "postalAddress.stateOrProvince", bVisible: false},
-                    {mDataProp: "postalAddress.postalCode", bVisible: false},
-                    {mDataProp: "postalAddress.country", bVisible: false},
-                    {mDataProp: "phoneNumber", bVisible: false},
-                    {mDataProp: "ctepId", bVisible: false}
+                    {mDataProp: "organization.email"},
+                    {mDataProp: "organization.postalAddress.streetAddress", bVisible: false},
+                    {mDataProp: "organization.postalAddress.deliveryAddress", bVisible: false},
+                    {mDataProp: "organization.postalAddress.city", bVisible: false},
+                    {mDataProp: "organization.postalAddress.stateOrProvince", bVisible: false},
+                    {mDataProp: "organization.postalAddress.postalCode", bVisible: false},
+                    {mDataProp: "organization.postalAddress.country", bVisible: false},
+                    {mDataProp: "organization.phoneNumber", bVisible: false},
+                    {mDataProp: "organization.ctepId", bVisible: false}
                 ],
-                fnRowCallback: function (nRow, organization) {
-                    return organizationSearch.completeRow(nRow, organization);
+                fnRowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+                    return organizationSearch.completeRow(nRow, aData.organization.nesId, aData.key, aData);
                 },
                 fnDrawCallback: function () {
                     organizationSearch.finishTable();

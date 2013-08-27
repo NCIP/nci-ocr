@@ -103,8 +103,6 @@ public class DegreeType extends AbstractListItem implements RankableListItem {
      * ctor.
      * @param name name of degree type.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public DegreeType(String name) {
         super(name);
     }

@@ -85,26 +85,17 @@ package gov.nih.nci.firebird.data;
 import static org.junit.Assert.*;
 import gov.nih.nci.firebird.common.ValidationResult;
 import gov.nih.nci.firebird.test.CredentialFactory;
-import gov.nih.nci.firebird.test.GuiceTestRunner;
-import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
 
-import java.util.ResourceBundle;
-
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import com.google.inject.Inject;
+import com.opensymphony.xwork2.interceptor.annotations.Before;
 
-@RunWith(GuiceTestRunner.class)
 public class ProtocolForm1572ValidatorTest extends AbstractRegistrationFormTest {
     private ProtocolForm1572 form;
     private InvestigatorRegistration registration;
     private ProtocolForm1572Validator validator;
-    @Inject
-    private ResourceBundle resources;
 
     @Before
     public void setUp() {
@@ -161,15 +152,15 @@ public class ProtocolForm1572ValidatorTest extends AbstractRegistrationFormTest 
         assertTrue(hasError(
                 result,
                 getErrorMessage("validation.failure.uncurated", irb.getOrganization().getName() + " role as "
-                        + irb.getRoleType().getDisplay(), form.getFormType().getName(), irb.getCurationStatus().getDisplay())));
+                        + irb.getRoleType().getDisplay(), form.getFormType().getName(), irb.getNesStatus().getDisplay())));
         assertTrue(hasError(
                 result,
                 getErrorMessage("validation.failure.uncurated", lab.getOrganization().getName() + " role as "
-                        + lab.getRoleType().getDisplay(), form.getFormType().getName(), lab.getCurationStatus().getDisplay())));
+                        + lab.getRoleType().getDisplay(), form.getFormType().getName(), lab.getNesStatus().getDisplay())));
         assertTrue(hasError(
                 result,
                 getErrorMessage("validation.failure.uncurated", site.getOrganization().getName() + " role as "
-                        + site.getRoleType().getDisplay(), form.getFormType().getName(), site.getCurationStatus()
+                        + site.getRoleType().getDisplay(), form.getFormType().getName(), site.getNesStatus()
                         .getDisplay())));
         assertTrue(hasError(result, getErrorMessage("validation.failure.missing.clinical.laboratory.certificate")));
         assertEquals(3, form.getInvalidEntityIds().size());
@@ -180,7 +171,7 @@ public class ProtocolForm1572ValidatorTest extends AbstractRegistrationFormTest 
 
     private Organization createUncuratedOrganization() {
         Organization organization = OrganizationFactory.getInstanceWithId().create();
-        organization.setCurationStatus(CurationStatus.PENDING);
+        organization.setNesStatus(CurationStatus.PENDING);
         return organization;
     }
 
@@ -189,7 +180,7 @@ public class ProtocolForm1572ValidatorTest extends AbstractRegistrationFormTest 
         ValidationResult result = new ValidationResult();
         registration.getProfile().addCredential(CredentialFactory.getInstance().createDegree("M.D.", true));
         Organization organization = OrganizationFactory.getInstance().create();
-        organization.setCurationStatus(CurationStatus.ACTIVE);
+        organization.setNesStatus(CurationStatus.ACTIVE);
         ClinicalLaboratory lab = (ClinicalLaboratory) registration.getProfile()
                 .addOrganizationAssociation(organization, OrganizationRoleType.CLINICAL_LABORATORY)
                 .getOrganizationRole();
@@ -213,41 +204,6 @@ public class ProtocolForm1572ValidatorTest extends AbstractRegistrationFormTest 
         validator.validate(result, getResources());
         assertTrue(result.isValid());
         assertTrue(form.getInvalidEntityIds().isEmpty());
-    }
-
-    @Test
-    public void testValidateCurationStatus_OrgRole() throws Exception {
-        ValidationResult result = new ValidationResult();
-        final InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
-
-        final Organization practiceSite = OrganizationFactory.getInstance().create();
-        final Organization lab = OrganizationFactory.getInstance().create();
-        final OrganizationAssociation uncuratedAssoc = profile.addOrganizationAssociation(practiceSite,
-                OrganizationRoleType.PRACTICE_SITE);
-        final OrganizationAssociation curatedAssoc = profile.addOrganizationAssociation(lab,
-                OrganizationRoleType.CLINICAL_LABORATORY);
-        practiceSite.setCurationStatus(CurationStatus.PENDING);
-
-        AbstractRegistrationForm form = registration.getForm1572();
-
-        result = new ValidationResult();
-        System.setProperty("registration.validation.require.nes.status.active", "false");
-        validator.validateCurationStatus(uncuratedAssoc.getOrganizationRole(), result, getResources());
-        assertTrue(result.isValid());
-        System.setProperty("registration.validation.require.nes.status.active", "true");
-
-        validator.validateCurationStatus(uncuratedAssoc.getOrganizationRole(), result, resources);
-        assertEquals(1, result.getFailures().size());
-        hasError(
-                result,
-                getErrorMessage("validation.failure.uncurated", practiceSite.getName() + " role as "
-                        + uncuratedAssoc.getType().getDisplay(), form.getFormType().getName(), uncuratedAssoc
-                        .getOrganizationRole().getCurationStatus().name()));
-        assertEquals(1, form.getInvalidEntityIds().size());
-        assertTrue(form.getInvalidEntityIds().contains(uncuratedAssoc.getOrganizationRole().getOrganization().getId()));
-        result = new ValidationResult();
-        validator.validateCurationStatus(curatedAssoc.getOrganizationRole(), result, resources);
-        assertEquals(0, result.getFailures().size());
     }
 
 }

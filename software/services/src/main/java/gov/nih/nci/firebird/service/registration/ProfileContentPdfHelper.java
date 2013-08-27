@@ -130,7 +130,7 @@ class ProfileContentPdfHelper {
     private static final String FELLOWSHIPS_TITLE_KEY = "pdf.fellowships.heading";
     private static final String LICENSES_TITLE_KEY = "pdf.licenses.heading";
     private static final String SPECIALTIES_TITLE_KEY = "pdf.specialties.heading";
-    private static final String INVESTIGATOR_EXTERNAL_ID_TITLE_KEY = "pdf.investigator.external.id.heading";
+    private static final String INVESTIGATOR_NES_ID_TITLE_KEY = "pdf.investigator.nes.id.heading";
     private static final String INVESTIGATOR_PROVIDER_NUMBER_TITLE_KEY = "pdf.investigator.provider.number.heading";
     private static final String INVESTIGATOR_PROVIDER_CTEP_ID_TITLE_KEY = "pdf.investigator.number.heading";
     private static final String NAME_TITLE_KEY = "pdf.name.heading";
@@ -153,9 +153,9 @@ class ProfileContentPdfHelper {
         return pdfGenerator.getInvestigator();
     }
 
-    void addInvestigatorExternalId(PdfPTable table, int index) {
-        table.addCell(pdfGenerator.createHeaderAndValueTableCell(index, INVESTIGATOR_EXTERNAL_ID_TITLE_KEY,
-                getInvestigator().getExternalId(), true));
+    void addInvestigatorNesId(PdfPTable table, int index) {
+        table.addCell(pdfGenerator.createHeaderAndValueTableCell(index, INVESTIGATOR_NES_ID_TITLE_KEY,
+                getInvestigator().getNesId(), true));
     }
 
     void addInvestigatorEmail(PdfPTable table, int index) {
@@ -182,7 +182,7 @@ class ProfileContentPdfHelper {
         addAddress(getInvestigator().getPostalAddress(), table, index);
     }
 
-    private void addAddress(Address address, PdfPTable table, int index) {
+    void addAddress(Address address, PdfPTable table, int index) {
         PdfPTable addressTable = pdfGenerator.createTable(AbstractPdfWriterGenerator.ONE_COLUMN);
         addressTable.addCell(pdfGenerator.createHeaderCell(index + ". "
                 + pdfGenerator.getFromResources(ADDRESS_TITLE_KEY)));
@@ -203,7 +203,7 @@ class ProfileContentPdfHelper {
         table.addCell(addressTableCell);
     }
 
-    private Organization getOrganization() {
+    Organization getOrganization() {
         if (getProfile().getPrimaryOrganization() != null) {
             return getProfile().getPrimaryOrganization().getOrganization();
         } else {
@@ -405,7 +405,7 @@ class ProfileContentPdfHelper {
                 pdfGenerator.formatMonthAndYearDate(specialty.getExpirationDate()));
     }
 
-    private void addAddressContent(Paragraph contents, Address address) {
+    void addAddressContent(Paragraph contents, Address address) {
         contents.add(pdfGenerator.getValueChunk(address.getStreetAddress()));
         if (StringUtils.isNotBlank(address.getDeliveryAddress())) {
             contents.add(Chunk.NEWLINE);

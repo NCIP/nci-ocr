@@ -52,7 +52,7 @@
                 buildInvestigatorsTable();
                 addAnyAndNoneOptionsToFilter();
                 addOnChangeToFilter();
-                selectRegistrationsWithStatus(notInvitedText);
+                selectInvestigatorsWithStatus(notInvitedText);
                 addButtonClickHandlers();
             });
 
@@ -79,8 +79,8 @@
                 } );
             }
 
-            function buildCheckBoxColumn(registration) {
-                var checkboxId = "selectRegistration_" + registration.id;
+            function buildCheckBoxColumn(investigator) {
+                var checkboxId = "selectInvestigator_" + investigator.id;
                 return createHiddenCheckboxLabel(checkboxId) + "<input type='checkbox' id='" + checkboxId + "' />";
             }
 
@@ -98,14 +98,14 @@
                             $("input:checkbox").attr('checked', 'checked');
                         } else {
                             $("input:checkbox").attr('checked', false);
-                            selectRegistrationsWithStatus(selectedStatus);
+                            selectInvestigatorsWithStatus(selectedStatus);
                         }
                         event.preventDefault();
                   }
                 });
             }
 
-            function selectRegistrationsWithStatus(selectedStatus) {
+            function selectInvestigatorsWithStatus(selectedStatus) {
                 $("tr").each(function(index) {
                     $(this).children("td").each(function(index) {
                         if ($(this).text().indexOf(selectedStatus) === 0) {
@@ -119,7 +119,7 @@
                 $("#inviteButton").click( function(){
                     disableDialog();
                     var formData = {};
-                    formData.invitedRegistrationIds = getSelectedRegistrationIds();
+                    formData.invitedRegistrations = getSelectedInvestigatorIds();
                     formData["protocol.id"] = '${protocol.id}';
                     formData["registration.id"] = '${registration.id}';
                     $.post(document.inviteForm.action, formData, function(data) {
@@ -133,12 +133,12 @@
                 });
             }
 
-            function getSelectedRegistrationIds() {
-                var registrationIds = new Array();
+            function getSelectedInvestigatorIds() {
+                var investigatorIds = new Array();
                 $("tr:has(input:checked)").each(function(index) {
-                    registrationId = $(this).attr("id");
-                    registrationIds.push(registrationId);
+                    investigatorId = $(this).attr("id");
+                    investigatorIds.push(investigatorId);
                 });
-                return registrationIds;
+                return investigatorIds;
             }
         </script>

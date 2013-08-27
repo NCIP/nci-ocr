@@ -118,8 +118,6 @@ public class ReviewRegistrationFormActionProcessor<T extends AbstractRegistratio
     /**
      * Maximum character count for comments.
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public static final int MAX_CHAR_COUNT = 1000;
     private static final EnumSet<FormTypeEnum> FORM_TYPES_WITH_ADDITIONAL_DOCS = EnumSet.of(FormTypeEnum.FORM_1572,
             FormTypeEnum.CTEP_FORM_1572, FormTypeEnum.CTEP_FINANCIAL_DISCLOSURE_FORM,
@@ -300,8 +298,7 @@ public class ReviewRegistrationFormActionProcessor<T extends AbstractRegistratio
     public String getAdditionalDocumentsJson() throws JSONException {
         Collection<?> additionalDocuments = getAdditionalDocuments();
         Collection<Pattern> excludes = Lists.newArrayList(Pattern.compile(".*\\.byteDataSource"),
-                Pattern.compile(".*\\.originalCertificate"), Pattern.compile(".*\\.roles"),
-                Pattern.compile(".*\\.certificates"));
+                Pattern.compile(".*\\.originalCertificate"));
         return JSONUtil.serialize(additionalDocuments, excludes, null, false, false);
     }
 

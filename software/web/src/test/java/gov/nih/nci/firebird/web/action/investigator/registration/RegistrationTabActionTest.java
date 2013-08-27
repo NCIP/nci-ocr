@@ -87,6 +87,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.AbstractCredential;
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
+import gov.nih.nci.firebird.data.AbstractRegistrationForm;
 import gov.nih.nci.firebird.data.Certification;
 import gov.nih.nci.firebird.data.CredentialType;
 import gov.nih.nci.firebird.data.FormType;
@@ -180,13 +181,6 @@ public class RegistrationTabActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testViewOverview_RegistrationDeleted() throws ValidationException {
-        action.setRegistration(new InvestigatorRegistration());
-        assertEquals(FirebirdUIConstants.RETURN_ACCESS_DENIED_ENTER, action.viewOverview());
-        verifyZeroInteractions(mockRegistrationService);
-    }
-
-    @Test
     public void testViewOverview_Locked() throws ValidationException {
         registration.setStatus(RegistrationStatus.INACTIVE);
         assertEquals(RegistrationTabAction.VIEW_OVERVIEW, action.viewOverview());
@@ -215,6 +209,26 @@ public class RegistrationTabActionTest extends AbstractWebTest {
     public void testViewProtocolInformation_NoRegistration() {
         action.setRegistration(new InvestigatorRegistration());
         assertEquals(FirebirdUIConstants.RETURN_ACCESS_DENIED_ENTER, action.viewProtocolInformation());
+    }
+
+    @Test
+    public void testGetRegistrationFormsJson() throws JSONException {
+        String actualJson = action.getRegistrationFormsJson();
+        for (AbstractRegistrationForm form : registration.getForms()) {
+            checkFormIncludedInJson(actualJson, form);
+        }
+    }
+
+    private void checkFormIncludedInJson(String actualJson, AbstractRegistrationForm form) throws JSONException {
+        assertTrue(actualJson.contains(form.getId().toString()));
+        assertTrue(actualJson.contains(form.getFormType().getId().toString()));
+        assertTrue(actualJson.contains(form.getFormType().getDescription()));
+        assertTrue(actualJson.contains(form.getFormOptionality().getDisplay()));
+        assertTrue(actualJson.contains(form.getFormType().getName().replaceAll(" ", "_")));
+        if (form.getComments() != null) {
+            assertTrue(actualJson.contains(form.getComments()));
+        }
+        assertTrue(actualJson.contains(form.getFormStatus().getDisplay()));
     }
 
     @Test

@@ -86,6 +86,7 @@ import static gov.nih.nci.firebird.commons.selenium2.support.IdentifiableCompone
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
 import gov.nih.nci.firebird.selenium2.pages.base.AbstractMenuPage;
 
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.CacheLookup;
@@ -99,6 +100,7 @@ public class RegistrationPacketPage extends AbstractMenuPage<RegistrationPacketP
     public static final IdentifiableComponentFactory<RegistrationPacketPage> FACTORY = createFactory(RegistrationPacketPage.class);
 
     private static final String OVERVIEW_TAB_LINK_CSS_SELECTOR = "#overviewTab > a";
+    private static final String REGISTRATON_FORM_ROWS_CSS_SELECTOR = ".registrationFormsTable > tbody > tr";
 
     @FindBy(tagName = "h2")
     @CacheLookup
@@ -123,7 +125,7 @@ public class RegistrationPacketPage extends AbstractMenuPage<RegistrationPacketP
     @Override
     public void assertLoaded() {
         super.assertLoaded();
-        assertFindBysPresent();
+        assertPresent(By.cssSelector(REGISTRATON_FORM_ROWS_CSS_SELECTOR));
     }
 
 }

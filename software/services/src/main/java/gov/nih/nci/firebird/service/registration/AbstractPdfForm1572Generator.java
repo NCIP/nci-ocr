@@ -119,9 +119,9 @@ abstract class AbstractPdfForm1572Generator extends AbstractPdfFormGenerator {
     private static final int MAXIMUM_LINES_IN_ORGANIZATIONS_FIELD = 2;
     private static final int MAXIMUM_LINES_IN_SUBINVESTIGATORS_FIELD = 5;
     static final String FIELD_OPTION_YES = "Yes";
-
+    
     private static final Logger LOG = Logger.getLogger(AbstractPdfForm1572Generator.class);
-
+    
     private final ResourceBundle resources;
 
     AbstractPdfForm1572Generator(AbstractRegistration registration, PdfService pdfService,
@@ -137,25 +137,25 @@ abstract class AbstractPdfForm1572Generator extends AbstractPdfFormGenerator {
         values.setValue(Form1572Field.CV_CHECKBOX, FIELD_OPTION_YES);
         setValue(
                 values,
-                Form1572Field.PRACTICE_SITES_TEXT,
-                getAssociatedOrganizationText(PRACTICE_SITE),
+                Form1572Field.PRACTICE_SITES_TEXT, 
+                getAssociatedOrganizationText(PRACTICE_SITE, true),
                 MAXIMUM_LINES_IN_ORGANIZATIONS_FIELD,
                 resources.getString("form1572.practice_sites.header"));
         setValue(
                 values,
-                Form1572Field.CLINCIAL_LABS_TEXT,
-                getAssociatedOrganizationText(CLINICAL_LABORATORY),
+                Form1572Field.CLINCIAL_LABS_TEXT, 
+                getAssociatedOrganizationText(CLINICAL_LABORATORY, false),
                 MAXIMUM_LINES_IN_ORGANIZATIONS_FIELD,
                 resources.getString("form1572.labs.header"));
         setValue(
                 values,
-                Form1572Field.IRB_TEXT,
-                getAssociatedOrganizationText(IRB),
+                Form1572Field.IRB_TEXT, 
+                getAssociatedOrganizationText(IRB, false),
                 MAXIMUM_LINES_IN_ORGANIZATIONS_FIELD,
                 resources.getString("form1572.irbs.header"));
         setValue(
                 values,
-                Form1572Field.SUBINVESTIGATORS_TEXT,
+                Form1572Field.SUBINVESTIGATORS_TEXT, 
                 getSubinvestigatorsFieldText(),
                 MAXIMUM_LINES_IN_SUBINVESTIGATORS_FIELD,
                 resources.getString("form1572.subinvestigators.header"));
@@ -164,7 +164,7 @@ abstract class AbstractPdfForm1572Generator extends AbstractPdfFormGenerator {
         return values;
     }
 
-    private void setValue(PdfFormValues values, Form1572Field field, String value, int maximumLinesInField,
+    void setValue(PdfFormValues values, Form1572Field field, String value, int maximumLinesInField, 
             String fieldHeader) {
         List<String> lines = Lists.newArrayList(Splitter.on(NEWLINE).split(value));
         if (lines.size() <= maximumLinesInField) {
@@ -193,7 +193,7 @@ abstract class AbstractPdfForm1572Generator extends AbstractPdfFormGenerator {
 
     abstract String getProtocolText();
 
-    private String getInvestigatorNameAndAddress() {
+    String getInvestigatorNameAndAddress() {
         StringBuilder sb = new StringBuilder();
         sb.append(getInvestigator().getDisplayName());
         sb.append(NEWLINE);
@@ -201,13 +201,13 @@ abstract class AbstractPdfForm1572Generator extends AbstractPdfFormGenerator {
         return sb.toString();
     }
 
-    private String getAssociatedOrganizationText(final OrganizationRoleType organizationType) {
+    String getAssociatedOrganizationText(OrganizationRoleType organizationType, final boolean includeCtepId) {
         Set<Organization> organizations = ((Form1572) getForm()).getAssociatedOrganizations(organizationType);
         Iterable<String> organizationLines = Iterables.transform(organizations,
             new Function<Organization, String>() {
                 @Override
                 public String apply(Organization organization) {
-                    return getOrganizationLine(organization, organizationType);
+                    return getOrganizationLine(organization, includeCtepId);
                 }
         });
         return Joiner.on(NEWLINE).join(organizationLines);
@@ -215,24 +215,25 @@ abstract class AbstractPdfForm1572Generator extends AbstractPdfFormGenerator {
 
     abstract String getSubinvestigatorsFieldText();
 
-    private String getOrganizationLine(Organization organization, OrganizationRoleType organizationType) {
+    private String getOrganizationLine(Organization organization, boolean includeCtepId) {
         StringBuilder sb = new StringBuilder();
         sb.append(organization.getName());
         sb.append(", ");
         sb.append(organization.getPostalAddress().toOneLineString());
-        if (organizationType == OrganizationRoleType.PRACTICE_SITE) {
-            addPracticeSiteFields(organization, sb);
+        if (includeCtepId && !isEmpty(organization.getCtepId())) {
+            sb.append(", " + organization.getCtepId());
         }
+        addOhrpNumberIfNecessary(sb, organization);
         return sb.toString();
     }
 
-    private void addPracticeSiteFields(Organization organization, StringBuilder sb) {
-        if (!isEmpty(organization.getCtepId())) {
-            sb.append(", " + organization.getCtepId());
-        }
-        PracticeSite practiceSite = (PracticeSite) organization.getRole(OrganizationRoleType.PRACTICE_SITE);
-        if (practiceSite != null && !isEmpty(practiceSite.getOhrpAssuranceNumber())) {
-            sb.append(", " + practiceSite.getOhrpAssuranceNumber());
+    private void addOhrpNumberIfNecessary(StringBuilder sb, Organization organization) {
+        if (organization.getRole(OrganizationRoleType.PRACTICE_SITE) != null) {
+            String ohrpNumber = ((PracticeSite) organization.getRole(OrganizationRoleType.PRACTICE_SITE))
+                    .getOhrpAssuranceNumber();
+            if (!isEmpty(ohrpNumber)) {
+                sb.append(", " + ohrpNumber);
+            }
         }
     }
 

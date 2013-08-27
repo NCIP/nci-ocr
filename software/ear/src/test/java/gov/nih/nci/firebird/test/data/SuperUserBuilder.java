@@ -87,7 +87,7 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.PrimaryOrganization;
 import gov.nih.nci.firebird.data.PrimaryOrganizationType;
 import gov.nih.nci.firebird.test.LoginAccount;
-import gov.nih.nci.firebird.test.nes.ExternalEntityTestDataSource;
+import gov.nih.nci.firebird.test.nes.NesTestDataSource;
 import gov.nih.nci.firebird.test.nes.TargetGridResources;
 
 import java.util.Iterator;
@@ -113,11 +113,11 @@ public class SuperUserBuilder extends AbstractFirebirdUserBuilder<SuperUserBuild
     }
 
     private Organization getNesOrganization() {
-        return getTestDataSource().getOrganization();
+        return getNesDataSource().getOrganization();
     }
 
-    private ExternalEntityTestDataSource getTestDataSource() {
-        return getGridResources().getTestDataSource();
+    private NesTestDataSource getNesDataSource() {
+        return getGridResources().getNesTestDataSource();
     }
 
 }

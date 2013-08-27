@@ -99,7 +99,5 @@ public interface CertifyingBoard<T extends Specialty<?>> extends ListItem {
     /**
      * @param specialties the specialties to set
      */
-    @SuppressWarnings("ucd")
-    // setter required by hibernate
     void setSpecialties(List<T> specialties);
 }

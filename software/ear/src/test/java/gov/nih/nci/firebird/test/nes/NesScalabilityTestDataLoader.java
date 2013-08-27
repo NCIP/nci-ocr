@@ -88,7 +88,7 @@ import gov.nih.nci.coppa.services.structuralroles.healthcarefacility.common.Heal
 import gov.nih.nci.coppa.services.structuralroles.oversightcommittee.common.OversightCommitteeI;
 import gov.nih.nci.firebird.nes.organization.IdentifiedOrganizationIntegrationService;
 import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
-import gov.nih.nci.firebird.service.person.external.ExternalPersonService;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
 
 import java.io.File;
 import java.util.Set;
@@ -107,21 +107,21 @@ public class NesScalabilityTestDataLoader extends NesTestDataLoader {
             Provider<HealthCareFacilityI> healthCareFacilityProvider,
             Provider<OversightCommitteeI> oversightCommitteeProvider,
             NesOrganizationIntegrationServiceFactory nesServiceFactory,
-            ExternalPersonService nesPersonService,
+            NesPersonIntegrationService nesPersonIntegrationService,
             IdentifiedOrganizationIntegrationService identifiedOrganizationService,
             @Named("nes.service.hostname") String nesHostname,
-            @Named("scalability.test.cached.external.organization.count") int requestedOrganizationCount,
-            @Named("scalability.test.cached.external.person.count") int requestedPersonCount,
-            @Named("scalability.test.cached.external.practiceSite.count") int requestedPracticeSiteCount,
+            @Named("scalability.test.cached.nes.organization.count") int requestedOrganizationCount,
+            @Named("scalability.test.cached.nes.person.count") int requestedPersonCount,
+            @Named("scalability.test.cached.nes.practiceSite.count") int requestedPracticeSiteCount,
             @Named("scalability.test.cached.nes.clinicalLab.count") int requestedClinicalLabCount,
-            @Named("scalability.test.cached.external.irb.count") int requestedIrbCount,
-            @Named("sponsor.organization.with.protocol.registrations.nes.ids") Set<String> protocolSponsorExternalIds,
-            @Named("sponsor.organization.with.annual.registrations.nes.id") String annualRegistrationSponsorExternalId) {
+            @Named("scalability.test.cached.nes.irb.count") int requestedIrbCount,
+            @Named("sponsor.organization.with.protocol.registrations.nes.ids") Set<String> protocolSponsorNesIds,
+            @Named("sponsor.organization.with.annual.registrations.nes.id") String annualRegistrationSponsorNesId) {
         super(personServiceProvider, organizationServiceProvider, healthCareFacilityProvider,
-                oversightCommitteeProvider, nesServiceFactory, nesPersonService,
+                oversightCommitteeProvider, nesServiceFactory, nesPersonIntegrationService,
                 identifiedOrganizationService, nesHostname, requestedOrganizationCount, requestedPersonCount,
-                requestedPracticeSiteCount, requestedClinicalLabCount, requestedIrbCount, protocolSponsorExternalIds,
-                annualRegistrationSponsorExternalId);
+                requestedPracticeSiteCount, requestedClinicalLabCount, requestedIrbCount, protocolSponsorNesIds,
+                annualRegistrationSponsorNesId);
     }
 
     @Override

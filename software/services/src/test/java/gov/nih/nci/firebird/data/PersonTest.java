@@ -93,14 +93,15 @@ public class PersonTest {
     public void testCreateSnapshot() {
         Person person = PersonFactory.getInstanceWithId().create();
         PersonSnapshot snapshot = person.createSnapshot();
-
+        
         assertEquals(person.getCtepId(), snapshot.getCtepId());
         assertEquals(person.getEmail(), snapshot.getEmail());
         assertEquals(person.getFirstName(), snapshot.getFirstName());
         assertEquals(person.getLastName(), snapshot.getLastName());
+        assertEquals(person.getLastNesRefresh(), snapshot.getLastNesRefresh());
         assertEquals(person.getMiddleName(), snapshot.getMiddleName());
-        assertEquals(person.getExternalId(), snapshot.getExternalId());
-        assertEquals(person.getCurationStatus(), snapshot.getCurationStatus());
+        assertEquals(person.getNesId(), snapshot.getNesId());
+        assertEquals(person.getNesStatus(), snapshot.getNesStatus());
         assertEquals(person.getPhoneNumber(), snapshot.getPhoneNumber());
         assertEquals(person.getPostalAddress(), snapshot.getPostalAddress());
         assertEquals(person.getPrefix(), snapshot.getPrefix());

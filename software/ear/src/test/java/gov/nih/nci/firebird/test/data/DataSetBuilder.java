@@ -172,10 +172,6 @@ public class DataSetBuilder {
 
     public SubinvestigatorRegistrationBuilder createSubinvestigatorRegistration() {
         InvestigatorRegistration primaryRegistration = createRegistration().complete().get();
-        return createSubinvestigatorRegistration(primaryRegistration);
-    }
-
-    public SubinvestigatorRegistrationBuilder createSubinvestigatorRegistration(InvestigatorRegistration primaryRegistration) {
         FirebirdUser subinvestigator = createInvestigatorWithCompleteProfile().get();
         return createSubinvestigatorRegistration(subinvestigator, primaryRegistration);
     }
@@ -216,7 +212,7 @@ public class DataSetBuilder {
         }
         dataLoader.save(objectsToSave);
         getDataLoader().closeSession();
-        return new DataSet(dataLoader, credentialTypesData, formTypesData, componentBuilders);
+        return new DataSet(dataLoader, credentialTypesData, componentBuilders);
     }
 
     public SponsorBuilder createSponsor() {

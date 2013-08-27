@@ -98,7 +98,7 @@ import com.google.inject.Inject;
 /**
  * Translates between NES OversightCommittee and FIREBIRD Organization objects.
  */
-class OversightCommitteeTranslator extends AbstractCorrelationTranslator {
+public class OversightCommitteeTranslator extends AbstractCorrelationTranslator {
 
     @Inject
     OversightCommitteeTranslator(OrganizationNameTranslator nameTranslator, NesTranslatorHelper translatorHelper) {
@@ -107,13 +107,10 @@ class OversightCommitteeTranslator extends AbstractCorrelationTranslator {
 
     OversightCommittee toOversightCommittee(Organization organization, OversightCommitteeType type) {
         OversightCommittee oversightCommittee = new OversightCommittee();
-        if (organization.hasExternalRecord()) {
-            OversightCommitteeData oversightCommitteeData = (OversightCommitteeData) organization.getExternalData();
-            handleIdentifier(oversightCommittee, oversightCommitteeData.getExternalId());
-            handlePlayerIdentifier(oversightCommittee, oversightCommitteeData.getPlayerId());
-        }
+        handleIdentifier(oversightCommittee, organization.getNesId());
+        handlePlayerIdentifier(oversightCommittee, organization.getPlayerIdentifier());
         oversightCommittee.setTypeCode(toCd(type));
-        oversightCommittee.setStatus(getTranslatorHelper().toStatusCode(organization.getCurationStatus()));
+        oversightCommittee.setStatus(getTranslatorHelper().toStatusCode(organization.getNesStatus()));
         return oversightCommittee;
     }
 
@@ -136,22 +133,18 @@ class OversightCommitteeTranslator extends AbstractCorrelationTranslator {
     Organization toFirebirdOrganization(OversightCommittee oversightCommittee,
             gov.nih.nci.coppa.po.Organization player) {
         Organization firebirdOrganization = new Organization();
-        OversightCommitteeData oversightCommitteeData = new OversightCommitteeData();
-        oversightCommitteeData.setExternalId(getTranslatorHelper().toNesIdString(getIi(oversightCommittee)));
-        oversightCommitteeData.setPlayerId(getTranslatorHelper().toNesIdString(
+        firebirdOrganization.setNesId(getTranslatorHelper().toNesIdString(getIi(oversightCommittee)));
+        firebirdOrganization.setPlayerIdentifier(getTranslatorHelper().toNesIdString(
                 oversightCommittee.getPlayerIdentifier()));
-        String typeCode = oversightCommittee.getTypeCode().getCode();
-        oversightCommitteeData.setOversightCommitteeType(OversightCommitteeType.getByCode(typeCode));
-        firebirdOrganization.setExternalData(oversightCommitteeData);
         firebirdOrganization.setName(toFirebirdName(player.getName()));
         firebirdOrganization.setPostalAddress(getAddress(player.getPostalAddress()));
         firebirdOrganization.setEmail(getTranslatorHelper().getEmail(player.getTelecomAddress()));
         firebirdOrganization.setPhoneNumber(getTranslatorHelper().getPhoneNumber(player.getTelecomAddress()));
-        firebirdOrganization.setCurationStatus(getTranslatorHelper().toCurationStatus(oversightCommittee.getStatus()));
+        firebirdOrganization.setNesStatus(getTranslatorHelper().toCurationStatus(oversightCommittee.getStatus()));
         return firebirdOrganization;
     }
 
-    private Address getAddress(AD playerPostalAddress) {
+    Address getAddress(AD playerPostalAddress) {
         return getTranslatorHelper().toAddress(playerPostalAddress);
     }
 

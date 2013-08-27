@@ -12,7 +12,9 @@
 </h2>
 <s:if test="profile.person.updatePending">
     <div id="pendingUpdateMessage" class="pageAlert">
-        <fmt:message key="profile.pending.person.updates.message"/>
+        <fmt:message key="profile.pending.person.updates.message">
+            <fmt:param value="${profile.person.updateRequested}"/>
+        </fmt:message>
     </div>
 </s:if>
 <firebird:viewPerson person="${profile.person}" showProviderNumber="true" showCtepId="true" ctepIdLabelKey="label.nci.investigator.number"/>

@@ -129,28 +129,28 @@ public abstract class AbstractDataComponentBuilder<T extends PersistentObject> {
     abstract T getObject();
 
     Organization getSponsorOrganization() {
-        String sponsorExternalId = gridResources.getValidSponsorExternalId();
-        return retrieveSponsorOrganization(sponsorExternalId);
+        String sponsorNesId = gridResources.getValidSponsorNesId();
+        return retrieveSponsorOrganization(sponsorNesId);
     }
 
-    Organization retrieveSponsorOrganization(String sponsorExternalId) {
-        return (Organization) dataLoader.retrieve("from " + Organization.class.getName() + " where externalData.externalId = ?",
-                sponsorExternalId);
+    Organization retrieveSponsorOrganization(String sponsorNesId) {
+        return (Organization) dataLoader.retrieve("from " + Organization.class.getName() + " where nesId = ?",
+                sponsorNesId);
     }
 
     Organization getSponsorWithAnnualRegistrationsOrganization() {
-        String sponsorExternalId = gridResources.getSponsorWithAnnualRegistrationsExternalId();
-        return retrieveSponsorOrganization(sponsorExternalId);
+        String sponsorNesId = gridResources.getSponsorWithAnnualRegistrationsNesId();
+        return retrieveSponsorOrganization(sponsorNesId);
     }
 
     Organization getSponsorWithProtocolRegistrationsOrganization() {
-        String sponsorExternalId = Iterables.getLast(gridResources.getSponsorWithProtocolRegistrationsExternalIds());
-        return retrieveSponsorOrganization(sponsorExternalId);
+        String sponsorNesId = Iterables.getLast(gridResources.getSponsorWithProtocolRegistrationsNesIds());
+        return retrieveSponsorOrganization(sponsorNesId);
     }
 
     Set<Organization> getSponsorsWithProtocolRegistrationsOrganization() {
         Set<Organization> sponsors = Sets.newHashSet();
-        Set<String> sponsorIds = gridResources.getSponsorWithProtocolRegistrationsExternalIds();
+        Set<String> sponsorIds = gridResources.getSponsorWithProtocolRegistrationsNesIds();
         for (String sponsorId : sponsorIds) {
             sponsors.add(retrieveSponsorOrganization(sponsorId));
         }

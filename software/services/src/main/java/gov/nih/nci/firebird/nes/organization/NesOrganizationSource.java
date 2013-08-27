@@ -91,7 +91,7 @@ import java.util.Map;
 /**
  * Enumeration of the OID roots from NES used in the application.
  */
-enum NesOrganizationSource {
+public enum NesOrganizationSource {
 
     /**
      * NCI organization entity service.
@@ -136,7 +136,7 @@ enum NesOrganizationSource {
      * @param root get organization source service matching this root
      * @return the service enum.
      */
-    static NesOrganizationSource getByRoot(NesIIRoot root) {
+    public static NesOrganizationSource getByRoot(NesIIRoot root) {
         return serviceMap.get(root);
     }
 

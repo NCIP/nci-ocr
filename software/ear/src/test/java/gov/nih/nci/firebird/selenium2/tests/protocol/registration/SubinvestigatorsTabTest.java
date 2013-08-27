@@ -109,8 +109,7 @@ import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.Faili
 import gov.nih.nci.firebird.selenium2.pages.util.FirebirdEmailUtils;
 import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
 import gov.nih.nci.firebird.test.PersonFactory;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
 
 import java.util.Iterator;
 import java.util.List;
@@ -126,39 +125,30 @@ import org.junit.Test;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 
 public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
 
-    @Inject
-    private DataSetBuilder builder;
-    private DataSet dataSet;
+    private InvestigatorRegistrationTestDataSet dataSet;
     private SubinvestigatorsTab subinvestigatorsTab;
 
     @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        InvestigatorRegistration primaryRegistration = builder.createRegistration().complete().withStatus(RegistrationStatus.COMPLETED).get();
-        builder.createSubinvestigatorRegistration(primaryRegistration);
-        dataSet = builder.build();
+        dataSet = InvestigatorRegistrationTestDataSet.createReadyForSubmissionNoMd(getDataLoader(), getGridResources());
         goToSubinvestigatorsTab();
     }
 
     private void deleteSubinvestigatorRegistrations() {
-        dataSet.delete(getOnlySubinvestigatorRegistration());
-    }
-
-    private SubInvestigatorRegistration getOnlySubinvestigatorRegistration() {
-        return Iterables.getOnlyElement(dataSet.getInvestigatorRegistration().getSubinvestigatorRegistrations());
+        dataSet.delete(Iterables.getOnlyElement(dataSet.getRegistration().getSubinvestigatorRegistrations()));
     }
 
     private void goToSubinvestigatorsTab() {
         HomePage homePage = openLoginPage().getHelper().goToHomePage(dataSet.getInvestigatorLogin(), getProvider());
         BrowseRegistrationsPage browseRegistrationsPage = homePage.getInvestigatorMenu().clickProtocolRegistrations();
         RegistrationOverviewTab overviewTab = browseRegistrationsPage.getHelper()
-                .getRegistrationListing(dataSet.getInvestigatorRegistration()).clickRegistrationLink();
-        overviewTab.getPage().getHelper().checkRegistrationPageHeader(dataSet.getInvestigatorRegistration());
+                .getRegistrationListing(dataSet.getRegistration()).clickRegistrationLink();
+        overviewTab.getPage().getHelper().checkRegistrationPageHeader(dataSet.getRegistration());
         subinvestigatorsTab = overviewTab.getPage().clickSubinvestigatorsTab();
     }
 
@@ -170,12 +160,13 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
 
     private void performRemoveSubinvestigatorTest(RegistrationStatus primaryRegistrationStatus,
             RegistrationStatus subInvestigatorRegistrationStatus, FormStatus expected1572Status) {
-        dataSet.getInvestigatorRegistration().setStatus(primaryRegistrationStatus);
-        SubInvestigatorRegistration subinvestigatorRegistration = getOnlySubinvestigatorRegistration();
+        dataSet.getRegistration().setStatus(primaryRegistrationStatus);
+        SubInvestigatorRegistration subinvestigatorRegistration = Iterables.getOnlyElement(dataSet.getRegistration()
+                .getSubinvestigatorRegistrations());
         subinvestigatorRegistration.setStatus(subInvestigatorRegistrationStatus);
-        dataSet.update(dataSet.getInvestigatorRegistration(), subinvestigatorRegistration);
+        dataSet.update(dataSet.getRegistration(), subinvestigatorRegistration);
         RegistrationOverviewTab overviewTab = subinvestigatorsTab.getPage().clickHome().getInvestigatorMenu()
-                .clickProtocolRegistrations().getHelper().getRegistrationListing(dataSet.getInvestigatorRegistration())
+                .clickProtocolRegistrations().getHelper().getRegistrationListing(dataSet.getRegistration())
                 .clickRegistrationLink();
         SubinvestigatorsTab subInvestigatorsTab = overviewTab.getPage().clickSubinvestigatorsTab();
         ConfirmDialog confirmDialog = subInvestigatorsTab.getHelper()
@@ -188,8 +179,8 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
 
     private void checkForm1572Status(SubinvestigatorsTab subInvestigatorsTab, FormStatus expectedStatus) {
         RegistrationOverviewTab overviewTab = subInvestigatorsTab.getPage().clickOverviewTab();
-        String actualStatus = overviewTab.getHelper().getFormListing(dataSet.getInvestigatorRegistration().getForm1572())
-                .getFormStatus();
+        String actualStatus = overviewTab.getHelper().getFormListing(dataSet.getRegistration().getForm1572())
+                .getStatus();
         assertEquals(expectedStatus.getDisplay(), actualStatus);
     }
 
@@ -241,12 +232,12 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
         addAssociatedSubinvestigator(personAssociationsTab);
         goToSubinvestigatorsTab();
         dataSet.reload();
-        return dataSet.getInvestigator().getInvestigatorRole().getProfile().getSubInvestigators();
+        return dataSet.getInvestigatorUser().getInvestigatorRole().getProfile().getSubInvestigators();
     }
 
     private void addAssociatedSubinvestigator(SubInvestigatorAssociationsTab personAssociationsTab) {
         SubInvestigatorAssociationFormDialog addNewAssociationDialog = personAssociationsTab.clickAddNew();
-        addNewAssociationDialog.getHelper().searchAndSelectPerson(getExistingExternalPerson());
+        addNewAssociationDialog.getHelper().searchAndSelectPerson(getExistingNesPerson());
     }
 
     private void checkDialogContainsSubinvestigators(ProfileSubinvestigatorsDialog dialog,
@@ -270,7 +261,7 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
     @Test
     public void testAddNew() {
         deleteSubinvestigatorRegistrations();
-        final Person person = dataSet.getInvestigatorRegistration().getProfile().getPerson();
+        final Person person = dataSet.getRegistration().getProfile().getPerson();
         dataSet.reload();
 
         addPerson(subinvestigatorsTab, person);
@@ -282,7 +273,8 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
         ExpectedValidationFailure expectedValidationFailure = new ExpectedValidationFailure(
                 "registration.subinvestigator.add.duplicate", person.getDisplayName());
         addPerson(subinvestigatorsTab, person, expectedValidationFailure);
-        removeAndVerifyPerson(subinvestigatorsTab, getOnlySubinvestigatorRegistration());
+        removeAndVerifyPerson(subinvestigatorsTab,
+                Iterables.getOnlyElement(dataSet.getRegistration().getSubinvestigatorRegistrations()));
         addNewSubInvestigator(subinvestigatorsTab);
     }
 
@@ -307,12 +299,13 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
         List<SubinvestigatorsTab.SubinvestigatorListing> subInvestigatorListings = subinvestigatorsTab
                 .getSubinvestigatorListings();
         assertEquals(1, subInvestigatorListings.size());
-        SubInvestigatorRegistration registration = getOnlySubinvestigatorRegistration();
+        SubInvestigatorRegistration registration = Iterables.getOnlyElement(dataSet.getRegistration()
+                .getSubinvestigatorRegistrations());
         subInvestigatorsPage.getHelper().areEquivalent(subInvestigatorListings.get(0), registration);
     }
 
     private void checkPersonAddedToRegistration(Person person) {
-        for (SubInvestigator subInvestigator : dataSet.getInvestigatorRegistration().getProfile().getSubInvestigators()) {
+        for (SubInvestigator subInvestigator : dataSet.getRegistration().getProfile().getSubInvestigators()) {
             if (subInvestigator.getPerson().getId().equals(person.getId())) {
                 return;
             }
@@ -328,7 +321,7 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
                 .getSubinvestigatorListings();
         assertTrue(subInvestigatorListings.isEmpty());
         dataSet.reload();
-        assertTrue(dataSet.getInvestigatorRegistration().getSubinvestigatorRegistrations().isEmpty());
+        assertTrue(dataSet.getRegistration().getSubinvestigatorRegistrations().isEmpty());
     }
 
     private void addNewSubInvestigator(SubinvestigatorsTab subinvestigatorTab) {
@@ -341,8 +334,8 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
                 .getSubinvestigatorListings();
         assertEquals(1, subInvestigatorListings.size());
         dataSet.reload();
-        Person subinvestigator = Iterables.getOnlyElement(dataSet.getInvestigatorRegistration().getSubinvestigators());
-        assertEquals(CurationStatus.PENDING, subinvestigator.getCurationStatus());
+        Person subinvestigator = Iterables.getOnlyElement(dataSet.getRegistration().getSubinvestigators());
+        assertEquals(CurationStatus.PENDING, subinvestigator.getNesStatus());
     }
 
     @Test
@@ -353,7 +346,7 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
 
         List<ProfileSubinvestigatorsDialog.SubinvestigatorListing> subinvestigatorListings = addDialog
                 .getSubinvestigatorListings();
-        assertEquals(3, subinvestigatorListings.size());
+        assertEquals(2, subinvestigatorListings.size());
         subinvestigatorListings.get(0).select();
         subinvestigatorListings.get(1).select();
         addDialog.clickSave();
@@ -372,7 +365,7 @@ public class SubinvestigatorsTabTest extends AbstractFirebirdWebDriverTest {
         Long invitedSubinvestigatorId = inviteListings.get(0).getId();
         inviteDialog.clickSendInvitations();
 
-        InvestigatorRegistration registration = reloadRegistration(dataSet.getInvestigatorRegistration());
+        InvestigatorRegistration registration = reloadRegistration(dataSet.getRegistration());
         List<SubinvestigatorsTab.SubinvestigatorListing> subinvestigatorsTable = subinvestigatorsTab
                 .getSubinvestigatorListings();
         for (SubinvestigatorsTab.SubinvestigatorListing row : subinvestigatorsTable) {

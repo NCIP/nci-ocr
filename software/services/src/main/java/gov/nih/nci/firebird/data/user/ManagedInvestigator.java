@@ -171,8 +171,6 @@ public class ManagedInvestigator implements PersistentObject {
         return id;
     }
 
-    @SuppressWarnings("ucd")
-    // setter required by hibernate, used in tests
     void setId(Long id) {
         this.id = id;
     }

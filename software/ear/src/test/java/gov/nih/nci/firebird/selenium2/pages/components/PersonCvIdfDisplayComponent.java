@@ -98,7 +98,7 @@ public class PersonCvIdfDisplayComponent extends AbstractLoadableComponent<Perso
     private static final String SECTION_BODY_CLASS = ".section_body";
 
     static final String PERSON_NAME_CONTENT_CSS = "#personNameSection " + SECTION_BODY_CLASS;
-    static final String PERSON_EXTERNAL_ID_CONTENT_CSS = "#externalIdSection " + SECTION_BODY_CLASS;
+    static final String PERSON_NES_ID_CONTENT_CSS = "#nesIdSection " + SECTION_BODY_CLASS;
     static final String PRIMARY_ADDRESS_CONTENT_CSS = "#primaryAddressSection " + SECTION_BODY_CLASS;
     static final String PERSON_EMAIL_CONTENT_CSS = "#emailSection " + SECTION_BODY_CLASS;
     static final String PERSON_PHONE_CONTENT_CSS = "#phoneNumberSection " + SECTION_BODY_CLASS;
@@ -109,9 +109,9 @@ public class PersonCvIdfDisplayComponent extends AbstractLoadableComponent<Perso
     @CacheLookup
     private WebElement nameSection;
 
-    @FindBy(css = PERSON_EXTERNAL_ID_CONTENT_CSS)
+    @FindBy(css = PERSON_NES_ID_CONTENT_CSS)
     @CacheLookup
-    private WebElement externalIdSection;
+    private WebElement nesIdSection;
 
     @FindBy(css = PRIMARY_ADDRESS_CONTENT_CSS)
     @CacheLookup
@@ -144,12 +144,12 @@ public class PersonCvIdfDisplayComponent extends AbstractLoadableComponent<Perso
         return nameSection.getText();
     }
 
-    public String getExternalId() {
-        return externalIdSection.getText();
+    public String getNesId() {
+        return nesIdSection.getText();
     }
 
-    public boolean isExternalIdPresent() {
-        return isPresent(By.cssSelector(PERSON_EXTERNAL_ID_CONTENT_CSS));
+    public boolean isNesIdPresent() {
+        return isPresent(By.cssSelector(PERSON_NES_ID_CONTENT_CSS));
     }
 
     public String getPrimaryAddress() {

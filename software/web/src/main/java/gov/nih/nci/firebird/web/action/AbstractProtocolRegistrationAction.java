@@ -131,7 +131,7 @@ public abstract class AbstractProtocolRegistrationAction extends
      * @return the lastProtocolUpdate
      */
     public boolean isProtocolUpdated() {
-        return isRegistrationDeleted()
+        return getRegistration() == null
                 || getRegistration().isLockedForInvestigator() != originalIsLockedForInvestigator
                 || checkProtocolDatesNotEqual();
     }

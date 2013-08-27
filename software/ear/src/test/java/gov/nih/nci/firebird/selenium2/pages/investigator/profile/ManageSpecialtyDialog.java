@@ -138,7 +138,7 @@ public class ManageSpecialtyDialog extends AbstractDialog<ManageSpecialtyDialog>
 
     public void selectCertificationBoard(String value) {
         FormUtils.selectByVisibleText(cerificationBoardSelect, value);
-        pause(400);  //wait for specialties to load
+        pause(200);
     }
 
     public void selectSpecialty(String value) {

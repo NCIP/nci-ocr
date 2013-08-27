@@ -25,6 +25,7 @@ public class ClinicalLaboratoryPersistenceTest extends AbstractHibernateTestCase
         cal.set(Calendar.YEAR, 2020);
 
         ClinicalLaboratory lab = new ClinicalLaboratory();
+        lab.setCapExemption(CapCertificateExemption.RESEARCH_LAB);
         LaboratoryCertificate cert = new LaboratoryCertificate(LaboratoryCertificateType.CLIA);
         cert.setEffectiveDate(cal.getTime());
         cert.setExpirationDate(cal.getTime());
@@ -32,7 +33,8 @@ public class ClinicalLaboratoryPersistenceTest extends AbstractHibernateTestCase
         lab.addCertificate(cert);
         save(lab);
         flushAndClearSession();
-        reloadObject(lab);
+        ClinicalLaboratory lab2 = reloadObject(lab);
+        assertEquals(CapCertificateExemption.RESEARCH_LAB, lab2.getCapExemption());
         assertEquals(1, lab.getCertificates().size());
         LaboratoryCertificate cert2 = lab.getCertificate(LaboratoryCertificateType.CLIA);
         assertEquals(cert.getCertificateFile().getId(), cert2.getCertificateFile().getId());

@@ -82,9 +82,11 @@
  */
 package gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration;
 
+import static gov.nih.nci.firebird.commons.selenium2.util.TableUtils.*;
 import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
 import gov.nih.nci.firebird.selenium2.pages.base.AbstractMenuPage;
 import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
+import gov.nih.nci.firebird.selenium2.pages.components.TreeDataTable;
 
 import java.util.List;
 
@@ -92,20 +94,20 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-import com.google.common.collect.Lists;
-
 /**
  * content/investigator/browse_registrations.jsp
  */
 public class BrowseRegistrationsPage extends AbstractMenuPage<BrowseRegistrationsPage> {
 
-    private static final String REGISTRATION_TABLE_EXPAND_BUTTON_SELECTOR = ".accordionToggle";
-    private static final String REGISTRATIONS_TABLE_ID = "registrationsAccordionTable";
-    private static final String REGISTRATION_ROWS_SELECTOR = ".accordionHeader";
+    private static final String REGISTRATIONS_TABLE_ID = "registrationsTable";
     private final BrowseRegistrationsPageHelper helper = new BrowseRegistrationsPageHelper(this);
+
+    private final TreeDataTable<RegistrationListing> table;
 
     public BrowseRegistrationsPage(WebDriver driver) {
         super(driver);
+        table = new TreeDataTable<RegistrationListing>(getDriver(), REGISTRATIONS_TABLE_ID, RegistrationListing.class,
+                this);
     }
 
     public BrowseRegistrationsPageHelper getHelper() {
@@ -113,26 +115,14 @@ public class BrowseRegistrationsPage extends AbstractMenuPage<BrowseRegistration
     }
 
     public List<RegistrationListing> getRegistrationListings() {
-        List<RegistrationListing> listings = Lists.newArrayList();
-        List<WebElement> rows = findElements(By.cssSelector(REGISTRATION_ROWS_SELECTOR));
-        for (WebElement row : rows) {
-            listings.add(new RegistrationListing(row));
-        }
-        return listings;
+        return table.getListings();
     }
 
     @Override
     public void assertLoaded() {
         super.assertLoaded();
-        assertElementWithIdPresent(REGISTRATIONS_TABLE_ID);
-        openAllRegistrationTables();
-    }
-
-    private void openAllRegistrationTables() {
-        List<WebElement> tableExpandButtons = findElements(By.cssSelector(REGISTRATION_TABLE_EXPAND_BUTTON_SELECTOR));
-        for (WebElement tableExpandButton : tableExpandButtons) {
-            tableExpandButton.click();
-        }
+        assertFindBysPresent();
+        table.assertLoaded();
     }
 
     public class RegistrationListing implements TableListing {
@@ -150,17 +140,17 @@ public class BrowseRegistrationsPage extends AbstractMenuPage<BrowseRegistration
         private final String type;
         private final String status;
 
-        private final WebElement editButton;
+        private final WebElement registrationLink;
 
         public RegistrationListing(WebElement row) {
             id = Long.valueOf(WebElementUtils.getId(row));
-            List<WebElement> cells = row.findElements(By.tagName("div"));
+            List<WebElement> cells = getCells(row);
             title = cells.get(PROTOCOL_TITLE_COLUMN).getText();
             protocolId = cells.get(PROTOCOL_NUMBER_COLUMN).getText();
             sponsor = cells.get(SPONSOR_NAME_COLUMN).getText();
             type = cells.get(REGISTRATION_TYPE_COLUMN).getText();
             status = cells.get(REGISTRATION_STATUS_COLUMN).getText();
-            editButton = row.findElement(By.tagName("a"));
+            registrationLink = getElementIfPresent(cells.get(PROTOCOL_TITLE_COLUMN), By.linkText(title));
         }
 
         @Override
@@ -189,7 +179,7 @@ public class BrowseRegistrationsPage extends AbstractMenuPage<BrowseRegistration
         }
 
         public RegistrationOverviewTab clickRegistrationLink() {
-            editButton.click();
+            registrationLink.click();
             return RegistrationOverviewTab.FACTORY.create(getDriver());
         }
     }

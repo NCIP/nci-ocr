@@ -86,7 +86,7 @@ import static org.junit.Assert.*;
 import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.service.ctep.iam.IamIntegrationService;
 import gov.nih.nci.firebird.service.signing.DigitalSigningServiceModule;
-import gov.nih.nci.firebird.test.FirebirdServicesAsSpysTestModule;
+import gov.nih.nci.firebird.test.FirebirdServicesTestModule;
 import gov.nih.nci.firebird.test.FirebirdTestModule;
 
 import org.junit.Test;
@@ -101,7 +101,7 @@ public class CtepIntegrationModuleTest {
     @Test
     public void testConfigure() {
         Injector injector = Guice.createInjector(new CtepIntegrationModule(), new TestPropertiesModule(), 
-                new FirebirdServicesAsSpysTestModule(), new FirebirdTestModule(), new DigitalSigningServiceModule());
+                new FirebirdServicesTestModule(), new FirebirdTestModule(), new DigitalSigningServiceModule());
         assertNotNull(injector.getInstance(IamIntegrationService.class));
     }
     

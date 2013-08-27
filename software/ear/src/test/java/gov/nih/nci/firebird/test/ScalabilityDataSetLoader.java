@@ -102,7 +102,7 @@ import gov.nih.nci.firebird.test.LoginAccount.CoordinatorLogin;
 import gov.nih.nci.firebird.test.LoginAccount.InvestigatorLogin;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
 import gov.nih.nci.firebird.test.data.TestDataLoader;
-import gov.nih.nci.firebird.test.nes.ExternalEntityTestDataSource;
+import gov.nih.nci.firebird.test.nes.NesTestDataSource;
 import gov.nih.nci.firebird.test.nes.TargetGridResources;
 
 import java.awt.Toolkit;
@@ -200,7 +200,7 @@ public class ScalabilityDataSetLoader {
             }
             builder.build();
             System.out.println("Finished creating " + ((i + 1) * CHUNK_SIZE) + " CTEP investigators in "
-                    + stopwatch.elapsed(TimeUnit.SECONDS) + " seconds");
+                    + stopwatch.elapsedTime(TimeUnit.SECONDS) + " seconds");
         }
     }
 
@@ -223,7 +223,7 @@ public class ScalabilityDataSetLoader {
 
     private void replacePersonIfNecessary(FirebirdUser investigator) {
         while (testInvestigators != null && testInvestigators.contains(investigator.getInvestigatorRole().getProfile().getPerson())) {
-            investigator.getInvestigatorRole().getProfile().setPerson(gridResources.getTestDataSource().getPerson());
+            investigator.getInvestigatorRole().getProfile().setPerson(gridResources.getNesTestDataSource().getPerson());
         }
     }
 
@@ -238,7 +238,7 @@ public class ScalabilityDataSetLoader {
             int protocolCount = (i + 1) * CHUNK_SIZE;
             int investigatorCount = protocolCount * REGISTRATIONS_PER_PROTOCOL;
             System.out.println("Finished creating " + protocolCount + " protocols and " + investigatorCount
-                    + " investigators and protocol registrations in " + stopwatch.elapsed(TimeUnit.SECONDS)
+                    + " investigators and protocol registrations in " + stopwatch.elapsedTime(TimeUnit.SECONDS)
                     + " seconds");
         }
     }
@@ -262,8 +262,8 @@ public class ScalabilityDataSetLoader {
     private TargetGridResources gridResources;
 
     @Inject
-    @Named("ScalabilityTestDataSource")
-    private ExternalEntityTestDataSource testDataSource;
+    @Named("NesScalabilityTestDataSource")
+    private NesTestDataSource testDataSource;
 
     @Inject
     private TestDataLoader dataLoader;
@@ -283,7 +283,7 @@ public class ScalabilityDataSetLoader {
     @Before
     public void setUp() throws Exception {
         getInjector().injectMembers(this);
-        gridResources.setTestDataSource(testDataSource);
+        gridResources.setNesTestDataSource(testDataSource);
         dataRemover.doInitialCleanIfNecessary(getDataRemovalStatements());
     }
 

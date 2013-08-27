@@ -178,7 +178,7 @@ public abstract class AbstractSpecialtyCredentialTest extends AbstractCredential
     private void checkEditingCredential() throws IOException {
         EditSpecialtyCredentialDialog credentialDialog = credentialSection.getHelper()
                 .getListing(getCredentialWithExistingIssuer()).clickEdit();
-        SpecialtyCredential newCredential = createCredential(getExistingExternalOrganizationWithCtepId());
+        SpecialtyCredential newCredential = createCredential(getExistingNesOrganizationWithCtepId());
         credentialDialog.getHelper().setCredential(newCredential);
         credentialDialog.clickSave();
         credentialSection.getHelper().verifyCredentialListed(newCredential);

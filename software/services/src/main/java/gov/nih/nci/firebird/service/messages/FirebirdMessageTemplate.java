@@ -116,8 +116,7 @@ public enum FirebirdMessageTemplate implements FirebirdTemplate {
     /**
      * Notify the investigator that their submitted registration has been returned with comments.
      */
-    REGISTRATION_RETURNED_EMAIL(REGISTRATION_RETURNED_NOTIFICATION_EMAIL_BODY, REGISTRATION, FIREBIRD_LINK,
-            SPONSOR_EMAIL_ADDRESS),
+    REGISTRATION_RETURNED_EMAIL(REGISTRATION_RETURNED_NOTIFICATION_EMAIL_BODY, REGISTRATION, FIREBIRD_LINK),
 
     /**
      * Notifies the investigator and any subinvestigators that a registration packet has been approved and finalized.
@@ -141,8 +140,7 @@ public enum FirebirdMessageTemplate implements FirebirdTemplate {
      * Notify the investigator / subinvestigator that there have been modifications to the protocol and they will be
      * required to re-submit their registration if they had previously submitted their registration.
      */
-    PROTOCOL_MODIFIED_EMAIL(PROTOCOL_MODIFIED_EMAIL_BODY, REGISTRATION, FIREBIRD_LINK, SPONSOR_EMAIL_ADDRESS,
-            PROTOCOL_REVISION),
+    PROTOCOL_MODIFIED_EMAIL(PROTOCOL_MODIFIED_EMAIL_BODY, REGISTRATION, FIREBIRD_LINK, SPONSOR_EMAIL_ADDRESS),
 
     /**
      * Email notifying Investigator that a Registration Coordinator is requesting access to manage their profile and
@@ -169,34 +167,34 @@ public enum FirebirdMessageTemplate implements FirebirdTemplate {
      * their protocol registrations.
      */
     COORDINATOR_SUSPENDED_FROM_REGISTRATIONS_EMAIL(COORDINATOR_SUSPENDED_FROM_REGISTRATIONS_EMAIL_BODY,
-            MANAGED_INVESTIGATOR, FIREBIRD_LINK, MANAGED_INVESTIGATOR, INVESTIGATOR),
+                                                   MANAGED_INVESTIGATOR, FIREBIRD_LINK),
 
     /**
      * Email template informing the coordinator that a previously managed investigator has unsuspended them from
      * managing their protocol registrations.
      */
     COORDINATOR_UNSUSPENDED_FROM_REGISTRATIONS_EMAIL(COORDINATOR_UNSUSPENDED_FROM_REGISTRATIONS_EMAIL_BODY,
-                                                     MANAGED_INVESTIGATOR, FIREBIRD_LINK, INVESTIGATOR),
+                                                     MANAGED_INVESTIGATOR, FIREBIRD_LINK),
 
     /**
      * Email template informing the coordinator that a previously managed investigator has suspended them from managing
      * their profile.
      */
     COORDINATOR_SUSPENDED_FROM_PROFILE_EMAIL(COORDINATOR_SUSPENDED_FROM_PROFILE_EMAIL_BODY,
-                                             MANAGED_INVESTIGATOR, FIREBIRD_LINK, INVESTIGATOR),
+                                             MANAGED_INVESTIGATOR, FIREBIRD_LINK),
 
     /**
      * Email template informing the coordinator that a previously managed investigator has unsuspended them from
      * managing their profile.
      */
     COORDINATOR_UNSUSPENDED_FROM_PROFILE_EMAIL(COORDINATOR_UNSUSPENDED_FROM_PROFILE_EMAIL_BODY,
-                                               MANAGED_INVESTIGATOR, FIREBIRD_LINK, INVESTIGATOR),
+                                               MANAGED_INVESTIGATOR, FIREBIRD_LINK),
 
     /**
      * Email template informing the coordinator that a previously managed investigator has removed them as a
      * registration coordinator.
      */
-    COORDINATOR_REMOVED_EMAIL(COORDINATOR_REMOVED_EMAIL_BODY, MANAGED_INVESTIGATOR, FIREBIRD_LINK, INVESTIGATOR),
+    COORDINATOR_REMOVED_EMAIL(COORDINATOR_REMOVED_EMAIL_BODY, MANAGED_INVESTIGATOR, FIREBIRD_LINK),
 
     /**
      * Email template informing the a coordinator that an investigator has approved/rejected a request.
@@ -424,14 +422,7 @@ public enum FirebirdMessageTemplate implements FirebirdTemplate {
      * Email notifying a sponsor that one of their investigators has canceled a revision to their registration.
      */
     REGISTRATION_REVISION_CANCELED_EMAIL_TO_SPONSOR(REGISTRATION_REVISION_CANCELED_EMAIL_TO_SPONSOR_BODY,
-            INVESTIGATOR_REGISTRATION),
-
-    /**
-     * Email notifying coordinator and others that one of their managed investigators has deleted their annual
-     * registration packet.
-     */
-    INVESTIGATOR_DELETED_ANNUAL_REGISTRATION_EMAIL_TO_OTHERS(
-            INVESTIGATOR_DELETED_ANNUAL_REGISTRATION_EMAIL_TO_OTHERS_BODY, INVESTIGATOR);
+            INVESTIGATOR_REGISTRATION);
 
     private static final String SUBJECT_TEMPLATE_SUFFIX = "_SUBJECT";
 

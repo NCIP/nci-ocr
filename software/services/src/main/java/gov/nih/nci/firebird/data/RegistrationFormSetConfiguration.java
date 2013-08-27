@@ -133,7 +133,7 @@ public class RegistrationFormSetConfiguration implements Auditable {
      *
      * @param configuration RegistrationFormSetConfiguration to copy from
      */
-    RegistrationFormSetConfiguration(RegistrationFormSetConfiguration configuration) {
+    public RegistrationFormSetConfiguration(RegistrationFormSetConfiguration configuration) {
         this.formOptionalities = Maps.newHashMap(configuration.getFormOptionalities());
     }
 

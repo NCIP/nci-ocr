@@ -87,7 +87,9 @@ import gov.nih.nci.coppa.services.structuralroles.oversightcommittee.common.Over
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.iso21090.extensions.Id;
 
 import java.rmi.RemoteException;
@@ -126,7 +128,19 @@ public class OversightCommitteeIntegrationServiceBeanIntegrationTest extends
     }
 
     @Override
-    Organization getOrganizationForPlayerId(Id playerId) throws RemoteException, InvalidatedOrganizationException  {
+    Organization getOrCreateOrganizationForPlayerId(Id playerId) throws UnavailableEntityException,
+            ReplacedEntityException, RemoteException {
+        Organization organization = getExistingOrganizationForPlayerId(playerId);
+        if (organization == null) {
+            organization = OrganizationFactory.getInstance().createWithoutNesData();
+            organization.setPlayerIdentifier(new NesId(playerId).toString());
+            getService().create(organization, TYPE);
+        }
+        return organization;
+    }
+
+    private Organization getExistingOrganizationForPlayerId(Id playerId) throws RemoteException,
+            UnavailableEntityException, ReplacedEntityException {
         OversightCommittee[] oversightCommittees = oversightCommitteeClient.getByPlayerIds(new Id[] { playerId });
         List<OversightCommittee> filteredOversightCommittees = filterOversightCommitteesByType(oversightCommittees,
                 TYPE);

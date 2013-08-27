@@ -158,7 +158,7 @@ public class DegreeCredentialsTest extends AbstractCredentialsTabTest {
 
     @Test
     public void testDuplicateDegreeIsInvalid() {
-        Degree degree = createTestDegree(getTestDataSource().getOrganization());
+        Degree degree = createTestDegree(getNesTestDataSource().getOrganization());
         saveAndVerifyNewDegree(getDegreeSection(), degree);
         ExpectedValidationFailure expectedValidationFailure = new ExpectedValidationFailure(
                 "error.credentials.already.exists", CredentialType.DEGREE.getDisplay());
@@ -167,8 +167,11 @@ public class DegreeCredentialsTest extends AbstractCredentialsTabTest {
     }
 
     private void checkDegreeWithSameDateAndType(Degree degree) {
-        degree.setIssuer(getTestDataSource().getOrganization());
-        saveAndVerifyNewDegree(getDegreeSection(), degree);
+        degree.setIssuer(getNesTestDataSource().getOrganization());
+        ManageDegreeDialog createDegreeDialog = getDegreeSection().clickAddDegree();
+        createDegreeDialog.getHelper().enterDegreeData(degree);
+        createDegreeDialog.clickSave();
+        assertNotNull(getDegreeSection().getHelper().getListing(degree));
     }
 
 

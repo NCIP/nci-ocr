@@ -83,6 +83,8 @@
 package gov.nih.nci.firebird.service.file;
 
 import gov.nih.nci.firebird.data.FirebirdFile;
+import gov.nih.nci.firebird.data.InvestigatorProfile;
+import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.service.GenericService;
 
 import java.io.File;
@@ -97,6 +99,28 @@ import javax.ejb.Local;
  */
 @Local
 public interface FileService extends GenericService<FirebirdFile> {
+
+    /**
+     * save the file data in a compressed blob, and add it to a profile.
+     *
+     * @param profile the profile to add the new file to.
+     * @param file contents to be included in the FirebirdFile
+     * @param fileMetadata information and data of the file to add.
+     * @return the created file.
+     * @throws IOException if reading or compression fails.
+     */
+    FirebirdFile addFileToProfile(InvestigatorProfile profile, File file, FileMetadata fileMetadata) throws IOException;
+
+    /**
+     * save the file data in a compressed blob, and add it to a protocol.
+     *
+     * @param protocol the protocol to add the new file to.
+     * @param file contents to be included in the FirebirdFile
+     * @param fileMetadata information and data of the file to add.
+     * @return the created file.
+     * @throws IOException if reading or compression fails.
+     */
+    FirebirdFile addFileToProtocol(Protocol protocol, File file, FileMetadata fileMetadata) throws IOException;
 
     /**
      * Create a file. Make sure that the parent's deletion will cascade, and that this call is inside the parent's
@@ -146,6 +170,14 @@ public interface FileService extends GenericService<FirebirdFile> {
      * @throws IOException if decompression fails.
      */
     void writeCompressedFile(FirebirdFile file, OutputStream out) throws IOException;
+
+    /**
+     * delete a file from a profile.
+     *
+     * @param profile the profile to delete from.
+     * @param file the file to delete.
+     */
+    void deleteFileFromProfile(InvestigatorProfile profile, FirebirdFile file);
 
     /**
      * Returns the compressed length of the given file.

@@ -88,7 +88,6 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.security.Authenticator;
-import gov.nih.nci.firebird.security.CredentialsHandlerFactory;
 import gov.nih.nci.firebird.security.UserSessionInformation;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
@@ -105,8 +104,6 @@ public class WithdrawSubmissionActionTest extends AbstractWebTest {
 
     @Inject
     private WithdrawSubmissionAction action;
-    @Inject
-    private CredentialsHandlerFactory mockCredentialsHandlerFactory;
 
     @Test
     public void testEnter() {
@@ -128,7 +125,7 @@ public class WithdrawSubmissionActionTest extends AbstractWebTest {
         action.setUsername(investigator.getBaseUsername());
 
         Authenticator mockAuthenticator = mock(Authenticator.class);
-        when(mockCredentialsHandlerFactory.getAuthenticator(anyString())).thenReturn(mockAuthenticator);
+        when(action.getCredentialsHandlerFactory().getAuthenticator(anyString())).thenReturn(mockAuthenticator);
         when(mockAuthenticator.authenticateUser(anyString(), anyString(), anyString())).thenReturn(
                 mock(UserSessionInformation.class));
 

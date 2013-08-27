@@ -120,15 +120,15 @@ public class ProtocolBuilder extends AbstractDataComponentBuilder<Protocol> {
     }
 
     private Organization getLeadOrganization() {
-        return getGridResources().getTestDataSource().getOrganization();
+        return getGridResources().getNesTestDataSource().getOrganization();
     }
 
     private Person getPrincipalInvestigator() {
-        return getGridResources().getTestDataSource().getPerson();
+        return getGridResources().getNesTestDataSource().getPerson();
     }
 
     public ProtocolBuilder withSponsor(Organization sponsor) {
-        protocol.setSponsor(retrieveSponsorOrganization(sponsor.getExternalId()));
+        protocol.setSponsor(retrieveSponsorOrganization(sponsor.getNesId()));
         return this;
     }
 

@@ -82,109 +82,188 @@
  */
 package gov.nih.nci.firebird.service.person;
 
-import static com.google.common.base.Preconditions.*;
-import gov.nih.nci.firebird.data.CurationDataset;
-import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.nes.correlation.PersonRoleType;
-import gov.nih.nci.firebird.service.person.external.ExternalPersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
-import gov.nih.nci.firebird.service.person.local.LocalPersonDataService;
+import gov.nih.nci.firebird.nes.common.NesEntityException;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
+import gov.nih.nci.firebird.service.AbstractGenericServiceBean;
+import gov.nih.nci.firebird.service.search.FirebirdAnnotatedBeanSearchCriteria;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+import org.hibernate.criterion.Restrictions;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 /**
- * Provides functionality to retrieve and manage person entities.
+ * Implementation of the person service.
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
-public class PersonServiceBean implements PersonService {
+public class PersonServiceBean extends AbstractGenericServiceBean<Person> implements PersonService {
+    
+    private static final Logger LOG = Logger.getLogger(PersonServiceBean.class);
 
-    private LocalPersonDataService localService;
-    private ExternalPersonService externalService;
+    private NesPersonIntegrationService nesIntegrationService;
+    private Provider<FirebirdAnnotatedBeanSearchCriteria<Person>> criteriaProvider;
 
-    @Override
-    public List<Person> search(String term) {
-        checkArgument(StringUtils.isNotBlank(term), "Search term must not be blank");
-        List<Person> results = replaceWithLocalPersons(externalService.search(term));
-        Collections.sort(results, Person.NAME_COMPARATOR);
-        return results;
+    @Inject
+    void setNesIntegrationService(final NesPersonIntegrationService nesIntegrationService) {
+        this.nesIntegrationService = nesIntegrationService;
     }
 
-    private List<Person> replaceWithLocalPersons(List<Person> externalResults) {
-        List<Person> combinedResults = new ArrayList<Person>(externalResults.size());
-        for (Person externalPerson : externalResults) {
-            Person localPerson = localService.getByExternalId(externalPerson.getExternalId());
-            combinedResults.add(localPerson != null ? localPerson : externalPerson);
-        }
-        return combinedResults;
+    @Inject
+    void setCriteriaProvider(Provider<FirebirdAnnotatedBeanSearchCriteria<Person>> criteriaProvider) {
+        this.criteriaProvider = criteriaProvider;
     }
 
     @Override
-    public Person getByExternalId(String identifier) throws InvalidatedPersonException {
-        Person person = localService.getByExternalId(identifier);
-        if (person == null) {
-            person = externalService.getByExternalId(identifier);
-            localService.save(person);
+    public Person importNesPerson(final String nesId) throws UnavailableEntityException {
+        Person nesPerson = getPersonFromNes(nesId);
+
+        if (nesPerson != null) {
+            Person savedPerson = getByNesId(nesId);
+            if (savedPerson != null) {
+                copyPersonFields(savedPerson, nesPerson);
+                save(savedPerson);
+                nesPerson = savedPerson;
+            }
+            save(nesPerson);
         }
+
+        return nesPerson;
+    }
+
+    private Person getPersonFromNes(final String nesId) throws UnavailableEntityException {
+        try {
+            return nesIntegrationService.getById(nesId);
+        } catch (ReplacedEntityException e) {
+            return getPersonFromNes(e.getReplacmentNesId());
+        }
+    }
+
+    private Person getByNesId(final String nesId) {
+        FirebirdAnnotatedBeanSearchCriteria<Person> criteria = criteriaProvider.get();
+        criteria.getCriteria().setNesId(nesId);
+        return Iterables.getOnlyElement(search(criteria), null);
+    }
+
+    /*
+     * Used for copying the fields from the imported Nes Person onto the person that is already
+     * saved in the database.
+     *
+     * @param exists the person from the db
+     * @param retrieved person from NES
+     * @return if there were any updates besides NES Status
+     */
+    boolean copyPersonFields(final Person target, final Person source) {
+        boolean isUpdateNecessary = !source.isEquivalent(target);
+        if (isUpdateNecessary) {
+            target.setFirstName(source.getFirstName());
+            target.setLastName(source.getLastName());
+            target.setMiddleName(source.getMiddleName());
+            target.setPrefix(source.getPrefix());
+            target.setSuffix(source.getSuffix());
+            target.setNesId(source.getNesId());
+            target.setNesStatus(source.getNesStatus());
+            target.setEmail(source.getEmail());
+            target.setPhoneNumber(source.getPhoneNumber());
+            target.getPostalAddress().copyFrom(source.getPostalAddress());
+        }
+        return isUpdateNecessary;
+    }
+
+    @Override
+    public void refreshFromNes(Person person) {
+        if (person.getNesId() == null) {
+            throw new IllegalArgumentException("No NES ID");
+        }
+        Person nesPerson;
+        try {
+            nesPerson = nesIntegrationService.getById(person.getNesId());
+            if (!person.isEquivalent(nesPerson)) {
+                person.clearPendingUpdate();
+            }
+            copyPersonFields(person, nesPerson);
+        } catch (NesEntityException e) {
+            person.setNesStatus(CurationStatus.NULLIFIED);
+        }
+        person.setLastNesRefresh(new Date());
+        save(person);
+    }
+
+    @Override
+    public Person createNesPerson(Person person) throws ValidationException {
+        validatePerson(person);
+        String id = nesIntegrationService.createPerson(person);
+
+        person.setNesId(id);
+        save(person);
+
         return person;
     }
 
     @Override
-    public void validate(Person person) throws ValidationException {
-        externalService.validate(person);
+    public void updateNesPerson(Person person) throws ValidationException {
+        validatePerson(person);
+
+        CurationStatus newStatus = nesIntegrationService.updatePerson(person);
+
+        Person savedPerson = getById(person.getId());
+        savedPerson.setNesStatus(newStatus);
+        savedPerson.setProviderNumber(person.getProviderNumber());
+        updateLocalPerson(savedPerson);
+    }
+
+    private void updateLocalPerson(Person person) {
+        person.requestUpdate();
+        save(person);
     }
 
     @Override
-    public void save(Person person) throws ValidationException {
-        externalService.save(person);
-        localService.save(person);
+    public void validatePerson(Person person) throws ValidationException {
+        nesIntegrationService.validate(person);
     }
 
+    @SuppressWarnings("unchecked")
+    //Hibernate does not provide typed results
     @Override
-    public void refreshNow(Person person) {
-        externalService.refreshNow(person);
-        localService.save(person);
-    }
-
-    @Override
-    public void refreshIfStale(Person person) {
-        externalService.refreshIfStale(person);
-        localService.save(person);
-    }
-
-    @Override
-    public void checkCorrelation(Person person, Organization organization, PersonRoleType type)
-            throws ValidationException {
-        externalService.checkCorrelation(person, organization, type);
+    public List<Person> getPersonsToBeCurated() {
+        return getSessionProvider()
+                .get()
+                .createCriteria(Person.class)
+                .add(Restrictions.or(Restrictions.eq("nesStatus", CurationStatus.PENDING),
+                        Restrictions.isNotNull("updateRequested"))).list();
     }
     
     @Override
-    public CurationDataset getPersonsToBeCurated() {
-        List<Person> curationCandidates = localService.getCandidatePersonsToBeCurated();
-        return externalService.getPersonsToBeCurated(curationCandidates);
+    public Person getByCtepId(String ctepId) {
+        Person person = getByCtepIdLocal(ctepId);
+        if (person == null) {
+            try {
+                return nesIntegrationService.getByCtepId(ctepId);
+            } catch (UnavailableEntityException e) {
+                LOG.warn("Couldn't retrieve Person for CTEP ID: " + ctepId, e);
+                return null;
+            }
+        }
+        return person;
     }
 
-    @Resource(mappedName = "firebird/LocalPersonDataServiceBean/local")
-    void setLocalService(LocalPersonDataService localService) {
-        this.localService = localService;
+    private Person getByCtepIdLocal(String ctepId) {
+        FirebirdAnnotatedBeanSearchCriteria<Person> criteria = criteriaProvider.get();
+        criteria.getCriteria().setCtepId(ctepId);
+        return Iterables.getOnlyElement(search(criteria), null);
     }
-
-    @Inject
-    void setExternalService(ExternalPersonService externalService) {
-        this.externalService = externalService;
-    }
-
 }

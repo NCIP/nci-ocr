@@ -13,7 +13,7 @@
     <fmt:message key="registration.supplemental.investigator.data.form.title" />
 </h2>
 
-<s:if test="readOnly">
+<s:if test="registration.lockedForInvestigator">
     <div id="lockedViewIdfPdfButtonTopDiv">
         <firebird:viewGeneratedFormButton buttonId="viewIdfPdfButtonTop" form="${form}"/>
     </div>

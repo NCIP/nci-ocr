@@ -150,8 +150,6 @@ public class BrowseManagedInvestigatorsAction extends AbstractProfileAction {
     /**
      * Class to describe a record of the investigators data grid.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
     public static class ManagedInvestigatorListing {
         private final Long id;
         private final String investigatorName;
@@ -166,7 +164,7 @@ public class BrowseManagedInvestigatorsAction extends AbstractProfileAction {
          *
          * @param managedInvestigator The registration coordinator role the record is for
          */
-        ManagedInvestigatorListing(ManagedInvestigator managedInvestigator) {
+        public ManagedInvestigatorListing(ManagedInvestigator managedInvestigator) {
             this.id = managedInvestigator.getInvestigatorProfile().getId();
             Person investigator = managedInvestigator.getInvestigatorProfile().getPerson();
             this.investigatorName = investigator.getDisplayNameForList();

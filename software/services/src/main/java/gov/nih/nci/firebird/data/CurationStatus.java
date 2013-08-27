@@ -117,9 +117,9 @@ public enum CurationStatus {
 
     /**
      * This is the default value for FIREBIRD, the object has not been communicated
-     * back to the underlying system and is in an unsaved state.
+     * back to NES to get the valid NES state.
      */
-    UNSAVED;
+    PRE_NES_VALIDATION;
 
     /**
      * The maximum length of the form type name.

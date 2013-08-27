@@ -87,9 +87,8 @@ import gov.nih.nci.firebird.FirebirdModule;
 import gov.nih.nci.firebird.service.periodic.DailyJobService;
 import gov.nih.nci.firebird.test.nes.NesScalabilityTestDataLoader;
 import gov.nih.nci.firebird.test.nes.NesTestDataLoader;
-import gov.nih.nci.firebird.test.nes.ExternalEntityTestDataSource;
+import gov.nih.nci.firebird.test.nes.NesTestDataSource;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -171,13 +170,13 @@ public class EarTestModule extends FirebirdModule {
     }
 
     @Provides
-    ExternalEntityTestDataSource provideTestDataSource(NesTestDataLoader loader) {
+    NesTestDataSource provideNesTestDataSource(NesTestDataLoader loader) {
         return loader.getCache();
     }
 
     @Provides
-    @Named("ScalabilityTestDataSource")
-    ExternalEntityTestDataSource provideTestDataSource(NesScalabilityTestDataLoader loader) {
+    @Named("NesScalabilityTestDataSource")
+    NesTestDataSource provideNesTestDataSource(NesScalabilityTestDataLoader loader) {
         return loader.getCache();
     }
 
@@ -195,12 +194,6 @@ public class EarTestModule extends FirebirdModule {
         environment.put(InitialContext.PROVIDER_URL, "jnp://localhost:1099");
         environment.put(InitialContext.URL_PKG_PREFIXES, "org.jboss.naming:org.jnp.interfaces");
         return new InitialContext(environment);
-    }
-    
-    @Provides
-    @Named("jboss.server.log")
-    File provideJbossServerLog(@Named("jboss.server.log") String serverLogPath) {
-        return new File(serverLogPath);
     }
 
 }

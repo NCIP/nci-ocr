@@ -84,7 +84,7 @@ package gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact;
 
 import gov.nih.nci.firebird.commons.selenium2.util.FormUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
-import gov.nih.nci.firebird.data.PrimaryOrganizationType;
+import gov.nih.nci.firebird.data.PracticeSiteType;
 import gov.nih.nci.firebird.selenium2.pages.base.AbstractDialog;
 import gov.nih.nci.firebird.selenium2.pages.base.MessageHandler;
 import gov.nih.nci.firebird.selenium2.pages.components.CreateOrganizationComponent;
@@ -136,8 +136,8 @@ public class CreatePrimaryOrganizationDialog extends AbstractDialog<CreatePrimar
         return contactInformationTab.waitUntilReady();
     }
 
-    public void selectOrganizationType(PrimaryOrganizationType type) {
-        FormUtils.selectByVisibleText(organizationTypeSelect, type.getDisplay());
+    public void selectOrganizationType(PracticeSiteType organizationType) {
+        FormUtils.selectByVisibleText(organizationTypeSelect, organizationType.getDisplay());
     }
 
     @Override

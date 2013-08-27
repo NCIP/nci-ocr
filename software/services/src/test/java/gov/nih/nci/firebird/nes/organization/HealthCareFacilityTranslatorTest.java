@@ -113,8 +113,6 @@ public class HealthCareFacilityTranslatorTest {
     @Test
     public void testToHealthCareFacility() {
         Organization organization = OrganizationFactory.getInstance().create();
-        HealthCareFacilityData healthCareFacilityData = new HealthCareFacilityData();
-        organization.setExternalData(healthCareFacilityData);
         when(mockHelper.getCountry(any(Address.class))).thenReturn(organization.getPostalAddress().getCountry());
         HealthCareFacility healthCareFacility = translator.toHealthCareFacility(organization);
         assertFalse(healthCareFacility.getPostalAddress().getItem().isEmpty());

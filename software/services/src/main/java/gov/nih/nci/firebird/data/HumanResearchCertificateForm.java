@@ -249,7 +249,7 @@ public class HumanResearchCertificateForm extends AbstractProtocolRegistrationFo
     Set<PersistentObject> returnForm() {
         Set<PersistentObject> objectsToDelete = super.returnForm();
         for (SubmittedTrainingCertificate certificate : getSubmittedCertificates()) {
-            if (certificate.getOriginalCertificate() != null && !certificate.isExpired()) {
+            if (certificate.getOriginalCertificate() != null) {
                 getSelectedCertificates().add(certificate.getOriginalCertificate());
             }
         }

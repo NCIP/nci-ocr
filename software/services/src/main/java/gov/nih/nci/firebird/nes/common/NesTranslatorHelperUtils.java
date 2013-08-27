@@ -82,12 +82,18 @@
  */
 package gov.nih.nci.firebird.nes.common;
 
-import static gov.nih.nci.firebird.common.FirebirdConstants.*;
+import static gov.nih.nci.firebird.common.FirebirdConstants.US_COUNTRY_CODE;
+
 import gov.nih.nci.firebird.data.Address;
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.iso21090.extensions.Id;
+import gov.nih.nci.iso21090.grid.dto.transform.iso.TSTransformer;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.Locale;
 
 import org.apache.commons.lang.StringUtils;
 import org.iso._21090.AD;
@@ -100,6 +106,7 @@ import org.iso._21090.NullFlavor;
 import org.iso._21090.TEL;
 import org.iso._21090.TELEmail;
 import org.iso._21090.TELPhone;
+import org.iso._21090.TS;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
@@ -113,7 +120,7 @@ import com.google.common.collect.Lists;
 // Utility class exposes many methods plus helpers
 public class NesTranslatorHelperUtils {
 
-    private static final String CANADA_COUNTRY_CODE = "CAN";
+    static final String CANADA_COUNTRY_CODE = "CAN";
 
     private static final int AREA_CODE_START_INDEX = 0;
     private static final int AREA_CODE_END_INDEX = 3;
@@ -136,6 +143,41 @@ public class NesTranslatorHelperUtils {
      */
     public static final String ORG_IDENTIFIER_NAME = "NCI organization entity identifier";
     private static final int REQUIRED_PHONE_DIGITS = 10;
+
+
+    /**
+     * convert an iso/xml timestamp into a Date.
+     * @param timestamp iso TS type to convert.
+     * @return the java Date.
+     * @see TSTransformer#FORMAT_STRING
+     */
+    public static Date getDate(TS timestamp) {
+        if (timestamp == null || timestamp.getValue() == null) {
+            return null;
+        }
+        SimpleDateFormat format = new SimpleDateFormat(TSTransformer.FORMAT_STRING, Locale.getDefault());
+        try {
+            return format.parse(timestamp.getValue());
+        } catch (ParseException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+
+    /**
+     * convert a java Date into an iso/xml date.
+     * @param date date to convert
+     * @return the iso date
+     * @see TSTransformer#FORMAT_STRING.
+     */
+    public static TS createDateTs(Date date) {
+        if (date == null) {
+            return null;
+        }
+        SimpleDateFormat format = new SimpleDateFormat(TSTransformer.FORMAT_STRING, Locale.getDefault());
+        TS ts = new TS();
+        ts.setValue(format.format(date));
+        return ts;
+    }
 
     /**
      * Extracts and returns the first email TEL value, non-prefixed.
@@ -191,7 +233,7 @@ public class NesTranslatorHelperUtils {
      * @param value the value of the TEL
      * @return the TEL object
      */
-    private static TELEmail createEmailTel(String value) {
+    public static TELEmail createEmailTel(String value) {
         TELEmail email = new TELEmail();
         setTelFields(email, EMAIL_TEL_PREFIX, value);
 
@@ -214,7 +256,7 @@ public class NesTranslatorHelperUtils {
      * @param countryCode three-letter country code for the country phone number is in
      * @return the TEL object
      */
-    static TELPhone createPhoneTel(String value, String countryCode) {
+    public static TELPhone createPhoneTel(String value, String countryCode) {
         TELPhone phone = new TELPhone();
         setTelFields(phone, PHONE_TEL_PREFIX, formatPhoneNumber(value, countryCode));
         return phone;
@@ -433,7 +475,7 @@ public class NesTranslatorHelperUtils {
      * @return the CD object.
      */
     public static CD buildStatus(CurationStatus status) {
-        if (status != CurationStatus.UNSAVED) {
+        if (status != CurationStatus.PRE_NES_VALIDATION) {
             if (status != null) {
                 CD result = new CD();
                 result.setCode(status.getCodeValue());

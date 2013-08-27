@@ -93,7 +93,6 @@ import gov.nih.nci.coppa.common.LimitOffset;
 import gov.nih.nci.coppa.common.faults.TooManyResultsFault;
 import gov.nih.nci.coppa.po.IdentifiedOrganization;
 import gov.nih.nci.coppa.services.structuralroles.identifiedorganization.common.IdentifiedOrganizationI;
-import gov.nih.nci.firebird.common.RemoteServiceException;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 
 import org.iso._21090.II;
@@ -109,9 +108,9 @@ public class IdentifiedOrganizationIntegrationServiceBeanTest {
 
     @Mock
     private IdentifiedOrganizationI mockIdentifiedOrganizationClient;
-
+    
     private IdentifiedOrganizationIntegrationServiceBean bean;
-
+    
     @Before
     public void setUp() throws TooManyResultsFault, RemoteException {
         MockitoAnnotations.initMocks(this);
@@ -143,20 +142,20 @@ public class IdentifiedOrganizationIntegrationServiceBeanTest {
         assertNull(bean.getCtepId(TEST_NES_ID_STRING));
     }
 
-    @Test(expected = RemoteServiceException.class)
+    @Test(expected = IllegalStateException.class)
     public void testGetCtepId_TooManyResultsFault() throws Exception {
         when(mockIdentifiedOrganizationClient.query(any(IdentifiedOrganization.class), any(LimitOffset.class)))
                 .thenThrow(new TooManyResultsFault());
         bean.getCtepId(TEST_NES_ID_STRING);
     }
 
-    @Test(expected = RemoteServiceException.class)
+    @Test(expected = IllegalStateException.class)
     public void testGetCtepId_RemoteException() throws Exception {
         when(mockIdentifiedOrganizationClient.query(any(IdentifiedOrganization.class), any(LimitOffset.class)))
                 .thenThrow(new RemoteException());
         bean.getCtepId(TEST_NES_ID_STRING);
     }
-
+    
     @Test
     public void test() throws RemoteException {
         List<IdentifiedOrganization> identifiedOrganizations = bean.getIdentifiedOrganizations(TEST_CTEP_IDENTIFIER);

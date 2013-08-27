@@ -129,7 +129,7 @@ public class EditRegistrationFormsActionTest extends AbstractWebTest {
 
     @Test
     public void testEnterAction() {
-        assertEquals(ActionSupport.SUCCESS, action.enterAction());
+        assertEquals(ActionSupport.SUCCESS, action.navigationAction());
     }
 
     @Test
@@ -222,4 +222,14 @@ public class EditRegistrationFormsActionTest extends AbstractWebTest {
         assertTrue(json.contains(formType.getSubinvestigatorDefault().getDisplay()));
     }
 
+    @Test
+    public void testGetOptionalities() {
+        Protocol protocol = ProtocolFactory.getInstance().createWithForms();
+        FormType formType = protocol.getRegistrationConfiguration().getAssociatedFormTypes().get(0);
+        protocol.getRegistrationConfiguration().setInvestigatorOptionality(formType, FormOptionality.REQUIRED);
+        protocol.getRegistrationConfiguration().setSubinvestigatorOptionality(formType, FormOptionality.OPTIONAL);
+        action.setProtocol(protocol);
+        assertEquals(FormOptionality.REQUIRED, action.getInvestigatorOptionality(formType));
+        assertEquals(FormOptionality.OPTIONAL, action.getSubinvestigatorOptionality(formType));
+    }
 }

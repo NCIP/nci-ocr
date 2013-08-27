@@ -63,7 +63,7 @@
                         </thead>
                     </table>
                     <div class="float table_stats"></div>
-                    <s:hidden name="sponsorExternalId" value="%{protocolImportJob.sponsor.externalId}"/>
+                    <s:hidden name="sponsor.id" value="%{protocolImportJob.sponsor.id}"/>
                     <div class="btn_bar clear">
                         <s:a id="importButton_bottom" cssClass="button importButton" href="#"><fmt:message key="button.import"/></s:a>
                         <s:a id="cancelButton_bottom" action="cancelImport" cssClass="button cancelButton"><fmt:message key="button.cancel"/></s:a>

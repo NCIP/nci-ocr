@@ -82,18 +82,20 @@
  */
 package gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration;
 
+import static gov.nih.nci.firebird.test.util.FirebirdPropertyUtils.*;
 import static org.junit.Assert.*;
 import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
 import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
+import gov.nih.nci.firebird.commons.selenium2.util.TableUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.WaitUtils;
+import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
 import gov.nih.nci.firebird.selenium2.pages.base.ValidationMessageDialog;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.CommentsTag;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag.CommentType;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.RegistrationProgressBar;
+import gov.nih.nci.firebird.selenium2.pages.registration.common.FormRejectionCommentsDialog;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.util.List;
 
@@ -109,13 +111,12 @@ public class RegistrationOverviewTab extends AbstractRegistrationTab<Registratio
 
     public static final IdentifiableComponentFactory<RegistrationOverviewTab> FACTORY = new Factory();
 
-    private static final String TAB_UNIQUE_LOCATOR_ID = "dcpOverview";
     static final String TAB_LINK_CSS_SELECTOR = "#overviewTab > a";
     private static final String TAB_ID = "overviewTab";
     private static final String SUBMIT_REGISTRATION_BUTTON_ID = "processRegistrationBtn";
     private static final String REVISE_BUTTON_ID = "initiateRegistrationRevisionButton";
     private static final String CANCEL_REVISION_BUTTON_ID = "cancelRegistrationRevisionButton";
-    private static final String REGISTRATION_STATUS_ID = "registrationStatus";
+    private static final String STATUS_HEADING_CSS_SELECTOR = "h3.clear";
 
     @FindBy(id = SUBMIT_REGISTRATION_BUTTON_ID)
     private WebElement submitRegistrationButton;
@@ -126,19 +127,17 @@ public class RegistrationOverviewTab extends AbstractRegistrationTab<Registratio
     @FindBy(id = CANCEL_REVISION_BUTTON_ID)
     private WebElement cancelRevisionButton;
 
-    @FindBy(id = REGISTRATION_STATUS_ID)
-    private WebElement registrationStatus;
+    @FindBy(css = STATUS_HEADING_CSS_SELECTOR)
+    private WebElement statusHeading;
 
     private RegistrationOverviewTabHelper helper = new RegistrationOverviewTabHelper(this);
     private final RegistrationCommentsTag commentsTag;
-    private final RegistrationProgressBar progressBar;
-    private final InvestigatorRegistrationFormTablesTag formTables;
+    private final RegistrationFormsTable formsTable;
 
     RegistrationOverviewTab(WebDriver driver, InvestigatorRegistrationPage page) {
         super(driver, page);
         this.commentsTag = new RegistrationCommentsTag(driver);
-        this.progressBar = new RegistrationProgressBar(driver);
-        this.formTables = new InvestigatorRegistrationFormTablesTag(getDriver());
+        this.formsTable = new RegistrationFormsTable();
     }
 
     public RegistrationOverviewTabHelper getHelper() {
@@ -146,11 +145,9 @@ public class RegistrationOverviewTab extends AbstractRegistrationTab<Registratio
     }
 
     public String getStatus() {
-        String status = registrationStatus.getText();
-        if (status.indexOf(" (") > 0) {
-            status = status.substring(0, status.indexOf(" ("));
-        }
-        return status;
+        String headingPrefix = getPropertyText("registration.status.label") + getPropertyText("label.separator") + " ";
+        int statusStartIndex = headingPrefix.length();
+        return statusHeading.getText().substring(statusStartIndex).trim();
     }
 
     public boolean areCommentsPresent() {
@@ -168,9 +165,11 @@ public class RegistrationOverviewTab extends AbstractRegistrationTab<Registratio
     public AbstractLoadableComponent<?> clickSubmitRegistration() {
         submitRegistrationButton.click();
         WaitUtils.pause(200);
-        return identifyDisplayedComponent(SignAndSubmitRegistrationDialog.getFactory(RegistrationOverviewTab.this),
+        return identifyDisplayedComponent(
+                SignAndSubmitRegistrationDialog.getFactory(RegistrationOverviewTab.this),
                 ConfirmSubmissionToInvestigatorDialog.getFactory(RegistrationOverviewTab.this),
-                ValidationMessageDialog.getFactory(this), ResubmissionCommentsDialog.getFactory(this));
+                ValidationMessageDialog.getFactory(this),
+                ResubmissionCommentsDialog.getFactory(this));
     }
 
     public boolean isReviseRegistrationButtonPresent() {
@@ -192,16 +191,19 @@ public class RegistrationOverviewTab extends AbstractRegistrationTab<Registratio
     }
 
     public List<FormListing> getFormListings() {
-        return getFormTablesTag().getFormsListing();
+        return getFormsTable().getFormListings();
+    }
+
+    private RegistrationFormsTable getFormsTable() {
+        return formsTable.waitUntilReady();
     }
 
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
-        assertElementWithIdPresent(TAB_UNIQUE_LOCATOR_ID);;
         assertFalse(JQueryUtils.isDialogDisplayed(getDriver()));
-        assertPresent(By.id(REGISTRATION_STATUS_ID));
-        assertTrue(findElement(By.id(REGISTRATION_STATUS_ID)).isDisplayed());
+        assertPresent(By.cssSelector(STATUS_HEADING_CSS_SELECTOR));
+        assertTrue(findElement(By.cssSelector(STATUS_HEADING_CSS_SELECTOR)).isDisplayed());
     }
 
     protected String getTabId() {
@@ -212,19 +214,97 @@ public class RegistrationOverviewTab extends AbstractRegistrationTab<Registratio
         return commentsTag.waitUntilReady();
     }
 
-    RegistrationProgressBar getProgressBar() {
-        return progressBar.waitUntilReady();
-    }
-
-    private InvestigatorRegistrationFormTablesTag getFormTablesTag() {
-        return formTables.waitUntilReady();
-    }
-
     private static class Factory extends IdentifiableComponentFactory<RegistrationOverviewTab> {
 
         @Override
         protected RegistrationOverviewTab getInstance(WebDriver driver) {
             return new RegistrationOverviewTab(driver, new InvestigatorRegistrationPage(driver));
+        }
+
+    }
+
+    private class RegistrationFormsTable extends AbstractLoadableComponent<RegistrationFormsTable> {
+
+        private static final String FORM_TABLE_ID = "registrationFormsTable";
+
+        @FindBy(id = FORM_TABLE_ID)
+        private WebElement table;
+
+        protected RegistrationFormsTable() {
+            super(RegistrationOverviewTab.this.getDriver());
+        }
+
+        @Override
+        protected void assertLoaded() {
+            assertFindBysPresent();
+        }
+
+        private List<FormListing> getFormListings() {
+            return FirebirdTableUtils.transformDataTableRows(RegistrationOverviewTab.this, table, FormListing.class);
+        }
+
+    }
+
+    public class FormListing implements TableListing {
+
+        private static final int FORM_COLUMN_INDEX = 0;
+        private static final int OPTIONALITY_COLUMN_INDEX = 1;
+        private static final int STATUS_DATE_COLUMN_INDEX = 2;
+        private static final int STATUS_COLUMN_INDEX = 3;
+        private static final int COMMENTS_COLUMN_INDEX = 4;
+
+        private final Long id;
+        private final String form;
+        private final WebElement formLink;
+        private final String optionality;
+        private final String statusDate;
+        private final String status;
+        private final WebElement commentLink;
+
+        public FormListing(WebElement row) {
+            this.id = Long.valueOf(RegistrationOverviewTab.getId(row));
+            List<WebElement> cells = TableUtils.getCells(row);
+            this.form = cells.get(FORM_COLUMN_INDEX).getText();
+            this.formLink = cells.get(FORM_COLUMN_INDEX).findElement(By.tagName("a"));
+            this.optionality = cells.get(OPTIONALITY_COLUMN_INDEX).getText();
+            this.statusDate = cells.get(STATUS_DATE_COLUMN_INDEX).getText();
+            this.status = cells.get(STATUS_COLUMN_INDEX).getText();
+            commentLink = getElementIfPresent(cells.get(COMMENTS_COLUMN_INDEX), By.tagName("img"));
+        }
+
+        @Override
+        public Long getId() {
+            return id;
+        }
+
+        public String getForm() {
+            return form;
+        }
+
+        public String getOptionality() {
+            return optionality;
+        }
+
+        public String getStatusDate() {
+            return statusDate;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public AbstractFormTab<?> clickFormLink() {
+            pause(200);
+            formLink.click();
+            pause(200);
+            return (AbstractFormTab<?>) identifyDisplayedComponent(30, ProtocolForm1572Tab.getFactory(getPage()),
+                    FinancialDisclosureTab.getFactory(getPage()), CurriculumVitaeTab.getFactory(getPage()),
+                    HumanResearchCertificateTab.getFactory(getPage()), ProtocolAdditionalAttachmentsTab.getFactory(getPage()));
+        }
+
+        public FormRejectionCommentsDialog clickComments() {
+            commentLink.click();
+            return new FormRejectionCommentsDialog(getDriver(), RegistrationOverviewTab.this).waitUntilReady();
         }
 
     }

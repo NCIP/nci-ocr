@@ -127,7 +127,7 @@ public class ManageInvestigatorsActionTest extends AbstractWebTest {
         InvestigatorProfile profile2 = InvestigatorProfileFactory.getInstance().create();
         when(mockProfileService.getById(1L)).thenReturn(profile1);
         when(mockProfileService.getById(2L)).thenReturn(profile2);
-        action.setSelectedInvestigatorsProfileIds(Lists.newArrayList(1L, 2L));
+        action.setSelectedInvestigators(Lists.newArrayList(1L, 2L));
 
         action.prepare();
         assertTrue("Profile 1 was not found in the result!", action.getSelectedInvestigatorProfiles()

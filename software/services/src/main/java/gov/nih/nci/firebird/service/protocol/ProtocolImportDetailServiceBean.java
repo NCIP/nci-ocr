@@ -82,14 +82,15 @@
  */
 package gov.nih.nci.firebird.service.protocol;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 
 import java.util.List;
 import java.util.Map;
@@ -107,8 +108,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.hibernate.Session;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -122,25 +121,25 @@ import com.google.inject.Provider;
 public class ProtocolImportDetailServiceBean implements ProtocolImportDetailService {
     private PersonService personService;
     private ProtocolService protocolService;
-    private OrganizationService organizationService;
+    private OrganizationSearchService organizationSearchService;
     private ResourceBundle resources;
     private Provider<Session> sessionProvider;
     private SessionContext sessionContext;
     private final Map<String, Person> lookedUpPersons = Maps.newHashMap();
 
-    @Resource(mappedName = "firebird/PersonServiceBean/local")
+    @Inject
     void setPersonService(PersonService personService) {
         this.personService = personService;
     }
 
-    @Resource(mappedName = "firebird/ProtocolServiceBean/local")
+    @Inject
     void setProtocolService(ProtocolService protocolService) {
         this.protocolService = protocolService;
     }
 
-    @Resource(mappedName = "firebird/OrganizationServiceBean/local")
-    void setOrganizationService(OrganizationService organizationService) {
-        this.organizationService = organizationService;
+    @Inject
+    void setOrganizationSearchService(OrganizationSearchService organizationSearchService) {
+        this.organizationSearchService = organizationSearchService;
     }
 
     @Inject
@@ -171,10 +170,10 @@ public class ProtocolImportDetailServiceBean implements ProtocolImportDetailServ
     private void checkForDuplicateProtocolNumber(ProtocolImportDetail detail) {
         if (protocolService.hasDuplicateProtocolNumber(detail.getProtocol())) {
             detail.addFailure(resources, "validation.failure.protocol.import.duplicate.number",
-                    ProtocolImportJob.PROTOCOL_NUMBER_COLUMN_INDEX, detail.getProtocol().getProtocolNumber());
+                              ProtocolImportJob.PROTOCOL_NUMBER_COLUMN_INDEX, detail.getProtocol().getProtocolNumber());
         }
     }
-
+    
     private void handleLeadOrganizations(ProtocolImportDetail detail) {
         if (!detail.getLeadOrganizationMappings().isEmpty()) {
 
@@ -192,7 +191,7 @@ public class ProtocolImportDetailServiceBean implements ProtocolImportDetailServ
     }
 
     private void addLeadOrganization(ProtocolImportDetail detail, Organization leadOrganization,
-            Person principalInvestigator) {
+                                     Person principalInvestigator) {
         if (leadOrganization != null && principalInvestigator != null) {
             detail.getProtocol().addLeadOrganization(leadOrganization, principalInvestigator);
         }
@@ -201,7 +200,7 @@ public class ProtocolImportDetailServiceBean implements ProtocolImportDetailServ
     private boolean validateMapping(Map.Entry<String, String> mapping, ProtocolImportDetail detail) {
         if (StringUtils.isBlank(mapping.getKey()) || StringUtils.isBlank(mapping.getValue())) {
             detail.addFailure(resources, "validation.failure.protocol.import.invalid.lead.organization.key",
-                    ProtocolImportJob.PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX, mapping);
+                              ProtocolImportJob.PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX, mapping);
             return false;
         }
         return true;
@@ -211,58 +210,57 @@ public class ProtocolImportDetailServiceBean implements ProtocolImportDetailServ
         Set<String> principalInvestigatorIds = Sets.newHashSet(detail.getLeadOrganizationMappings().values());
         Map<String, Person> lookedUpInvestigators = Maps.newHashMap();
 
-        for (String externalId : principalInvestigatorIds) {
-            if (StringUtils.isNotBlank(externalId)) {
-                Person person = retrievePrincipalInvestigator(detail, externalId);
-                lookedUpInvestigators.put(externalId, person);
+        for (String nesId : principalInvestigatorIds) {
+            if (StringUtils.isNotBlank(nesId)) {
+                Person person = retrievePrincipalInvestigator(detail, nesId);
+                lookedUpInvestigators.put(nesId, person);
             }
         }
 
         return lookedUpInvestigators;
     }
 
-    private Person retrievePrincipalInvestigator(ProtocolImportDetail detail, String investigatorExternalId) {
-        return retrieveInvestigator(detail, investigatorExternalId,
-                ProtocolImportJob.PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX);
+    private Person retrievePrincipalInvestigator(ProtocolImportDetail detail, String investigatorNesId) {
+        return retrieveInvestigator(detail, investigatorNesId,
+                                    ProtocolImportJob.PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX);
     }
 
-    private Person retrieveInvestigator(ProtocolImportDetail detail, String investigatorExternalId, int column) {
-        if (!NumberUtils.isDigits(investigatorExternalId)) {
-            handleInvalidInvestigatorIdFormat(detail, investigatorExternalId, column);
+    private Person retrieveInvestigator(ProtocolImportDetail detail, String investigatorNesId, int column) {
+        if (!NumberUtils.isDigits(investigatorNesId)) {
+            handleInvalidInvestigatorIdFormat(detail, investigatorNesId, column);
             return null;
         }
-        Person investigator = lookedUpPersons.get(investigatorExternalId);
+        Person investigator = lookedUpPersons.get(investigatorNesId);
         if (investigator == null) {
-            investigator = lookupInvestigator(detail, investigatorExternalId, column);
-            lookedUpPersons.put(investigatorExternalId, investigator);
+            investigator = lookupInvestigator(detail, investigatorNesId, column);
+            lookedUpPersons.put(investigatorNesId, investigator);
         }
         return investigator;
     }
 
-    private Person lookupInvestigator(ProtocolImportDetail detail, String investigatorExternalId, int column) {
+    private Person lookupInvestigator(ProtocolImportDetail detail, String investigatorNesId, int column) {
         try {
-            Person investigator = personService.getByExternalId(investigatorExternalId);
+            Person investigator = personService.importNesPerson(investigatorNesId);
             if (investigator == null) {
-                handleInvalidInvestigatorId(detail, investigatorExternalId, column);
+                handleInvalidInvestigatorId(detail, investigatorNesId, column);
             }
             return investigator;
-        } catch (InvalidatedPersonException e) {
-            handleInvalidInvestigatorId(detail, investigatorExternalId, column);
+        } catch (UnavailableEntityException e) {
+            handleInvalidInvestigatorId(detail, investigatorNesId, column);
         }
         return null;
     }
 
-    private void handleInvalidInvestigatorIdFormat(ProtocolImportDetail detail, String investigatorExternalId,
-            int column) {
-        detail.addFailure(resources, "validation.failure.protocol.import.invalid.investigator.id.format", column,
-                investigatorExternalId);
+    private void handleInvalidInvestigatorIdFormat(ProtocolImportDetail detail, String investigatorNesId, int column) {
+        detail.addFailure(resources, "validation.failure.protocol.import.invalid.investigator.id.format",
+                          column, investigatorNesId);
     }
 
-    private void handleInvalidInvestigatorId(ProtocolImportDetail detail, String investigatorExternalId, int column) {
-        detail.addFailure(resources, "validation.failure.protocol.import.invalid.investigator.id", column,
-                investigatorExternalId);
+    private void handleInvalidInvestigatorId(ProtocolImportDetail detail, String investigatorNesId, int column) {
+        detail.addFailure(resources, "validation.failure.protocol.import.invalid.investigator.id",
+                          column, investigatorNesId);
     }
-
+    
     private Map<String, Organization> lookupMappedOrganizations(ProtocolImportDetail detail) {
         Set<String> leadOrganizationIds = detail.getLeadOrganizationMappings().keySet();
         Map<String, Organization> lookedUpOrganizations = Maps.newHashMap();
@@ -277,8 +275,7 @@ public class ProtocolImportDetailServiceBean implements ProtocolImportDetailServ
     }
 
     private Organization retrieveLeadOrganization(ProtocolImportDetail detail, String ctepId) {
-        List<Organization> leadOrganizations = organizationService.getByAlternateIdentifier(ctepId,
-                OrganizationRoleType.GENERIC_ORGANIZATION);
+        List<Organization> leadOrganizations = organizationSearchService.searchByAssignedIdentifier(ctepId);
         if (leadOrganizations.isEmpty()) {
             handleInvalidLeadOrganizationCtepId(detail, ctepId);
         } else if (leadOrganizations.size() > 1) {
@@ -289,28 +286,28 @@ public class ProtocolImportDetailServiceBean implements ProtocolImportDetailServ
         return null;
     }
 
+
     private void handleInvalidLeadOrganizationCtepId(ProtocolImportDetail detail, String ctepId) {
         detail.addFailure(resources, "validation.failure.protocol.import.invalid.lead.organization.ctep.id",
-                ProtocolImportJob.PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX, ctepId);
+                          ProtocolImportJob.PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX, ctepId);
     }
 
     private void handleTooManyLeadOrganizationsReturned(ProtocolImportDetail detail, String ctepId) {
         detail.addFailure(resources, "validation.failure.protocol.import.too.many.lead.organizations.returned",
-                ProtocolImportJob.PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX, ctepId);
+                          ProtocolImportJob.PROTOCOL_LEAD_ORGANIZATION_COLUMN_INDEX, ctepId);
     }
-
     private void checkInvestigators(ProtocolImportDetail detail) {
-        for (String investigatorExternalId : detail.getInvestigatorExternalIds()) {
-            Person investigator = retrieveInvestigator(detail, investigatorExternalId);
+        for (String investigatorNesId : detail.getInvestigatorNesIds()) {
+            Person investigator = retrieveInvestigator(detail, investigatorNesId);
             if (investigator != null) {
                 detail.getInvestigators().add(investigator);
             }
         }
     }
 
-    private Person retrieveInvestigator(ProtocolImportDetail detail, String investigatorExternalId) {
-        return retrieveInvestigator(detail, investigatorExternalId,
-                ProtocolImportJob.PROTOCOL_INVESTIGATOR_IDS_COLUMN_INDEX);
+    private Person retrieveInvestigator(ProtocolImportDetail detail, String investigatorNesId) {
+        return retrieveInvestigator(detail, investigatorNesId,
+                                    ProtocolImportJob.PROTOCOL_INVESTIGATOR_IDS_COLUMN_INDEX);
     }
 
     private void setFinalValidationStatus(ProtocolImportDetail detail) {
@@ -327,7 +324,7 @@ public class ProtocolImportDetailServiceBean implements ProtocolImportDetailServ
         detail.setStatus(ProtocolImportDetailStatus.IMPORTING);
         List<Person> investigators = retrieveInvestigators(detail);
         if (detail.getValidationResult().isValid()) {
-            Protocol protocolToSave = detail.getProtocol().createCopy();
+            Protocol protocolToSave = detail.getProtocol().clone();
             protocolService.addFormTypes(protocolToSave.getRegistrationConfiguration());
             protocolService.save(protocolToSave);
             addInvestigators(detail, investigators, protocolToSave);
@@ -356,10 +353,11 @@ public class ProtocolImportDetailServiceBean implements ProtocolImportDetailServ
 
     private List<Person> retrieveInvestigators(ProtocolImportDetail detail) {
         List<Person> investigators = Lists.newArrayList();
-        for (String investigatorExternalId : detail.getInvestigatorExternalIds()) {
-            investigators.add(retrieveInvestigator(detail, investigatorExternalId));
+        for (String investigatorNesId : detail.getInvestigatorNesIds()) {
+            investigators.add(retrieveInvestigator(detail, investigatorNesId));
         }
         return investigators;
     }
-
+    
+    
 }

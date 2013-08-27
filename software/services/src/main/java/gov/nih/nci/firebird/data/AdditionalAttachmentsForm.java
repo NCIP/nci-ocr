@@ -121,6 +121,7 @@ public class AdditionalAttachmentsForm extends AbstractSupplementalForm {
 
     AdditionalAttachmentsForm(AbstractRegistration registration, FormType formType) {
         super(registration, formType);
+        setFormStatus(FormStatus.NOT_APPLICABLE);
     }
 
     @Override

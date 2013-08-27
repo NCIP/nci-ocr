@@ -90,11 +90,11 @@ import gov.nih.nci.firebird.data.PrimaryOrganization;
 import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewCompletionDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewHumanResearchCertificatesDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab.RegistrationFormListing;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FormReviewCommentDialog;
 import gov.nih.nci.firebird.test.data.DataSet;
 
@@ -129,7 +129,7 @@ public class ReviewProtocolRegistrationTest extends AbstractScalabilityTest {
         acceptAllForms(reviewTab);
         ReviewCompletionDialog completionDialog = completeReview(reviewTab);
         approveRegistration(completionDialog);
-        assertEquals(RegistrationStatus.APPROVED.getDisplay(), reviewTab.getStatusHeader());
+        assertEquals("Status: " + RegistrationStatus.APPROVED.getDisplay(), reviewTab.getStatusHeader());
     }
 
     private ReviewRegistrationTab openRegistration(final HomePage homePage) {
@@ -150,11 +150,11 @@ public class ReviewProtocolRegistrationTest extends AbstractScalabilityTest {
     }
 
     private void downloadForm(ReviewRegistrationTab reviewTab, AbstractRegistrationForm form) throws IOException {
-        final RegistrationListing listing = reviewTab.getHelper().getMatchingListing(form);
+        final RegistrationFormListing listing = reviewTab.getHelper().getMatchingListing(form);
         new TimedAction<Void>("Download " + form.getFormType().getName()) {
             @Override
             public Void perform() throws IOException {
-                AbstractLoadableComponent<?> result = listing.clickDownload();
+                AbstractLoadableComponent<?> result = listing.clickFormDownload();
                 if (result instanceof ReviewHumanResearchCertificatesDialog) {
                     ReviewHumanResearchCertificatesDialog dialog = (ReviewHumanResearchCertificatesDialog) result;
                     dialog.getListings().get(0).clickDownloadLink();
@@ -177,7 +177,7 @@ public class ReviewProtocolRegistrationTest extends AbstractScalabilityTest {
         final FormReviewCommentDialog commentsDialog = new TimedAction<FormReviewCommentDialog>("Reject " + form.getFormType().getName()) {
             @Override
             public FormReviewCommentDialog perform() throws IOException {
-                return reviewTab.getHelper().getMatchingListing(form).clickReject();
+                return reviewTab.getHelper().getMatchingListing(form).clickRejectRadioButton();
             }
         }.time();
         commentsDialog.typeComments("Rejected");
@@ -202,7 +202,7 @@ public class ReviewProtocolRegistrationTest extends AbstractScalabilityTest {
         new TimedAction<Void>("Accept " + form.getFormType().getName()) {
             @Override
             public Void perform() throws IOException {
-                reviewTab.getHelper().getMatchingListing(form).clickAccept();
+                reviewTab.getHelper().getMatchingListing(form).clickAcceptRadioButton();
                 return null;
             }
         }.time();
@@ -220,7 +220,7 @@ public class ReviewProtocolRegistrationTest extends AbstractScalabilityTest {
         new TimedAction<Void>("Approve Registration") {
             @Override
             public Void perform() {
-                completionDialog.clickApproveRegistration().clickClose();
+                completionDialog.clickApproveRegistration();
                 return null;
             }
         }.time();

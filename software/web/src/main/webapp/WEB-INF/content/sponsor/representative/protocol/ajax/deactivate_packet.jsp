@@ -3,7 +3,7 @@
     <div class="ui-tabs">
         <div class="ui-tabs-panel">
             <firebird:messages/>
-            <s:form namespace="/sponsor/representative/protocol/ajax" action="deactivateRegistrationPacket" id="deactivateForm">
+            <s:form namespace="/sponsor/protocol/representative/ajax" action="deactivateRegistrationPacket" id="deactivateForm">
                 <s:hidden name="registration.id"/>
                 <firebird:dialogHeader>
                     <fmt:message key="sponsor.protocol.deactivate.investigator"/>

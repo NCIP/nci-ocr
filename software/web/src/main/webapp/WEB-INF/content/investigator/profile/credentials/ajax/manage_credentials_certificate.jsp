@@ -56,7 +56,7 @@
                     </div>
                 </div>
 
-                <s:hidden id="issuingOrganizationExternalId" name="issuingOrganizationExternalId"/>
+                <s:hidden id="issuerSearchKey" name="issuerSearchKey"/>
 
                 <div id="issuerDisplay">
                     <firebird:organizationDisplay organization="${certificate.issuer}" tagVariableName="issuerDisplay"/>
@@ -78,7 +78,7 @@
                            <fmt:message key="button.searchAgain" /></s:a>
                        </span>
                         <div class="formcol">
-                           <s:textfield id="certificate.issuer.name" name="certificate.issuer.name" maxlength="160" size="30" requiredLabel="true"
+                           <s:textfield id="certificate.issuer.name" name="certificate.issuer.name" maxlength="160" size="30" required="true"
                                cssStyle="width: 19em;" label="%{getText('textfield.organization.name')}"
                               />
                         </div>
@@ -147,7 +147,7 @@ var certificateDialog = {
     },
 
     enableIssuerSearch: function () {
-        $('#issuingOrganizationExternalId').val("");
+        $('#issuerSearchKey').val("");
         certificateDialog.searchedOrganization = null;
         $('#nihOerCertificate').attr('checked', false);
         $("#nihOerIssuerDisplay").hide(certificateDialog.toggleSpeed);
@@ -171,7 +171,7 @@ var certificateDialog = {
 
 $(function () {
     certificateDialog.effectiveDateLabel = $("label[for=effectiveDateMonthSelect]");
-    certificateDialog.effectiveDateRequiredAsterisk = certificateDialog.effectiveDateLabel.find(".requiredLabel");
+    certificateDialog.effectiveDateRequiredAsterisk = certificateDialog.effectiveDateLabel.find(".required");
     var showCreateNew = $("#createNewIssuerFields .errorMessage").length > 0;
     $("#nihOerIssuerDisplay").toggle(${nihOerIssued} && !showCreateNew);
     $("#issuerSearch").toggle(!${nihOerIssued} && certificateDialog.searchedOrganization == null && !showCreateNew);
@@ -181,15 +181,15 @@ $(function () {
     }
     certificateDialog.toggleEffectiveDateRequired();
 
-    organizationSearch.clickSelectButton = function (organization) {
+    organizationSearch.clickSelectButton = function (searchKey, rowData) {
         indicateLoading(true);
-        $.post("${retrieveCtepIdUrl}", { issuingOrganizationExternalId: organization.externalId } , function(ctepId) {
-            organization.ctepId = ctepId;
-            certificateDialog.searchedOrganization = organization;
-            issuerDisplay.setOrganization(organization);
+        $.post("${retrieveCtepIdUrl}", { issuerSearchKey: searchKey } , function(ctepId) {
+            rowData.organization.ctepId = ctepId;
+            certificateDialog.searchedOrganization = rowData.organization;
+            issuerDisplay.setOrganization(rowData.organization);
             $("#issuerSearch").hide(certificateDialog.toggleSpeed);
             $("#issuerDisplay").show(certificateDialog.toggleSpeed);
-            $('#issuingOrganizationExternalId').val(organization.externalId);
+            $('#issuerSearchKey').val(searchKey);
             indicateLoading(false);
         });
     };

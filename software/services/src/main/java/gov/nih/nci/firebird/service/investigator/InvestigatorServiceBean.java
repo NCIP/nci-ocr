@@ -85,7 +85,6 @@ package gov.nih.nci.firebird.service.investigator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -115,7 +114,7 @@ public class InvestigatorServiceBean implements InvestigatorService {
     private TemplateService templateService;
     private EmailService emailService;
 
-    @Resource(mappedName = "firebird/FirebirdUserServiceBean/local")
+    @Inject
     void setUserService(FirebirdUserService userService) {
         this.userService = userService;
     }

@@ -115,6 +115,22 @@ public class RootKeystore implements Auditable {
         // noop
     }
 
+    /**
+     * convenient ctor.
+     * @param keystore key-store.
+     */
+    public RootKeystore(Keystore keystore) {
+        this.keystore = keystore;
+    }
+
+    /**
+     * convenient ctor.
+     * @param file key-store file.
+     */
+    public RootKeystore(FirebirdFile file) {
+        this(new Keystore(file));
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Searchable
@@ -123,9 +139,7 @@ public class RootKeystore implements Auditable {
         return id;
     }
 
-    @SuppressWarnings("unused")
-    // setter required by hibernate
-    private void setId(Long id) {
+    void setId(Long id) {
         this.id = id;
     }
 

@@ -38,7 +38,7 @@ public class FlowNavigationActionTest extends AbstractWebTest {
         flow.setupFlowBodyWithSteps(EnumSet.copyOf(RegistrationFlowStep.getStepsForRole(UserRoleType.INVESTIGATOR)), VIEW_SELECTED_ROLES);
         setupExistingFlow(flow);
     }
-
+    
     private void setupExistingFlow(RegistrationFlowController flow) {
         setFlowStatusInSession(flow);
         setNewFlowDataInSession();
@@ -56,7 +56,7 @@ public class FlowNavigationActionTest extends AbstractWebTest {
         setupExistingFlow();
         assertEquals(flow, action.getFlow());
     }
-
+    
     @Test
     public void testEnterNextStep() {
         setupExistingFlow();
@@ -114,11 +114,5 @@ public class FlowNavigationActionTest extends AbstractWebTest {
 
     private void setNewFlowDataInSession() {
         getMockRequest().getSession().setAttribute(ACCOUNT_CONFIGURATION_DATA, data);
-    }
-
-    @Test
-    public  void testEnterCurrentStep() throws Exception {
-        setupExistingFlow();
-        assertEquals(flow.getCurrentStep().name(), action.enterCurrentStep());
     }
 }

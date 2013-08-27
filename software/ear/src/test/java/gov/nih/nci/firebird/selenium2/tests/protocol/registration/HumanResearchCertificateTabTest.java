@@ -90,7 +90,6 @@ import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.TrainingCertificate;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.CredentialsTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.EditTrainingCertificateDialog;
@@ -99,7 +98,7 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.B
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.HumanResearchCertificateTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.HumanResearchCertificateTab.CertificateListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab.FormListing;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.LoginAccount.InvestigatorLogin;
@@ -109,9 +108,7 @@ import gov.nih.nci.firebird.test.data.DataSetBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
-import java.util.Date;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
 
 public class HumanResearchCertificateTabTest extends AbstractFirebirdWebDriverTest {
@@ -131,12 +128,11 @@ public class HumanResearchCertificateTabTest extends AbstractFirebirdWebDriverTe
     }
 
     protected HumanResearchCertificateTab navigateToHumanResearchCertificateTab() {
-        BrowseRegistrationsPage browsePage = openHomePage(getLogin()).getInvestigatorMenu()
-                .clickProtocolRegistrations();
+        BrowseRegistrationsPage browsePage = openHomePage(getLogin()).getInvestigatorMenu().clickProtocolRegistrations();
         RegistrationOverviewTab overviewTab = browsePage.getHelper().getRegistrationListing(getRegistration())
                 .clickRegistrationLink();
         return (HumanResearchCertificateTab) overviewTab.getHelper()
-                .getFormListing(getRegistration().getHumanResearchCertificateForm()).click();
+                .getFormListing(getRegistration().getHumanResearchCertificateForm()).clickFormLink();
     }
 
     protected LoginAccount getLogin() {
@@ -156,13 +152,8 @@ public class HumanResearchCertificateTabTest extends AbstractFirebirdWebDriverTe
         File tempFile2 = TestFileUtils.createTemporaryFile();
 
         TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate(tempFile,
-                getExistingExternalOrganization());
+                getExistingNesOrganization());
         certificate.setEffectiveDate(effectiveDate.getTime());
-
-        TrainingCertificate certificate2 = CredentialFactory.getInstance().createCertificate(tempFile2,
-                getExistingExternalOrganization());
-        certificate2.setEffectiveDate(effectiveDate.getTime());
-        certificate2.setExpirationDate(null);
 
         HumanResearchCertificateTab hrcTab = navigateToHumanResearchCertificateTab();
 
@@ -172,6 +163,10 @@ public class HumanResearchCertificateTabTest extends AbstractFirebirdWebDriverTe
         listing = updateCertificate(hrcTab, listing, certificate, null);
         assertTrue(listing.isSelected());
 
+        TrainingCertificate certificate2 = CredentialFactory.getInstance().createCertificate(tempFile2,
+                getExistingNesOrganization());
+        certificate2.setEffectiveDate(effectiveDate.getTime());
+        certificate2.setExpirationDate(null);
         addAndSelectCertificate(hrcTab, certificate2, tempFile2);
 
         hrcTab = verifyFormStatusOnOverviewTab(hrcTab, FormStatus.COMPLETED);
@@ -222,12 +217,12 @@ public class HumanResearchCertificateTabTest extends AbstractFirebirdWebDriverTe
                 getRegistration().getHumanResearchCertificateForm());
 
         if (!formListing.getOptionality().equals(FormOptionality.OPTIONAL.getDisplay())) {
-            assertEquals(status.getDisplay(), formListing.getFormStatus());
+            assertEquals(status.getDisplay(), formListing.getStatus());
         } else {
-            assertEquals(FormStatus.COMPLETED.getDisplay(), formListing.getFormStatus());
+            assertEquals(FormStatus.COMPLETED.getDisplay(), formListing.getStatus());
         }
         return (HumanResearchCertificateTab) overviewTab.getHelper()
-                .getFormListing(getRegistration().getHumanResearchCertificateForm()).click();
+                .getFormListing(getRegistration().getHumanResearchCertificateForm()).clickFormLink();
     }
 
     private void removeCertificatesFromProfile(HumanResearchCertificateTab hrcTab) {
@@ -239,27 +234,6 @@ public class HumanResearchCertificateTabTest extends AbstractFirebirdWebDriverTe
         assertEquals(1, certificateSection.getListings().size());
         certificateSection.getListings().get(0).clickDeleteLink().clickDelete();
         assertTrue(certificateSection.getListings().isEmpty());
-    }
-
-    @Test
-    public void testCantSelectExpiredCertificate() throws IOException, CredentialAlreadyExistsException {
-        TrainingCertificate expiredCertificate = CredentialFactory.getInstance().createCertificate(
-                TestFileUtils.createTemporaryFile(), getExistingExternalOrganization());
-        expiredCertificate.setEffectiveDate(new Date());
-        expiredCertificate.setExpirationDate(DateUtils.addMonths(new Date(), -1));
-
-        TrainingCertificate activeCertificate = CredentialFactory.getInstance().createCertificate(
-                TestFileUtils.createTemporaryFile(), getExistingExternalOrganization());
-        activeCertificate.setEffectiveDate(new Date());
-
-        getRegistration().getProfile().addCredential(expiredCertificate);
-        getRegistration().getProfile().addCredential(activeCertificate);
-
-        dataSet.update(getRegistration().getProfile());
-
-        HumanResearchCertificateTab hrcTab = navigateToHumanResearchCertificateTab();
-        assertNotNull(hrcTab.getHelper().getListing(activeCertificate));
-        assertNull(hrcTab.getHelper().getListing(expiredCertificate));
     }
 
     protected DataSet getDataSet() {

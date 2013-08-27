@@ -12,7 +12,7 @@
 <s:textfield
         id="%{#elementId}"
         name="%{#elementId}"
-        maxlength="20" size="20" cssStyle="width: 19em;" required="true"
+        maxlength="20" size="20" cssStyle="width: 19em;" requiredLabel="true"
         label="%{getText('textfield.zipCode')}" labelposition="left" />
 
 <script>

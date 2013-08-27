@@ -82,9 +82,9 @@
  */
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
-import static org.apache.commons.lang3.StringUtils.*;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.protocol.ProtocolImportDetail;
 import gov.nih.nci.firebird.service.protocol.ProtocolImportJob;
 import gov.nih.nci.firebird.service.protocol.ProtocolImportService;
@@ -118,28 +118,32 @@ public class ImportProtocolsAction extends AbstractProtocolAction {
 
     static final String JOB_IN_PROGRESS_ERROR_KEY = "import.protocol.job.in.progress";
 
+    private final OrganizationService organizationService;
     private final ProtocolImportService protocolImportService;
 
     private File importFile;
     private Organization sponsor;
-    private String sponsorExternalId;
     private List<Integer> selectedIndexForImport;
 
     /**
      * @param protocolService the protocol service
+     * @param organizationService the organization service
      * @param protocolImportService the protocol import service
      */
     @Inject
-    public ImportProtocolsAction(ProtocolService protocolService, ProtocolImportService protocolImportService) {
+    public ImportProtocolsAction(ProtocolService protocolService, OrganizationService organizationService,
+            ProtocolImportService protocolImportService) {
         super(protocolService);
+        this.organizationService = organizationService;
         this.protocolImportService = protocolImportService;
     }
 
     @Override
     public void prepare() {
         super.prepare();
-        if (!isEmpty(getSponsorExternalId())) {
-            setSponsor(getOrganization(getSponsorExternalId()));
+        Long sponsorId = getId(sponsor);
+        if (sponsorId != null) {
+            setSponsor(organizationService.getById(sponsorId));
         }
     }
 
@@ -167,7 +171,7 @@ public class ImportProtocolsAction extends AbstractProtocolAction {
     @Validations(expressions = @ExpressionValidator(
             expression = "sponsor.id == null || currentUser.isSponsorRepresentative(sponsor)",
             key = "sponsor.verification.not.representative"), requiredFields = {
-            @RequiredFieldValidator(fieldName = "sponsor.externalId", key = "import.protocol.sponsor.required"),
+            @RequiredFieldValidator(fieldName = "sponsor.id", key = "import.protocol.sponsor.required"),
             @RequiredFieldValidator(fieldName = "importFile", key = "import.protocol.export.file.required") })
     public String uploadImportFile() {
         ProtocolImportJob importJob = getProtocolImportJob();
@@ -213,8 +217,7 @@ public class ImportProtocolsAction extends AbstractProtocolAction {
     @Validations(expressions = {
             @ExpressionValidator(expression = "currentUser.isSponsorRepresentative(sponsor)",
                     key = "sponsor.verification.not.representative"),
-            @ExpressionValidator(
-                    expression = "selectedIndexForImport != null && !selectedIndexForImport.empty",
+            @ExpressionValidator(expression = "!selectedIndexForImport.empty",
                     key = "import.protocol.selection.required") })
     public String importRecords() {
         ProtocolImportJob importJob = getProtocolImportJob();
@@ -241,38 +244,51 @@ public class ImportProtocolsAction extends AbstractProtocolAction {
         return INPUT;
     }
 
+    /**
+     * @return The Existing Protocol Import Job from the session.
+     */
     public ProtocolImportJob getProtocolImportJob() {
         return (ProtocolImportJob) getSessionAttribute(FirebirdUIConstants.PROTOCOL_IMPORT_JOB);
     }
 
+    /**
+     * @return the importFile
+     */
     public File getImportFile() {
         return importFile;
     }
 
+    /**
+     * @param importFile the importFile to set
+     */
     public void setImportFile(File importFile) {
         this.importFile = importFile;
     }
 
-    public String getSponsorExternalId() {
-        return sponsorExternalId;
-    }
-
-    public void setSponsorExternalId(String sponsorExternalId) {
-        this.sponsorExternalId = sponsorExternalId;
-    }
-
+    /**
+     * @return the sponsor
+     */
     public Organization getSponsor() {
         return sponsor;
     }
 
-    private void setSponsor(Organization sponsor) {
+    /**
+     * @param sponsor the sponsor to set
+     */
+    public void setSponsor(Organization sponsor) {
         this.sponsor = sponsor;
     }
 
+    /**
+     * @return the selectedIndexesForImport
+     */
     public List<Integer> getSelectedIndexForImport() {
         return selectedIndexForImport;
     }
 
+    /**
+     * @param selectedIndexesForImport the selectedIndexesForImport to set
+     */
     public void setSelectedIndexForImport(List<Integer> selectedIndexesForImport) {
         this.selectedIndexForImport = selectedIndexesForImport;
     }

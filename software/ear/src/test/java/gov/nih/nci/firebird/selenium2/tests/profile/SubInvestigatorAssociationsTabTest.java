@@ -141,8 +141,8 @@ public class SubInvestigatorAssociationsTabTest extends AbstractFirebirdWebDrive
 
         associationDialog = associationTab.clickAddNew();
 
-        List<Person> associatedPersons = Lists.newArrayList(getTestDataSource().getPerson(), getTestDataSource()
-                .getPerson(), getTestDataSource().getPerson(), personInDatabase);
+        List<Person> associatedPersons = Lists.newArrayList(getNesTestDataSource().getPerson(), getNesTestDataSource()
+                .getPerson(), getNesTestDataSource().getPerson(), personInDatabase);
         for (Person associatedPerson : associatedPersons) {
             associationDialog = associationTab.clickAddNew();
             addAssociationToExistingPerson(associationDialog, associatedPerson);

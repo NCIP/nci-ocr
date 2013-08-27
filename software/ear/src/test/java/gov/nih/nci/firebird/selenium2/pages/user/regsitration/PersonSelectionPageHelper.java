@@ -103,7 +103,7 @@ public class PersonSelectionPageHelper extends AbstractAccountRegistrationPageHe
         page.typeInSearchField(SearchUtils.getSearchString(person));
     }
 
-    private void checkPersonInResults(Person person) {
+    public void checkPersonInResults(Person person) {
         SearchUtils.checkPersonInResults(person, page.getSearchResults());
     }
 

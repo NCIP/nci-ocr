@@ -320,6 +320,21 @@ public class FirebirdUserTest {
     }
 
     @Test
+    public void testGetVerifiedSponsorDelegateOrganizations() {
+        FirebirdUser user = FirebirdUserFactory.getInstance().create();
+        Organization sponsorDelegateOrganization = OrganizationFactory.getInstance().create();
+        Organization sponsorRepresentativeOrganization = OrganizationFactory.getInstance().create();
+        user.addSponsorDelegateRole(sponsorDelegateOrganization);
+        user.addSponsorRepresentativeRole(sponsorRepresentativeOrganization);
+        String delegateGroupName = "verified_sponsor_delegate_" + getNesIdExtension(sponsorDelegateOrganization);
+        String representativeGroupName = "verified_sponsor_" + getNesIdExtension(sponsorRepresentativeOrganization);
+        Set<String> groupNames = Sets.newHashSet(delegateGroupName, representativeGroupName);
+        List<Organization> sponsorDelegateOrgs = user.getVerifiedSponsorDelegateOrganizations(groupNames);
+        assertFalse(sponsorDelegateOrgs.contains(sponsorRepresentativeOrganization));
+        assertTrue(sponsorDelegateOrgs.contains(sponsorDelegateOrganization));
+    }
+
+    @Test
     public void testGetVerifiedSponsorRepresentativeOrganizations() {
         FirebirdUser user = FirebirdUserFactory.getInstance().create();
         Organization sponsorDelegateOrganization = OrganizationFactory.getInstance().create();
@@ -347,6 +362,14 @@ public class FirebirdUserTest {
         List<Organization> sponsorRepresentativeOrgs = user.getVerifiedSponsorOrganizations(groupNames);
         assertTrue(sponsorRepresentativeOrgs.contains(sponsorRepresentativeOrganization));
         assertTrue(sponsorRepresentativeOrgs.contains(sponsorDelegateOrganization));
+    }
+
+    @Test
+    public void testRemoveInvestigatorRole() {
+        FirebirdUser user = FirebirdUserFactory.getInstance().createInvestigator("username");
+        assertNotNull(user.getInvestigatorRole());
+        user.removeInvestigatorRole();
+        assertNull(user.getInvestigatorRole());
     }
 
     @Test
@@ -401,7 +424,7 @@ public class FirebirdUserTest {
     public void testHasVerifiedSponsorRole_False_NotASponsor() {
         FirebirdUser user = FirebirdUserFactory.getInstance().create();
         Organization sponsor = OrganizationFactory.getInstance().create();
-        Set<String> groupNames = Sets.newHashSet(SPONSOR_DELEGATE.getVerifiedGroupName() + "_" + sponsor.getExternalId());
+        Set<String> groupNames = Sets.newHashSet(SPONSOR_DELEGATE.getVerifiedGroupName() + "_" + sponsor.getNesId());
         assertFalse(user.hasVerifiedSponsorRole(sponsor, groupNames));
     }
 

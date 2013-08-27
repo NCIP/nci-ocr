@@ -125,9 +125,7 @@ public class TestDataHandler {
         } catch (HibernateException he) {
             handleException(tx, he, "Error deleting test data");
         } finally {
-            if (session != null) {
-                session.close();
-            }
+            session.close();
         }
     }
 

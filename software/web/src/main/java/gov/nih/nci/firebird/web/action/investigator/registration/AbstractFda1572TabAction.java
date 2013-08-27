@@ -82,12 +82,12 @@
  */
 package gov.nih.nci.firebird.web.action.investigator.registration;
 
-import static org.apache.commons.lang3.StringUtils.*;
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.ProtocolForm1572;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 import gov.nih.nci.firebird.web.action.investigator.registration.common.Fda1572TabActionProcessor;
 
@@ -99,33 +99,34 @@ import org.apache.struts2.json.JSONException;
 /**
  * Form 1572 Action methods for adding and removing associated organizations to the form.
  */
-@SuppressWarnings("ucd")
-// needs to be public for actions to get mapped
 public abstract class AbstractFda1572TabAction extends AbstractRegistrationTabAction {
 
     private static final long serialVersionUID = 1L;
+    private final OrganizationService organizationService;
     private Fda1572TabActionProcessor<AbstractProtocolRegistration> processor;
     private Organization organization;
-    private String organizationExternalId;
 
     /**
      * Creates an action instance.
      *
      * @param registrationService registration service
+     * @param organizationService organization service
      * @param profileService profile service
      * @param resources FIREBIRD resource bundle
      */
     protected AbstractFda1572TabAction(ProtocolRegistrationService registrationService,
-            InvestigatorProfileService profileService, ResourceBundle resources) {
+            OrganizationService organizationService, InvestigatorProfileService profileService,
+            ResourceBundle resources) {
         super(registrationService, profileService, resources);
+        this.organizationService = organizationService;
         this.processor = new Fda1572TabActionProcessor<AbstractProtocolRegistration>(registrationService, this);
     }
 
     @Override
     public void prepare() {
         super.prepare();
-        if (!isEmpty(getOrganizationExternalId())) {
-            organization = getOrganization(getOrganizationExternalId());
+        if (organization != null && organization.getId() != null) {
+            organization = organizationService.getById(organization.getId());
         }
         processor.setRegistration(getRegistration());
     }
@@ -176,24 +177,23 @@ public abstract class AbstractFda1572TabAction extends AbstractRegistrationTabAc
         return getRegistration().getForm1572();
     }
 
-    public String getOrganizationExternalId() {
-        return organizationExternalId;
-    }
-
-    public void setOrganizationExternalId(String organizationExternalId) {
-        this.organizationExternalId = organizationExternalId;
-    }
-    
+    /**
+     * @return organization selected for add/remove
+     */
     public Organization getOrganization() {
         return organization;
     }
 
-    void setOrganization(Organization organization) {
+    /**
+     * @param organization organization selected for add/remove
+     */
+    public void setOrganization(Organization organization) {
         this.organization = organization;
     }
 
-    @SuppressWarnings("ucd")
-    // used to inject mock processor from tests
+    /**
+     * @param processor the processor to set
+     */
     protected void setProcessor(Fda1572TabActionProcessor<AbstractProtocolRegistration> processor) {
         this.processor = processor;
     }

@@ -91,8 +91,6 @@ import javax.ejb.Timer;
  * Interface used to run jobs in the background on a daily basis.
  */
 @Remote
-@SuppressWarnings("ucd")
-// exposed service methods
 public interface DailyJobService {
 
     /**

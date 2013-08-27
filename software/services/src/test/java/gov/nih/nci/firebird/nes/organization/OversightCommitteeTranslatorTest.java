@@ -122,9 +122,7 @@ public class OversightCommitteeTranslatorTest {
     @Test
     public void testToOversightCommittee() throws Exception {
         Organization organization = OrganizationFactory.getInstance().create();
-        OversightCommitteeData oversightCommitteeData = new OversightCommitteeData();
-        oversightCommitteeData.setPlayerId(NesIdTestUtil.TEST_NES_ID_STRING);
-        organization.setExternalData(oversightCommitteeData);
+        organization.setPlayerIdentifier(NesIdTestUtil.TEST_NES_ID_STRING);
         when(mockHelper.getCountry(any(Address.class))).thenReturn(organization.getPostalAddress().getCountry());
         OversightCommittee oversightCommittee = translator.toOversightCommittee(organization, TYPE);
         assertEquals(TYPE.getCode(), oversightCommittee.getTypeCode().getCode());
@@ -135,14 +133,12 @@ public class OversightCommitteeTranslatorTest {
     public void testToFirebirdOrganization() throws Exception {
         gov.nih.nci.coppa.po.Organization player = nesObjectFactory.getTestNesOrganization();
         OversightCommittee oversightCommittee = nesObjectFactory.getTestOversightCommittee(TYPE);
-        Organization organization = translator.toFirebirdOrganization(oversightCommittee, player);
+        translator.toFirebirdOrganization(oversightCommittee, player);
         verify(mockHelper).toNesIdString(oversightCommittee.getIdentifier().getItem().get(0));
         verify(mockHelper).toNesIdString(oversightCommittee.getPlayerIdentifier());
         verify(mockHelper).toAddress(player.getPostalAddress());
         verify(mockHelper).getEmail(player.getTelecomAddress());
         verify(mockHelper).getPhoneNumber(player.getTelecomAddress());
-        OversightCommitteeData oversightCommitteeData = (OversightCommitteeData) organization.getExternalData();
-        assertEquals(TYPE, oversightCommitteeData.getOversightCommitteeType());
     }
 
     @Test

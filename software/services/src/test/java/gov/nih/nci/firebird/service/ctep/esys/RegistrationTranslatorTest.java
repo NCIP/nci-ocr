@@ -138,11 +138,9 @@ public class RegistrationTranslatorTest {
                 FINANCIAL_DISCLOSURE_ANSWERS.get(MONETARY_GAIN_QUESTION_ID));
         registration.getFinancialDisclosure().setOtherSponsorPayments(
                 FINANCIAL_DISCLOSURE_ANSWERS.get(OTHER_SPONSOR_PAYMENTS_QUESTION_ID));
-        Organization pharmaceuticalCompany = OrganizationFactory.getInstanceWithId().create();
-        pharmaceuticalCompany.setCtepId("ctepId");
         registration.getFinancialDisclosure().getPharmaceuticalCompanies()
-                .add(pharmaceuticalCompany);
-        registration.getForm1572().getPracticeSites().add(pharmaceuticalCompany);
+                .add(OrganizationFactory.getInstanceWithId().create());
+        registration.getForm1572().getPracticeSites().add(OrganizationFactory.getInstanceWithId().create());
         return registration;
     }
 
@@ -156,11 +154,8 @@ public class RegistrationTranslatorTest {
         for (FinancialDisclosureAnswer answer : esysRegistration.getFinancialDisclosure().getAnswers()) {
             assertEquals(FINANCIAL_DISCLOSURE_ANSWERS.get(answer.getQuestionId()), answer.getAnswer());
         }
-        for (Organization pharmaceuticalCompany : financialDisclosure.getPharmaceuticalCompanies()) {
-            assertTrue(esysRegistration.getFinancialDisclosure().getPharmaceuticalCompanyCtepIds()
-                    .contains(pharmaceuticalCompany.getCtepId()));
-        }
-
+        esysRegistration.getFinancialDisclosure().getPharmaceuticalCompanyCtepIds()
+                .containsAll(financialDisclosure.getPharmaceuticalCompanies());
     }
 
 }

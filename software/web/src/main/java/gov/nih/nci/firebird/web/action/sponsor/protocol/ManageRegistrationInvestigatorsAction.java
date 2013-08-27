@@ -81,7 +81,7 @@ public class ManageRegistrationInvestigatorsAction extends InvestigatorsTabActio
             @Result(name = INPUT, location = "investigator_info_new.jsp") })
     @Validations(customValidators = { @CustomValidator(type = "hibernate", fieldName = "investigator", parameters = {
             @ValidationParameter(name = "resourceKeyBase", value = "person"),
-            @ValidationParameter(name = "excludes", value = "externalId") }) }, fieldExpressions = {
+            @ValidationParameter(name = "excludes", value = "nesId") }) }, fieldExpressions = {
             @FieldExpressionValidator(fieldName = "investigator.postalAddress.stateOrProvince",
                     expression = "investigator.postalAddress.stateOrProvinceValid", key = "stateOrProvince.required") })
     public String addInvestigator() {
@@ -124,17 +124,16 @@ public class ManageRegistrationInvestigatorsAction extends InvestigatorsTabActio
      *
      * @return close dialog if all went well.
      */
-    @Validations(expressions = @ExpressionValidator(
-            expression = "invitedRegistrationIds != null && invitedRegistrationIds.size > 0",
+    @Validations(expressions = @ExpressionValidator(expression = "invitedRegistrations.size > 0",
             key = "sponsor.protocol.investigator.invite.no.selection.warning.message"))
     @Action(value = "invite", results = { @Result(name = ERROR, location = "invite.jsp") })
     public String invite() {
         CollectionUtils.forAllDo(getProtocol().getCurrentInvestigatorRegistrations(), new Closure() {
             @Override
             public void execute(Object registration) {
-                InvestigatorRegistration investigatorRegistration = (InvestigatorRegistration) registration;
-                if (getInvitedRegistrationIds().contains(investigatorRegistration.getId())) {
-                    getProtocolService().invite(investigatorRegistration);
+                InvestigatorRegistration investigatorReg = (InvestigatorRegistration) registration;
+                if (getInvitedRegistrations().contains(investigatorReg.getId())) {
+                    getProtocolService().invite(investigatorReg);
                 }
             }
         });

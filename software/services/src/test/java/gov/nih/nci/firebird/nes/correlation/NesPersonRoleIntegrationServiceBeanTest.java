@@ -98,8 +98,6 @@ import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
 import gov.nih.nci.firebird.nes.NesIdTestUtil;
-import gov.nih.nci.firebird.nes.organization.AbstractNesRoleData;
-import gov.nih.nci.firebird.nes.organization.HealthCareFacilityData;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
 import gov.nih.nci.iso21090.extensions.Id;
@@ -123,9 +121,7 @@ public class NesPersonRoleIntegrationServiceBeanTest {
 
     @Before
     public void setUp() {
-        HealthCareFacilityData healthCareFacilityData = new HealthCareFacilityData();
-        healthCareFacilityData.setPlayerId(NesIdTestUtil.TEST_NES_ID_STRING);
-        organization.setExternalData(healthCareFacilityData);
+        organization.setPlayerIdentifier(NesIdTestUtil.TEST_NES_ID_STRING);
     }
 
     @Test
@@ -165,7 +161,7 @@ public class NesPersonRoleIntegrationServiceBeanTest {
         ii.setExtension(TEST_EXTENSION);
         dsetii.getItem().add(ii);
         provider.setIdentifier(dsetii);
-        II scoperIi = new NesId(getNesRoleData(organization).getPlayerId()).toIi();
+        II scoperIi = new NesId(organization.getPlayerIdentifier()).toIi();
         provider.setScoperIdentifier(scoperIi);
         HealthCareProvider wrongOrgProvider = new HealthCareProvider();
         II wrongOrgScoperIi = new II();
@@ -179,10 +175,6 @@ public class NesPersonRoleIntegrationServiceBeanTest {
         verify(mockProviderClient, never()).create(any(HealthCareProvider.class));
     }
 
-    private AbstractNesRoleData getNesRoleData(Organization organization) {
-        return (AbstractNesRoleData) organization.getExternalData();
-    }
-
     @Test
     public void testEnsureRoleCorrelated_ExistingOrganizationalContact() throws RemoteException, ValidationException {
         OrganizationalContact contact = new OrganizationalContact();
@@ -192,7 +184,7 @@ public class NesPersonRoleIntegrationServiceBeanTest {
         ii.setExtension(TEST_EXTENSION);
         dsetii.getItem().add(ii);
         contact.setIdentifier(dsetii);
-        II scoperIi = new NesId(getNesRoleData(organization).getPlayerId()).toIi();
+        II scoperIi = new NesId(organization.getPlayerIdentifier()).toIi();
         contact.setScoperIdentifier(scoperIi);
         OrganizationalContact[] contacts = new OrganizationalContact[] { contact };
         when(mockOrganizationalContactClient.getByPlayerIds(any(Id[].class))).thenReturn(contacts);
@@ -204,11 +196,28 @@ public class NesPersonRoleIntegrationServiceBeanTest {
     public void testEnsureRoleExistsNoNciRootFound() throws RemoteException, ValidationException {
         HealthCareProvider provider = new HealthCareProvider();
         provider.setIdentifier(new DSETII());
-        II scoperIi = new NesId(getNesRoleData(organization).getPlayerId()).toIi();
+        II scoperIi = new NesId(organization.getPlayerIdentifier()).toIi();
         provider.setScoperIdentifier(scoperIi);
         HealthCareProvider[] providers = new HealthCareProvider[] { provider };
         when(mockProviderClient.getByPlayerIds(any(Id[].class))).thenReturn(providers);
         service.ensureCorrelated(person, organization, HEALTH_CARE_PROVIDER);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEnsureRoleExistsInvalidPersonRole() throws RemoteException, ValidationException {
+        HealthCareProvider provider = new HealthCareProvider();
+        provider.setIdentifier(new DSETII());
+        II scoperIi = new II();
+        scoperIi.setExtension(organization.getNesId());
+        provider.setScoperIdentifier(scoperIi);
+        HealthCareProvider[] providers = new HealthCareProvider[] { provider };
+        when(mockProviderClient.getByPlayerIds(any(Id[].class))).thenReturn(providers);
+        service.ensureCorrelated(person, organization, CLINICAL_RESEARCH_STAFF);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testEnsureRoleExistsUnsupportedType() throws RemoteException, ValidationException {
+        service.ensureCorrelated(person, organization, PersonRoleType.PATIENT);
     }
 
     @Test(expected = RuntimeException.class)

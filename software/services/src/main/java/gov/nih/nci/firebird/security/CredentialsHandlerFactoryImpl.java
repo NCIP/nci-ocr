@@ -90,7 +90,7 @@ import com.google.inject.name.Named;
 /**
  * Provides CTEP and caGrid based authenticators for FIREBIRD authentication.
  */
-class CredentialsHandlerFactoryImpl implements CredentialsHandlerFactory {
+public class CredentialsHandlerFactoryImpl implements CredentialsHandlerFactory {
 
     private String ctepIamServiceUrl;    
     private String ctepIamUsernamePrefix;

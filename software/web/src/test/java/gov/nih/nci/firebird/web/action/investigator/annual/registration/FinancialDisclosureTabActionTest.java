@@ -195,7 +195,8 @@ public class FinancialDisclosureTabActionTest extends AbstractWebTest {
     }
 
     private void checkJsonForPharmaceuticalCompany(String json, Organization pharmaceuticalCompany) {
-        assertTrue(json.contains(pharmaceuticalCompany.getExternalId()));
+        assertTrue(json.contains(pharmaceuticalCompany.getId().toString()));
+        assertTrue(json.contains(pharmaceuticalCompany.getNesId()));
         assertTrue(json.contains(pharmaceuticalCompany.getName()));
         assertTrue(json.contains(trimToEmpty(pharmaceuticalCompany.getCtepId())));
         assertTrue(json.contains(pharmaceuticalCompany.getEmail()));

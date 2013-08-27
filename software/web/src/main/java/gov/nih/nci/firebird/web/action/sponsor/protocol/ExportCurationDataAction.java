@@ -82,15 +82,25 @@
  */
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
-import gov.nih.nci.firebird.data.CurationDataset;
-import gov.nih.nci.firebird.service.curation.CurationService;
+import gov.nih.nci.firebird.data.AbstractOrganizationRole;
+import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.data.Person;
+import gov.nih.nci.firebird.nes.NesIIRoot;
+import gov.nih.nci.firebird.nes.NesId;
+import gov.nih.nci.firebird.service.organization.OrganizationAssociationService;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.person.PersonService;
 import gov.nih.nci.firebird.web.action.FirebirdActionSupport;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Actions;
 import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.Namespaces;
 import org.apache.struts2.convention.annotation.Result;
@@ -98,6 +108,8 @@ import org.apache.struts2.interceptor.ServletResponseAware;
 import org.apache.struts2.json.JSONException;
 import org.apache.struts2.json.JSONUtil;
 
+import com.csvreader.CsvWriter;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -108,15 +120,27 @@ public class ExportCurationDataAction extends FirebirdActionSupport implements S
     private static final long serialVersionUID = 1L;
 
     private HttpServletResponse response;
-    private final CurationService curationService;
-    private CurationDataset curationDataset;
+    private final OrganizationService organizationService;
+    private final PersonService personService;
+    private final OrganizationAssociationService associationService;
+
+    static final String[] PERSON_EXPORT_HEADERS = {"NES_ID", "PERSON_NAME" };
+    static final String[] ORGANIZATION_EXPORT_HEADERS = {"NES_ID", "ORGANIZATION_NAME" };
+    static final String[] ROLE_EXPORT_HEADERS = {"NES_ID", "STRUCTURAL_ROLE_TYPE", "ORGANIZATION_PLAYER_NES_ID",
+            "ORGANIZATION_PLAYER_NAME" };
 
     /**
-     * @param curationService the service that provides access to entities requiring curation
+     * @param organizationService the organization service for looking up Organizations needing to be curated.
+     * @param personService The Person Service for looking up Persons needing to be curated
+     * @param associationService The Organization Association Service for looking up Structural Roles that need to be
+     *            curated.
      */
     @Inject
-    public ExportCurationDataAction(CurationService curationService) {
-        this.curationService = curationService;
+    public ExportCurationDataAction(OrganizationService organizationService, PersonService personService,
+            OrganizationAssociationService associationService) {
+        this.organizationService = organizationService;
+        this.personService = personService;
+        this.associationService = associationService;
     }
 
     /**
@@ -124,45 +148,15 @@ public class ExportCurationDataAction extends FirebirdActionSupport implements S
      *
      * @return the struts forward.
      */
-    @Action(value = "enterDataToCurate", results = @Result(location = "export_data_to_be_curated.jsp"))
+    @Actions(value = {
+            @Action(value = "enterDataToCurate", results = @Result(location = "export_data_to_be_curated.jsp")),
+            @Action(value = "viewPersonsToCurate", results = @Result(location = "view_persons_to_curate.jsp")),
+            @Action(value = "viewOrganizationsToCurate", results = @Result(
+                    location = "view_organizations_to_curate.jsp")),
+            @Action(value = "viewOrganizationRolesToCurate", results = @Result(
+                    location = "view_organization_roles_to_curate.jsp")) })
     public String enter() {
         return SUCCESS;
-    }
-
-    /**
-     * @return forward to the view persons for curation page.
-     */
-    @Action(value = "viewPersonsToCurate", results = @Result(location = "view_persons_to_curate.jsp"))
-    public String viewPersons() {
-        setCurationDataset(curationService.getPersonsToBeCurated());
-        return SUCCESS;
-    }
-
-    /**
-     * @return forward to the view organizations for curation page.
-     */
-    @Action(value = "viewOrganizationsToCurate", results = @Result(location = "view_organizations_to_curate.jsp"))
-    public String viewOrganizations() {
-        setCurationDataset(curationService.getOrganizationsToBeCurated());
-        return SUCCESS;
-    }
-
-    /**
-     * @return forward to the view organization roles for curation page.
-     */
-    @Action(value = "viewOrganizationRolesToCurate", 
-            results = @Result(location = "view_organization_roles_to_curate.jsp"))
-    public String viewRoles() {
-        setCurationDataset(curationService.getRolesToBeCurated());
-        return SUCCESS;
-    }
-
-    /**
-     * @return JSON of the rows of the current curation dataset
-     * @throws JSONException If there is is an exception serializing data
-     */
-    public String getCurationDataRowsJson() throws JSONException {
-        return JSONUtil.serialize(getCurationDataset().getRows(), null, null, false, true, false);
     }
 
     /**
@@ -173,19 +167,40 @@ public class ExportCurationDataAction extends FirebirdActionSupport implements S
      */
     @Action("exportPersons")
     public String exportPersons() throws IOException {
-        setCurationDataset(curationService.getPersonsToBeCurated());
-        writeCsv("sponsor.export.persons.file.name");
+        List<List<String>> personRecords = Lists.newArrayList();
+        List<Person> personsToBeCurated = getPersonsToBeCurated();
+
+        if (CollectionUtils.isNotEmpty(personsToBeCurated)) {
+            for (Person person : personsToBeCurated) {
+                List<String> record = Lists.newArrayList();
+                record.add(person.getNesId());
+                record.add(person.getDisplayNameForList());
+                personRecords.add(record);
+            }
+        }
+
+        response.setHeader("Content-Disposition", "attachment; filename=\""
+                + getText("sponsor.export.persons.file.name") + "\"");
+        writeCsv(PERSON_EXPORT_HEADERS, personRecords);
         return NONE;
     }
-    
-    private void writeCsv(String filenameKey) throws IOException {
-        response.setHeader("Content-Disposition", "attachment; filename=\""
-                + getText(filenameKey) + "\"");
+
+    private void writeCsv(String[] headers, List<List<String>> data) throws IOException {
         response.setContentType("text/csv");
         response.setHeader("Pragma", "private");
         response.setHeader("Cache-Control", "private, must-revalidate");
-        curationDataset.writeCsv(response.getOutputStream());
-        
+        CsvWriter writer = new CsvWriter(new OutputStreamWriter(response.getOutputStream()), ',');
+
+        if (headers != null) {
+            writer.writeRecord(headers);
+        }
+        if (CollectionUtils.isNotEmpty(data)) {
+            for (List<String> record : data) {
+                writer.writeRecord(record.toArray(new String[] {}));
+            }
+        }
+        writer.flush();
+        writer.close();
     }
 
     /**
@@ -196,8 +211,21 @@ public class ExportCurationDataAction extends FirebirdActionSupport implements S
      */
     @Action("exportOrganizations")
     public String exportOrganizations() throws IOException {
-        setCurationDataset(curationService.getOrganizationsToBeCurated());
-        writeCsv("sponsor.export.organizations.file.name");
+        List<List<String>> organizationRecords = Lists.newArrayList();
+        List<Organization> organizationsToBeCurated = getOrganizationsToBeCurated();
+
+        if (CollectionUtils.isNotEmpty(organizationsToBeCurated)) {
+            for (Organization organization : organizationsToBeCurated) {
+                List<String> record = Lists.newArrayList();
+                record.add(new NesId(organization.getNesId()).getExtension());
+                record.add(organization.getName());
+                organizationRecords.add(record);
+            }
+        }
+
+        response.setHeader("Content-Disposition", "attachment; filename=\""
+                + getText("sponsor.export.organizations.file.name") + "\"");
+        writeCsv(ORGANIZATION_EXPORT_HEADERS, organizationRecords);
         return NONE;
     }
 
@@ -209,9 +237,29 @@ public class ExportCurationDataAction extends FirebirdActionSupport implements S
      */
     @Action("exportRoles")
     public String exportRoles() throws IOException {
-        setCurationDataset(curationService.getRolesToBeCurated());
-        writeCsv("sponsor.export.organization.roles.file.name");
+        List<List<String>> roleRecords = Lists.newArrayList();
+        List<AbstractOrganizationRole> rolesToBeCurated = getRolesToBeCurated();
+
+        if (CollectionUtils.isNotEmpty(rolesToBeCurated)) {
+            for (AbstractOrganizationRole role : rolesToBeCurated) {
+                List<String> record = Lists.newArrayList();
+                record.add(new NesId(role.getNesId()).getExtension());
+                record.add(getNesRoleType(role).getDisplay());
+                record.add(new NesId(role.getOrganization().getPlayerIdentifier()).getExtension());
+                record.add(role.getOrganization().getName());
+                roleRecords.add(record);
+            }
+        }
+
+        response.setHeader("Content-Disposition", "attachment; filename=\""
+                + getText("sponsor.export.organization.roles.file.name") + "\"");
+        writeCsv(ROLE_EXPORT_HEADERS, roleRecords);
         return NONE;
+    }
+
+    static NesIIRoot getNesRoleType(AbstractOrganizationRole role) {
+        String nesId = role.getOrganization().getNesId();
+        return new NesId(nesId).getRootType();
     }
 
     @Override
@@ -219,12 +267,165 @@ public class ExportCurationDataAction extends FirebirdActionSupport implements S
         this.response = servletResponse;
     }
 
-    public CurationDataset getCurationDataset() {
-        return curationDataset;
+    /**
+     * @return JSON of Persons to be Curated.
+     * @throws JSONException If there is is an exception serializing data
+     */
+    public String getPersonsToBeCuratedJson() throws JSONException {
+        return JSONUtil.serialize(getPersonsToBeCurated(), null, null, false, true, false);
     }
 
-    void setCurationDataset(CurationDataset curationDataset) {
-        this.curationDataset = curationDataset;
+    /**
+     * @return the List of Persons to be Curated.
+     */
+    private List<Person> getPersonsToBeCurated() {
+        return personService.getPersonsToBeCurated();
+    }
+
+    /**
+     * @return JSON of Organizations to be Curated.
+     * @throws JSONException If there is is an exception serializing data
+     */
+    public String getOrganizationsToBeCuratedJson() throws JSONException {
+        return JSONUtil.serialize(getOrganizationListingsToBeCurated());
+    }
+
+    private List<OrganizationListing> getOrganizationListingsToBeCurated() {
+        List<OrganizationListing> listings = Lists.newArrayList();
+        for (Organization organization : getOrganizationsToBeCurated()) {
+            listings.add(new OrganizationListing(organization));
+        }
+        return listings;
+    }
+
+    /**
+     * @return the organizationsToBeCurated
+     */
+    private List<Organization> getOrganizationsToBeCurated() {
+        return organizationService.getOrganizationsToBeCurated();
+    }
+
+    /**
+     * @return JSON of Organization Roles to be Curated.
+     * @throws JSONException If there is is an exception serializing data
+     */
+    public String getRolesToBeCuratedJson() throws JSONException {
+        return JSONUtil.serialize(getRoleListingsToBeCurated());
+    }
+
+    private List<OrganizationRoleListing> getRoleListingsToBeCurated() {
+        List<OrganizationRoleListing> listings = Lists.newArrayList();
+        for (AbstractOrganizationRole role : getRolesToBeCurated()) {
+            listings.add(new OrganizationRoleListing(role));
+        }
+        return listings;
+    }
+
+    /**
+     * @return the rolesToBeCurated
+     */
+    private List<AbstractOrganizationRole> getRolesToBeCurated() {
+        return associationService.getRolesToBeCurated();
+    }
+
+    /**
+     * Class to describe an organization listing in the curation grid.
+     */
+    public static class OrganizationListing {
+
+        private final Long id;
+        private final String nesId;
+        private final String name;
+
+        /**
+         * @param organization organization
+         */
+        public OrganizationListing(Organization organization) {
+            id = organization.getId();
+            nesId = new NesId(organization.getNesId()).getExtension();
+            name = organization.getName();
+        }
+
+        /**
+         * @return the id
+         */
+        public Long getId() {
+            return id;
+        }
+
+        /**
+         * @return the nesId
+         */
+        public String getNesId() {
+            return nesId;
+        }
+
+        /**
+         * @return the name
+         */
+        public String getName() {
+            return name;
+        }
+
+    }
+
+    /**
+     * Class to describe an organization role listing in the curation grid.
+     */
+    public static class OrganizationRoleListing {
+
+        private final Long id;
+        private final String roleNesId;
+        private final String roleType;
+        private final String organizationNesId;
+        private final String name;
+
+        /**
+         * @param role role
+         */
+        public OrganizationRoleListing(AbstractOrganizationRole role) {
+            id = role.getId();
+            roleNesId = new NesId(role.getNesId()).getExtension();
+            roleType = getNesRoleType(role).getDisplay();
+            organizationNesId = new NesId(role.getOrganization().getPlayerIdentifier()).getExtension();
+            name = role.getOrganization().getName();
+        }
+
+        /**
+         * @return the id
+         */
+        public Long getId() {
+            return id;
+        }
+
+        /**
+         * @return the roleNesId
+         */
+        public String getRoleNesId() {
+            return roleNesId;
+        }
+
+        /**
+         * @return the roleType
+         */
+        public String getRoleType() {
+            return roleType;
+        }
+
+        /**
+         * @return the organizationNesId
+         */
+        public String getOrganizationNesId() {
+            return organizationNesId;
+        }
+
+        /**
+         * @return the name
+         */
+        public String getName() {
+            return name;
+        }
+
     }
 
 }

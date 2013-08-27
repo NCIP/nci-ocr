@@ -19,50 +19,49 @@
                 <div><fmt:message key="label.due.date" /></div>
             </div>
 
-            <div id="annualRegistrationsAccordionTable">
-                <s:if test="annualRegistrationListings.empty">
-                    <br>
-                    <div class="centeredText"><fmt:message key="label.no.registrations"/></div>
-                </s:if> <s:else>
-                    <s:iterator value="annualRegistrationListings" var="registration">
-                        <div class="accordion">
-                            <div id="<s:property value='%{#registration.id}'/>" class="accordionHeader">
-                                <span class="accordionToggle ui-icon ui-icon-triangle-1-e"></span>
-                                <img alt="Registration" src="${registrationIconUrl}"/>
-                                <div><s:property value='%{#registration.type}'/></div>
-                                <div>
-                                    <span class="statusBullet statusBullet_inv_<s:property value='%{#registration.status.name()}'/>">&bull;</span>
-                                    <span id="registrationStatus"><s:property value='%{#registration.status.display}'/></span>
-                                </div>
-                                <div class="date"><s:date name="submissionDate" format="MM/dd/yyyy" /></div>
-                                <div class="date"><s:date name="dueDate" format="MM/dd/yyyy" /></div>
-                                <s:if test="%{!readOnly && #registration.submittable}">
-                                    <div><s:a cssClass="button" href="#" onclick="viewRegistration(%{#registration.id})"><fmt:message key="button.edit"/></s:a></div>
-                                </s:if><s:else>
-                                    <div><s:a cssClass="button" href="#" onclick="viewRegistration(%{#registration.id})"><fmt:message key="button.view"/></s:a></div>
-                                </s:else>
+            <s:if test="annualRegistrationListings.empty">
+                <br>
+                <div class="centeredText"><fmt:message key="label.no.registrations"/></div>
+            </s:if> <s:else>
+                <s:iterator value="annualRegistrationListings" var="registration">
+                    <div class="accordion">
+                        <div id="<s:property value='%{#registration.id}'/>" class="accordionHeader">
+                            <span class="accordionToggle ui-icon ui-icon-triangle-1-e"></span>
+                            <img alt="Registration" src="${registrationIconUrl}"/>
+                            <div><s:property value='%{#registration.type}'/></div>
+                            <div>
+                                <span class="statusBullet statusBullet_inv_<s:property value='%{#registration.status.name()}'/>">&bull;</span>
+                                <span id="registrationStatus"><s:property value='%{#registration.status.display}'/></span>
                             </div>
-                            <table id="annualRegistrationsTable_<s:property value='%{#registration.id}'/>"
-                                   class="investigatorAnnualRegistrationsTable ui-jqgrid-htable ui-jqgrid-btable"
-                                   summary="This table shows the forms that are part of the annual registration. It displays
-                                            the form name, optionality, the date of the last update, and the form status.">
-                                <thead>
-                                    <tr>
-                                        <th scope="col" width="300px"><div><fmt:message key="label.form" /></div></th>
-                                        <th scope="col" width="180px"><div><fmt:message key="label.optionality" /></div></th>
-                                        <th scope="col" width="180px"><div><fmt:message key="label.last.update" /></div></th>
-                                        <th scope="col" width="180px"><div><fmt:message key="label.status" /></div></th>
-                                    </tr>
-                                </thead>
-                            </table>
+                            <div class="date"><s:date name="submissionDate" format="MM/dd/yyyy" /></div>
+                            <div class="date"><s:date name="dueDate" format="MM/dd/yyyy" /></div>
+                            <s:if test="#registration.submittable">
+                                <div><s:a cssClass="button" href="#" onclick="viewRegistration(%{#registration.id})"><fmt:message key="button.edit"/></s:a></div>
+                            </s:if><s:else>
+                                <div><s:a cssClass="button" href="#" onclick="viewRegistration(%{#registration.id})"><fmt:message key="button.view"/></s:a></div>
+                            </s:else>
                         </div>
-                    </s:iterator>
-                </s:else>
-            </div>
+                        <table id="annualRegistrationsTable_<s:property value='%{#registration.id}'/>"
+                               class="investigatorAnnualRegistrationsTable ui-jqgrid-htable ui-jqgrid-btable"
+                               summary="This table shows the forms that are part of the annual registration. It displays
+                                        the form name, optionality, the date of the last update, and the form status.">
+                            <thead>
+                                <tr>
+                                    <th scope="col" width="300px"><div><fmt:message key="label.form" /></div></th>
+                                    <th scope="col" width="180px"><div><fmt:message key="label.optionality" /></div></th>
+                                    <th scope="col" width="180px"><div><fmt:message key="label.last.update" /></div></th>
+                                    <th scope="col" width="180px"><div><fmt:message key="label.status" /></div></th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </s:iterator>
+            </s:else>
 
             <div class="clear"></div>
             <br/>
             <s:if test="%{withdrawButtonVisible}">
+                <div>
                     <sj:dialog id="withdrawDialog" autoOpen="false" modal="true" width="950" position="top"
                                onCloseTopics="dialogClosed" resizable="false" onOpenTopics="dialogOpened"/>
                     <s:url namespace="/investigator/annual/registration/ajax/withdraw" action="enterWithdraw"
@@ -71,19 +70,12 @@
                           id="withdrawSubmission">
                         <fmt:message key="button.withdraw"/>
                     </sj:a>
+                </div>
             </s:if><s:elseif test="%{reactivateButtonVisible}">
                 <s:a href="javascript:void(0)" cssClass="button" id="reactivateButton" onclick="reactivateInvestigator();">
                         <fmt:message key="button.reactivate"/>
                </s:a>
             </s:elseif>
-
-            <s:if test="createRegistrationAllowed">
-                <s:a id="createAnnualRegistration" action="createAnnualRegistration" cssClass="blueButton button float_right" >
-                    <s:param name="profile.id" value="profile.id" />
-                    <fmt:message key="button.create.registration"/>
-                </s:a>
-            </s:if>
-
         </div>
     </div>
 </div>
@@ -146,14 +138,14 @@
 
     function setUpAccordion() {
         $('.accordionToggle').click(function () {
-            toggleAccordionArrow(this);
+            toggleAccordionArrow();
             $(this).parent().next().slideToggle('fast');
         }).parent().next().hide();
     }
 
-    function toggleAccordionArrow(arrow) {
-        $(arrow).toggleClass("ui-icon-triangle-1-s");
-        $(arrow).toggleClass("ui-icon-triangle-1-e");
+    function toggleAccordionArrow() {
+        $(this).toggleClass("ui-icon-triangle-1-s");
+        $(this).toggleClass("ui-icon-triangle-1-e");
     }
 
     function viewRegistration(id) {

@@ -140,7 +140,7 @@ public class SponsorOrganizationsPageFlowActionTest extends AbstractFlowActionTe
 
     @Test
     public void testPerformSave() {
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(dcpSponsorOrganization.getExternalId(), otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(dcpSponsorOrganization.getId(), otherSponsorOrganization.getId()));
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertTrue(action.getAccountConfigurationData().getSponsorOrganizations().contains(dcpSponsorOrganization));
         assertTrue(action.getAccountConfigurationData().getSponsorOrganizations().contains(otherSponsorOrganization));
@@ -149,7 +149,7 @@ public class SponsorOrganizationsPageFlowActionTest extends AbstractFlowActionTe
     @Test
     public void testPerformSave_BlocksDelegateSelection() {
         getAccountConfigurationData().setRoles(EnumSet.of(SPONSOR, SPONSOR_DELEGATE));
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(dcpSponsorOrganization.getExternalId(), otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(dcpSponsorOrganization.getId(), otherSponsorOrganization.getId()));
         action.prepare();
         assertEquals(ActionSupport.INPUT, action.performSave());
         assertTrue(action.hasActionErrors());
@@ -158,14 +158,14 @@ public class SponsorOrganizationsPageFlowActionTest extends AbstractFlowActionTe
     @Test
     public void testPerformSave_DoesNotBlockDelegateSelection() {
         getAccountConfigurationData().setRoles(EnumSet.of(SPONSOR, SPONSOR_DELEGATE));
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(otherSponsorOrganization.getId()));
         assertEquals(ActionSupport.SUCCESS, action.performSave());
     }
 
     @Test
     public void testPerformSave_ReplaceOldSelection() {
         getAccountConfigurationData().getSponsorOrganizations().add(dcpSponsorOrganization);
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(otherSponsorOrganization.getId()));
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertFalse(action.getAccountConfigurationData().getSponsorOrganizations().contains(dcpSponsorOrganization));
         assertTrue(action.getAccountConfigurationData().getSponsorOrganizations().contains(otherSponsorOrganization));
@@ -174,7 +174,7 @@ public class SponsorOrganizationsPageFlowActionTest extends AbstractFlowActionTe
     @Test
     public void testPerformSave_DoesNotReplaceDelegates() {
         getAccountConfigurationData().getDelegateOrganizations().add(dcpSponsorOrganization);
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(otherSponsorOrganization.getId()));
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertTrue(action.getAccountConfigurationData().getDelegateOrganizations().contains(dcpSponsorOrganization));
         assertTrue(action.getAccountConfigurationData().getSponsorOrganizations().contains(otherSponsorOrganization));
@@ -192,12 +192,12 @@ public class SponsorOrganizationsPageFlowActionTest extends AbstractFlowActionTe
     public void testSaveAndProceedPrevious() {
         CollectionUtils.addAll(action.getSelectedSponsors(), new Long[] { 1L, 2L });
         action.saveAndProceedPrevious();
-        assertTrue(action.getSelectedSponsorExternalIds().isEmpty());
+        assertTrue(action.getSelectedSponsorIds().isEmpty());
     }
 
     @Test
     public void testSaveAndProceedPrevious_NoSelections() {
         action.saveAndProceedPrevious();
-        assertTrue(action.getSelectedSponsorExternalIds().isEmpty());
+        assertTrue(action.getSelectedSponsorIds().isEmpty());
     }
 }

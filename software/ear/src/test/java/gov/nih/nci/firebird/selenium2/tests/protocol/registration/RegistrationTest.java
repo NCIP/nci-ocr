@@ -96,8 +96,8 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.F
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.FinancialDisclosureTab.Question;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.ProtocolForm1572Tab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab.FormListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTabHelper;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
 import gov.nih.nci.firebird.selenium2.pages.registration.common.FormRejectionCommentsDialog;
 import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
@@ -155,7 +155,7 @@ public class RegistrationTest extends AbstractFirebirdWebDriverTest {
 
     private void verifyFormComments(AbstractProtocolRegistration registration) {
         for (AbstractRegistrationForm form : registration.getForms()) {
-            AbstractFormTab<?> formTab = (AbstractFormTab<?>) overviewTab.getHelper().getFormListing(form).click();
+            AbstractFormTab<?> formTab = overviewTab.getHelper().getFormListing(form).clickFormLink();
             if (form.isReviewRequired()) {
                 assertTrue(formTab.areCommentsPresent());
                 assertEquals(form.getComments(), formTab.getComments());
@@ -193,6 +193,6 @@ public class RegistrationTest extends AbstractFirebirdWebDriverTest {
     }
 
     private void verifyFormStatus(AbstractProtocolRegistrationForm form, FormStatus status) {
-        assertEquals(status.getDisplay(), overviewTab.getHelper().getFormListing(form).getFormStatus());
+        assertEquals(status.getDisplay(), overviewTab.getHelper().getFormListing(form).getStatus());
     }
 }

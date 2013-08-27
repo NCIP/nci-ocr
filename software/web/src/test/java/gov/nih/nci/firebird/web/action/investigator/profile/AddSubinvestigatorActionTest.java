@@ -96,7 +96,7 @@ import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.person.PersonService;
+import gov.nih.nci.firebird.service.person.PersonSearchService;
 import gov.nih.nci.firebird.test.PersonFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
 import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
@@ -118,7 +118,7 @@ public class AddSubinvestigatorActionTest extends AbstractWebTest {
     @Inject
     private CountryLookupService mockCountryLookupService;
     @Inject
-    private PersonService mockPersonService;
+    private PersonSearchService mockPersonSearchService;
     @Inject
     private AddSubinvestigatorAction action;
     private InvestigatorProfile profile = new InvestigatorProfile();
@@ -135,14 +135,14 @@ public class AddSubinvestigatorActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testPrepare() throws Exception {
+    public void testPrepare() {
         action.prepare();
         verify(mockStateLookupService).getAll();
         verify(mockCountryLookupService).getAll();
-        verify(mockPersonService, never()).getByExternalId(anyString());
-        action.setSelectedPersonExternalId("key");
+        verify(mockPersonSearchService, never()).getPerson(anyString());
+        action.setSelectedPersonKey("key");
         action.prepare();
-        verify(mockPersonService).getByExternalId("key");
+        verify(mockPersonSearchService).getPerson("key");
     }
 
     @Test
@@ -213,11 +213,6 @@ public class AddSubinvestigatorActionTest extends AbstractWebTest {
         verify(mockProfileService).addSubInvestigator(profile, person);
         assertFalse(action.getActionErrors().isEmpty());
         assertEquals(ERROR_MESSAGE, action.getActionErrors().iterator().next());
-    }
-
-    @Test
-    public void testErrorOnAssociationAlreadyExistsException() throws Exception {
-        assertTrue(action.errorOnAssociationAlreadyExistsException());
     }
 
 }

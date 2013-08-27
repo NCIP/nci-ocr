@@ -87,6 +87,7 @@ import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileServi
 import gov.nih.nci.firebird.web.action.AbstractAnnualRegistrationAction;
 
 import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.InterceptorRef;
 import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.Result;
 
@@ -96,6 +97,7 @@ import com.google.inject.Inject;
  * Action class for sponsor reviewing of submitted annual registrations.
  */
 @Namespace("/sponsor/annual/registration/review")
+@InterceptorRef("annualRegistrationManagementStack")
 @Result(location = "review_registration.jsp")
 public class ReviewRegistrationAction extends AbstractAnnualRegistrationAction {
 
@@ -119,17 +121,4 @@ public class ReviewRegistrationAction extends AbstractAnnualRegistrationAction {
         return SUCCESS;
     }
 
-    @SuppressWarnings("PMD.BooleanGetMethodName")   // use of get reads better
-    public boolean getControlsEnabled() {
-        return isCtepReviewer() && (getRegistration().isReviewable() || getRegistration().isReviewOnHold());
-    }
-    
-    public boolean isCompletable() {
-        return isCtepReviewer() && getRegistration().isCompleteable();
-    }
-    
-    public boolean isApprovable() {
-        return isCtepReviewer() && getRegistration().isApprovable();
-    }
-    
 }

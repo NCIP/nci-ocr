@@ -86,9 +86,12 @@ import static gov.nih.nci.firebird.nes.NesIdTestUtil.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+
+import java.rmi.RemoteException;
+import java.util.List;
+
 import gov.nih.nci.coppa.common.LimitOffset;
 import gov.nih.nci.coppa.po.CorrelationNode;
-import gov.nih.nci.coppa.po.IdentifiedOrganization;
 import gov.nih.nci.coppa.po.OversightCommittee;
 import gov.nih.nci.coppa.po.StringMap;
 import gov.nih.nci.coppa.services.business.business.common.BusinessI;
@@ -100,19 +103,14 @@ import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
 import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
 import gov.nih.nci.firebird.test.OrganizationFactory;
-import gov.nih.nci.iso21090.extensions.Bl;
 import gov.nih.nci.iso21090.extensions.Id;
-
-import java.rmi.RemoteException;
-import java.util.List;
+import gov.nih.nci.iso21090.extensions.Bl;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import com.google.common.collect.Lists;
 
 @RunWith(MockitoJUnitRunner.class)
 public class OversightCommitteeIntegrationServiceBeanTest {
@@ -134,7 +132,7 @@ public class OversightCommitteeIntegrationServiceBeanTest {
     @Mock
     private ValidationErrorTranslator mockErrorTranslator;
     @Mock
-    private OversightCommitteeI mockOversightCommiteeService;
+    private OversightCommitteeI mockResearchOrganizationService;
     private OversightCommitteeIntegrationServiceBean bean;
     private NesOrganizationFactory nesObjectFactory = new NesOrganizationFactory();
     private OversightCommittee oversightCommittee = nesObjectFactory.getTestOversightCommittee(TYPE);
@@ -142,7 +140,7 @@ public class OversightCommitteeIntegrationServiceBeanTest {
     @Before
     public void setUp() {
         bean = new OversightCommitteeIntegrationServiceBean(mockBusinessService, mockOrganizationService,
-                mockIdentifiedOrganizationService, mockErrorTranslator, mockOversightCommiteeService, mockTranslator);
+                mockIdentifiedOrganizationService, mockErrorTranslator, mockResearchOrganizationService, mockTranslator);
         when(mockTranslator.toOversightCommittee(any(Organization.class), any(OversightCommitteeType.class)))
                 .thenReturn(oversightCommittee);
         when(mockTranslator.toNesOrganization(any(Organization.class))).thenReturn(mockNesOrganization);
@@ -154,35 +152,43 @@ public class OversightCommitteeIntegrationServiceBeanTest {
     @Test
     public void testCreate() throws Exception {
         Id researchOrganizationId = nesObjectFactory.getTestIdentifier(NesIIRoot.RESEARCH_ORGANIZATION);
-        when(mockOversightCommiteeService.create(oversightCommittee)).thenReturn(researchOrganizationId);
+        when(mockResearchOrganizationService.create(oversightCommittee)).thenReturn(researchOrganizationId);
         when(mockOrganizationService.create(mockNesOrganization)).thenReturn(TEST_NES_ID.toId());
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
 
         bean.create(organization, TYPE);
 
-        assertEquals(new NesId(researchOrganizationId).toString(), organization.getExternalId());
-        OversightCommitteeData nesRoleData = getNesRoleData(organization);
-        assertEquals(TEST_NES_ID.toString(), nesRoleData.getPlayerId());
-        assertEquals(TYPE, nesRoleData.getOversightCommitteeType());
-        assertEquals(CurationStatus.PENDING, organization.getCurationStatus());
+        assertEquals(new NesId(researchOrganizationId).toString(), organization.getNesId());
+        assertEquals(TEST_NES_ID.toString(), organization.getPlayerIdentifier());
+        assertEquals(CurationStatus.PENDING, organization.getNesStatus());
         verify(mockOrganizationService).create(mockNesOrganization);
-        verify(mockOversightCommiteeService).create(oversightCommittee);
+        verify(mockResearchOrganizationService).create(oversightCommittee);
     }
-    
-    private OversightCommitteeData getNesRoleData(Organization organization) {
-        return (OversightCommitteeData) organization.getExternalData();
+
+    @Test
+    public void testCreate_ExistingPlayer() throws Exception {
+        Id researchOrganizationId = nesObjectFactory.getTestIdentifier(NesIIRoot.RESEARCH_ORGANIZATION);
+        when(mockOrganization.getPlayerIdentifier()).thenReturn(TEST_NES_ID_STRING);
+        when(mockResearchOrganizationService.create(oversightCommittee)).thenReturn(researchOrganizationId);
+
+        bean.create(mockOrganization, TYPE);
+        verify(mockResearchOrganizationService).create(oversightCommittee);
+        verifyZeroInteractions(mockOrganizationService);
     }
 
     @Test
     public void testGetOrganization() throws RemoteException {
-        OversightCommitteeData mockOversightCommitteeData = mock(OversightCommitteeData.class);
-        when(mockOversightCommitteeData.getPlayerId()).thenReturn(TEST_NES_ID_STRING);
-        when(mockOrganization.getExternalData()).thenReturn(mockOversightCommitteeData);
         CorrelationNode node = nesObjectFactory.createNode(oversightCommittee, mockNesOrganization);
         when(mockBusinessService.getCorrelationByIdWithEntities(any(Id.class), any(Bl.class), any(Bl.class)))
                 .thenReturn(node);
+        when(mockOrganization.getPlayerIdentifier()).thenReturn(TEST_NES_ID_STRING);
         Organization organization = bean.getOrganization(TEST_NES_ID);
         assertEquals(mockOrganization, organization);
+    }
+
+    @Test
+    public void testGetNesIIRoot() {
+        assertEquals(NesIIRoot.OVERSIGHT_COMMITTEE, bean.getNesIIRoot());
     }
 
     @Test
@@ -199,24 +205,14 @@ public class OversightCommitteeIntegrationServiceBeanTest {
     }
 
     @Test
-    public void testSearchByAssignedIdentifier() throws Exception {
-        when(mockOversightCommiteeService.getByPlayerIds(any(Id[].class))).thenReturn(
-                new OversightCommittee[] { oversightCommittee });
-
-        IdentifiedOrganization identifiedOrganization = new IdentifiedOrganization();
-        identifiedOrganization.setPlayerIdentifier(TEST_NES_ID.toIi());
-        List<IdentifiedOrganization> identifiedOrganizations = Lists.newArrayList(identifiedOrganization);
-        when(mockIdentifiedOrganizationService.getIdentifiedOrganizations(TEST_EXTENSION)).thenReturn(
-                identifiedOrganizations);
-
-        List<Organization> organizations = bean.searchByAssignedIdentifier(TEST_EXTENSION, TYPE);
-        assertEquals(Lists.newArrayList(mockOrganization), organizations);
+    public void testSearchByAssignedIdentifier() {
+        bean.searchByAssignedIdentifier(TEST_EXTENSION, TYPE);
         verify(mockIdentifiedOrganizationService).getIdentifiedOrganizations(TEST_EXTENSION);
     }
 
     @Test
     public void testGetByIdentifiedOrganizationPlayerId() throws RemoteException {
-        when(mockOversightCommiteeService.getByPlayerIds(any(Id[].class))).thenReturn(
+        when(mockResearchOrganizationService.getByPlayerIds(any(Id[].class))).thenReturn(
                 new OversightCommittee[] { oversightCommittee });
         List<Organization> organizations = bean.getByIdentifiedOrganizationPlayerId(TEST_NES_ID, TYPE);
         assertEquals(1, organizations.size());
@@ -231,10 +227,10 @@ public class OversightCommitteeIntegrationServiceBeanTest {
 
     @Test
     public void testGetValidationResults() throws RemoteException {
-        when(mockOversightCommiteeService.validate(oversightCommittee)).thenReturn(new StringMap());
+        when(mockResearchOrganizationService.validate(oversightCommittee)).thenReturn(new StringMap());
         when(mockOrganizationService.validate(mockNesOrganization)).thenReturn(new StringMap());
         bean.getValidationResults(mockOrganization);
-        verify(mockOversightCommiteeService).validate(oversightCommittee);
+        verify(mockResearchOrganizationService).validate(oversightCommittee);
         verify(mockOrganizationService).validate(mockNesOrganization);
     }
 

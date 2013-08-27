@@ -82,16 +82,18 @@
  */
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
-import com.google.inject.Inject;
 import gov.nih.nci.firebird.data.ProtocolAgent;
-import gov.nih.nci.firebird.service.protocol.ProtocolAgentService;
+import gov.nih.nci.firebird.service.protocol.ProtocolService;
 import gov.nih.nci.firebird.web.AutocompleterResult;
 import gov.nih.nci.firebird.web.action.FirebirdActionSupport;
+
+import java.util.List;
+
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.struts2.convention.annotation.Result;
 
-import java.util.List;
+import com.google.inject.Inject;
 
 /**
  * This action used to lookup existing <code>ProtocolAgents</code>.
@@ -100,7 +102,7 @@ import java.util.List;
 public class AgentSearchAction extends FirebirdActionSupport {
 
     private static final long serialVersionUID = 1L;
-    private final ProtocolAgentService protocolAgentService;
+    private final ProtocolService protocolService;
 
     private String term;
     private List<ProtocolAgent> results;
@@ -110,8 +112,8 @@ public class AgentSearchAction extends FirebirdActionSupport {
      * @param protocolService the integration service;
      */
     @Inject
-    public AgentSearchAction(ProtocolAgentService protocolService) {
-        this.protocolAgentService = protocolService;
+    public AgentSearchAction(ProtocolService protocolService) {
+        this.protocolService = protocolService;
     }
 
     /**
@@ -121,7 +123,7 @@ public class AgentSearchAction extends FirebirdActionSupport {
     @Override
     public String execute() {
         if (!StringUtils.isBlank(term)) {
-            results = protocolAgentService.getAgents(term);
+            results = protocolService.getAgents(term);
         }
         return SUCCESS;
     }

@@ -109,14 +109,22 @@ public interface ResearchOrganizationIntegrationService extends BaseOrganization
     List<Organization> searchByName(String searchName, ResearchOrganizationType type);
 
     /**
-     * Returns the ResearchOrganizations (if any) matching the assigned identifier provided. This is used to locate
+     * Returns a list of ResearchOrganizations matching the assigned identifier provided. This is used to locate
      * organizations with additional externally assigned identifiers (e.g. CTEP codes). Note that only the extension is
      * required and not the identifier root.
      *
      * @param extension the identifier extension to search for.
      * @param type limit returned organizations to this type.
-     * @return the matching organizations.
+     * @return any matching organizations.
      */
     List<Organization> searchByAssignedIdentifier(String extension, ResearchOrganizationType type);
+
+    /**
+     * Returns the the type of the research organization with the given NES ID.
+     *
+     * @param nesId NES ID
+     * @return type of the research organization with the given NES ID
+     */
+    ResearchOrganizationType getType(String nesId);
 
 }

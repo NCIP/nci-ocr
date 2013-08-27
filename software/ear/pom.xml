@@ -2,7 +2,7 @@
     <parent>
         <artifactId>firebird</artifactId>
         <groupId>gov.nih.nci.firebird</groupId>
-        <version>3.3.0.8-SNAPSHOT</version>
+        <version>3.2.0.56-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -12,7 +12,6 @@
     <url>../../ear/target/site</url>
 
     <properties>
-        <project.root.dir>${project.basedir}/..</project.root.dir>
         <log.level.default>${logger.level}</log.level.default>
         <log.level.nci-commons>${logger.level}</log.level.nci-commons>
         <log.level.firebird>${logger.level.firebird}</log.level.firebird>
@@ -41,12 +40,17 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>${commons.lang3.version}</version>
+            <version>3.1</version>
         </dependency>
         <dependency>
             <groupId>${jdbc.groupId}</groupId>
             <artifactId>${jdbc.artifactId}</artifactId>
             <version>${jdbc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.5.6</version>
         </dependency>
 
         <!-- Test dependencies  -->
@@ -127,6 +131,16 @@
                         <jarModule>
                             <groupId>${jdbc.groupId}</groupId>
                             <artifactId>${jdbc.artifactId}</artifactId>
+                            <includeInApplicationXml>true</includeInApplicationXml>
+                        </jarModule>
+                        <jarModule>
+                            <groupId>gov.nih.nci</groupId>
+                            <artifactId>security</artifactId>
+                            <includeInApplicationXml>true</includeInApplicationXml>
+                        </jarModule>
+                        <jarModule>
+                            <groupId>org.slf4j</groupId>
+                            <artifactId>slf4j-log4j12</artifactId>
                             <includeInApplicationXml>true</includeInApplicationXml>
                         </jarModule>
                         <ejbModule>

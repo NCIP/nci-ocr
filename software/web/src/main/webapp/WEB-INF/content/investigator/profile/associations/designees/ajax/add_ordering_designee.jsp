@@ -6,7 +6,7 @@
     <firebird:messages />
     <s:form id="selectOrderingDesigneeForm" action="selectOrderingDesignee" onsubmit="return false">
         <s:hidden name="profile.id" value="%{profile.id}" />
-        <s:hidden id="selectedPersonExternalId" name="selectedPersonExternalId" />
+        <s:hidden id="selectedPersonKey" name="selectedPersonKey" />
 
         <firebird:personSearch labelKey="person.search.label" setFocus="true">
             <s:a id="createNewButton" cssClass="button" href="javascript:void(0);"><fmt:message key="button.create.new"/></s:a>
@@ -18,8 +18,8 @@
 
     <s:url var="createNewUrl" action="enterOrderingDesigneeFields" />
     $(document).ready(function() {
-        personSearch.clickSelectButton = function(person) {
-            $('#selectedPersonExternalId').val(person.externalId);
+        personSearch.clickSelectButton = function(personId) {
+            $('#selectedPersonKey').val(personId);
             var url = $('#selectOrderingDesigneeForm').attr('action');
             performClick(url);
         };
@@ -31,7 +31,7 @@
         }
 
         $("#createNewButton").click(function() {
-            $('#selectedPersonExternalId').val("");
+            $('#selectedPersonKey').val("");
             var url = '${createNewUrl}';
             performClick(url);
         });

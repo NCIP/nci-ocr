@@ -129,7 +129,7 @@ public enum FirebirdContentTemplate implements FirebirdTemplate {
      * Email template for notifying investigators and subinvestigators that a registration packet has been deactivated.
      */
     REGISTRATION_PACKET_DEACTIVATED_EMAIL_BODY("registrationPacketDeactivatedEmail.vm", REGISTRATION,
-                                               SPONSOR_EMAIL_ADDRESS, COMMENTS),
+                                               SPONSOR_EMAIL_ADDRESS),
 
     /**
      * Email template for notifying investigators and subinvestigators that a registration packet has been reactivated.
@@ -142,8 +142,7 @@ public enum FirebirdContentTemplate implements FirebirdTemplate {
      * protocol and they will be required to re-submit their registration if they had previously submitted their
      * registration.
      */
-    PROTOCOL_MODIFIED_EMAIL_BODY("protocolModifiedEmail.vm", REGISTRATION, FIREBIRD_LINK, PROTOCOL_REVISION,
-            SPONSOR_EMAIL_ADDRESS),
+    PROTOCOL_MODIFIED_EMAIL_BODY("protocolModifiedEmail.vm", REGISTRATION, FIREBIRD_LINK),
 
     /**
      * Email template notifying Investigator that a Registration Coordinator is requesting access to manage their
@@ -280,78 +279,70 @@ public enum FirebirdContentTemplate implements FirebirdTemplate {
     /**
      * Notify the investigator that their submitted annual registration has been returned with comments.
      */
-    ANNUAL_REGISTRATION_RETURNED_EMAIL_TO_INVESTIGATOR_BODY("annualRegistrationReturnedEmailToInvestigator.vm",
-            ANNUAL_REGISTRATION, SPONSOR_EMAIL_ADDRESS, FIREBIRD_LINK),
+    ANNUAL_REGISTRATION_RETURNED_EMAIL_TO_INVESTIGATOR_BODY("annualRegistrationReturnedEmailToInvestigator.vm"),
 
     /**
      * Notify the investigator's coordinator and other persons that their submitted annual registration has been
      * returned with comments.
      */
-    ANNUAL_REGISTRATION_RETURNED_EMAIL_TO_OTHERS_BODY("annualRegistrationReturnedEmailToOthers.vm",
-            ANNUAL_REGISTRATION),
+    ANNUAL_REGISTRATION_RETURNED_EMAIL_TO_OTHERS_BODY("annualRegistrationReturnedEmailToOthers.vm"),
 
     /**
      * Notify the investigator that their submitted annual registration has been accepted.
      */
-    ANNUAL_REGISTRATION_ACCEPTED_EMAIL_TO_INVESTIGATOR_BODY("annualRegistrationAcceptedEmailToInvestigator.vm",
-            ANNUAL_REGISTRATION, FIREBIRD_LINK, SPONSOR_EMAIL_ADDRESS),
+    ANNUAL_REGISTRATION_ACCEPTED_EMAIL_TO_INVESTIGATOR_BODY("annualRegistrationAcceptedEmailToInvestigator.vm"),
 
     /**
      * Notify the investigator's coordinator and other persons that their submitted annual registration has been
      * accepted.
      */
-    ANNUAL_REGISTRATION_ACCEPTED_EMAIL_TO_OTHERS_BODY("annualRegistrationAcceptedEmailToOthers.vm",
-            ANNUAL_REGISTRATION),
+    ANNUAL_REGISTRATION_ACCEPTED_EMAIL_TO_OTHERS_BODY("annualRegistrationAcceptedEmailToOthers.vm"),
 
     /**
      * Notify the investigator's coordinator that an annual registration renewal should be renewed within
      * sixty days.
      */
-    ANNUAL_REGISTRATION_RENEWAL_SIXTY_DAY_NOTICE_EMAIL_BODY("annualRegistrationRenewalSixtyDayNotice.vm",
-            ANNUAL_REGISTRATION, FIREBIRD_LINK),
+    ANNUAL_REGISTRATION_RENEWAL_SIXTY_DAY_NOTICE_EMAIL_BODY("annualRegistrationRenewalSixtyDayNotice.vm"),
 
     /**
      * Notify the investigator's coordinator that an annual registration renewal should be renewed within thirty days.
      */
     ANNUAL_REGISTRATION_RENEWAL_THIRTY_DAY_NOTICE_EMAIL_TO_COORDINATOR_BODY(
-            "annualRegistrationRenewalThirtyDayNoticeToCoordinator.vm", ANNUAL_REGISTRATION, FIREBIRD_LINK),
+            "annualRegistrationRenewalThirtyDayNoticeToCoordinator.vm"),
 
     /**
      * Notify the investigator that there annual registration renewal should be renewed within thirty days.
      */
     ANNUAL_REGISTRATION_RENEWAL_THIRTY_DAY_NOTICE_EMAIL_TO_INVESTIGATOR_BODY(
-            "annualRegistrationRenewalThirtyDayNoticeToInvestigator.vm", FIREBIRD_LINK),
+            "annualRegistrationRenewalThirtyDayNoticeToInvestigator.vm"),
 
     /**
      * Notify the investigator that their annual registration has been approved.
      */
-    ANNUAL_REGISTRATION_APPROVED_EMAIL_TO_INVESTIGATOR_BODY("annualRegistrationApprovedEmailToInvestigator.vm",
-            ANNUAL_REGISTRATION),
+    ANNUAL_REGISTRATION_APPROVED_EMAIL_TO_INVESTIGATOR_BODY("annualRegistrationApprovedEmailToInvestigator.vm"),
 
     /**
      * Notify the investigator that their annual registration has been approved.
      */
     ANNUAL_REGISTRATION_APPROVED_NOTIFICATION_TO_INVESTIGATOR_BODY(
-            "annualRegistrationApprovedNotificationToInvestigator.vm", ANNUAL_REGISTRATION),
+            "annualRegistrationApprovedNotificationToInvestigator.vm"),
 
     /**
      * Notify a coordinator that one of their investigator's annual registration has been approved.
      */
-    ANNUAL_REGISTRATION_APPROVED_EMAIL_TO_COORDINATOR_BODY("annualRegistrationApprovedEmailToCoordinator.vm",
-            ANNUAL_REGISTRATION),
+    ANNUAL_REGISTRATION_APPROVED_EMAIL_TO_COORDINATOR_BODY("annualRegistrationApprovedEmailToCoordinator.vm"),
 
     /**
      * Notify a coordinator that one of their investigator's annual registration has been approved.
      */
     ANNUAL_REGISTRATION_APPROVED_NOTIFICATION_TO_COORDINATOR_BODY(
-            "annualRegistrationApprovedNotificationToCoordinator.vm", ANNUAL_REGISTRATION),
+            "annualRegistrationApprovedNotificationToCoordinator.vm"),
 
     /**
      * Email notifying a Registration Coordinator that a Sponsor has completed one of their managed investigator's
      * annual registrations and it is now ready for the investigator to sign and submit.
      */
-    SPONSOR_COMPLETED_ANNUAL_REGISTRATION_EMAIL_BODY("sponsorCompletedAnnualRegistrationEmail.vm", ANNUAL_REGISTRATION,
-            SPONSOR, FIREBIRD_LINK, REGISTRATION_COORDINATOR),
+    SPONSOR_COMPLETED_ANNUAL_REGISTRATION_EMAIL_BODY("sponsorCompletedAnnualRegistrationEmail.vm"),
 
     /**
      * Email requesting investigator withdrawal from further NCI-sponsored clinical trials.
@@ -434,14 +425,7 @@ public enum FirebirdContentTemplate implements FirebirdTemplate {
      * Email notifying a sponsor that one of their investigators has canceled a revision to their registration.
      */
     REGISTRATION_REVISION_CANCELED_EMAIL_TO_SPONSOR_BODY("registrationRevisionCanceledEmailToSponsor.vm",
-            INVESTIGATOR_REGISTRATION),
-
-    /**
-     * Email notifying coordinator and others that one of their managed investigators has deleted their annual
-     * registration packet.
-     */
-    INVESTIGATOR_DELETED_ANNUAL_REGISTRATION_EMAIL_TO_OTHERS_BODY(
-            "investigatorDeletedAnnualRegistrationEmailToOthers.vm", INVESTIGATOR);
+            INVESTIGATOR_REGISTRATION);
 
     private String template;
     private final FirebirdTemplateParameter[] requiredParameters;

@@ -23,7 +23,7 @@
         </firebird:comments>
     </s:if>
     <div class="line"></div>
-    <s:if test="%{!readOnly}">
+    <s:if test="%{!registration.lockedForInvestigator}">
        <firebird:instructionBubble messageKey="registration.human.research.certificate.instructions" />
         <span id="noCertificatesAsterisk" class="validationErrorAsterisk" style="display:none; float:left">*</span>
         <sj:a openDialog="registrationDialog" href="%{manageCertificateUrl}" cssClass="button" id="addCertificateButton">
@@ -48,10 +48,6 @@
             </tr>
         </thead>
     </table>
-
-    <s:if test="!registration.lockedForInvestigator">
-        <firebird:nextTabButton form="${form}" />
-    </s:if>
 
     <s:set var="selectedCertificateIds" value="%{form.certificates.{#this.id}}"/>
 
@@ -98,7 +94,7 @@
         }
 
         page.getSubmitUrl = function(checkbox) {
-              if ($(checkbox).is(":checked")) {
+              if ($(checkbox).attr("checked")) {
                   return '${selectCertificateUrl}';
               } else {
                   return '${deselectCertificateUrl}';

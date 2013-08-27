@@ -19,7 +19,7 @@
         </div>
         <div id="selectedOrganization"
              class="selection_section hide">
-            <s:hidden id="selectedOrganizationExternalId" name="selectedOrganizationExternalId"/>
+            <s:hidden id="selectedOrganizationKey" name="selectedOrganizationKey"/>
             <firebird:searchAgainLink/>
             <firebird:organizationDisplay organization="${organization}"
                                           tagVariableName="organizationDisplay"/>
@@ -62,7 +62,7 @@
         </div>
         <div id="selectedPerson"
              class="selection_section hide">
-            <s:hidden id="selectedPersonExternalId" name="selectedPersonExternalId"/>
+            <s:hidden id="selectedPersonKey" name="selectedPersonKey"/>
             <firebird:searchAgainLink/>
             <firebird:viewPerson person="${principalInvestigator}"
                                  tagVariableName="principalInvestigator"/>
@@ -162,10 +162,10 @@
     function saveLeadOrganization() {
         disableDialog();
 
-        var organizationExternalId = $("#selectedOrganizationExternalId").val();
-        var personExternalId = $("#selectedPersonExternalId").val();
-        if (!verifyOrganizationNotAlreadySelected(organizationExternalId, personExternalId)) {
-          enableDialog();
+        var organizationId = $("#selectedOrganizationKey").val();
+        var personId = $("#selectedPersonKey").val();
+        if (!verifyOrganizationNotAlreadySelected(organizationId, personId)) {
+          enableDialog()    ;
           return;
         }
 
@@ -181,7 +181,7 @@
         });
         $.post(url, formData, function (data) {
             enableDialog();
-            var selectedOrganizationExternalId = $("#selectedOrganizationExternalId", data).val();
+            var selectedOrganizationKey = $("#selectedOrganizationKey", data).val();
             if ($(".wwerr", data).length === 0) {
                 addLeadOrganizationRow(data);
                 closeDialog({});
@@ -191,8 +191,8 @@
         });
     }
 
-    function verifyOrganizationNotAlreadySelected(organizationExternalId, personExternalId) {
-        if (protocolFields.checkLeadOrganizationAdded(organizationExternalId, personExternalId)) {
+    function verifyOrganizationNotAlreadySelected(organizationId, personId) {
+        if (protocolFields.checkLeadOrganizationAdded(organizationId, personId)) {
             setPageErrorMessages("<fmt:message key='sponsor.protocol.lead.organization.duplicate.error'/>");
             return false;
         }
@@ -200,19 +200,19 @@
     }
 
     function addLeadOrganizationRow(pageData) {
-        var personKey = $("#selectedPersonExternalId", pageData).val();
+        var personKey = $("#selectedPersonKey", pageData).val();
         var personName = $("#personDisplayName", pageData).text();
-        var organizationKey = $("#selectedOrganizationExternalId", pageData).val();
+        var organizationKey = $("#selectedOrganizationKey", pageData).val();
         var organizationName = $("#orgName", pageData).text();
         protocolFields.addLeadOrganizationRow(organizationKey, organizationName, personKey, personName);
     }
 
-    personSearch.clickSelectButton = function (person) {
-        $('#selectedPersonExternalId').val(person.externalId);
+    personSearch.clickSelectButton = function (personId, rowData) {
+        $('#selectedPersonKey').val(personId);
         $("#selectPerson > div").each(function (index) {
             if (index === SELECTION_SECTION) {
                 showSection(this);
-                principalInvestigator.setPerson(person);
+                principalInvestigator.setPerson(rowData.person);
             } else {
                 hideSection(this);
             }
@@ -222,13 +222,13 @@
     $("#selectPerson .searchAgainLink").click(getSearchAgainFunction("selectPerson"));
     $("#searchPerson #createNewPerson").click(getCreateNewFunction("selectPerson"));
 
-    organizationSearch.clickSelectButton = function (organization) {
-        $('#selectedOrganizationExternalId').val(organization.externalId);
+    organizationSearch.clickSelectButton = function (organizationId, rowData) {
+        $('#selectedOrganizationKey').val(organizationId);
         $("#selectOrganization > div").each(function (index) {
             if (index === SELECTION_SECTION) {
                 showSection(this);
-                $(this).data("selection", organization);
-                organizationDisplay.setOrganization(organization);
+                $(this).data("selection", rowData.organization);
+                organizationDisplay.setOrganization(rowData.organization);
             } else {
                 hideSection(this);
             }
@@ -250,9 +250,9 @@
     }
 
     $(document).ready(function () {
-        showNecessarySection(<s:property value='%{organization.externalId != null}'/>,
+        showNecessarySection(<s:property value='%{organization.nesId != null}'/>,
                 <s:property value='%{createNewOrganization}'/>, "selectOrganization")
-        showNecessarySection(<s:property value='%{principalInvestigator.externalId != null}'/>,
+        showNecessarySection(<s:property value='%{principalInvestigator.nesId != null}'/>,
                 <s:property value='%{createNewPerson}'/>, "selectPerson")
         wrapDataInFormsIfNecessary();
         addErrorMessagesIfNecessary();

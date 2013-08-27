@@ -103,7 +103,7 @@ public class SponsorReviewAnnualRegistrationTest extends AbstractReviewAnnualReg
 
     @Test
     public void testCompleteReviewButtonInstructions() throws IOException {
-        AnnualRegistration registration = dataSet.getAnnualRegistration();
+        AnnualRegistration registration = dataSet.getRenewalRegistration();
         ReviewAnnualRegistrationPage reviewTab = openHomePage(dataSet.getSponsorLogin(), getCtepProvider()).getHelper()
                 .openSubmittedAnnualRegistrationTask(registration);
         for (RegistrationStatus status : RegistrationStatus.values()) {

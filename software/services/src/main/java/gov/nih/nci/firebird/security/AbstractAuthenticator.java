@@ -96,7 +96,7 @@ abstract class AbstractAuthenticator extends AbstractCredentialHandler implement
         super(userService);
     }
 
-    private static final String INVALID_CREDENTIALS_MESSAGE_KEY = "authentication.invalid.credentials";
+    static final String INVALID_CREDENTIALS_MESSAGE_KEY = "authentication.invalid.credentials";
 
     @Override
     @SuppressWarnings("PMD.AvoidCatchingGenericException")  // need to handle unexpected failures
@@ -114,7 +114,7 @@ abstract class AbstractAuthenticator extends AbstractCredentialHandler implement
         return sessionInformation;
     }
 
-    abstract UserSessionInformation performAuthentication(String username, String password, String providerUrl)
+    abstract UserSessionInformation performAuthentication(String username, String password, String providerUrl) 
             throws LoginException;
 
 }

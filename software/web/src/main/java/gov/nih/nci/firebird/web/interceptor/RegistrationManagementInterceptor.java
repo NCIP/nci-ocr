@@ -85,8 +85,6 @@ package gov.nih.nci.firebird.web.interceptor;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.ManagedInvestigator;
-import gov.nih.nci.firebird.data.user.SponsorRole;
-import gov.nih.nci.firebird.security.UserSessionInformation;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
@@ -123,19 +121,4 @@ public class RegistrationManagementInterceptor extends AbstractInvestigatorDataA
     protected String getSuspendedStrutsForward() {
         return FirebirdUIConstants.RETURN_REGISTRATION_ACCESS_SUSPENDED_ENTER;
     }
-    
-    @Override
-    boolean isPermittedSponsor(FirebirdUser currentUser, UserSessionInformation sessionInformation) {
-        return isCtepSponsor(currentUser) || hasVerifiedSponsorRole(currentUser, sessionInformation);
-    }
-
-    private boolean hasVerifiedSponsorRole(FirebirdUser currentUser, UserSessionInformation sessionInformation) {
-        for (SponsorRole role : currentUser.getSponsorRoles()) {
-            if (sessionInformation.getGroupNames().contains(role.getVerifiedSponsorGroupName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 }

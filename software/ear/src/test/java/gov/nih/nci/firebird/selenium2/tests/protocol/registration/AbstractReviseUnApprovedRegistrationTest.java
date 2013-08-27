@@ -153,30 +153,30 @@ public abstract class AbstractReviseUnApprovedRegistrationTest extends AbstractR
         ReviewRegistrationTab reviewTab = homePage.getHelper().openSubmittedProtocolRegistrationTask(
                 getPrimaryRegistration());
         reviewTab.getHelper().reviewAllForms(getPrimaryRegistration());
-        reviewTab.getHelper().getMatchingListing(getPrimaryRegistration().getFinancialDisclosure()).clickAccept();
+        reviewTab.getHelper().getMatchingListing(getPrimaryRegistration().getFinancialDisclosure()).clickAcceptRadioButton();
         reviewTab.getHelper().getMatchingListing(getPrimaryRegistration().getHumanResearchCertificateForm())
-                .clickAccept();
+                .clickAcceptRadioButton();
         FormReviewCommentDialog commentDialog = reviewTab.getHelper()
-                .getMatchingListing(getPrimaryRegistration().getForm1572()).clickReject();
+                .getMatchingListing(getPrimaryRegistration().getForm1572()).clickRejectRadioButton();
         commentDialog.typeComments("comments");
         commentDialog.clickSave();
     }
 
     private void checkFormStatuses(FormStatus form1572Status) {
         assertEquals(COMPLETED.getDisplay(),
-                getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getCurriculumVitaeForm()).getFormStatus());
+                getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getCurriculumVitaeForm()).getStatus());
         assertEquals(ACCEPTED.getDisplay(),
-                getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getFinancialDisclosure()).getFormStatus());
+                getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getFinancialDisclosure()).getStatus());
         assertEquals(ACCEPTED.getDisplay(),
                 getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getHumanResearchCertificateForm())
-                        .getFormStatus());
+                        .getStatus());
         assertEquals(form1572Status.getDisplay(),
-                getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getForm1572()).getFormStatus());
+                getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getForm1572()).getStatus());
     }
 
     private void checkIncompleteSubmission() {
         assertEquals(FormStatus.REVISED.getDisplay(),
-                getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getForm1572()).getFormStatus());
+                getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getForm1572()).getStatus());
         ValidationMessageDialog messageDialog = submitIncompleteSubmission();
         messageDialog.getHelper().verifyMessageDisplayed("validation.failure.missing.institutional.review.board");
         messageDialog.clickClose();
@@ -184,7 +184,7 @@ public abstract class AbstractReviseUnApprovedRegistrationTest extends AbstractR
 
     private ValidationMessageDialog submitIncompleteSubmission() {
         if (isCoordinator()) {
-            ConfirmSubmissionToInvestigatorDialog confirmDialog =
+            ConfirmSubmissionToInvestigatorDialog confirmDialog = 
                     (ConfirmSubmissionToInvestigatorDialog) getOverviewTab().clickSubmitRegistration();
             return (ValidationMessageDialog) confirmDialog.clickConfirm();
         } else {
@@ -223,10 +223,10 @@ public abstract class AbstractReviseUnApprovedRegistrationTest extends AbstractR
         removeOrganizationAssociationsFromProfile();
         reviseRegistration();
         assertEquals(IN_PROGRESS.getDisplay(), getOverviewTab().getHelper()
-                .getFormListing(getPrimaryRegistration().getForm1572()).getFormStatus());
+                .getFormListing(getPrimaryRegistration().getForm1572()).getStatus());
         checkSubmissionWithRemovedOrganizationAssociations();
         assertEquals(INCOMPLETE.getDisplay(), getOverviewTab().getHelper().getFormListing(getPrimaryRegistration().getForm1572())
-                .getFormStatus());
+                .getStatus());
     }
 
     private void removeOrganizationAssociationsFromProfile() {

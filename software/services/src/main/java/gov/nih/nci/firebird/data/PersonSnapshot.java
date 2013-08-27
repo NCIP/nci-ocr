@@ -87,28 +87,16 @@ import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 
-import org.hibernate.validator.NotEmpty;
-
 /**
  * Class that represents the local cache of the NES Person Service Person object.
  */
 @Entity(name = "person_snapshot")
 @AttributeOverrides({
+        @AttributeOverride(name = "nesId", column = @Column(name = "nes_id", unique = false)),
         @AttributeOverride(name = "ctepId", column = @Column(name = "ctep_id", unique = false))
 })
 public class PersonSnapshot extends AbstractPersonData {
 
     private static final long serialVersionUID = 1L;
-    private String externalId;
     
-    @NotEmpty
-    @Column(name = "external_id", unique = true)
-    public String getExternalId() {
-        return externalId;
-    }
-
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
-    }
-
 }

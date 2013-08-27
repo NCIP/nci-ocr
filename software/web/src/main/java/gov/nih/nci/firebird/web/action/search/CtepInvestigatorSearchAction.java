@@ -149,9 +149,7 @@ public class CtepInvestigatorSearchAction extends AbstractPersonSearchAction {
     /**
      * Investigator listing used for table display.
      */
-    // needs to be public for JSONUtil.serialize()
-    @SuppressWarnings("ucd")
-    public final class InvestigatorListing {
+    public class InvestigatorListing {
 
         private final Long id;
         private final String name;
@@ -163,7 +161,7 @@ public class CtepInvestigatorSearchAction extends AbstractPersonSearchAction {
         /**
          * @param profile investigator's profile
          */
-        InvestigatorListing(InvestigatorProfile profile) {
+        public InvestigatorListing(InvestigatorProfile profile) {
             this.id = profile.getId();
             this.name = profile.getPerson().getDisplayNameForList();
             this.sortableName = profile.getPerson().getSortableName();

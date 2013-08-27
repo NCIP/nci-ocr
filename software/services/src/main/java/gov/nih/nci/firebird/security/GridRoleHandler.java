@@ -86,6 +86,8 @@ import gov.nih.nci.firebird.cagrid.GridGrouperService;
 import gov.nih.nci.firebird.cagrid.GridInvocationException;
 import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
+import gov.nih.nci.firebird.data.user.SponsorRole;
+import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 
 import java.util.Set;
@@ -97,7 +99,7 @@ import com.google.inject.Inject;
 /**
  * Looks up FIREBIRD roles from caGrid's Grid Grouper and makes any necessary user updates.
  */
-class GridRoleHandler extends AbstractCredentialHandler implements RoleHandler {
+public class GridRoleHandler extends AbstractCredentialHandler implements RoleHandler {
 
     private static final String GRID_ERROR_MESSAGE_KEY = "authentication.error";
 
@@ -116,7 +118,26 @@ class GridRoleHandler extends AbstractCredentialHandler implements RoleHandler {
         FirebirdUser user = getUserService().getUserInfo(sessionInformation);
         if (user != null) {
             sessionInformation.addGroupName(FirebirdConstants.REGISTERED_USER_ROLE);
+            addRoleVerificationInformation(user, sessionInformation);
+            getUserService().save(user);
         }
+    }
+
+    private void addRoleVerificationInformation(FirebirdUser user, UserSessionInformation userSessionInformation) {
+        Set<String> groupNames = userSessionInformation.getGroupNames();
+        if (isVerifiedInvestigator(user, groupNames)) {
+            user.getInvestigatorRole().setVerified(true);
+        }
+        for (SponsorRole role : user.getSponsorRoles()) {
+            if (groupNames.contains(role.getVerifiedSponsorGroupName())) {
+                role.setVerified(true);
+            }
+        }
+    }
+
+    private boolean isVerifiedInvestigator(FirebirdUser user, Set<String> groupNames) {
+        return user.getInvestigatorRole() != null
+                && groupNames.contains(UserRoleType.INVESTIGATOR.getVerifiedGroupName());
     }
 
     private Set<String> getRoles(String fullyQualifiedUserName) throws LoginException {

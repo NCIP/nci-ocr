@@ -90,13 +90,13 @@ import java.util.ResourceBundle;
 /**
  * Validator for Form FDA 1572.
  */
-class AnnualForm1572Validator extends AbstractForm1572Validator {
+public class AnnualForm1572Validator extends AbstractForm1572Validator {
 
     /**
      * Constructor.
      * @param form Form1572
      */
-    AnnualForm1572Validator(Form1572 form) {
+    public AnnualForm1572Validator(Form1572 form) {
         super(form);
     }
 

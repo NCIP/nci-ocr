@@ -101,7 +101,6 @@ public class AdditionalAttachmentsDialogHelper {
     }
 
     public void checkForAdditionalAttachments(AdditionalAttachmentsForm additionalAttachmentsForm) throws IOException {
-        assertEquals(additionalAttachmentsForm.getAdditionalAttachments().size(), dialog.getListings().size());
         for (FirebirdFile attachment : additionalAttachmentsForm.getAdditionalAttachments()) {
             AdditionalAttachmentListing listing = getListingByValues(attachment);
             assertTrue(listing.clickDownload().length() > 0);

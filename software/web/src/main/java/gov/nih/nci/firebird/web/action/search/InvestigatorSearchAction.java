@@ -84,23 +84,27 @@ package gov.nih.nci.firebird.web.action.search;
 
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
+import gov.nih.nci.firebird.service.person.PersonSearchResult;
 
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.struts2.convention.annotation.Result;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
  * This action supports autocompleter person searches.
  */
+@Result(type = "json", params = { "root", "results" })
 public class InvestigatorSearchAction extends AbstractPersonSearchAction {
 
     private static final long serialVersionUID = 1L;
 
     private final InvestigatorProfileService profileService;
-    private List<InvestigatorProfile> results = Collections.emptyList();
+    private List<PersonSearchResult> results = Collections.emptyList();
 
     /**
      * Build the search action.
@@ -120,18 +124,29 @@ public class InvestigatorSearchAction extends AbstractPersonSearchAction {
     @Override
     public String execute() {
         String searchTermAlpha = filterSearchTerm();
+        List<InvestigatorProfile> profileResults = null;
         if (StringUtils.length(searchTermAlpha) >= MIN_INPUT_LENGTH) {
-            results = profileService.search(getTerm());
+            profileResults = profileService.search(getTerm());
+            results = convertProfileResultsToPersonResults(profileResults);
         } else {
             results = Collections.emptyList();
         }
         return SUCCESS;
     }
 
+    private List<PersonSearchResult> convertProfileResultsToPersonResults(List<InvestigatorProfile> profileResults) {
+        List<PersonSearchResult> searchResults = Lists.newArrayList();
+        for (InvestigatorProfile profile : profileResults) {
+            PersonSearchResult personResult = new PersonSearchResult(profile.getId().toString(), profile.getPerson());
+            searchResults.add(personResult);
+        }
+        return searchResults;
+    }
+
     /**
      * @return the results
      */
-    public List<InvestigatorProfile> getResults() {
+    public List<PersonSearchResult> getResults() {
         return results;
     }
 

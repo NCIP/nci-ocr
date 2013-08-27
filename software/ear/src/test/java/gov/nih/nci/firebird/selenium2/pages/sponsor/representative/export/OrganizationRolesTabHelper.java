@@ -87,8 +87,7 @@ import gov.nih.nci.firebird.data.AbstractOrganizationRole;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
-import gov.nih.nci.firebird.nes.organization.AbstractNesRoleData;
-import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.export.OrganizationRolesTab.OrganizationRoleListing;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -107,31 +106,21 @@ public class OrganizationRolesTabHelper extends AbstractExportCurationDataTabHel
     }
 
     public boolean contains(AbstractOrganizationRole role) {
-        for (OrganizationRoleListing listing : tab.getListings()) {
-            String externalIdExtension = new NesId(role.getExternalId()).getExtension();
-            if (listing.getExternalId().equals(externalIdExtension)) {
-                return true;
-            }
-        }
-        return false;
+        return FirebirdTableUtils.getListing(tab.getListings(), role) != null;
     }
 
     public void downloadAndCheckCsvFile(Iterable<AbstractOrganizationRole> roles) throws IOException {
         List<String> fileContents = getCsvFileContents();
         for (AbstractOrganizationRole role : roles) {
             Organization organization = role.getOrganization();
-            String expectedLine = getNesIdExtension(role.getExternalId()) + "," + getNesRoleType(role).getDisplay() + ","
-                    + getNesIdExtension(getNesRoleData(organization).getPlayerId()) + "," + organization.getName();
+            String expectedLine = getNesIdExtension(role.getNesId()) + "," + getNesRoleType(role).getDisplay() + ","
+                    + getNesIdExtension(organization.getPlayerIdentifier()) + "," + organization.getName();
             assertLineIsPresent(expectedLine, fileContents);
         }
     }
 
-    private AbstractNesRoleData getNesRoleData(Organization organization) {
-        return (AbstractNesRoleData) organization.getExternalData();
-    }
-
     private NesIIRoot getNesRoleType(AbstractOrganizationRole role) {
-        String nesId = role.getOrganization().getExternalId();
+        String nesId = role.getOrganization().getNesId();
         return new NesId(nesId).getRootType();
     }
 

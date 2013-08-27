@@ -87,9 +87,8 @@ import gov.nih.nci.firebird.data.AnnualRegistration;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
-import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.AnnualRegistrationSubmissionsPage;
-import gov.nih.nci.firebird.test.LoginAccount;
+import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
 
 import org.junit.Test;
@@ -101,34 +100,26 @@ public class AnnualRegistrationSubmissionsPageTest extends AbstractFirebirdWebDr
     private AnnualRegistration inReviewRegistration;
     private AnnualRegistration onHoldRegistration;
     private AnnualRegistration inProgressRegistration;
-    private LoginAccount ctepSponsorLogin;
-    private LoginAccount dcpSponsorLogin;
-    private LoginAccount dcpSponsorDelegateLogin;
+    private DataSet dataSet;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
         FirebirdUser investigator = builder.createInvestigator().asCtepUser().get();
-        ctepSponsorLogin = builder.createSponsor().asCtepUser().getLogin();
-        dcpSponsorLogin = builder.createSponsor().getLogin();
-        dcpSponsorDelegateLogin = builder.createSponsor().asDelegate().getLogin();
+        builder.createSponsor().asCtepUser();
         submittedRegistration = builder.createAnnualRegistration(investigator).withStatus(RegistrationStatus.SUBMITTED).get();
         acceptedRegistration = builder.createAnnualRegistration(investigator).withStatus(RegistrationStatus.ACCEPTED).get();
         inReviewRegistration = builder.createAnnualRegistration(investigator).withStatus(RegistrationStatus.IN_REVIEW).get();
         onHoldRegistration = builder.createAnnualRegistration(investigator).withStatus(RegistrationStatus.REVIEW_ON_HOLD).get();
         inProgressRegistration = builder.createAnnualRegistration(investigator).withStatus(RegistrationStatus.IN_PROGRESS).get();
-        builder.build();
+        dataSet = builder.build();
     }
 
     @Test
-    public void testBrowseAnnualRegistrationsAsCtepSponsor() {
-        HomePage homePage = openHomePage(ctepSponsorLogin, getCtepProvider());
-        AnnualRegistrationSubmissionsPage submissionsPage = homePage.getAnnualRegistrationsMenu().clickSubmissions();
-        checkRegistrationListings(submissionsPage);
-    }
-
-    private void checkRegistrationListings(AnnualRegistrationSubmissionsPage submissionsPage) {
+    public void testBrowseAnnualRegistrations() {
+        AnnualRegistrationSubmissionsPage submissionsPage = openHomePage(dataSet.getSponsorLogin(), getCtepProvider())
+                .getAnnualRegistrationsMenu().clickSubmissions();
         assertNotNull(submissionsPage.getHelper().getListingByValues(submittedRegistration));
         assertNotNull(submissionsPage.getHelper().getListingByValues(acceptedRegistration));
         assertNotNull(submissionsPage.getHelper().getListingByValues(inReviewRegistration));
@@ -156,19 +147,4 @@ public class AnnualRegistrationSubmissionsPageTest extends AbstractFirebirdWebDr
         assertNotNull(submissionsPage.getHelper().getListingByValues(onHoldRegistration));
         assertNull(submissionsPage.getHelper().getListingByValues(inProgressRegistration));
     }
-
-    @Test
-    public void testBrowseAnnualRegistrationsAsDcpSponsor() {
-        HomePage homePage = openHomePage(dcpSponsorLogin);
-        AnnualRegistrationSubmissionsPage submissionsPage = homePage.getAnnualRegistrationsMenu().clickSubmissions();
-        checkRegistrationListings(submissionsPage);
-    }
-
-    @Test
-    public void testBrowseAnnualRegistrationsAsDcpSponsorDelegate() {
-        HomePage homePage = openHomePage(dcpSponsorDelegateLogin);
-        AnnualRegistrationSubmissionsPage submissionsPage = homePage.getAnnualRegistrationsMenu().clickSubmissions();
-        checkRegistrationListings(submissionsPage);
-    }
-    
 }

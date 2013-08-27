@@ -82,47 +82,47 @@
  */
 package gov.nih.nci.firebird.web.action.search;
 
-import static gov.nih.nci.firebird.data.OrganizationRoleType.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
-import gov.nih.nci.firebird.test.OrganizationFactory;
-import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
 import java.util.List;
+
+import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchResult;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
+import gov.nih.nci.firebird.test.OrganizationFactory;
+import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.opensymphony.xwork2.ActionSupport;
 
 public class AbstractOrganizationSearchActionTest extends AbstractWebTest {
 
-    @Inject
-    private OrganizationService mockOrganizationService;
-    @Inject
-    private Provider<OrganizationService> mockOrganizationServiceProvider;
+    private static final String ORGANIZATION_KEY = "key";
+
+    private OrganizationSearchService mockService = mock(OrganizationSearchService.class);
 
     @SuppressWarnings("serial")
     private AbstractOrganizationSearchAction action = new AbstractOrganizationSearchAction() {
         @Override
-        List<Organization> lookupSearchResults() {
-            return mockOrganizationService.search(getTerm(), GENERIC_ORGANIZATION);
+        List<OrganizationSearchResult> lookupSearchResults() {
+            return mockService.search(getTerm());
         }
-
+        
     };
     private Organization organization = OrganizationFactory.getInstance().create();
+    private OrganizationSearchResult expectedResult = new OrganizationSearchResult(ORGANIZATION_KEY, organization);
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        action.setOrganizationServiceProvider(mockOrganizationServiceProvider);
-        when(mockOrganizationService.search(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(Lists.newArrayList(organization));
+        action.setOrganizationSearchService(mockService);
+        when(mockService.search(anyString())).thenReturn(Lists.newArrayList(expectedResult));
     }
 
     @Test
@@ -131,7 +131,7 @@ public class AbstractOrganizationSearchActionTest extends AbstractWebTest {
         assertEquals(ActionSupport.SUCCESS, action.doSearch());
         assertEquals(0, action.getResults().size());
         assertEquals(0, action.getAutoCompleterResults().size());
-        verify(mockOrganizationService, never()).search(anyString(), eq(GENERIC_ORGANIZATION));
+        verify(mockService, never()).search(anyString());
     }
 
     @Test
@@ -140,7 +140,7 @@ public class AbstractOrganizationSearchActionTest extends AbstractWebTest {
         assertEquals(ActionSupport.SUCCESS, action.doSearch());
         assertEquals(0, action.getResults().size());
         assertEquals(0, action.getAutoCompleterResults().size());
-        verify(mockOrganizationService, never()).search(anyString(), eq(GENERIC_ORGANIZATION));
+        verify(mockService, never()).search(anyString());
     }
 
     @Test
@@ -149,7 +149,7 @@ public class AbstractOrganizationSearchActionTest extends AbstractWebTest {
         assertEquals(ActionSupport.SUCCESS, action.doSearch());
         assertEquals(0, action.getResults().size());
         assertEquals(0, action.getAutoCompleterResults().size());
-        verify(mockOrganizationService, never()).search(anyString(), eq(GENERIC_ORGANIZATION));
+        verify(mockService, never()).search(anyString());
     }
 
     @Test
@@ -158,15 +158,15 @@ public class AbstractOrganizationSearchActionTest extends AbstractWebTest {
         action.setTerm(searchTerm);
         assertEquals(ActionSupport.SUCCESS, action.doSearch());
         assertEquals(1, action.getResults().size());
-        verify(mockOrganizationService).search(searchTerm, GENERIC_ORGANIZATION);
+        verify(mockService).search(eq(searchTerm));
 
-        Organization result = action.getResults().get(0);
-        assertEquals(organization, result);
+        OrganizationSearchResult result = action.getResults().get(0);
+        assertEquals(ORGANIZATION_KEY, result.getKey());
     }
 
     @Test(expected = IllegalStateException.class)
     public void testAutoCompleteTableSearch_Failure() {
-        when(mockOrganizationService.search(anyString(), eq(GENERIC_ORGANIZATION))).thenThrow(new IllegalStateException());
+        when(mockService.search(anyString())).thenThrow(new IllegalStateException());
         action.setTerm("Organization Name");
         action.doSearch();
     }

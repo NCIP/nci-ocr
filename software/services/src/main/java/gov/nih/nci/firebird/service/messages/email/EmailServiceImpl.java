@@ -109,6 +109,7 @@ public class EmailServiceImpl implements EmailService {
     static final String TO_OVERRIDE_HEADING = "Originally sent to:\n";
     static final String CC_OVERRIDE_HEADING = "Originally cc'ed to:\n";
 
+
     private Session mailSession;
     private String overrideEmailAddress;
     private String senderEmail;
@@ -130,10 +131,8 @@ public class EmailServiceImpl implements EmailService {
             sendEmail(email, bounce);
             LOG.info("Sent email with subject \"" + message.getSubject() + "\" to recipients: " + to);
         } catch (EmailException e) {
-            LOG.warn("An Error occurred while sending the email with subject \""
-                    + message.getSubject() + "\" to recipients: " + to);
-            throw new IllegalStateException("An Error occurred while sending the email with subject \""
-                    + message.getSubject() + "\" to recipients: " + to, e);
+            LOG.error(e);
+            throw new IllegalStateException("An Error occurred while sending the email", e);
         }
     }
 
@@ -171,8 +170,9 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    private Email prepareSimpleMessage(Collection<String> to, Collection<String> cc, FirebirdMessage message)
-            throws EmailException {
+    private Email prepareSimpleMessage(Collection<String> to, Collection<String> cc, 
+            FirebirdMessage message)
+    throws EmailException {
         Email email = new SimpleEmail();
         email.setSentDate(new Date());
         email.setSubject(message.getSubject());
@@ -278,8 +278,8 @@ public class EmailServiceImpl implements EmailService {
     }
 
     /**
-     * @param overrideEmailAddress if this is set, all emails will be hijacked and sent to this email address instead of
-     *            their intended recipients.
+     * @param overrideEmailAddress if this is set, all emails will be hijacked and sent to this email
+     * address instead of their intended recipients.
      */
     @Inject
     public void setOverrideEmailAddress(@Named("mail.override.address") String overrideEmailAddress) {

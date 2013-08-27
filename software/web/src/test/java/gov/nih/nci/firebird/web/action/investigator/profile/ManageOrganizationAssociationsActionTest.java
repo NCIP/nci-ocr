@@ -96,9 +96,9 @@ import gov.nih.nci.firebird.data.PracticeSite;
 import gov.nih.nci.firebird.data.PracticeSiteType;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
@@ -122,7 +122,7 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
     @Inject
     private InvestigatorProfileService mockProfileService;
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockOrganizationSearchService;
     @Inject
     private ManageOrganizationAssociationsAction action;
     private InvestigatorProfile profile = InvestigatorProfileFactory.getInstanceWithId().create();
@@ -137,29 +137,29 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
         action.setProfile(profile);
         action.setServletRequest(getMockRequest());
         when(mockProfileService.getById(profile.getId())).thenReturn(profile);
-        when(mockOrganizationService.getByExternalId(organization.getId().toString())).thenReturn(organization);
+        when(mockOrganizationSearchService.getOrganization(organization.getId().toString())).thenReturn(organization);
     }
 
     @Test
-    public void testPrepare_hasOrganizationExternalId() {
-        action.setOrganizationExternalId(organization.getId().toString());
+    public void testPrepare_hasSearchKey() {
+        action.setSearchKey(organization.getId().toString());
         action.prepare();
         assertEquals(organization, action.getAssociatedOrganization());
     }
 
     @Test
     public void testPrepare_hasNonMatchingId() {
-        action.setOrganizationExternalId("2355wdgdsg");
+        action.setSearchKey("2355wdgdsg");
         action.prepare();
         assertNull(action.getAssociatedOrganization());
     }
 
     @Test
-    public void testPrepare_InvalidatedOrganizationException() throws InvalidatedOrganizationException {
-        String organizationExternalId = "External1";
-        when(mockOrganizationService.getByExternalId(organizationExternalId)).thenThrow(
-                new InvalidatedOrganizationException());
-        action.setOrganizationExternalId(organizationExternalId);
+    public void testPrepare_UnavailableEntityException() throws UnavailableEntityException {
+        String searchKey = "NES1";
+        when(mockOrganizationSearchService.getOrganization(searchKey)).thenThrow(
+                new UnavailableEntityException(null, searchKey));
+        action.setSearchKey(searchKey);
         action.prepare();
         assertTrue(action.hasActionErrors());
     }
@@ -177,47 +177,48 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
 
     @Test
     public void testSelectAssociatedOrganization_CreateNew() throws Exception {
+        action.setNesId(StringUtils.EMPTY);
         assertEquals(RETURN_MANAGE_ASSOCIATION_FIELDS, action.selectAssociatedOrganization());
         ComparisonUtil.assertEquivalent(new Organization(), action.getAssociatedOrganization());
         assertTrue(StringUtils.isEmpty(action.getAssociationOhrp()));
-        assertTrue(StringUtils.isEmpty(action.getAssociatedOrganization().getExternalId()));
+        assertTrue(StringUtils.isEmpty(action.getNesId()));
     }
 
     @Test
     public void testSelectAssociatedOrganization_PracticeSiteFirstAssociation() throws Exception {
-        Organization externalOrg = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(externalOrg.getExternalId())).thenReturn(externalOrg);
+        Organization nesOrg = OrganizationFactory.getInstance().create();
+        when(mockOrganizationSearchService.getOrganization(nesOrg.getNesId())).thenReturn(nesOrg);
 
-        action.setOrganizationExternalId(externalOrg.getExternalId());
+        action.setSearchKey(nesOrg.getNesId());
         action.setAssociationType(PRACTICE_SITE);
         action.prepare();
         assertEquals(RETURN_MANAGE_ASSOCIATION_FIELDS, action.selectAssociatedOrganization());
-        ComparisonUtil.assertEquivalent(externalOrg, action.getAssociatedOrganization());
+        ComparisonUtil.assertEquivalent(nesOrg, action.getAssociatedOrganization());
         assertTrue(StringUtils.isEmpty(action.getAssociationOhrp()));
     }
 
     @Test
     public void testSelectAssociatedOrganization_PracticeSiteAssociationAlreadyExistsInSystem() throws Exception {
         String ohrp = "12345";
-        Organization externalOrg = OrganizationFactory.getInstance().create();
-        PracticeSite practiceSite = (PracticeSite) externalOrg.createRole(PRACTICE_SITE);
+        Organization nesOrg = OrganizationFactory.getInstance().create();
+        PracticeSite practiceSite = (PracticeSite) nesOrg.createRole(PRACTICE_SITE);
         practiceSite.setOhrpAssuranceNumber(ohrp);
-        when(mockOrganizationService.getByExternalId(externalOrg.getExternalId())).thenReturn(externalOrg);
+        when(mockOrganizationSearchService.getOrganization(nesOrg.getNesId())).thenReturn(nesOrg);
 
-        action.setOrganizationExternalId(externalOrg.getExternalId());
+        action.setSearchKey(nesOrg.getNesId());
         action.setAssociationType(PRACTICE_SITE);
         action.prepare();
         assertEquals(RETURN_MANAGE_ASSOCIATION_FIELDS, action.selectAssociatedOrganization());
-        ComparisonUtil.assertEquivalent(externalOrg, action.getAssociatedOrganization());
+        ComparisonUtil.assertEquivalent(nesOrg, action.getAssociatedOrganization());
         assertEquals(ohrp, action.getAssociationOhrp());
     }
 
     @Test
     public void testSelectAssociatedOrganization_IRB() throws Exception {
-        Organization externalOrg = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(externalOrg.getExternalId())).thenReturn(externalOrg);
+        Organization nesOrg = OrganizationFactory.getInstance().create();
+        when(mockOrganizationSearchService.getOrganization(nesOrg.getNesId())).thenReturn(nesOrg);
 
-        action.setOrganizationExternalId(externalOrg.getExternalId());
+        action.setSearchKey(nesOrg.getNesId());
         action.setAssociationType(IRB);
         action.prepare();
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.selectAssociatedOrganization());
@@ -225,10 +226,10 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
 
     @Test
     public void testSelectAssociatedOrganization_ClinicalLab() throws Exception {
-        Organization externalOrg = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(externalOrg.getExternalId())).thenReturn(externalOrg);
+        Organization nesOrg = OrganizationFactory.getInstance().create();
+        when(mockOrganizationSearchService.getOrganization(nesOrg.getNesId())).thenReturn(nesOrg);
 
-        action.setOrganizationExternalId(externalOrg.getExternalId());
+        action.setSearchKey(nesOrg.getNesId());
         action.setAssociationType(CLINICAL_LABORATORY);
         action.prepare();
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.selectAssociatedOrganization());
@@ -236,11 +237,11 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
 
     @Test
     public void testSelectAssociatedOrganization_AssociationAlreadyExists() throws Exception {
-        Organization externalOrg = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(externalOrg.getExternalId())).thenReturn(externalOrg);
-        profile.addOrganizationAssociation(externalOrg, CLINICAL_LABORATORY);
+        Organization nesOrg = OrganizationFactory.getInstance().create();
+        when(mockOrganizationSearchService.getOrganization(nesOrg.getNesId())).thenReturn(nesOrg);
+        profile.addOrganizationAssociation(nesOrg, CLINICAL_LABORATORY);
 
-        action.setOrganizationExternalId(externalOrg.getExternalId());
+        action.setSearchKey(nesOrg.getNesId());
         action.setAssociationType(CLINICAL_LABORATORY);
         action.prepare();
         assertEquals(ManageOrganizationAssociationsAction.RETURN_MANAGE_ASSOCIATION,
@@ -249,47 +250,50 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
 
     @Test
     public void testSaveOrganizationAjax_NewOrganization() throws Exception {
-        Organization successOrg = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization successOrg = OrganizationFactory.getInstance().create();
 
         action.setAssociatedOrganization(successOrg);
         action.setAssociationType(OrganizationRoleType.IRB);
 
+        successOrg.setNesId(null);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveOrganizationAjax());
         verify(mockProfileService).addAssociatedInstitutionalReviewBoard(profile, successOrg);
     }
 
     @Test
-    public void testSaveOrganizationAjax_ExternalOrganization() throws Exception {
+    public void testSaveOrganizationAjax_NesOrganization() throws Exception {
         Organization successOrg = OrganizationFactory.getInstance().create();
-        String externalId = successOrg.getExternalId();
-        when(mockOrganizationService.getByExternalId(externalId)).thenReturn(successOrg);
+        String nesId = "nes_id";
+        when(mockOrganizationSearchService.getOrganization(nesId)).thenReturn(successOrg);
 
         action.setAssociatedOrganization(successOrg);
         action.setAssociationType(OrganizationRoleType.IRB);
-        action.setOrganizationExternalId(externalId);
+        action.setSearchKey(nesId);
         action.prepare();
 
+        successOrg.setNesId(nesId);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveOrganizationAjax());
         verify(mockProfileService).addAssociatedInstitutionalReviewBoard(profile, successOrg);
     }
 
     @Test
-    public void testSaveOrganizationAjax_ExternalOrganization_ClinicalLab() throws Exception {
+    public void testSaveOrganizationAjax_NesOrganization_ClinicalLab() throws Exception {
         Organization successOrg = OrganizationFactory.getInstance().create();
-        String externalId = successOrg.getExternalId();
-        when(mockOrganizationService.getByExternalId(externalId)).thenReturn(successOrg);
+        String nesId = "nes_id";
+        when(mockOrganizationSearchService.getOrganization(nesId)).thenReturn(successOrg);
 
         action.setAssociatedOrganization(successOrg);
         action.setAssociationType(OrganizationRoleType.CLINICAL_LABORATORY);
-        action.setOrganizationExternalId(externalId);
+        action.setSearchKey(nesId);
         action.prepare();
 
+        successOrg.setNesId(nesId);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveOrganizationAjax());
         verify(mockProfileService).addAssociatedClinicalLab(profile, successOrg);
     }
 
     @Test
-    public void testSaveOrganizationAjax_PracticeSite_NoOhrpOrTypeOrExternalId() throws Exception {
+    public void testSaveOrganizationAjax_PracticeSite_NoOhrpOrTypeOrNesId() throws Exception {
         Organization successOrg = setUpForPracticeSiteSave(null, null, null);
         assertEquals(ActionSupport.INPUT, action.saveOrganizationAjax());
         verify(mockProfileService, never()).addAssociatedPracticeSite(eq(profile), eq(successOrg), anyString(),
@@ -300,30 +304,25 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
         assertTrue(action.getFieldErrors().containsKey(PRACTICE_SITE_TYPE_FIELD_NAME));
     }
 
-    private Organization setUpForPracticeSiteSave(String externalId, String ohrp, PracticeSiteType type)
-            throws Exception {
+    private Organization setUpForPracticeSiteSave(String nesId, String ohrp, PracticeSiteType type) throws Exception {
         Organization organization = OrganizationFactory.getInstance().create();
-        String organizationExternalId = "organizationExternalId";
-        when(mockOrganizationService.getByExternalId(organizationExternalId)).thenReturn(organization);
+        String searchKey = "searchKey";
+        when(mockOrganizationSearchService.getOrganization(searchKey)).thenReturn(organization);
 
         action.setAssociatedOrganization(organization);
         action.setAssociationType(PRACTICE_SITE);
-        action.setOrganizationExternalId(organizationExternalId);
+        action.setSearchKey(searchKey);
         action.setOhrpRequired(true);
         action.setAssociationOhrp(ohrp);
         action.setPracticeSiteType(type);
         action.prepare();
 
-        if (externalId == null) {
-            organization.setExternalData(null);
-        } else {
-            organization.getExternalData().setExternalId(externalId);
-        }
+        organization.setNesId(nesId);
         return organization;
     }
 
     @Test
-    public void testSaveOrganizationAjax_PracticeSiteWithNoTypeOrExternalId() throws Exception {
+    public void testSaveOrganizationAjax_PracticeSiteWithNoTypeOrNesId() throws Exception {
         Organization successOrg = setUpForPracticeSiteSave(null, VALID_OHRP_NUMBER, null);
         assertEquals(ActionSupport.INPUT, action.saveOrganizationAjax());
         verify(mockProfileService, never()).addAssociatedPracticeSite(eq(profile), eq(successOrg), anyString(),
@@ -334,7 +333,7 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testSaveOrganizationAjax_PracticeSiteWithTypeAndNoExternalId() throws Exception {
+    public void testSaveOrganizationAjax_PracticeSiteWithTypeAndNoNesId() throws Exception {
         Organization successOrg = setUpForPracticeSiteSave(null, VALID_OHRP_NUMBER, PracticeSiteType.CANCER_CENTER);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveOrganizationAjax());
         verify(mockProfileService).addAssociatedPracticeSite(eq(profile), eq(successOrg), anyString(),
@@ -343,8 +342,8 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testSaveOrganizationAjax_PracticeSiteWithExternalIdAndNoType() throws Exception {
-        Organization successOrg = setUpForPracticeSiteSave("externalId", VALID_OHRP_NUMBER, null);
+    public void testSaveOrganizationAjax_PracticeSiteWithNesIdAndNoType() throws Exception {
+        Organization successOrg = setUpForPracticeSiteSave("nesId", VALID_OHRP_NUMBER, null);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveOrganizationAjax());
         verify(mockProfileService).addAssociatedPracticeSite(eq(profile), eq(successOrg), anyString(),
                 isNull(PracticeSiteType.class));
@@ -354,7 +353,7 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
     @Test
     public void testSaveOrganizationAjax_PracticeSite() throws Exception {
         final String OHRP = VALID_OHRP_NUMBER;
-        Organization successOrg = setUpForPracticeSiteSave("externalId", OHRP, PracticeSiteType.CANCER_CENTER);
+        Organization successOrg = setUpForPracticeSiteSave("nesId", OHRP, PracticeSiteType.CANCER_CENTER);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveOrganizationAjax());
         verify(mockProfileService).addAssociatedPracticeSite(profile, successOrg, OHRP, PracticeSiteType.CANCER_CENTER);
     }
@@ -376,22 +375,27 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
 
     @Test
     public void testUpdateOhrp() throws Exception {
-        Organization organization = OrganizationFactory.getInstanceWithId().create();
-        OrganizationAssociation association = profile.addOrganizationAssociation(organization,
+        Organization org = OrganizationFactory.getInstance().create();
+        org.setId(12345L);
+        org.setNesId("1234t56");
+        OrganizationAssociation association = profile.addOrganizationAssociation(org,
                 OrganizationRoleType.PRACTICE_SITE);
-        action.setAssociatedOrganization(organization);
+        action.setAssociatedOrganization(org);
         action.setAssociationOhrp(VALID_OHRP_NUMBER);
         action.setAssociationType(OrganizationRoleType.PRACTICE_SITE);
 
-        assertEquals(ActionSupport.INPUT, action.updateOhrp());
+        assertEquals(ActionSupport.NONE, action.updateOhrp());
         verify(mockProfileService).updateAssociationOhrp(association, VALID_OHRP_NUMBER);
     }
 
     @Test
     public void testUpdateOhrp_InvalidOhrpFormat() throws Exception {
-        Organization organization = OrganizationFactory.getInstanceWithId().create();
-        profile.addOrganizationAssociation(organization, OrganizationRoleType.PRACTICE_SITE);
-        action.setAssociatedOrganization(organization);
+        Organization org = OrganizationFactory.getInstance().create();
+        org.setId(12345L);
+        org.setNesId("1234t56");
+        profile.addOrganizationAssociation(org,
+                OrganizationRoleType.PRACTICE_SITE);
+        action.setAssociatedOrganization(org);
         action.setAssociationOhrp("ABCD1234567");
         action.setAssociationType(OrganizationRoleType.PRACTICE_SITE);
 
@@ -414,7 +418,9 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
 
     @Test
     public void testUpdateOhrp_NoMatchingAssociation() throws Exception {
-        Organization org = OrganizationFactory.getInstanceWithId().create();
+        Organization org = OrganizationFactory.getInstance().create();
+        org.setId(12345L);
+        org.setNesId("1234t56");
         action.setAssociatedOrganization(org);
         action.setAssociationOhrp(VALID_OHRP_NUMBER);
         action.setAssociationType(OrganizationRoleType.PRACTICE_SITE);
@@ -427,7 +433,9 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
 
     @Test
     public void testUpdateOhrp_NoAssociationType() throws Exception {
-        Organization org = OrganizationFactory.getInstanceWithId().create();
+        Organization org = OrganizationFactory.getInstance().create();
+        org.setId(12345L);
+        org.setNesId("1234t56");
         profile.addOrganizationAssociation(org, OrganizationRoleType.PRACTICE_SITE);
         action.setAssociatedOrganization(org);
         action.setAssociationOhrp(VALID_OHRP_NUMBER);
@@ -441,7 +449,9 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
     @Test
     public void testUpdateOhrp_InvalidOhrp() throws Exception {
         String ohrp = null;
-        Organization org = OrganizationFactory.getInstanceWithId().create();
+        Organization org = OrganizationFactory.getInstance().create();
+        org.setId(12345L);
+        org.setNesId("1234t56");
         profile.addOrganizationAssociation(org, OrganizationRoleType.PRACTICE_SITE);
         action.setAssociatedOrganization(org);
         action.setAssociationOhrp(ohrp);
@@ -477,7 +487,9 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
 
     @Test
     public void testSaveOrganizationAjax_withoutRequiredOhrp() throws Exception {
-        Organization org = OrganizationFactory.getInstanceWithId().create();
+        Organization org = OrganizationFactory.getInstance().create();
+        org.setId(12345L);
+        org.setNesId("1234t56");
         action.setAssociationType(PRACTICE_SITE);
         action.setOhrpRequired(true);
         action.setAssociatedOrganization(org);
@@ -505,7 +517,7 @@ public class ManageOrganizationAssociationsActionTest extends AbstractWebTest {
     @Test
     public void testSaveOrganizationAjax_PracticeSite_CtepUser_PhoneNumberMissing_NewOrganization() throws Exception {
         organization.setPhoneNumber(null);
-        organization.setExternalData(null);
+        organization.setNesId(null);
         action.setAssociationOhrp(VALID_OHRP_NUMBER);
         action.setPracticeSiteType(PracticeSiteType.CANCER_CENTER);
         action.setAssociatedOrganization(organization);

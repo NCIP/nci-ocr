@@ -82,7 +82,6 @@
  */
 package gov.nih.nci.firebird.nes.organization;
 
-import static com.google.common.base.Preconditions.*;
 import gov.nih.nci.coppa.po.IdentifiedOrganization;
 import gov.nih.nci.coppa.po.StringMap;
 import gov.nih.nci.coppa.po.faults.NullifiedEntityFault;
@@ -91,12 +90,13 @@ import gov.nih.nci.firebird.common.ValidationResult;
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.nes.AbstractNesData;
+import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
 import gov.nih.nci.firebird.nes.common.AbstractBaseNesService;
 import gov.nih.nci.firebird.nes.common.NesTranslatorHelperUtils;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 import gov.nih.nci.iso21090.extensions.Id;
 
 import java.rmi.RemoteException;
@@ -112,7 +112,7 @@ import com.google.inject.Inject;
 /**
  * Base class for all NES organization integration service implementations.
  */
-abstract class AbstractOrganizationIntegrationServiceBean extends AbstractBaseNesService
+public abstract class AbstractOrganizationIntegrationServiceBean extends AbstractBaseNesService 
 implements BaseOrganizationIntegrationService {
 
     private final IdentifiedOrganizationIntegrationService identifiedOrganizationService;
@@ -120,7 +120,7 @@ implements BaseOrganizationIntegrationService {
     private final OrganizationI organizationService;
 
     @Inject
-    AbstractOrganizationIntegrationServiceBean(OrganizationI organizationService,
+    AbstractOrganizationIntegrationServiceBean(OrganizationI organizationService, 
             IdentifiedOrganizationIntegrationService identifiedOrganizationService,
             ValidationErrorTranslator errorTranslator) {
         this.organizationService = organizationService;
@@ -138,32 +138,29 @@ implements BaseOrganizationIntegrationService {
     }
 
     void create(Organization organization, OrganizationCreator creator) {
-        Preconditions.checkArgument(organization.getExternalData() == null,
-                "Illegal attempt to create existing organization");
-        AbstractNesData nesExternalData = createNesExternalData();
-        organization.setExternalData(nesExternalData);
+        Preconditions.checkArgument(organization.getNesId() == null, "Illegal attempt to create existing organization");
         try {
             Id id = creator.create(organization);
             NesId nesId = new NesId(id);
-            nesExternalData.setExternalId(nesId.toString());
-            nesExternalData.setLastNesRefresh(new Date());
-            organization.setCurationStatus(CurationStatus.PENDING);
+            organization.setNesId(nesId.toString());
+            organization.setLastNesRefresh(new Date());
+            organization.setNesStatus(CurationStatus.PENDING);
         } catch (RemoteException e) {
             handleUnexpectedError(e);
         }
     }
 
-    abstract AbstractNesData createNesExternalData();
-
     @Override
-    public Organization getById(String nesIdString) throws InvalidatedOrganizationException {
+    public Organization getById(String nesIdString) throws UnavailableEntityException, ReplacedEntityException {
         NesId nesId = new NesId(nesIdString);
         Organization firebirdOrganization = null;
         try {
             firebirdOrganization = getOrganization(nesId);
-            checkState(firebirdOrganization != null, "No record exists for NES ID " + nesId);
+            if (firebirdOrganization == null) {
+                throw new IllegalArgumentException("No match for NES ID: " + nesIdString);
+            }
         } catch (NullifiedEntityFault e) {
-            return handleNullifiedOrganization(e, nesId);
+            handleNullifiedOrganization(e, nesId);
         } catch (RemoteException e) {
             handleUnexpectedError(e);
         }
@@ -172,23 +169,26 @@ implements BaseOrganizationIntegrationService {
 
     abstract Organization getOrganization(NesId nesId) throws RemoteException;
 
-    private Organization handleNullifiedOrganization(NullifiedEntityFault e, NesId nullifiedNesId)
-            throws InvalidatedOrganizationException {
+    private void handleNullifiedOrganization(NullifiedEntityFault e, NesId nullifiedNesId)
+            throws UnavailableEntityException, ReplacedEntityException {
         String correctedNesIdExtension = getCorrectedNesIdExtension(e, nullifiedNesId.getExtension());
         if (correctedNesIdExtension == null) {
             getLog().warn(
                     "Organization with NES ID " + nullifiedNesId + " has been nullified with no replacement indicated");
-            throw new InvalidatedOrganizationException();
+            throw new UnavailableEntityException(e, nullifiedNesId.toString());
         } else if (correctedNesIdExtension.equals(nullifiedNesId.getExtension())) {
             getLog().warn("Organization with NES ID " + nullifiedNesId
                     + " has been nullified but an identical replacement id was indicated");
-            throw new InvalidatedOrganizationException();
+            throw new UnavailableEntityException(e, nullifiedNesId.toString());
         } else {
             getLog().warn("Organization with NES ID " + nullifiedNesId
                     + " has been nullified and replaced by organization with id " + correctedNesIdExtension);
-            return getById(nullifiedNesId.getRoot() + ":" + correctedNesIdExtension);
+            NesId correctedNesId = new NesId(getNesIIRoot(), correctedNesIdExtension);
+            throw new ReplacedEntityException(e, nullifiedNesId.toString(), correctedNesId.toString());
         }
     }
+
+    abstract NesIIRoot getNesIIRoot();
 
     List<Organization> performSearch(OrganizationSearcher searcher) {
         List<Organization> matches = null;
@@ -210,7 +210,7 @@ implements BaseOrganizationIntegrationService {
             }
         } catch (RemoteException e) {
             handleUnexpectedError(e);
-        }
+        }    
     }
 
     abstract StringMap getValidationResults(Organization organization) throws RemoteException;
@@ -224,38 +224,29 @@ implements BaseOrganizationIntegrationService {
         }
         return playerIds;
     }
-
+    
     @Override
     public void refresh(Organization organization) {
         try {
-            Organization currentOrganization = getById(organization.getExternalId());
+            Organization currentOrganization = getById(organization.getNesId());
             updateOrganizationFields(currentOrganization, organization);
-            getExternalData(organization).setLastNesRefresh(new Date());
-        } catch (InvalidatedOrganizationException e) {
-            getLog().warn(
-                    "Attempted to synchronize an invalidated organization (NES ID - " + organization.getExternalId()
-                            + ")");
-            organization.setCurationStatus(CurationStatus.NULLIFIED);
+        } catch (UnavailableEntityException e) {
+            organization.setNesStatus(CurationStatus.NULLIFIED);
+        } catch (ReplacedEntityException e) {
+            organization.setNesId(e.getReplacmentNesId());
+            refresh(organization);
+        } finally {
+            organization.setLastNesRefresh(new Date());
         }
     }
 
     private void updateOrganizationFields(Organization fromOrganization, Organization toOrganization) {
         toOrganization.setEmail(fromOrganization.getEmail());
         toOrganization.setName(fromOrganization.getName());
-        if (!fromOrganization.getExternalId().equals(toOrganization.getExternalId())) {
-            toOrganization.setExternalData(fromOrganization.getExternalData());
-        }
-        toOrganization.setCurationStatus(fromOrganization.getCurationStatus());
+        toOrganization.setNesId(fromOrganization.getNesId());
+        toOrganization.setNesStatus(fromOrganization.getNesStatus());
         toOrganization.setPhoneNumber(fromOrganization.getPhoneNumber());
         toOrganization.getPostalAddress().copyFrom(fromOrganization.getPostalAddress());
-    }
-
-    List<Organization> searchByAssignedIdentifier(OrganizationSearcher searcher, String assignedIdentifier) {
-        return performSearch(searcher);
-    }
-
-    AbstractNesData getExternalData(Organization organization) {
-        return (AbstractNesData) organization.getExternalData();
     }
 
 }

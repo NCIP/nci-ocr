@@ -96,7 +96,7 @@ final class OrganizationTranslator {
         gov.nih.nci.ctep.ces.ocr.api.Organization esysOrganization = new gov.nih.nci.ctep.ces.ocr.api.Organization();
         esysOrganization.setCtepId(organization.getCtepId());
         esysOrganization.setName(organization.getName());
-        esysOrganization.setNesId(organization.getExternalId());
+        esysOrganization.setNesId(organization.getNesId());
         esysOrganization.setStructuralRoleNesId(null); // TODO Organization.getStructuralRoleNesId()
         return esysOrganization;
     }

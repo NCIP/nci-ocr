@@ -92,27 +92,28 @@ import java.util.List;
 public interface OrganizationEntityIntegrationService extends BaseOrganizationIntegrationService {
 
     /**
-     * Request that NES create a new organization. The organization's NES ID will be set on creation.
-     *
+     * Request that NES create a new organization. The organization's NES ID will
+     * be set on creation.
+     * 
      * @param organization the organization to create.
      */
     void create(Organization organization);
 
     /**
      * Search for organizations by name. 500 results is the maximum that will be returned.
-     *
+     * 
      * @param searchName the name substring to match. Must not be blank.
      * @return the list of organizations.
      */
     List<Organization> searchByName(String searchName);
 
     /**
-     * Returns the organizations (if any) matching the assigned identifier provided. This is used to locate
-     * organizations with additional externally assigned identifiers (e.g. CTEP codes). Note that only the extension is
-     * required and not the identifier root.
-     *
+     * Returns a list of organizations matching the assigned identifier provided. This is used to locate organizations
+     * with additional externally assigned identifiers (e.g. CTEP codes). Note that only the extension is required and
+     * not the identifier root.
+     * 
      * @param extension the identifier extension to search for.
-     * @return the matching organizations.
+     * @return any matching organizations.
      */
     List<Organization> searchByAssignedIdentifier(String extension);
 

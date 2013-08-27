@@ -83,6 +83,7 @@
 package gov.nih.nci.firebird.web.action.search;
 
 import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchResult;
 import gov.nih.nci.firebird.web.AutocompleterResult;
 
 import java.util.Collections;
@@ -98,11 +99,10 @@ abstract class AbstractOrganizationSearchAction extends AbstractTextBoxSearchAct
     private static final long serialVersionUID = 1L;
     private static final int MIN_INPUT_LENGTH = 3;
 
-    private List<Organization> results;
+    private List<OrganizationSearchResult> results;
     private Exception searchFailure;
 
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    // need to handle any unexpected exception
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")  // need to handle any unexpected exception
     String doSearch() {
         if (getTerm() != null && getTerm().length() >= MIN_INPUT_LENGTH) {
             try {
@@ -117,12 +117,12 @@ abstract class AbstractOrganizationSearchAction extends AbstractTextBoxSearchAct
         return SUCCESS;
     }
 
-    abstract List<Organization> lookupSearchResults();
-
+    abstract List<OrganizationSearchResult> lookupSearchResults();
+    
     /**
      * @return the results
      */
-    public List<Organization> getResults() {
+    public List<OrganizationSearchResult> getResults() {
         return results;
     }
 
@@ -142,10 +142,10 @@ abstract class AbstractOrganizationSearchAction extends AbstractTextBoxSearchAct
 
     private List<AutocompleterResult> convertToAutocompleterResults() {
         List<AutocompleterResult> autoCompleterResults = Lists.newArrayList();
-        for (Organization organization : results) {
-            autoCompleterResults.add(new AutocompleterResult(organization.getExternalId(), organization.getName()));
+        for (OrganizationSearchResult result : results) {
+            Organization resultOrg = result.getOrganization();
+            autoCompleterResults.add(new AutocompleterResult(resultOrg.getNesId(), resultOrg.getName()));
         }
         return autoCompleterResults;
     }
-
 }

@@ -257,7 +257,7 @@ public class ResubmitRegistrationTest extends AbstractFirebirdWebDriverTest {
 
     private void checkFormStatus(RegistrationOverviewTab overviewTab, AbstractRegistrationForm form,
             FormStatus expectedStatus) {
-        assertEquals(expectedStatus.getDisplay(), overviewTab.getHelper().getFormListing(form).getFormStatus());
+        assertEquals(expectedStatus.getDisplay(), overviewTab.getHelper().getFormListing(form).getStatus());
     }
 
     private void reviseHumanResearchForm(InvestigatorRegistration registration, RegistrationOverviewTab overviewTab) {

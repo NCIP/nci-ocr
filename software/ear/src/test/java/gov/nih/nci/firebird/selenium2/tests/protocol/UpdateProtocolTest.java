@@ -1,5 +1,5 @@
 /**
- *  * The software subject to this notice and license includes both human readable
+ * The software subject to this notice and license includes both human readable
  * source code form and machine readable, binary, object code form. The NCI OCR
  * Software was developed in conjunction with the National Cancer Institute
  * (NCI) by NCI employees and 5AM Solutions, Inc. (5AM). To the extent
@@ -228,8 +228,8 @@ public class UpdateProtocolTest extends AbstractFirebirdWebDriverTest {
     public void testProtocolEdit_Sponsor() {
         DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
         ProtocolLeadOrganization validLeadOrganizationInfo = new ProtocolLeadOrganization(null,
-                                                                                          getExistingExternalOrganization(),
-                                                                                          getExistingExternalPerson());
+                                                                                          getExistingNesOrganization(),
+                                                                                          getExistingNesPerson());
         builder.createSponsor();
         builder.createRegistration(builder.createInvestigator().get());
         Protocol protocol = builder.createProtocol().get();
@@ -314,10 +314,10 @@ public class UpdateProtocolTest extends AbstractFirebirdWebDriverTest {
         builder.createSponsor();
         Protocol protocol = builder.createProtocol().get();
         ProtocolLeadOrganization existingLeadOrganization = Iterables.getFirst(protocol.getLeadOrganizations(), null);
-        ProtocolLeadOrganization leadOrganizationToRemove = protocol.addLeadOrganization(getExistingExternalOrganization(),
-                                                                                         getExistingExternalPerson());
+        ProtocolLeadOrganization leadOrganizationToRemove = protocol.addLeadOrganization(getExistingNesOrganization(),
+                                                                                         getExistingNesPerson());
         ProtocolLeadOrganization leadOrganizationSamePI =
-                new ProtocolLeadOrganization(null, getExistingExternalOrganization(),
+                new ProtocolLeadOrganization(null, getExistingNesOrganization(),
                                              existingLeadOrganization.getPrincipalInvestigator());
 
         DataSet dataSet = builder.build();

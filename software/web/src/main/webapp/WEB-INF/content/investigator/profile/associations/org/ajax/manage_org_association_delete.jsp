@@ -15,7 +15,7 @@
                 <firebird:instructionBubble messageKey="organization.association.remove.association.instructions" messageParam="${associationType.display}"/>
                 <firebird:organizationDisplay organization="${associatedOrganization}"/>
 
-                <s:hidden name="organizationExternalId" value="%{organizationExternalId}"/>
+                <s:hidden name="searchKey" value="%{searchKey}"/>
                 <s:hidden name="associationType" value="%{associationType}"/>
                 <s:hidden name="profile.id" value="%{profile.id}"/>
 

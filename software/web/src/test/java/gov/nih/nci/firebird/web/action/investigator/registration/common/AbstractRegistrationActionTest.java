@@ -91,7 +91,7 @@ import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.ManagedInvestigator;
 import gov.nih.nci.firebird.data.user.ManagedInvestigatorStatus;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
+import gov.nih.nci.firebird.service.investigatorprofile.ProfileNesRefreshService;
 import gov.nih.nci.firebird.service.registration.BaseRegistrationService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
@@ -104,7 +104,7 @@ import com.opensymphony.xwork2.ActionSupport;
 
 public class AbstractRegistrationActionTest {
 
-    private ProfileRefreshService mockProfileRefreshService = mock(ProfileRefreshService.class);
+    private ProfileNesRefreshService mockProfileRefreshService = mock(ProfileNesRefreshService.class);
     private InvestigatorProfileService mockProfileService = mock(InvestigatorProfileService.class);
     @SuppressWarnings("unchecked")
     private BaseRegistrationService<AbstractRegistration> mockRegistrationService = mock(BaseRegistrationService.class);

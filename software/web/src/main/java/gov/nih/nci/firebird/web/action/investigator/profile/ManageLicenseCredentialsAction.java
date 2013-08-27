@@ -176,8 +176,7 @@ public class ManageLicenseCredentialsAction extends AbstractManageCredentialsAct
             fieldExpressions = {
                     @FieldExpressionValidator(
                             fieldName = "license.state",
-                            expression = "license.country != 'USA'"
-                                    + " || (license.state != null && license.state.trim() != '')",
+                            expression = "license.country != 'USA' || license.state.trim() != ''",
                             key = "error.credentials.license.state.required") })
     @Action(value = "saveLicense", results = {
             @Result(name = INPUT, location = "manage_credentials_license.jsp") })

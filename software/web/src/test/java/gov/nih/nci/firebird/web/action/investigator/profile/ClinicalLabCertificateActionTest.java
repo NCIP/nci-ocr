@@ -108,10 +108,10 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.EnumSet;
 
+import org.apache.struts.mock.MockServletContext;
 import org.apache.struts2.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.mock.web.MockServletContext;
 
 import com.google.inject.Inject;
 import com.opensymphony.xwork2.ActionSupport;

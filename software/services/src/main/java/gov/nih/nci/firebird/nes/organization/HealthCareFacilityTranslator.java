@@ -106,16 +106,13 @@ class HealthCareFacilityTranslator extends AbstractCorrelationTranslator {
 
     HealthCareFacility toHealthCareFacility(Organization organization) {
         HealthCareFacility facility = new HealthCareFacility();
-        if (organization.hasExternalRecord()) {
-            HealthCareFacilityData healthCareFacilityData = (HealthCareFacilityData) organization.getExternalData();
-            handleIdentifier(facility, healthCareFacilityData.getExternalId());
-            handlePlayerIdentifier(facility, healthCareFacilityData.getPlayerId());
-        }
+        handleIdentifier(facility, organization.getNesId());
+        handlePlayerIdentifier(facility, organization.getPlayerIdentifier());
         facility.setName(toNesName(organization.getName()));
         facility.setPostalAddress(new DSETAD());
         facility.getPostalAddress().getItem().add(getTranslatorHelper().toAd(organization.getPostalAddress()));
         facility.setTelecomAddress(buildTelecomAddress(organization));
-        facility.setStatus(getTranslatorHelper().toStatusCode(organization.getCurationStatus()));
+        facility.setStatus(getTranslatorHelper().toStatusCode(organization.getNesStatus()));
         return facility;
     }
 
@@ -128,15 +125,13 @@ class HealthCareFacilityTranslator extends AbstractCorrelationTranslator {
 
     Organization toFirebirdOrganization(HealthCareFacility facility, gov.nih.nci.coppa.po.Organization player) {
         Organization firebirdOrganization = new Organization();
-        HealthCareFacilityData healthCareFacilityData = new HealthCareFacilityData();
-        healthCareFacilityData.setExternalId(getTranslatorHelper().toNesIdString(getIi(facility)));
-        healthCareFacilityData.setPlayerId(getTranslatorHelper().toNesIdString(facility.getPlayerIdentifier()));
-        firebirdOrganization.setExternalData(healthCareFacilityData);
+        firebirdOrganization.setNesId(getTranslatorHelper().toNesIdString(getIi(facility)));
+        firebirdOrganization.setPlayerIdentifier(getTranslatorHelper().toNesIdString(facility.getPlayerIdentifier()));
         firebirdOrganization.setName(getName(facility, player));
         firebirdOrganization.setPostalAddress(getAddress(facility, player));
         firebirdOrganization.setEmail(getEmail(facility, player));
         firebirdOrganization.setPhoneNumber(getPhoneNumber(facility, player));
-        firebirdOrganization.setCurationStatus(getTranslatorHelper().toCurationStatus(facility.getStatus()));
+        firebirdOrganization.setNesStatus(getTranslatorHelper().toCurationStatus(facility.getStatus()));
         return firebirdOrganization;
     }
 

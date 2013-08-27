@@ -77,16 +77,16 @@
                         }
 
                         _page.requestAccount = function() {
-                            addSelectedSponsorExternalIdsToForm(sponsorRole);
-                            addSelectedSponsorExternalIdsToForm(sponsorDelegateRole);
+                            addSelectedSponsorIdsToForm(sponsorRole);
+                            addSelectedSponsorIdsToForm(sponsorDelegateRole);
                             $("#requestAccountForm").submit();
                         }
 
-                        function addSelectedSponsorExternalIdsToForm(role) {
+                        function addSelectedSponsorIdsToForm(role) {
                             if (role === sponsorDelegateRole) {
-                                var name = "selectedSponsorDelegateExternalIds";
+                                var name = "selectedSponsorDelegateIds";
                             } else {
-                                var name = "selectedSponsorExternalIds";
+                                var name = "selectedSponsorIds";
                             }
                             $(".sponsorRoleSelect input:checked").each(function() {
                                 if (this.value === role) {
@@ -155,20 +155,20 @@
                             <div class="boldHeader"><s:property value="name"/></div>
                             <div class="sponsorRoleSelect">
 
-                                <firebird:label forId="sponsor_${externalId}" messageKey="sponsor.representative.role.text"/>
-                                <firebird:label forId="sponsorDelegate_${externalId}" messageKey="sponsor.delegate.role.text"/>
+                                <firebird:label forId="sponsor_${nesId}" messageKey="sponsor.representative.role.text"/>
+                                <firebird:label forId="sponsorDelegate_${nesId}" messageKey="sponsor.delegate.role.text"/>
 
                                 <script>
                                 _requestAccountPage.createDeSelectableRadioButton({
                                     idPrefix : 'sponsor_',
-                                    id : "<s:property value='externalId'/>",
-                                    checked : <s:property value="%{#sponsor.externalId in selectedSponsorExternalIds}"/>,
+                                    id : "<s:property value='nesId'/>",
+                                    checked : <s:property value="%{#sponsor.nesId in selectedSponsorIds}"/>,
                                     value : '<s:property value="sponsorRole"/>'
                                 });
                                 _requestAccountPage.createDeSelectableRadioButton({
                                     idPrefix : 'sponsorDelegate_',
-                                    id : "<s:property value='externalId'/>",
-                                    checked : <s:property value="%{#sponsor.externalId in selectedSponsorDelegateExternalIds}"/>,
+                                    id : "<s:property value='nesId'/>",
+                                    checked : <s:property value="%{#sponsor.nesId in selectedSponsorDelegateIds}"/>,
                                     value : '<s:property value="sponsorDelegateRole"/>'
                                 });
                                 </script>

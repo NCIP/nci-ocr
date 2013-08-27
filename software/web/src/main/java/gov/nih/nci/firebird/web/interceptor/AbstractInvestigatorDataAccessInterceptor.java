@@ -127,17 +127,17 @@ abstract class AbstractInvestigatorDataAccessInterceptor extends AbstractDataAcc
     @Override
     @SuppressWarnings("PMD.SignatureDeclareThrowsException")
     // possible failure from invoke.
-    String checkAccess(FirebirdUser currentUser, UserSessionInformation sessionInformation,
+    String checkAccess(FirebirdUser currentUser, UserSessionInformation userSessionInformation,
             ActionInvocation invocation, ActionContext context) throws Exception {
         Long profileId = getIdParameterValue(context, PROFILE_ID_PARAM);
         if (profileId == null || isOwnProfile(currentUser, profileId)) {
             return invocation.invoke();
         }
         InvestigatorProfile investigatorProfile = profileService.getById(profileId);
-        if (!isApprovedToManageProfile(currentUser, investigatorProfile, sessionInformation)) {
+        if (!isApprovedToManageProfile(currentUser, investigatorProfile)) {
             return denyAccess("User is not approved to manage the requested profile");
         }
-        if (!isSponsorAccessingCtepInvestigatorsData(currentUser, investigatorProfile, sessionInformation)
+        if (!isCtepSponsorAccessingCtepInvestigatorsData(currentUser, investigatorProfile)
                 && isSuspendedFromAccess(currentUser, investigatorProfile)) {
             return getSuspendedStrutsForward();
         }
@@ -153,24 +153,15 @@ abstract class AbstractInvestigatorDataAccessInterceptor extends AbstractDataAcc
         return profileId.equals(currentUsersProfileId);
     }
 
-    private boolean isApprovedToManageProfile(FirebirdUser currentUser, InvestigatorProfile investigatorProfile,
-            UserSessionInformation sessionInformation) {
-        return isSponsorAccessingCtepInvestigatorsData(currentUser, investigatorProfile, sessionInformation)
+    private boolean isApprovedToManageProfile(FirebirdUser currentUser, InvestigatorProfile investigatorProfile) {
+        return isCtepSponsorAccessingCtepInvestigatorsData(currentUser, investigatorProfile)
                 || isCoordinatorAccessingApprovedManagedInvestigatorsData(currentUser, investigatorProfile);
     }
 
-    private boolean isSponsorAccessingCtepInvestigatorsData(FirebirdUser currentUser,
-            InvestigatorProfile investigatorProfile, UserSessionInformation sessionInformation) {
-        return isPermittedSponsor(currentUser, sessionInformation)
+    private boolean isCtepSponsorAccessingCtepInvestigatorsData(FirebirdUser currentUser,
+            InvestigatorProfile investigatorProfile) {
+        return currentUser.getSponsorOrganizations().contains(sponsorOrganizationWithAnnualRegistrations)
                 && investigatorProfile.getUser().isCtepUser();
-    }
-
-    boolean isPermittedSponsor(FirebirdUser currentUser, UserSessionInformation sessionInformation) {
-        return isCtepSponsor(currentUser);
-    }
-
-    boolean isCtepSponsor(FirebirdUser currentUser) {
-        return currentUser.getSponsorOrganizations().contains(getSponsorOrganizationWithAnnualRegistrations());
     }
 
     private boolean isCoordinatorAccessingApprovedManagedInvestigatorsData(FirebirdUser currentUser,
@@ -209,8 +200,4 @@ abstract class AbstractInvestigatorDataAccessInterceptor extends AbstractDataAcc
      * @return The struts forward if the current user is suspended from access.
      */
     protected abstract String getSuspendedStrutsForward();
-
-    private Organization getSponsorOrganizationWithAnnualRegistrations() {
-        return sponsorOrganizationWithAnnualRegistrations;
-    }
 }

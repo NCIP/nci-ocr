@@ -102,8 +102,6 @@ public class MedicalLicenseType extends AbstractListItem implements RankableList
      * ctor.
      * @param name name of license type.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public MedicalLicenseType(String name) {
         super(name);
     }

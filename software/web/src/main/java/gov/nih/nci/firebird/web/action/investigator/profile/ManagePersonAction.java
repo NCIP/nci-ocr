@@ -110,7 +110,8 @@ import com.opensymphony.xwork2.validator.annotations.ValidationParameter;
 import com.opensymphony.xwork2.validator.annotations.Validations;
 
 /**
- * Action for handling the navigation and execution of create and updates for a person's information.
+ * Action for handling the navigation and execution of create and updates for
+ * a person's information.
  */
 @Namespace("/investigator/profile/contact/ajax")
 @Result(name = ActionSupport.INPUT, location = "manage_person_ajax.jsp")
@@ -126,7 +127,7 @@ public class ManagePersonAction extends AbstractProfileAction {
     private final CountryLookupService countryLookup;
     private List<Country> countries;
     private List<State> states;
-    private final Person originalPerson = new Person();
+    private Person person;
 
     /**
      * Constructor.
@@ -153,7 +154,6 @@ public class ManagePersonAction extends AbstractProfileAction {
         super.prepare();
         setStates(stateLookup.getAll());
         countries = countryLookup.getAll();
-        originalPerson.copyContactInformation(getPerson());
     }
 
     /**
@@ -163,6 +163,7 @@ public class ManagePersonAction extends AbstractProfileAction {
      */
     @Action(value = "managePersonAjaxEnter")
     public String managePersonAjaxEnter() {
+        setPerson(getProfile().getPerson());
         return INPUT;
     }
 
@@ -178,14 +179,13 @@ public class ManagePersonAction extends AbstractProfileAction {
                     + ".postalAddress.stateOrProvinceValid", key = "stateOrProvince.required") })
     @Action(value = "updatePersonAjax")
     public String updatePersonAjax() {
-        if (!getPerson().isEquivalent(originalPerson)) {
+        if (!getProfile().getPerson().isEquivalent(getPerson())) {
             try {
-                personService.save(getPerson());
+                personService.updateNesPerson(getPerson());
                 Set<AbstractProtocolRegistration> returnedRegistrations = registrationService
                         .getReturnedOrRevisedRegistrations(getProfile());
                 registrationService.setRegistrationFormStatusesToRevisedIfReviewed(returnedRegistrations,
                         FormTypeEnum.CV, FormTypeEnum.FINANCIAL_DISCLOSURE_FORM, FormTypeEnum.FORM_1572);
-
             } catch (ValidationException e) {
                 return handleValidationException(e, RESOURCE);
             }
@@ -221,7 +221,14 @@ public class ManagePersonAction extends AbstractProfileAction {
      * @return the person
      */
     public Person getPerson() {
-        return getProfile().getPerson();
+        return person;
+    }
+
+    /**
+     * @param person the person to set
+     */
+    public void setPerson(Person person) {
+        this.person = person;
     }
 
 }

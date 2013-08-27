@@ -93,7 +93,6 @@ import gov.nih.nci.firebird.service.file.FileMetadata;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 import gov.nih.nci.firebird.web.common.Struts2UploadedFileInfo;
@@ -129,14 +128,9 @@ public class ManageCertificateCredentialsAction extends AbstractManageCredential
     private static final long serialVersionUID = 1L;
     private Struts2UploadedFileInfo certificateFile;
 
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String NAMESPACE = "/investigator/profile/credentials/ajax";
-    @SuppressWarnings("ucd")
-    // annotations access these
+
     static final String JSP_FIELDS = "/WEB-INF/content" + NAMESPACE + "/manage_credentials_certificate.jsp";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String JSP_DELETE = "/WEB-INF/content" + NAMESPACE + "/manage_credentials_certificate_delete.jsp";
     private boolean nihOerIssued;
     private final Organization nihOerIssuer;
@@ -149,24 +143,20 @@ public class ManageCertificateCredentialsAction extends AbstractManageCredential
      * @param stateLookup the stateLookupService to set
      * @param countryLookup country lookup service.
      * @param organizationService Organization Service
-     * @param nihOerOrganizationExternalId NIH OER external Identifier
+     * @param nihOerOrganizationNesId NIH OER NES Identifier
      */
     @Inject
     @SuppressWarnings("PMD.ExcessiveParameterList")
     // All services need to be injected
     public ManageCertificateCredentialsAction(InvestigatorProfileService profileService,
-            GenericDataRetrievalService dataService, StateLookupService stateLookup,
-            CountryLookupService countryLookup, OrganizationService organizationService,
-            @Named("nih.oer.organization.nes.id")
-            String nihOerOrganizationExternalId) {
+                                              GenericDataRetrievalService dataService,
+                                              StateLookupService stateLookup,
+                                              CountryLookupService countryLookup,
+                                              OrganizationService organizationService,
+                                              @Named("nih.oer.organization.nes.id") String nihOerOrganizationNesId) {
         super(profileService, dataService, stateLookup, countryLookup);
         setCertificate(new TrainingCertificate());
-        try {
-            this.nihOerIssuer = organizationService.getByExternalId(nihOerOrganizationExternalId);
-        } catch (InvalidatedOrganizationException e) {
-            throw new IllegalStateException("Unexpected failure for organization external id: "
-                    + nihOerOrganizationExternalId, e);
-        }
+        this.nihOerIssuer = organizationService.getByNesIdLocal(nihOerOrganizationNesId);
     }
 
     @Override
@@ -206,7 +196,7 @@ public class ManageCertificateCredentialsAction extends AbstractManageCredential
     @Validations(
             customValidators = { @CustomValidator(type = "hibernate", fieldName = "certificate.issuer", parameters = {
                     @ValidationParameter(name = "resourceKeyBase", value = "profile.organization"),
-                    @ValidationParameter(name = "excludes", value = "externalId") }) },
+                    @ValidationParameter(name = "excludes", value = "nesId") }) },
             requiredFields = { @RequiredFieldValidator(fieldName = "certificate.certificateType",
             key = "error.credentials.certificate.type.required") },
                 fieldExpressions = { @FieldExpressionValidator(
@@ -214,12 +204,11 @@ public class ManageCertificateCredentialsAction extends AbstractManageCredential
             expression = "certificate.id != null || (certificateFile != null && certificateFile.data != null)",
             key = "error.credentials.certificate.file.required"),
             @FieldExpressionValidator(fieldName = "nihOerIssued",
-                expression = "nihOerIssued || issuingOrganizationExternalId != null || certificate.issuer != null",
+                expression = "nihOerIssued || issuerSearchKey != null || certificate.issuer != null",
                 key = "error.credentials.organization.required"),
             @FieldExpressionValidator(
                     fieldName = "certificate.issuer.postalAddress.stateOrProvince",
-                    expression = "certificate.issuer != null"
-                            + " && certificate.issuer.postalAddress.stateOrProvinceValid",
+                    expression = "certificate.issuer.postalAddress.stateOrProvinceValid",
                     key = "stateOrProvince.required")
             })
     public String saveCertificate() throws IOException {

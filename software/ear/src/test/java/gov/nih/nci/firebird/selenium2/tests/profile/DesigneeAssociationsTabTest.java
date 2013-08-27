@@ -191,7 +191,7 @@ public class DesigneeAssociationsTabTest extends AbstractFirebirdWebDriverTest {
 
     private Person selectExistingOrderingDesignee(DesigneeAssociationsTab designeesTab) {
         SelectOrderingDesigneeDialog orderingDesigneeDialog = designeesTab.clickAddOrderingDesignee();
-        Person existingPerson = getExistingExternalPerson();
+        Person existingPerson = getExistingNesPerson();
         orderingDesigneeDialog.getHelper().searchAndSelectPerson(existingPerson);
         designeesTab.getHelper().assertOrderingDesigneeListed(existingPerson);
         checkDuplicateSelection(designeesTab, existingPerson);
@@ -293,9 +293,9 @@ public class DesigneeAssociationsTabTest extends AbstractFirebirdWebDriverTest {
 
     private Person selectExistingShippingDesignee(DesigneeAssociationsTab designeesTab) {
         SelectShippingDesigneeDialog shippingDesigneeDialog = designeesTab.clickSelectShippingDesignee();
-        Person existingPerson = getExistingExternalPerson();
+        Person existingPerson = getExistingNesPerson();
         shippingDesigneeDialog.getHelper().searchAndSelectPerson(existingPerson);
-        Organization existingOrganization = getExistingExternalOrganization();
+        Organization existingOrganization = getExistingNesOrganization();
         shippingDesigneeDialog.getHelper().searchAndSelectOrganization(existingOrganization);
         Address shippingAddress = ValueGenerator.getUniqueAddress();
         shippingDesigneeDialog.getHelper().setShippingAddress(shippingAddress);

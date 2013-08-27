@@ -114,7 +114,7 @@ public class SponsorDelegatePageFlowAction extends AbstractSponsorSelectionPageF
     protected String performSave() {
         leaveEditModeIfNoSponsorSelected();
         clearDelegateRoles();
-        for (Organization sponsor : findSelectedSponsorsByExternalId()) {
+        for (Organization sponsor : findSelectedSponsorsById()) {
             getAccountConfigurationData().getDelegateOrganizations().add(sponsor);
         }
         return SUCCESS;

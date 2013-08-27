@@ -105,7 +105,7 @@ public class AddOrganizationAssociationDialogHelper {
     }
 
     public void setOrganization(AbstractOrganizationRole role) {
-        if (role.getOrganization().hasExternalRecord()) {
+        if (role.getOrganization().hasNesRecord()) {
             searchAndSelectOrganization(role);
         } else {
             enterNewOrganizationData(role);
@@ -133,7 +133,7 @@ public class AddOrganizationAssociationDialogHelper {
     }
 
     public SearchResultListing<AbstractLoadableComponent<?>> getListing(final AbstractOrganizationRole role) {
-        if (role.getExternalId() != null) {
+        if (role.getNesId() != null) {
             return getListingById(role);
         } else {
             return getListingByValues(role);
@@ -145,7 +145,7 @@ public class AddOrganizationAssociationDialogHelper {
                 new Predicate<SearchResultListing<AbstractLoadableComponent<?>>>() {
                     @Override
                     public boolean apply(SearchResultListing<AbstractLoadableComponent<?>> listing) {
-                        return role.getOrganization().getExternalId().equals(listing.getExternalId());
+                        return role.getOrganization().getNesId().equals(listing.getNesId());
                     }
                 }, null);
     }

@@ -92,7 +92,7 @@ import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.SponsorRole;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
+import gov.nih.nci.firebird.service.investigatorprofile.ProfileNesRefreshService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.ProtocolFactory;
@@ -107,7 +107,7 @@ public class AbstractProtocolRegistrationActionTest extends AbstractWebTest {
 
     private ProtocolRegistrationService mockRegistrationService = mock(ProtocolRegistrationService.class);
     private InvestigatorProfileService mockProfileService = mock(InvestigatorProfileService.class);
-    private ProfileRefreshService mockProfileRefreshService = mock(ProfileRefreshService.class);
+    private ProfileNesRefreshService mockProfileRefreshService = mock(ProfileNesRefreshService.class);
     @SuppressWarnings("serial")
     private AbstractProtocolRegistrationAction action = new AbstractProtocolRegistrationAction(mockRegistrationService,
             mockProfileService) {
@@ -238,7 +238,7 @@ public class AbstractProtocolRegistrationActionTest extends AbstractWebTest {
 
     @Test
     public void testIsProtocolUpdated_InvestigatorRemoved() {
-        action.setRegistration(new InvestigatorRegistration());
+        action.setRegistration(null);
         assertTrue(action.isProtocolUpdated());
     }
 

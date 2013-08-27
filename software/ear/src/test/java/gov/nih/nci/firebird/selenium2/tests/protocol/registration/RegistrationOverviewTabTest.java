@@ -91,7 +91,7 @@ import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.AbstractFormTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.BrowseRegistrationsPage;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab.FormListing;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
@@ -136,9 +136,9 @@ public class RegistrationOverviewTabTest extends AbstractFirebirdWebDriverTest {
         for (AbstractRegistrationForm form : getRegistration().getForms()) {
             FormListing listing = overviewTab.getHelper().getFormListing(form);
             assertEquals(form.getId(), listing.getId());
-            assertEquals(form.getFormType().getDescription(), listing.getDescription());
-            assertEquals(form.getFormStatus().getDisplay(), listing.getFormStatus());
-            AbstractFormTab<?> formTab = (AbstractFormTab<?>) listing.click();
+            assertEquals(form.getFormType().getDescription(), listing.getForm());
+            assertEquals(form.getFormStatus().getDisplay(), listing.getStatus());
+            AbstractFormTab<?> formTab = listing.clickFormLink();
             overviewTab = formTab.getPage().clickOverviewTab();
         }
     }

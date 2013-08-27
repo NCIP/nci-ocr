@@ -88,8 +88,6 @@ import gov.nih.nci.firebird.service.annual.registration.AnnualRegistrationConfig
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import org.apache.log4j.Logger;
-
 import com.fiveamsolutions.nci.commons.util.HibernateHelper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -99,7 +97,6 @@ import com.google.inject.Injector;
  */
 public class AnnualRegistrationConfigurationInitializationListener implements ServletContextListener {
 
-    private static final Logger LOG = Logger.getLogger(AnnualRegistrationConfigurationInitializationListener.class);
     private AnnualRegistrationConfigurationService annualRegistrationConfigurationService;
     private HibernateHelper hibernateHelper;
 
@@ -132,10 +129,8 @@ public class AnnualRegistrationConfigurationInitializationListener implements Se
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
-        LOG.info("Initializing Annual Registration Configuration");
         hibernateHelper.openAndBindSession();
         annualRegistrationConfigurationService.initializeAnnualRegistrationConfiguration();
         hibernateHelper.unbindAndCleanupSession();
-        LOG.info("Initialization of Annual Registration Configuration successful");
     }
 }

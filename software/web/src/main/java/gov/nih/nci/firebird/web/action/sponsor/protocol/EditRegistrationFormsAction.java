@@ -133,7 +133,7 @@ public class EditRegistrationFormsAction extends RegistrationFormTabAction {
     @Override
     public void prepare() {
         super.prepare();
-        oldProtocol = getProtocol().createCopy();
+        oldProtocol = getProtocol().clone();
     }
 
     /**
@@ -181,6 +181,26 @@ public class EditRegistrationFormsAction extends RegistrationFormTabAction {
             config.setInvestigatorOptionality(formType, invOpt);
             config.setSubinvestigatorOptionality(formType, subinvOpt);
         }
+    }
+
+    /**
+     * Indicates whether a given form is required, etc. for an investigator.
+     *
+     * @param formType type of form
+     * @return optionality of form
+     */
+    public FormOptionality getInvestigatorOptionality(FormType formType) {
+        return getProtocol().getRegistrationConfiguration().getInvestigatorOptionality(formType);
+    }
+
+    /**
+     * Indicates whether a given form is required, etc. for a subinvestigator.
+     *
+     * @param formType type of form
+     * @return optionality of form
+     */
+    public FormOptionality getSubinvestigatorOptionality(FormType formType) {
+        return getProtocol().getRegistrationConfiguration().getSubinvestigatorOptionality(formType);
     }
 
     /**

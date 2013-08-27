@@ -114,7 +114,7 @@ public class FormTypeServiceBean extends AbstractGenericServiceBean<FormType> im
     @SuppressWarnings("unchecked")
     // Hibernate list() method is untyped
     public List<FormType> getStandardConfigureableForms(RegistrationType registrationType) {
-        List<FormType> allConfigurableForms = getSession().createCriteria(FormType.class)
+        List<FormType> allConfigurableForms = getSessionProvider().get().createCriteria(FormType.class)
                 .add(Restrictions.isNotNull(FORM_TYPE_ENUM_PROP))
                 .add(Restrictions.ne(INV_OPTIONALITY_ENUM_PROP, FormOptionality.SUPPLEMENTARY))
                 .add(Restrictions.ne(SUBINV_OPTIONALITY_ENUM_PROP, FormOptionality.SUPPLEMENTARY)).list();
@@ -136,7 +136,7 @@ public class FormTypeServiceBean extends AbstractGenericServiceBean<FormType> im
     @SuppressWarnings("unchecked")
     // Hibernate list() method is untyped
     public List<FormType> getSupplementalForms(RegistrationType registrationType) {
-        List<FormType> allSupplementalForms = getSession().createCriteria(FormType.class)
+        List<FormType> allSupplementalForms = getSessionProvider().get().createCriteria(FormType.class)
                 .add(Restrictions.isNotNull(FORM_TYPE_ENUM_PROP))
                 .add(Restrictions.or(Restrictions.eq(INV_OPTIONALITY_ENUM_PROP, FormOptionality.SUPPLEMENTARY),
                         Restrictions.eq(SUBINV_OPTIONALITY_ENUM_PROP, FormOptionality.SUPPLEMENTARY))).list();

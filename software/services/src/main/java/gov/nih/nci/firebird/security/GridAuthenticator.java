@@ -93,7 +93,7 @@ import com.google.inject.Inject;
 /**
  * Authenticator that supports caGrid based authentication.
  */
-class GridAuthenticator extends AbstractAuthenticator {
+public class GridAuthenticator extends AbstractAuthenticator {
  
     private static final String GRID_ERROR_MESSAGE_KEY = "authentication.error";
 

@@ -114,7 +114,7 @@ implements DynamicPropertiesService {
     }
 
     private AbstractPropertyHolder getPropertyHolder(String name) {
-        Query query = getSession().createQuery(GET_PROPERTY_HQL);
+        Query query = getSessionProvider().get().createQuery(GET_PROPERTY_HQL);
         return (AbstractPropertyHolder) query.setString("name", name).uniqueResult();
     }
 

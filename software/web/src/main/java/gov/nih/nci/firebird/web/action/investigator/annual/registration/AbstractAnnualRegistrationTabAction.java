@@ -144,16 +144,4 @@ public abstract class AbstractAnnualRegistrationTabAction extends AbstractAnnual
     public void setValidationHandler(RegistrationTabActionValidationHandler<AnnualRegistration> validationHandler) {
         this.validationHandler = validationHandler;
     }
-
-    /**
-     * @return true if the forms in this registration should be displayed read-only.
-     */
-    public boolean isReadOnly() {
-        return getRegistration().isLockedForInvestigator() || isReadOnlyUser();
-    }
-
-    private boolean isReadOnlyUser() {
-        return !getCurrentUser().isCtepUser();
-    }
-
 }

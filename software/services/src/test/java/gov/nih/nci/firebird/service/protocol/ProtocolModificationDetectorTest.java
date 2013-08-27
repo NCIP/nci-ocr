@@ -165,7 +165,7 @@ public class ProtocolModificationDetectorTest {
     }
 
     private Protocol getChangedCopy(final Protocol original) {
-        Protocol protocol = original.createCopy();
+        Protocol protocol = original.clone();
         protocol.getDocuments().clear();
         FirebirdFile file = new FirebirdFile(null, 0, "new file", null, null);
         protocol.getDocuments().add(file);
@@ -230,7 +230,7 @@ public class ProtocolModificationDetectorTest {
     @Test
     public void testAddModifications_RemovedLeadOrganization() {
         Protocol originalProtocol = ProtocolFactory.getInstanceWithId().create();
-        Protocol changedProtocol = originalProtocol.createCopy();
+        Protocol changedProtocol = originalProtocol.clone();
         ProtocolLeadOrganization leadOrganization = Iterables.getFirst(originalProtocol.getLeadOrganizations(), null);
         changedProtocol.getLeadOrganizations().clear();
         ProtocolModificationDetector detector = new ProtocolModificationDetector(originalProtocol, changedProtocol,
@@ -251,7 +251,7 @@ public class ProtocolModificationDetectorTest {
     @Test
     public void testAddModifications_AddLeadOrganization() {
         Protocol originalProtocol = ProtocolFactory.getInstanceWithId().create();
-        Protocol changedProtocol = originalProtocol.createCopy();
+        Protocol changedProtocol = originalProtocol.clone();
         ProtocolLeadOrganization leadOrganization = new ProtocolLeadOrganization(originalProtocol, OrganizationFactory
                 .getInstance().create(), PersonFactory.getInstance().create());
         changedProtocol.getLeadOrganizations().add(leadOrganization);
@@ -275,7 +275,7 @@ public class ProtocolModificationDetectorTest {
     @Test
     public void testAddModifications_NoChanges() {
         Protocol originalProtocol = ProtocolFactory.getInstanceWithId().create();
-        Protocol changedProtocol = originalProtocol.createCopy();
+        Protocol changedProtocol = originalProtocol.clone();
         ProtocolModificationDetector detector = new ProtocolModificationDetector(originalProtocol, changedProtocol,
                 resources);
         ProtocolRevision revision = new ProtocolRevision();

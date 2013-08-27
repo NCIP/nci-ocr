@@ -108,8 +108,8 @@ import org.openqa.selenium.support.FindBy;
 public class HumanResearchCertificateTab extends AbstractFormTab<HumanResearchCertificateTab> {
 
     private static final String NO_CERTIFICATES_ASTERISK_ID = "noCertificatesAsterisk";
-    private static final String TAB_ID = "form_human_research_certificate_tab";
-    static final String TAB_LINK_CSS_SELECTOR = "#" + TAB_ID + " > a";
+    static final String TAB_LINK_CSS_SELECTOR = "#form_Human_Research_CertificateTab > a";
+    private static final String TAB_ID = "form_Human_Research_CertificateTab";
     private static final String ADD_CERTIFICATE_BUTTON_ID = "addCertificateButton";
     private static final String CERTIFICATE_TABLE_ID = "certificateCredentialsTable";
 

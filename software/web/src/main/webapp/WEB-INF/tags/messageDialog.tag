@@ -9,24 +9,28 @@
 <%@ attribute name="reloadOnClose" type="java.lang.Boolean"
     description="Whether or not to reload the underlying page when the close button is clicked. Default is true" %>
 
-<firebird:dialogLayout>
-    <firebird:messages />
-    <firebird:dialogHeader>
-        <fmt:message key="${titleKey}" />
-    </firebird:dialogHeader>
+<div id="tabwrapper">
+    <div class="ui-tabs">
+        <div class="ui-tabs-panel">
+            <firebird:messages />
+            <firebird:dialogHeader>
+                <fmt:message key="${titleKey}" />
+            </firebird:dialogHeader>
 
-    <s:if test="%{#attr.messageKey not in {null, ''}}">
-        <p><fmt:message key="${messageKey}" /></p>
-    </s:if>
+            <s:if test="%{#attr.messageKey not in {null, ''}}">
+                <p><fmt:message key="${messageKey}" /></p>
+            </s:if>
 
-    <jsp:doBody />
+            <jsp:doBody />
 
-    <div class="btn_bar clear">
-        <s:if test="%{#attr.reloadOnClose == null || #attr.reloadOnClose}">
-            <s:a id="closeBtn" href="#" cssClass="button" onclick="closeDialogAndReload();"><fmt:message key="button.close"/></s:a>
-        </s:if>
-        <s:else>
-            <s:a id="closeBtn" href="#" cssClass="button" onclick="closeDialog();"><fmt:message key="button.close"/></s:a>
-        </s:else>
+            <div class="btn_bar clear">
+                <s:if test="%{#attr.reloadOnClose == null || #attr.reloadOnClose}">
+                    <s:a id="closeBtn" href="#" cssClass="button" onclick="closeDialogAndReload();"><fmt:message key="button.close"/></s:a>
+                </s:if>
+                <s:else>
+                    <s:a id="closeBtn" href="#" cssClass="button" onclick="closeDialog();"><fmt:message key="button.close"/></s:a>
+                </s:else>
+            </div>
+        </div>
     </div>
-</firebird:dialogLayout>
+</div>

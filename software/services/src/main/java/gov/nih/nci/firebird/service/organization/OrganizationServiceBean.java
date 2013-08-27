@@ -82,143 +82,100 @@
  */
 package gov.nih.nci.firebird.service.organization;
 
-import static com.google.common.base.Preconditions.*;
-import gov.nih.nci.firebird.data.AbstractOrganizationRole;
-import gov.nih.nci.firebird.data.CurationDataset;
+import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
-import gov.nih.nci.firebird.data.PracticeSiteType;
-import gov.nih.nci.firebird.data.PrimaryOrganizationType;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.external.ExternalOrganizationService;
-import gov.nih.nci.firebird.service.organization.local.LocalOrganizationDataService;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
+import gov.nih.nci.firebird.service.AbstractGenericServiceBean;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
-import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Query;
 
-import com.google.common.base.Objects;
 import com.google.inject.Inject;
 
 /**
- * Implements high level organization management and orchestrates use of lower level organization services.
+ * Implementation of the org service.
  */
 @Stateless
-public class OrganizationServiceBean implements OrganizationService {
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
+public class OrganizationServiceBean extends AbstractGenericServiceBean<Organization> implements
+        OrganizationService {
 
-    private ExternalOrganizationService externalService;
-    private LocalOrganizationDataService localService;
+    private static final String NES_ID_PARAMETER_NAME = "nesId";
+    private static final String SEARCH_BY_NES_ID_HQL = "from " + Organization.class.getName() + " where nesId = :"
+            + NES_ID_PARAMETER_NAME;
 
-    @Resource(mappedName = "firebird/LocalOrganizationDataServiceBean/local")
-    void setLocalOrganizationDataService(LocalOrganizationDataService localOrganizationDataService) {
-        this.localService = localOrganizationDataService;
-    }
+    private NesOrganizationIntegrationServiceFactory nesServiceFactory;
 
     @Inject
-    void setExternalOrganizationService(
-    ExternalOrganizationService externalOrganizationService) {
-        this.externalService = externalOrganizationService;
+    void setNesServiceFactory(NesOrganizationIntegrationServiceFactory nesServiceFactory) {
+        this.nesServiceFactory = nesServiceFactory;
     }
 
     @Override
-    public List<Organization> search(String term, OrganizationRoleType type) {
-        checkArgument(StringUtils.isNotBlank(term), "Search term may not be blank.");
-        checkNotNull(type);
-        List<Organization> results = replaceWithLocalOrganizations(externalService.search(term, type));
-        Collections.sort(results);
-        return results;
-    }
-
-    private List<Organization> replaceWithLocalOrganizations(List<Organization> externalResults) {
-        List<Organization> combinedResults = new ArrayList<Organization>(externalResults.size());
-        for (Organization externalOrganization : externalResults) {
-            combinedResults.add(replaceWithLocalOrganizationIfExists(externalOrganization));
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Organization getByNesId(String nesId) throws UnavailableEntityException {
+        Organization organization = getByNesIdLocal(nesId);
+        try {
+            if (organization == null) {
+                organization = retrieveFromNes(nesId);
+                save(organization);
+            }
+        } catch (ReplacedEntityException e) {
+            return getByNesId(e.getReplacmentNesId());
         }
-        return combinedResults;
+        return organization;
     }
 
-    private Organization replaceWithLocalOrganizationIfExists(Organization externalOrganization) {
-        Organization localOrganization = localService.getByExternalId(externalOrganization.getExternalId());
-        return Objects.firstNonNull(localOrganization, externalOrganization);
-    }
-
-    @Override
-    public List<Organization> getByAlternateIdentifier(String alternateIdentifier, OrganizationRoleType type) {
-        List<Organization> organizations = externalService.getByAlternateIdentifier(alternateIdentifier, type);
-        organizations = replaceWithLocalOrganizations(organizations);
-        for (Organization organization : organizations) {
-            localService.save(organization);
-        }
-        return organizations;
-    }
-
-    @Override
-    public Organization getByExternalId(String externalId) throws InvalidatedOrganizationException {
-        checkNotNull(externalId);
-        Organization organization = localService.getByExternalId(externalId);
+    private Organization retrieveFromNes(String nesId) throws UnavailableEntityException, ReplacedEntityException {
+        Organization organization = nesServiceFactory.getService(nesId).getById(nesId);
         if (organization == null) {
-            organization = externalService.getByExternalId(externalId);
-            localService.save(organization);
+            throw new IllegalArgumentException("No organization exists with NES id " + nesId);
         }
         return organization;
     }
 
     @Override
-    public void validate(Organization organization, OrganizationRoleType type, Object... args)
-            throws ValidationException {
-        checkNotNull(organization);
-        checkNotNull(type);
-        externalService.validate(organization, type, args);
+    public void refreshFromNes(Organization organization) {
+        nesServiceFactory.getService(organization).refresh(organization);
+        save(organization);
     }
 
     @Override
-    public void create(Organization organization, OrganizationRoleType type, Object... args)
-            throws ValidationException {
-        checkNotNull(organization);
-        checkNotNull(type);
-        externalService.create(organization, type, args);
-        localService.save(organization);
+    public void create(Organization organization) throws ValidationException {
+        validateOrganization(organization);
+        nesServiceFactory.getOrganizationEntityService().create(organization);
+        save(organization);
     }
 
     @Override
-    public void refreshNow(Organization organization) {
-        checkNotNull(organization);
-        externalService.refreshNow(organization);
-        localService.save(organization);
+    public Organization getByNesIdLocal(String nesId) {
+        Query query = getSessionProvider().get().createQuery(SEARCH_BY_NES_ID_HQL);
+        query.setString(NES_ID_PARAMETER_NAME, nesId);
+        return (Organization) query.uniqueResult();
     }
 
     @Override
-    public void refreshIfStale(Organization organization) {
-        checkNotNull(organization);
-        externalService.refreshIfStale(organization);
-        localService.save(organization);
+    public void validateOrganization(Organization organization) throws ValidationException {
+        nesServiceFactory.getOrganizationEntityService().validate(organization);
     }
 
+    @SuppressWarnings("unchecked")
+    // Hibernate does not provide typed results
     @Override
-    public PrimaryOrganizationType getPrimaryOrganizationType(Organization organization) {
-        return externalService.getPrimaryOrganizationType(organization);
-    }
-
-    @Override
-    public PracticeSiteType getPracticeSiteType(Organization organization) {
-        return externalService.getPracticeSiteType(organization);
-    }
-
-    @Override
-    public CurationDataset getOrganizationsToBeCurated() {
-        List<Organization> candidates = localService.getCandidateOrganizationsToBeCurated();
-        return externalService.getOrganizationsToBeCurated(candidates);
-    }
-
-    @Override
-    public CurationDataset getRolesToBeCurated() {
-        List<AbstractOrganizationRole> candidates = localService.getCandidateRolesToBeCurated();
-        return externalService.getRolesToBeCurated(candidates);
+    public List<Organization> getOrganizationsToBeCurated() {
+        String hql = "from " + Organization.class.getName() + " where nesStatus = :nesStatus "
+                + "and playerIdentifier is null";
+        Query query = getSessionProvider().get().createQuery(hql);
+        query.setString("nesStatus", CurationStatus.PENDING.name());
+        return query.list();
     }
 
 }

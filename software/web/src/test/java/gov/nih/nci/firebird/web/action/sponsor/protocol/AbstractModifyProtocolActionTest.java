@@ -12,12 +12,12 @@ import gov.nih.nci.firebird.data.ProtocolLeadOrganization;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.SponsorRole;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.security.UserSessionInformation;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.service.investigatorprofile.ProfileNesRefreshService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
-import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
+import gov.nih.nci.firebird.service.person.PersonSearchService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
@@ -26,18 +26,17 @@ import gov.nih.nci.firebird.test.ProtocolFactory;
 import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrBuilder;
+import org.apache.commons.lang3.ObjectUtils;
 import org.junit.Test;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 
 @SuppressWarnings("serial")
 public class AbstractModifyProtocolActionTest extends AbstractWebTest {
@@ -45,15 +44,13 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
     @Inject
     private ProtocolService mockProtocolService;
     @Inject
-    private Provider<OrganizationService> mockOrganizationServiceProvider;
+    private OrganizationService mockOrgService;
     @Inject
-    private Provider<PersonService> mockPersonServiceProvider;
+    private OrganizationSearchService mockOrgSearchService;
     @Inject
-    private OrganizationService mockOrganizationService;
+    private PersonSearchService mockPersonSearchService;
     @Inject
-    private PersonService mockPersonService;
-    @Inject
-    private ProfileRefreshService mockProfileRefreshService;
+    private ProfileNesRefreshService mockProfileRefreshService;
 
     private Protocol protocol = ProtocolFactory.getInstanceWithId().createWithFormsDocuments();
 
@@ -63,15 +60,15 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        action = new AbstractModifyProtocolAction(mockProtocolService) {
+        action = new AbstractModifyProtocolAction(mockProtocolService, mockOrgService) {
             @Override
             protected void performSave() throws ValidationException {/* Do Nothing */
             }
         };
         action.setProfileRefreshService(mockProfileRefreshService);
         action.setProtocol(protocol);
-        action.setPersonServiceProvider(mockPersonServiceProvider);
-        action.setOrganizationServiceProvider(mockOrganizationServiceProvider);
+        action.setPersonSearchService(mockPersonSearchService);
+        action.setOrganizationSearchService(mockOrgSearchService);
         when(mockProtocolService.getById(protocol.getId())).thenReturn(protocol);
         when(mockProtocolService.create()).thenReturn(new Protocol());
         user = FirebirdUserFactory.getInstance().create();
@@ -81,55 +78,57 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
         }
     }
 
-    private ProtocolLeadOrganization addLeadOrganizationToProtocol() throws InvalidatedOrganizationException, InvalidatedPersonException {
+    private ProtocolLeadOrganization addLeadOrganizationToProtocol() throws UnavailableEntityException {
         ProtocolLeadOrganization leadOrganization = createLeadOrganzation();
         return protocol.addLeadOrganization(leadOrganization.getOrganization(),
                 leadOrganization.getPrincipalInvestigator());
     }
 
-    private ProtocolLeadOrganization createLeadOrganzation() throws InvalidatedOrganizationException, InvalidatedPersonException {
+    private ProtocolLeadOrganization createLeadOrganzation() throws UnavailableEntityException {
         return createLeadOrganzation(OrganizationFactory.getInstanceWithId().create(), PersonFactory
                 .getInstanceWithId().create());
     }
 
     private ProtocolLeadOrganization createLeadOrganzation(Organization organization, Person principalInvestigator)
-            throws InvalidatedOrganizationException, InvalidatedPersonException {
+            throws UnavailableEntityException {
         ProtocolLeadOrganization leadOrganization = new ProtocolLeadOrganization(null, organization,
                 principalInvestigator);
-        String organizationId = leadOrganization.getOrganization().getExternalId();
-        when(mockOrganizationService.getByExternalId(organizationId)).thenReturn(leadOrganization.getOrganization());
-        if (principalInvestigator != null) {
-            String principalInvestigatorId = principalInvestigator.getExternalId();
-            when(mockPersonService.getByExternalId(principalInvestigatorId)).thenReturn(
-                    leadOrganization.getPrincipalInvestigator());
-        }
+        String organizationId = action.getIdAsString(leadOrganization.getOrganization());
+        String principalInvestigatorId = action.getIdAsString(leadOrganization.getPrincipalInvestigator());
+        when(mockOrgSearchService.getOrganization(organizationId)).thenReturn(leadOrganization.getOrganization());
+        when(mockPersonSearchService.getPerson(principalInvestigatorId)).thenReturn(
+                leadOrganization.getPrincipalInvestigator());
 
         return leadOrganization;
     }
 
     @Test
-    public void testPrepare_SponsorNoExternalId() {
-        action.setSponsorExternalId(null);
+    public void testPrepare_NoSponsor() {
+        action.setSponsor(null);
         action.prepare();
         assertNull(action.getSponsor());
     }
 
     @Test
-    public void testPrepare_SponsorWithExternalId() throws Exception {
-        Organization sponsor = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(sponsor.getExternalId())).thenReturn(sponsor);
-
-        action.setSponsorExternalId(sponsor.getExternalId());
+    public void testPrepare_SponsorNoId() {
+        Organization sponsor = new Organization();
+        action.setSponsor(sponsor);
         action.prepare();
         assertSame(sponsor, action.getSponsor());
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testPrepare_SponsorWithExternalId_InvalidatedOrganizationException() throws Exception {
-        Organization sponsor = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(sponsor.getExternalId())).thenThrow(new InvalidatedOrganizationException());
-        action.setSponsorExternalId(sponsor.getExternalId());
+    @Test
+    public void testPrepare_SponsorWithId() {
+        long sponsorId = 1L;
+        Organization sponsor = new Organization();
+        sponsor.setId(sponsorId);
+        Organization dbSponsor = OrganizationFactory.getInstance().create();
+        dbSponsor.setId(sponsorId);
+        when(mockOrgService.getById(sponsorId)).thenReturn(dbSponsor);
+
+        action.setSponsor(sponsor);
         action.prepare();
+        assertSame(dbSponsor, action.getSponsor());
     }
 
     @Test
@@ -152,6 +151,22 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
         verify(mockProtocolService).getById(protocol.getId());
     }
 
+    private void verifyProtocolLeadOrganizationsInMappings(Protocol protocol) {
+        assertFalse(protocol.getLeadOrganizations().isEmpty());
+        assertEquals(protocol.getLeadOrganizations().size(), action.getLeadOrganizationMappings().size());
+        for (ProtocolLeadOrganization leadOrganization : protocol.getLeadOrganizations()) {
+            String organizationId = action.getIdAsString(leadOrganization.getOrganization());
+            String principalInvestigatorId = action.getIdAsString(leadOrganization.getPrincipalInvestigator());
+            assertTrue(action.getLeadOrganizationMappings().containsKey(organizationId));
+            assertEquals(action.getLeadOrganizations().get(organizationId), leadOrganization.getOrganization());
+            if (leadOrganization.getPrincipalInvestigator() != null) {
+                assertTrue(action.getLeadOrganizationMappings().containsValue(Lists.newArrayList(principalInvestigatorId)));
+                assertEquals(action.getPrincipalInvestigators().get(principalInvestigatorId),
+                        leadOrganization.getPrincipalInvestigator());
+            }
+        }
+    }
+
     @Test
     public void testPrepare_MultipleLeadOrganizationsWithSamePI() throws Exception {
         ProtocolLeadOrganization leadOrganization = addLeadOrganizationMapping();
@@ -160,34 +175,29 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
         addLeadOrganizationMapping(leadOrganization2);
         action.prepare();
 
-        verify(mockPersonService, times(2))
-                .getByExternalId(leadOrganization.getPrincipalInvestigator().getExternalId());
-        verify(mockOrganizationService).getByExternalId(leadOrganization.getOrganization().getExternalId());
-        verify(mockOrganizationService).getByExternalId(leadOrganization2.getOrganization().getExternalId());
+        verify(mockPersonSearchService).getPerson(action.getIdAsString(leadOrganization.getPrincipalInvestigator()));
+        verify(mockOrgSearchService).getOrganization(action.getIdAsString(leadOrganization.getOrganization()));
+        verify(mockOrgSearchService).getOrganization(action.getIdAsString(leadOrganization2.getOrganization()));
     }
 
-    private ProtocolLeadOrganization addLeadOrganizationMapping() throws InvalidatedOrganizationException, InvalidatedPersonException {
+    private ProtocolLeadOrganization addLeadOrganizationMapping() throws UnavailableEntityException {
         return addLeadOrganizationMapping(createLeadOrganzation());
     }
 
     private ProtocolLeadOrganization addLeadOrganizationMapping(ProtocolLeadOrganization leadOrganization)
-            throws InvalidatedOrganizationException {
-        if (leadOrganization.getPrincipalInvestigator() != null) {
-            action.getLeadOrganizationIdMappings().put(leadOrganization.getOrganization().getExternalId(),
-                    Lists.newArrayList(leadOrganization.getPrincipalInvestigator().getExternalId()));
-        } else {
-            List<String> emptyList = Collections.emptyList();
-            action.getLeadOrganizationIdMappings().put(leadOrganization.getOrganization().getExternalId(), emptyList);
-        }
+            throws UnavailableEntityException {
+        String organizationId = action.getIdAsString(leadOrganization.getOrganization());
+        String principalInvestigatorId = action.getIdAsString(leadOrganization.getPrincipalInvestigator());
+        action.getLeadOrganizationMappings().put(organizationId, Lists.newArrayList(principalInvestigatorId));
 
         return leadOrganization;
     }
 
     @Test
-    public void testPrepare_InvalidatedOrganization() throws Exception {
+    public void testPrepare_UnavailableOrganization() throws Exception {
         ProtocolLeadOrganization leadOrganization = addLeadOrganizationMapping();
-        when(mockOrganizationService.getByExternalId(leadOrganization.getOrganization().getExternalId())).thenThrow(
-                new InvalidatedOrganizationException());
+        when(mockOrgSearchService.getOrganization(action.getIdAsString(leadOrganization.getOrganization()))).thenThrow(
+                new UnavailableEntityException(null, null));
         action.prepare();
 
         assertTrue(action.getLeadOrganizationMappings().isEmpty());
@@ -271,18 +281,6 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
         verifyProtocolLeadOrganizationsInMappings(protocol);
     }
 
-    private void verifyProtocolLeadOrganizationsInMappings(Protocol protocol) {
-        assertFalse(protocol.getLeadOrganizations().isEmpty());
-        assertEquals(protocol.getLeadOrganizations().size(), action.getLeadOrganizationMappings().size());
-        for (ProtocolLeadOrganization leadOrganization : protocol.getLeadOrganizations()) {
-            assertTrue(action.getLeadOrganizationMappings().containsKey(leadOrganization.getOrganization()));
-            if (leadOrganization.getPrincipalInvestigator() != null) {
-                assertTrue(action.getLeadOrganizationMappings().containsValue(
-                        Lists.newArrayList(leadOrganization.getPrincipalInvestigator())));
-            }
-        }
-    }
-
     @Test
     public void testGetSponsorListOrgsExist() {
         Organization organization = setUpSponsorUser();
@@ -319,11 +317,12 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
                 leadOrganization.getPrincipalInvestigator()));
     }
 
-    private ProtocolLeadOrganization createPreparedLeadOrganizationMapping() throws InvalidatedOrganizationException,
-            InvalidatedPersonException {
+    private ProtocolLeadOrganization createPreparedLeadOrganizationMapping() throws UnavailableEntityException {
         ProtocolLeadOrganization leadOrganization = addLeadOrganizationMapping();
-        action.getLeadOrganizationMappings().put(leadOrganization.getOrganization(),
-                Lists.newArrayList(leadOrganization.getPrincipalInvestigator()));
+        String organizationId = action.getIdAsString(leadOrganization.getOrganization());
+        String principalInvestigatorId = action.getIdAsString(leadOrganization.getPrincipalInvestigator());
+        action.getLeadOrganizations().put(organizationId, leadOrganization.getOrganization());
+        action.getPrincipalInvestigators().put(principalInvestigatorId, leadOrganization.getPrincipalInvestigator());
 
         return leadOrganization;
     }
@@ -345,12 +344,12 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
     public void testSaveProtocol_AddedLeadOrganizations() throws Exception {
         ProtocolLeadOrganization leadOrganization = createPreparedLeadOrganizationMapping();
         ProtocolLeadOrganization existingLeadOrganization = Iterables.getFirst(protocol.getLeadOrganizations(), null);
-
-        action.getLeadOrganizationMappings().put(existingLeadOrganization.getOrganization(),
-                Lists.newArrayList(existingLeadOrganization.getPrincipalInvestigator()));
-        action.getLeadOrganizationIdMappings().put(existingLeadOrganization.getOrganization().getExternalId(),
-                Lists.newArrayList(existingLeadOrganization.getPrincipalInvestigator().getExternalId()));
-
+        String leadOrganizationKey = action.getIdAsString(existingLeadOrganization.getOrganization());
+        String principalInvestigatorKey = action.getIdAsString(existingLeadOrganization.getPrincipalInvestigator());
+        action.getLeadOrganizationMappings().put(leadOrganizationKey, Lists.newArrayList(principalInvestigatorKey));
+        action.getLeadOrganizations().put(leadOrganizationKey, existingLeadOrganization.getOrganization());
+        action.getPrincipalInvestigators().put(principalInvestigatorKey,
+                existingLeadOrganization.getPrincipalInvestigator());
         action.saveProtocol();
         assertEquals(2, protocol.getLeadOrganizations().size());
         assertTrue(protocol.hasExistingLeadOrganization(leadOrganization.getOrganization(),
@@ -368,12 +367,11 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
     public void testSaveProtocol_ReplaceLeadOrganization() throws Exception {
         ProtocolLeadOrganization existingLeadOrganization = Iterables.getFirst(protocol.getLeadOrganizations(), null);
         Person newPrincipalInvestigator = PersonFactory.getInstanceWithId().create();
-
-        action.getLeadOrganizationMappings().put(existingLeadOrganization.getOrganization(),
-                Lists.newArrayList(newPrincipalInvestigator));
-        action.getLeadOrganizationIdMappings().put(existingLeadOrganization.getOrganization().getExternalId(),
-                Lists.newArrayList(newPrincipalInvestigator.getExternalId()));
-
+        String leadOrganizationKey = ObjectUtils.toString(existingLeadOrganization.getOrganization().getId());
+        String principalInvestigatorKey = ObjectUtils.toString(newPrincipalInvestigator.getId());
+        action.getLeadOrganizationMappings().put(leadOrganizationKey, Lists.newArrayList(principalInvestigatorKey));
+        action.getLeadOrganizations().put(leadOrganizationKey, existingLeadOrganization.getOrganization());
+        action.getPrincipalInvestigators().put(principalInvestigatorKey, newPrincipalInvestigator);
         action.saveProtocol();
 
         assertEquals(1, protocol.getLeadOrganizations().size());
@@ -385,7 +383,7 @@ public class AbstractModifyProtocolActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testSaveProtocol_RemoveAllLeadOrganizations() throws Exception {
+    public void testSaveProtocol_RemoveAllLeadOrganizations() throws UnavailableEntityException {
         addLeadOrganizationToProtocol();
         addLeadOrganizationToProtocol();
         addLeadOrganizationToProtocol();

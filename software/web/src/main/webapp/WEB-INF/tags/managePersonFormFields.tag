@@ -63,7 +63,7 @@
 
 </div>
 
-<s:hidden name="%{#attr.beanPrefix}.externalId"/>
+<s:hidden name="%{#attr.beanPrefix}.nesId"/>
 <s:hidden name="%{#attr.beanPrefix}.id"/>
 <s:hidden name="profile.id" value="%{profile.id}"/>
 

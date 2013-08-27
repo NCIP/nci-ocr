@@ -149,7 +149,7 @@ public class InternationalContactInformationTest extends AbstractFirebirdWebDriv
     }
 
     private Person createInternationalPerson() {
-        Person person = PersonFactory.getInstance().createWithoutExternalData();
+        Person person = PersonFactory.getInstance().createWithoutNesData();
         person.setPostalAddress(getUniqueInternationalAddress());
         person.setPhoneNumber(getInternationalPhoneNumber());
         return person;
@@ -160,7 +160,7 @@ public class InternationalContactInformationTest extends AbstractFirebirdWebDriv
     }
 
     private Organization createInternationalOrganization() {
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         organization.setPostalAddress(getUniqueInternationalAddress());
         organization.setPhoneNumber(getInternationalPhoneNumber());
         return organization;

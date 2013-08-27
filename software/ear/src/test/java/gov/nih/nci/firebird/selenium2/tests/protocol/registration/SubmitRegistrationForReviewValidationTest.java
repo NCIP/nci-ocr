@@ -143,6 +143,8 @@ import gov.nih.nci.firebird.test.FirebirdFileFactory;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
+import gov.nih.nci.firebird.test.data.ProtocolTestDataSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -173,33 +175,31 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
 
     @Test
     public void testSignRegistration() throws IOException {
-        InvestigatorRegistration registration = 
-                builder.createRegistration().complete().withStatus(RegistrationStatus.IN_PROGRESS).get();
-        builder.createSponsor();
-        DataSet dataSet = builder.build();
+        InvestigatorRegistrationTestDataSet dataSet = InvestigatorRegistrationTestDataSet.createReadyForSubmissionNoMd(
+                getDataLoader(), getGridResources());
 
         RegistrationOverviewTab overviewTab = openHomePage(dataSet.getInvestigatorLogin()).getHelper()
-                .openInProgressTask(registration);
+                .openInProgressTask(dataSet.getRegistration());
         overviewTab.getHelper().assertHasStatus(RegistrationStatus.IN_PROGRESS);
         overviewTab.getHelper().assertFormsHaveStatus(FormStatus.COMPLETED);
 
         signRegistration(dataSet, overviewTab);
         checkForSubmittedDataSnapshots(dataSet);
         overviewTab.getHelper().assertHasStatus(RegistrationStatus.SUBMITTED);
-        overviewTab.getHelper().validateFormsLocked(FormStatus.SUBMITTED, registration);
-        verifyCertificateChange(registration, dataSet);
+        overviewTab.getHelper().validateFormsLocked(FormStatus.SUBMITTED, dataSet.getRegistration());
+        verifyCertificateChange(dataSet.getRegistration(), dataSet);
     }
 
-    private void signRegistration(DataSet dataSet, RegistrationOverviewTab overviewTab)
+    private void signRegistration(InvestigatorRegistrationTestDataSet dataSet, RegistrationOverviewTab overviewTab)
             throws IOException {
         SignAndSubmitRegistrationDialog signDialog = (SignAndSubmitRegistrationDialog) overviewTab
                 .clickSubmitRegistration();
-        signDialog.getHelper().verifyDocumentsAgainstRegistration(dataSet.getInvestigatorRegistration());
+        signDialog.getHelper().verifyDocumentsAgainstRegistration(dataSet.getRegistration());
         checkInvalidAuthorization(signDialog);
         setUppercaseUsernameCredentials(signDialog, dataSet.getInvestigatorLogin());
         SignedDocumentsDialog documentsDialog = signDialog.clickSign();
         dataSet.reload();
-        documentsDialog.getHelper().checkForSignedDocuments(dataSet.getInvestigatorRegistration());
+        documentsDialog.getHelper().checkForSignedDocuments(dataSet.getRegistration());
         documentsDialog.clickClose();
         WaitUtils.pause(500);
     }
@@ -222,15 +222,14 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
         signDialog.typePassword(loginAccount.getPassword());
     }
 
-    private void checkForSubmittedDataSnapshots(DataSet dataSet) {
+    private void checkForSubmittedDataSnapshots(InvestigatorRegistrationTestDataSet dataSet) {
         dataSet.reload();
-        InvestigatorRegistration registration = dataSet.getInvestigatorRegistration();
-        assertNotNull(registration.getForm1572().getSubmittedData());
-        assertNotNull(registration.getCurriculumVitaeForm().getSubmittedCredentialData());
+        assertNotNull(dataSet.getRegistration().getForm1572().getSubmittedData());
+        assertNotNull(dataSet.getRegistration().getCurriculumVitaeForm().getSubmittedCredentialData());
     }
 
     private void verifyCertificateChange(InvestigatorRegistration registration,
-            DataSet dataSet) throws IOException {
+            InvestigatorRegistrationTestDataSet dataSet) throws IOException {
         String newContent = "this is some new content";
         String submittedFileString = getSubmittedCertificateContent(registration, dataSet.getSponsorLogin());
         ProfessionalContactInformationTab profileTab = addNewCertificate(registration, newContent,
@@ -245,7 +244,7 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
                 .openSubmittedProtocolRegistrationTask(registration);
         HumanResearchCertificateForm form = registration.getHumanResearchCertificateForm();
         ReviewHumanResearchCertificatesDialog hrcDialog = (ReviewHumanResearchCertificatesDialog) reviewPacketPage
-                .getHelper().getMatchingListing(form).clickDownload();
+                .getHelper().getMatchingListing(form).clickFormDownload();
         File submittedFile = hrcDialog.getListings().get(0).clickDownloadLink();
         return FileUtils.readFileToString(submittedFile);
     }
@@ -265,7 +264,7 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
         TrainingCertificate certificate = new TrainingCertificate(null, effectiveDate, DateUtils.addMonths(
                 effectiveDate, 1), CertificateType.HUMAN_RESEARCH_CERTIFICATE, FirebirdFileFactory.getInstance()
                 .create(newFile));
-        certificate.setIssuer(getExistingExternalOrganization());
+        certificate.setIssuer(getExistingNesOrganization());
         EditTrainingCertificateDialog certificateDialog = certificateSection.clickAddCertificate();
         certificateDialog.getHelper().enterTrainingCertificateData(certificate, newFile, false);
         certificateDialog.clickSave();
@@ -290,7 +289,7 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
                 .clickInvestigatorsTab().getHelper().getListing(registration).clickInvestigatorLink();
         HumanResearchCertificateForm form = registration.getHumanResearchCertificateForm();
         ReviewHumanResearchCertificatesDialog hrcDialog = (ReviewHumanResearchCertificatesDialog) reviewTab.getHelper()
-                .getMatchingListing(form).clickDownload();
+                .getMatchingListing(form).clickFormDownload();
         File submittedFile2 = hrcDialog.getListings().get(0).clickDownloadLink();
         String submittedFile2String = FileUtils.readFileToString(submittedFile2);
         assertEquals(originalContent, submittedFile2String);
@@ -299,25 +298,24 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
 
     @Test
     public void testClinicalLabCertificatesRequired() throws IOException {
-        InvestigatorRegistration registration = 
-                builder.createRegistration().complete().withStatus(RegistrationStatus.IN_PROGRESS).get();
-        DataSet dataSet = builder.build();
-        LoginAccount login = dataSet.getInvestigatorLogin();
-        RegistrationOverviewTab overviewTab = openRegistration(registration, login);
+        ProtocolTestDataSet dataSet = InvestigatorRegistrationTestDataSet.createWithStatus(getDataLoader(),
+                getGridResources(), RegistrationStatus.IN_PROGRESS);
+        InvestigatorRegistration registration = getInvestigatorRegistration(dataSet);
+        RegistrationOverviewTab overviewTab = openHomePage(dataSet.getInvestigatorLogin()).getInvestigatorMenu()
+                .clickProtocolRegistrations().getHelper().clickRegistrationLink(registration);
         checkSubmitWhenNoLabCertificates(overviewTab, dataSet);
         checkSubmitWhenFormLabHasCertProfileLabDoesNot(overviewTab, dataSet);
         checkSubmitWhenFormLabDoesNotHaveCertProfileLabDoes(overviewTab, dataSet);
         checkSubmitWhenBothFormLabsHaveCert(overviewTab, dataSet);
     }
 
-    private RegistrationOverviewTab openRegistration(InvestigatorRegistration registration, LoginAccount login) {
-        BrowseRegistrationsPage browseRegistrationsPage = openHomePage(login).getInvestigatorMenu()
-                .clickProtocolRegistrations();
-        return browseRegistrationsPage.getHelper().clickRegistrationLink(registration);
+    private InvestigatorRegistration getInvestigatorRegistration(ProtocolTestDataSet dataSet) {
+        return (InvestigatorRegistration) dataSet.getInvestigatorUser().getInvestigatorRole().getProfile()
+                .getRegistrations().iterator().next();
     }
 
-    private void checkSubmitWhenNoLabCertificates(final RegistrationOverviewTab overviewTab, DataSet dataSet) {
-        InvestigatorRegistration registration = dataSet.getInvestigatorRegistration();
+    private void checkSubmitWhenNoLabCertificates(final RegistrationOverviewTab overviewTab, ProtocolTestDataSet dataSet) {
+        InvestigatorRegistration registration = getInvestigatorRegistration(dataSet);
         removeCertificateFromLab(dataSet, getRegistrationsClinicalLab(registration));
         ValidationMessageDialog messageDialog = (ValidationMessageDialog) overviewTab.clickSubmitRegistration();
         messageDialog.getHelper().verifyMessagesDisplayed("validation.failure.missing.clinical.laboratory.certificate");
@@ -331,7 +329,7 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
                 .getRole(OrganizationRoleType.CLINICAL_LABORATORY);
     }
 
-    private void removeCertificateFromLab(DataSet dataSet, ClinicalLaboratory formLab) {
+    private void removeCertificateFromLab(ProtocolTestDataSet dataSet, ClinicalLaboratory formLab) {
         formLab.removeCertificate(LaboratoryCertificateType.CAP);
         dataSet.update(formLab);
     }
@@ -343,8 +341,8 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
     }
 
     private void checkSubmitWhenFormLabHasCertProfileLabDoesNot(RegistrationOverviewTab overviewTab,
-            DataSet dataSet) {
-        InvestigatorRegistration registration = dataSet.getInvestigatorRegistration();
+            ProtocolTestDataSet dataSet) {
+        InvestigatorRegistration registration = getInvestigatorRegistration(dataSet);
         ClinicalLaboratory formLab = getRegistrationsClinicalLab(registration);
         addCertificateToLab(dataSet, formLab);
         refreshoverviewTab(overviewTab);
@@ -358,14 +356,14 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
         overviewTab.waitUntilReady();
     }
 
-    private void addCertificateToLab(DataSet dataSet, ClinicalLaboratory profileLab) {
+    private void addCertificateToLab(ProtocolTestDataSet dataSet, ClinicalLaboratory profileLab) {
         profileLab.addCertificate(new LaboratoryCertificate(LaboratoryCertificateType.CAP));
         dataSet.update(profileLab);
     }
 
     private void checkSubmitWhenFormLabDoesNotHaveCertProfileLabDoes(RegistrationOverviewTab overviewTab,
-            DataSet dataSet) {
-        InvestigatorRegistration registration = dataSet.getInvestigatorRegistration();
+            ProtocolTestDataSet dataSet) {
+        InvestigatorRegistration registration = getInvestigatorRegistration(dataSet);
         ClinicalLaboratory formLab = getRegistrationsClinicalLab(registration);
         removeCertificateFromLab(dataSet, formLab);
         Set<OrganizationAssociation> profileLabs = getProfilesClinicalLabs(dataSet);
@@ -383,13 +381,13 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
         checkForLabValidationAsterisks(form1572Tab.getClinicalLabSection().getHelper().getSelectedListings());
     }
 
-    private Set<OrganizationAssociation> getProfilesClinicalLabs(DataSet dataSet) {
-        return dataSet.getInvestigator().getInvestigatorRole().getProfile()
+    private Set<OrganizationAssociation> getProfilesClinicalLabs(ProtocolTestDataSet dataSet) {
+        return dataSet.getInvestigatorUser().getInvestigatorRole().getProfile()
                 .getOrganizationAssociations(OrganizationRoleType.CLINICAL_LABORATORY);
     }
 
-    private void checkSubmitWhenBothFormLabsHaveCert(RegistrationOverviewTab overviewTab, DataSet dataSet) {
-        InvestigatorRegistration registration = dataSet.getInvestigatorRegistration();
+    private void checkSubmitWhenBothFormLabsHaveCert(RegistrationOverviewTab overviewTab, ProtocolTestDataSet dataSet) {
+        InvestigatorRegistration registration = getInvestigatorRegistration(dataSet);
         ClinicalLaboratory formLab = getRegistrationsClinicalLab(registration);
         Set<OrganizationAssociation> profileLabs = getProfilesClinicalLabs(dataSet);
         for (OrganizationAssociation organizationAssociation : profileLabs) {
@@ -435,25 +433,25 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
 
     private void checkInitialFormStatuses(RegistrationOverviewTab overviewTab, AbstractProtocolRegistration registration) {
         RegistrationOverviewTabHelper helper = overviewTab.getHelper();
-        assertEquals(COMPLETED.getDisplay(), helper.getFormListing(registration.getCurriculumVitaeForm()).getFormStatus());
-        assertEquals(NOT_STARTED.getDisplay(), helper.getFormListing(registration.getFinancialDisclosure()).getFormStatus());
+        assertEquals(COMPLETED.getDisplay(), helper.getFormListing(registration.getCurriculumVitaeForm()).getStatus());
+        assertEquals(NOT_STARTED.getDisplay(), helper.getFormListing(registration.getFinancialDisclosure()).getStatus());
         assertEquals(NOT_STARTED.getDisplay(), helper.getFormListing(registration.getHumanResearchCertificateForm())
-                .getFormStatus());
-        assertEquals(NOT_STARTED.getDisplay(), helper.getFormListing(registration.getForm1572()).getFormStatus());
+                .getStatus());
+        assertEquals(NOT_STARTED.getDisplay(), helper.getFormListing(registration.getForm1572()).getStatus());
         assertEquals(NOT_APPLICABLE.getDisplay(), helper.getFormListing(registration.getAdditionalAttachmentsForm())
-                .getFormStatus());
+                .getStatus());
     }
 
     private void checkFormStatusesAfterIncompleSubmit(RegistrationOverviewTab overviewTab,
             AbstractProtocolRegistration registration) {
         RegistrationOverviewTabHelper helper = overviewTab.getHelper();
-        assertEquals(COMPLETED.getDisplay(), helper.getFormListing(registration.getCurriculumVitaeForm()).getFormStatus());
-        assertEquals(INCOMPLETE.getDisplay(), helper.getFormListing(registration.getFinancialDisclosure()).getFormStatus());
+        assertEquals(COMPLETED.getDisplay(), helper.getFormListing(registration.getCurriculumVitaeForm()).getStatus());
+        assertEquals(INCOMPLETE.getDisplay(), helper.getFormListing(registration.getFinancialDisclosure()).getStatus());
         assertEquals(INCOMPLETE.getDisplay(), helper.getFormListing(registration.getHumanResearchCertificateForm())
-                .getFormStatus());
-        assertEquals(INCOMPLETE.getDisplay(), helper.getFormListing(registration.getForm1572()).getFormStatus());
+                .getStatus());
+        assertEquals(INCOMPLETE.getDisplay(), helper.getFormListing(registration.getForm1572()).getStatus());
         assertEquals(NOT_APPLICABLE.getDisplay(), helper.getFormListing(registration.getAdditionalAttachmentsForm())
-                .getFormStatus());
+                .getStatus());
     }
 
     private void checkFormTabMessages(RegistrationOverviewTab overviewTab, InvestigatorRegistration registration)
@@ -584,15 +582,13 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
 
     @Test
     public void testRemovedFormsNotValidated() {
-        InvestigatorRegistration registration = 
-                builder.createRegistration().complete().withStatus(RegistrationStatus.COMPLETED).get();
-        builder.createSponsor();
-        DataSet dataSet = builder.build();
+        InvestigatorRegistrationTestDataSet dataSet = InvestigatorRegistrationTestDataSet.createWithStatus(
+                getDataLoader(), getGridResources(), RegistrationStatus.IN_PROGRESS);
         HomePage homePage = openHomePage(dataSet.getInvestigatorLogin());
         RegistrationOverviewTab overviewTab = homePage.getInvestigatorMenu().clickProtocolRegistrations().getHelper()
-                .clickRegistrationLink(registration);
+                .clickRegistrationLink(dataSet.getRegistration());
         ProtocolForm1572Tab form1572Tab = overviewTab.getPage().clickForm1572Tab();
-        Organization irb = registration.getForm1572().getIrbs().iterator().next();
+        Organization irb = dataSet.getRegistration().getForm1572().getIrbs().iterator().next();
         form1572Tab.getIrbSection().getHelper().getListing(irb).deselect();
         assertFalse(form1572Tab.getIrbSection().getHelper().getListing(irb).isSelected());
         overviewTab = form1572Tab.getPage().clickOverviewTab();
@@ -604,14 +600,14 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
         RegistrationFormsTab formsTab = protocolTab.getPage().clickFormsTab();
 
         EditFormsDialog editFormsDialog = formsTab.clickEdit();
-        editFormsDialog.getHelper().getListing(registration.getForm1572())
+        editFormsDialog.getHelper().getListing(dataSet.getRegistration().getForm1572())
                 .selectInvestigatorOptionality(FormOptionality.NONE);
         editFormsDialog.typeComments("change comments");
         editFormsDialog.clickSave();
 
         homePage = openHomePage(dataSet.getInvestigatorLogin());
         overviewTab = homePage.getInvestigatorMenu().clickProtocolRegistrations().getHelper()
-                .clickRegistrationLink(registration);
+                .clickRegistrationLink(dataSet.getRegistration());
         assertSubmitIsValid(overviewTab);
     }
 
@@ -696,7 +692,7 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
     private void completeAndReturnRegistration(ReviewRegistrationTab reviewTab,
             AbstractProtocolRegistration registration) {
         String reviewComments = "These are comments indicating the utter rejection of the submitted registration";
-        assertTrue(reviewTab.isCompleteReviewButtonPresent());
+        assertTrue(reviewTab.isCompleteReviewButtonEnabled());
         RegistrationReviewCommentDialog commentDialog = (RegistrationReviewCommentDialog) reviewTab
                 .clickCompleteReview();
 
@@ -706,7 +702,7 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
         confirmRejectionDialog.clickConfirm().clickClose();
 
         reviewTab.getHelper().checkForRegistrationStatus(RegistrationStatus.RETURNED);
-        assertFalse(reviewTab.isCompleteReviewButtonPresent());
+        assertFalse(reviewTab.isCompleteReviewButtonEnabled());
         reviewTab.getHelper().checkCommentsForText(reviewComments);
     }
 
@@ -720,9 +716,9 @@ public class SubmitRegistrationForReviewValidationTest extends AbstractFirebirdW
 
     @Test
     public void testSelectedAssociationsRemovedFromProfile() {
-        InvestigatorRegistration registration = 
-                builder.createRegistration().complete().withStatus(RegistrationStatus.IN_PROGRESS).get();
-        DataSet dataSet = builder.build();
+        InvestigatorRegistrationTestDataSet dataSet = InvestigatorRegistrationTestDataSet.createReadyForSubmissionNoMd(
+                getDataLoader(), getGridResources());
+        InvestigatorRegistration registration = dataSet.getRegistration();
         Organization practiceSite = registration.getForm1572().getPracticeSites().iterator().next();
         Organization clinicalLab = registration.getForm1572().getLabs().iterator().next();
         Organization irb = registration.getForm1572().getIrbs().iterator().next();

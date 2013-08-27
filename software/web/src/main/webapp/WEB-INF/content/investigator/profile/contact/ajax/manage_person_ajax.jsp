@@ -1,5 +1,5 @@
 <%@ include file="/WEB-INF/content/common/taglibs.jsp"%>
-<s:set var="externalId" value="profile.person.externalId"/>
+<s:set var="nesId" value="profile.person.nesId"/>
 <fmt:message var="title" key="investigator.profile.person.update" />
 <s:url var="action" value="updatePersonAjax"/>
 

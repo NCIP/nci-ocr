@@ -100,9 +100,9 @@ public abstract class AbstractManageInvestigatorProfileOrgAssociationsTest exten
         ProfessionalContactInformationTab contactInfoPage = navigateToInvestigatorProfileInformation();
         OrganizationAssociationsTab associationsTab = contactInfoPage.getPage().clickOrganizationAssociationsTab();
 
-        PracticeSite practiceSite = getTestDataSource().getPracticeSite();
-        InstitutionalReviewBoard irb = getTestDataSource().getIrb();
-        ClinicalLaboratory lab = getTestDataSource().getClinicalLab();
+        PracticeSite practiceSite = getNesTestDataSource().getPracticeSite();
+        InstitutionalReviewBoard irb = getNesTestDataSource().getIrb();
+        ClinicalLaboratory lab = getNesTestDataSource().getClinicalLab();
 
         addIrb(associationsTab, irb);
         associationsTab.getIrbSection().getHelper().assertDisplayed(irb);

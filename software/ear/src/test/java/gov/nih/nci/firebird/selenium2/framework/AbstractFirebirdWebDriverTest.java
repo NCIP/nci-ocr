@@ -82,8 +82,6 @@
  */
 package gov.nih.nci.firebird.selenium2.framework;
 
-import static org.junit.Assert.*;
-
 import gov.nih.nci.firebird.commons.selenium2.test.AbstractWebDriverTest;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Person;
@@ -92,19 +90,12 @@ import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.TestDataHandler;
 import gov.nih.nci.firebird.test.data.TestDataLoader;
-import gov.nih.nci.firebird.test.nes.ExternalEntityTestDataSource;
+import gov.nih.nci.firebird.test.nes.NesTestDataSource;
 import gov.nih.nci.firebird.test.nes.TargetGridResources;
 import gov.nih.nci.firebird.test.util.FirebirdPropertyUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.runner.RunWith;
 
 import com.google.inject.Inject;
@@ -132,48 +123,6 @@ public abstract class AbstractFirebirdWebDriverTest extends AbstractWebDriverTes
     @Inject
     @Named("identity.provider")
     private String provider;
-
-    @Inject
-    @Named("jboss.server.log")
-    private File serverLog;
-
-    @Inject
-    @Named("fail.on.logged.error")
-    private boolean failOnLoggedError;
-
-    @Inject
-    @Named("fail.on.logged.warning")
-    private boolean failOnLoggedWarning;
-
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        if (failOnLoggedError || failOnLoggedWarning) {
-            truncateJbossLog();
-        }
-    };
-
-    private void truncateJbossLog() throws IOException {
-        FileChannel outChan = new FileOutputStream(serverLog, true).getChannel();
-        outChan.truncate(0);
-        outChan.close();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        super.tearDown();
-        if (failOnLoggedError) {
-            failIfFoundInLog("ERROR");
-        }
-        if (failOnLoggedWarning) {
-            failIfFoundInLog("WARN");
-        }
-    };
-
-    private void failIfFoundInLog(String value) throws IOException {
-        String logContents = FileUtils.readFileToString(serverLog);
-        assertFalse(value + " found in log:\n" + logContents, logContents.contains(value));
-    }
 
     @Override
     protected List<String> getDataRemovalStatements() {
@@ -208,36 +157,36 @@ public abstract class AbstractFirebirdWebDriverTest extends AbstractWebDriverTes
         return FirebirdPropertyUtils.getPropertyText(property, replacements);
     }
 
-    protected Person getExistingExternalPerson() {
-        return getTestDataSource().getPerson();
+    protected Person getExistingNesPerson() {
+        return getNesTestDataSource().getPerson();
     }
 
-    protected Organization getExistingExternalOrganization() {
-        return getTestDataSource().getOrganization();
+    protected Organization getExistingNesOrganization() {
+        return getNesTestDataSource().getOrganization();
     }
 
-    protected Organization getExistingExternalOrganizationWithCtepId() {
-        Organization externalOrganization = null;
+    protected Organization getExistingNesOrganizationWithCtepId() {
+        Organization nesOrganization = null;
         do {
-            externalOrganization = getExistingExternalOrganization();
-        } while (externalOrganization.getCtepId() == null);
-        return externalOrganization;
+            nesOrganization = getExistingNesOrganization();
+        } while (nesOrganization.getCtepId() == null);
+        return nesOrganization;
     }
 
     protected Organization getExistingPharmaceuticalCompany() {
-        return getTestDataSource().getPharmaceuticalCompany();
+        return getNesTestDataSource().getPharmaceuticalCompany();
     }
 
     protected Organization getExistingPrimaryOrganization() {
-        return getGridResources().getTestDataSource().getPracticeSite().getOrganization();
+        return getGridResources().getNesTestDataSource().getPracticeSite().getOrganization();
     }
 
     protected TargetGridResources getGridResources() {
         return gridResources;
     }
 
-    protected ExternalEntityTestDataSource getTestDataSource() {
-        return getGridResources().getTestDataSource();
+    protected NesTestDataSource getNesTestDataSource() {
+        return getGridResources().getNesTestDataSource();
     }
 
     protected TestDataHandler getDataHandler() {
@@ -246,14 +195,6 @@ public abstract class AbstractFirebirdWebDriverTest extends AbstractWebDriverTes
 
     protected TestDataLoader getDataLoader() {
         return dataLoader;
-    }
-
-    protected void ignoreLoggedWarnings() {
-        failOnLoggedWarning = false;
-    }
-
-    protected void ignoreLoggedErrors() {
-        failOnLoggedError = false;
     }
 
 }

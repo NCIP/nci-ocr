@@ -135,7 +135,7 @@ public class RequestAccountTest extends AbstractFirebirdWebDriverTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        sponsorOrganizations = getGridResources().getTestDataSource().getProtocolSponsorOrganizations();
+        sponsorOrganizations = getGridResources().getNesTestDataSource().getProtocolSponsorOrganizations();
         Iterator<Organization> sponsorIterator = sponsorOrganizations.iterator();
         sponsorOrganization = sponsorIterator.next();
         delegateOrganization = sponsorIterator.next();
@@ -293,8 +293,6 @@ public class RequestAccountTest extends AbstractFirebirdWebDriverTest {
 
     @Test
     public void testRequestAccount_EmailFail() {
-        ignoreLoggedWarnings();
-        ignoreLoggedErrors();
         getEmailChecker().stop();
         AccountConfigurationData account = getAccountData();
         LoginPage loginPage = openLoginPage();

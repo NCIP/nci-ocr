@@ -237,8 +237,6 @@ public class AnnualRegistrationForm1572 extends AbstractAnnualRegistrationForm i
     /**
      * @param validator the validator to set
      */
-    @SuppressWarnings("ucd")
-    // used to inject mock validator in from tests
     void setValidator(AnnualForm1572Validator validator) {
         this.validator = validator;
     }
@@ -348,7 +346,7 @@ public class AnnualRegistrationForm1572 extends AbstractAnnualRegistrationForm i
                     }
                 }));
     }
-
+    
     @Override
     Set<PersistentObject> returnForm() {
         new Form1572AssociationCleaner(this).cleanAssociations();

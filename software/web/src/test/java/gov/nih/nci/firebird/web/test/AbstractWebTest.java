@@ -83,7 +83,6 @@
 package gov.nih.nci.firebird.web.test;
 
 import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.test.FirebirdServicesAsMocksTestModule;
 import gov.nih.nci.firebird.test.FirebirdTestModule;
 import gov.nih.nci.firebird.web.FirebirdWebModule;
 
@@ -165,7 +164,7 @@ public abstract class AbstractWebTest {
      * @param modules add to this set of modules
      */
     protected void addModules(Set<Module> modules) {
-        modules.add(new FirebirdServicesAsMocksTestModule());
+        modules.add(new FirebirdServicesWebTestModule());
         modules.add(new FirebirdWebModule());
         modules.add(new FirebirdTestModule());
     }

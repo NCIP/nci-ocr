@@ -87,7 +87,7 @@ import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.service.account.AccountConfigurationData;
 import gov.nih.nci.firebird.service.account.AccountManagementService;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
+import gov.nih.nci.firebird.service.investigatorprofile.ProfileNesRefreshService;
 import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 
 import org.junit.Before;
@@ -97,7 +97,7 @@ import com.opensymphony.xwork2.ActionSupport;
 
 public class AbstractPageFlowActionTest extends AbstractFlowActionTestBase {
 
-    private ProfileRefreshService mockProfileRefreshService = mock(ProfileRefreshService.class);
+    private ProfileNesRefreshService mockProfileRefreshService = mock(ProfileNesRefreshService.class);
     private AccountManagementService mockAccountService = mock(AccountManagementService.class);
     private AbstractPageFlowAction action = new AbstractPageFlowAction(mockAccountService) {
         private static final long serialVersionUID = 1L;

@@ -9,22 +9,22 @@
         <collectionProp name="Arguments.arguments">
           <elementProp name="PROTOCOL" elementType="Argument">
             <stringProp name="Argument.name">PROTOCOL</stringProp>
-            <stringProp name="Argument.value">http</stringProp>
+            <stringProp name="Argument.value">https</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="SERVER" elementType="Argument">
             <stringProp name="Argument.name">SERVER</stringProp>
-            <stringProp name="Argument.value">localhost</stringProp>
+            <stringProp name="Argument.value">ocr-dev.nci.nih.gov</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="PORT" elementType="Argument">
             <stringProp name="Argument.name">PORT</stringProp>
-            <stringProp name="Argument.value">8080</stringProp>
+            <stringProp name="Argument.value">443</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="USERNAME_PREFIX" elementType="Argument">
             <stringProp name="Argument.name">USERNAME_PREFIX</stringProp>
-            <stringProp name="Argument.value">fbci</stringProp>
+            <stringProp name="Argument.value">fbdev</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="PASSWORD" elementType="Argument">
@@ -34,7 +34,7 @@
           </elementProp>
           <elementProp name="TEST_DIRECTORY" elementType="Argument">
             <stringProp name="Argument.name">TEST_DIRECTORY</stringProp>
-            <stringProp name="Argument.value">/Users/rkumsher/nci_git/firebird/software/firebird/ear/src/test/jmeter</stringProp>
+            <stringProp name="Argument.value">/Users/rkumsher/nci_svn/firebird/software/firebird/ear/src/test/jmeter</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
           <elementProp name="ctepUser" elementType="Argument">
@@ -52,9 +52,9 @@
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
           <boolProp name="LoopController.continue_forever">false</boolProp>
-          <stringProp name="LoopController.loops">1</stringProp>
+          <stringProp name="LoopController.loops">10</stringProp>
         </elementProp>
-        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.num_threads">10</stringProp>
         <stringProp name="ThreadGroup.ramp_time">50</stringProp>
         <longProp name="ThreadGroup.start_time">1364481230000</longProp>
         <longProp name="ThreadGroup.end_time">1364481230000</longProp>
@@ -114,7 +114,7 @@
         </ModuleController>
         <hashTree/>
       </hashTree>
-      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="true">
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree" enabled="false">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -242,7 +242,7 @@
         <stringProp name="filename"></stringProp>
       </ResultCollector>
       <hashTree/>
-      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="false">
+      <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
         <boolProp name="ResultCollector.error_logging">false</boolProp>
         <objProp>
           <name>saveConfig</name>
@@ -262,14 +262,13 @@
             <responseData>false</responseData>
             <samplerData>false</samplerData>
             <xml>false</xml>
-            <fieldNames>true</fieldNames>
+            <fieldNames>false</fieldNames>
             <responseHeaders>false</responseHeaders>
             <requestHeaders>false</requestHeaders>
             <responseDataOnError>false</responseDataOnError>
             <saveAssertionResultsFailureMessage>false</saveAssertionResultsFailureMessage>
             <assertionsResultsToSave>0</assertionsResultsToSave>
             <bytes>true</bytes>
-            <sampleCount>true</sampleCount>
           </value>
         </objProp>
         <stringProp name="filename"></stringProp>
@@ -2011,10 +2010,10 @@
                         </collectionProp>
                       </HeaderManager>
                       <hashTree/>
-                      <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="person.externalId Extractor" enabled="true">
+                      <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="person.nesId Extractor" enabled="true">
                         <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                        <stringProp name="RegexExtractor.refname">person.externalId</stringProp>
-                        <stringProp name="RegexExtractor.regex">&quot;person.externalId&quot; value=&quot;([^&quot;]+)&quot;</stringProp>
+                        <stringProp name="RegexExtractor.refname">person.nesId</stringProp>
+                        <stringProp name="RegexExtractor.regex">&quot;person.nesId&quot; value=&quot;([^&quot;]+)&quot;</stringProp>
                         <stringProp name="RegexExtractor.template">$1$</stringProp>
                         <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                         <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -2225,10 +2224,10 @@
                             <stringProp name="Argument.metadata">=</stringProp>
                             <boolProp name="HTTPArgument.use_equals">true</boolProp>
                           </elementProp>
-                          <elementProp name="person.externalId" elementType="HTTPArgument">
+                          <elementProp name="person.nesId" elementType="HTTPArgument">
                             <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                            <stringProp name="Argument.name">person.externalId</stringProp>
-                            <stringProp name="Argument.value">${person.externalId}</stringProp>
+                            <stringProp name="Argument.name">person.nesId</stringProp>
+                            <stringProp name="Argument.value">${person.nesId}</stringProp>
                             <stringProp name="Argument.metadata">=</stringProp>
                             <boolProp name="HTTPArgument.use_equals">true</boolProp>
                           </elementProp>
@@ -2575,10 +2574,10 @@
                         </collectionProp>
                       </HeaderManager>
                       <hashTree/>
-                      <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Organization External ID Extractor" enabled="true">
+                      <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                         <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                        <stringProp name="RegexExtractor.refname">organizationExternalId</stringProp>
-                        <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                        <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                        <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                         <stringProp name="RegexExtractor.template">$1$</stringProp>
                         <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                         <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -2588,10 +2587,10 @@
                     <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/contact/ajax/selectOrganizationAndClose.action" enabled="true">
                       <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                         <collectionProp name="Arguments.arguments">
-                          <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                          <elementProp name="searchKey" elementType="HTTPArgument">
                             <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                            <stringProp name="Argument.name">organizationExternalId</stringProp>
-                            <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                            <stringProp name="Argument.name">searchKey</stringProp>
+                            <stringProp name="Argument.value">${searchkey}</stringProp>
                             <stringProp name="Argument.metadata">=</stringProp>
                             <boolProp name="HTTPArgument.use_equals">true</boolProp>
                           </elementProp>
@@ -3652,10 +3651,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Issuing Organization External Id Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">issuingOrganizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -3686,10 +3685,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -3803,10 +3802,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -5364,10 +5363,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Issuing Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">issuingOrganizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -5415,10 +5414,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -5539,10 +5538,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -5865,9 +5864,9 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
                           <stringProp name="Argument.value"></stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
@@ -6057,10 +6056,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Issuing Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">issuingOrganizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -6105,10 +6104,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -6243,10 +6242,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -6367,10 +6366,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -6695,9 +6694,9 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
                           <stringProp name="Argument.value"></stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
@@ -6887,10 +6886,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Issuing Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">issuingOrganizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -6935,10 +6934,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -7066,10 +7065,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -7190,10 +7189,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -7518,9 +7517,9 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
                           <stringProp name="Argument.value"></stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
@@ -7710,10 +7709,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Issuing Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">issuingOrganizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -7758,10 +7757,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -7896,10 +7895,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -8020,10 +8019,10 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -8375,10 +8374,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Issuing Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">issuingOrganizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -8388,12 +8387,12 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/credentials/ajax/retrieveCtepId.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
                         </elementProp>
                       </collectionProp>
                     </elementProp>
@@ -8511,12 +8510,12 @@
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                           <stringProp name="Argument.name">profile.id</stringProp>
                         </elementProp>
-                        <elementProp name="issuingOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="issuerSearchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${issuingOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">issuingOrganizationExternalId</stringProp>
+                          <stringProp name="Argument.name">issuerSearchKey</stringProp>
                         </elementProp>
                         <elementProp name="" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
@@ -9257,10 +9256,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">organizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -9270,10 +9269,10 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/associations/org/ajax/selectAssociatedOrganization.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="searchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">organizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">searchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -9380,10 +9379,10 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/associations/org/ajax/save.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="searchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">organizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">searchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -9776,10 +9775,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">organizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -9789,10 +9788,10 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/associations/org/ajax/selectAssociatedOrganization.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="searchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">organizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">searchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -9899,10 +9898,10 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/associations/org/ajax/save.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="searchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">organizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">searchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -10295,10 +10294,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">organizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -10308,10 +10307,10 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/associations/org/ajax/selectAssociatedOrganization.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="searchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">organizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">searchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -10690,10 +10689,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">organizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -10703,10 +10702,10 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/associations/org/ajax/selectAssociatedOrganization.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="searchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">organizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">searchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -11078,10 +11077,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">organizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -11091,10 +11090,10 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/associations/org/ajax/selectAssociatedOrganization.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="searchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">organizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">searchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -11466,10 +11465,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">organizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -11479,10 +11478,10 @@
                   <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/profile/associations/org/ajax/selectAssociatedOrganization.action" enabled="true">
                     <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                       <collectionProp name="Arguments.arguments">
-                        <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="searchKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">true</boolProp>
-                          <stringProp name="Argument.name">organizationExternalId</stringProp>
-                          <stringProp name="Argument.value">${organizationExternalId}</stringProp>
+                          <stringProp name="Argument.name">searchKey</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
@@ -11953,10 +11952,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Selected Person External Id Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">selectedPersonExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -11973,12 +11972,12 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="selectedPersonExternalId" elementType="HTTPArgument">
+                        <elementProp name="selectedPersonKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${selectedPersonExternalId}</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">selectedPersonExternalId</stringProp>
+                          <stringProp name="Argument.name">selectedPersonKey</stringProp>
                         </elementProp>
                       </collectionProp>
                     </elementProp>
@@ -12322,10 +12321,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Selected Person External Id Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">selectedPersonExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -12342,12 +12341,12 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="selectedPersonExternalId" elementType="HTTPArgument">
+                        <elementProp name="selectedPersonKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${selectedPersonExternalId}</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">selectedPersonExternalId</stringProp>
+                          <stringProp name="Argument.name">selectedPersonKey</stringProp>
                         </elementProp>
                       </collectionProp>
                     </elementProp>
@@ -12790,10 +12789,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Selected Person External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">selectedPersonExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">personSearchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -12890,10 +12889,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Selected Organization External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">selectedOrganizationExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">organizationSearchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -12910,19 +12909,19 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="selectedPersonExternalId" elementType="HTTPArgument">
+                        <elementProp name="selectedPersonKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${selectedPersonExternalId}</stringProp>
+                          <stringProp name="Argument.value">${personSearchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">selectedPersonExternalId</stringProp>
+                          <stringProp name="Argument.name">selectedPersonKey</stringProp>
                         </elementProp>
-                        <elementProp name="selectedOrganizationExternalId" elementType="HTTPArgument">
+                        <elementProp name="selectedOrganizationKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${selectedOrganizationExternalId}</stringProp>
+                          <stringProp name="Argument.value">${organizationSearchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">selectedOrganizationExternalId</stringProp>
+                          <stringProp name="Argument.name">selectedOrganizationKey</stringProp>
                         </elementProp>
                         <elementProp name="shippingDesignee.shippingAddress.streetAddress" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
@@ -13321,10 +13320,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Selected Person External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">selectedPersonExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -13341,12 +13340,12 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="selectedPersonExternalId" elementType="HTTPArgument">
+                        <elementProp name="selectedPersonKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${selectedPersonExternalId}</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">selectedPersonExternalId</stringProp>
+                          <stringProp name="Argument.name">selectedPersonKey</stringProp>
                         </elementProp>
                       </collectionProp>
                     </elementProp>
@@ -13703,10 +13702,10 @@
                       </collectionProp>
                     </HeaderManager>
                     <hashTree/>
-                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Selected Person External ID Extractor" enabled="true">
+                    <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                       <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                      <stringProp name="RegexExtractor.refname">selectedPersonExternalId</stringProp>
-                      <stringProp name="RegexExtractor.regex">&quot;externalId&quot;:&quot;(.*?)&quot;</stringProp>
+                      <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                      <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;(.*?)&quot;</stringProp>
                       <stringProp name="RegexExtractor.template">$1$</stringProp>
                       <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                       <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -13723,12 +13722,12 @@
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
                         </elementProp>
-                        <elementProp name="selectedPersonExternalId" elementType="HTTPArgument">
+                        <elementProp name="selectedPersonKey" elementType="HTTPArgument">
                           <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                          <stringProp name="Argument.value">${selectedPersonExternalId}</stringProp>
+                          <stringProp name="Argument.value">${searchkey}</stringProp>
                           <stringProp name="Argument.metadata">=</stringProp>
                           <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                          <stringProp name="Argument.name">selectedPersonExternalId</stringProp>
+                          <stringProp name="Argument.name">selectedPersonKey</stringProp>
                         </elementProp>
                       </collectionProp>
                     </elementProp>
@@ -14025,7 +14024,7 @@
           </hashTree>
           <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Submit Annual Registration" enabled="true"/>
           <hashTree>
-            <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Create and Open Registration" enabled="true"/>
+            <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Open Registration" enabled="true"/>
             <hashTree>
               <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/annual/registration/enterBrowseAnnualRegistrations.action" enabled="true">
                 <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
@@ -14038,67 +14037,6 @@
                 <stringProp name="HTTPSampler.protocol"></stringProp>
                 <stringProp name="HTTPSampler.contentEncoding"></stringProp>
                 <stringProp name="HTTPSampler.path">/ocr/investigator/annual/registration/enterBrowseAnnualRegistrations.action</stringProp>
-                <stringProp name="HTTPSampler.method">GET</stringProp>
-                <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-                <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-                <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-                <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-                <boolProp name="HTTPSampler.monitor">false</boolProp>
-                <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-              </HTTPSamplerProxy>
-              <hashTree>
-                <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
-                  <collectionProp name="Asserion.test_strings"/>
-                  <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
-                  <boolProp name="Assertion.assume_success">false</boolProp>
-                  <intProp name="Assertion.test_type">2</intProp>
-                </ResponseAssertion>
-                <hashTree/>
-                <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
-                  <collectionProp name="HeaderManager.headers">
-                    <elementProp name="Accept-Language" elementType="Header">
-                      <stringProp name="Header.name">Accept-Language</stringProp>
-                      <stringProp name="Header.value">en-US,en;q=0.5</stringProp>
-                    </elementProp>
-                    <elementProp name="Accept" elementType="Header">
-                      <stringProp name="Header.name">Accept</stringProp>
-                      <stringProp name="Header.value">text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</stringProp>
-                    </elementProp>
-                    <elementProp name="User-Agent" elementType="Header">
-                      <stringProp name="Header.name">User-Agent</stringProp>
-                      <stringProp name="Header.value">Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:19.0) Gecko/20100101 Firefox/19.0</stringProp>
-                    </elementProp>
-                    <elementProp name="Referer" elementType="Header">
-                      <stringProp name="Header.name">Referer</stringProp>
-                      <stringProp name="Header.value">${PROTOCOL}://${SERVER}/ocr/index.action</stringProp>
-                    </elementProp>
-                    <elementProp name="Accept-Encoding" elementType="Header">
-                      <stringProp name="Header.name">Accept-Encoding</stringProp>
-                      <stringProp name="Header.value">gzip, deflate</stringProp>
-                    </elementProp>
-                  </collectionProp>
-                </HeaderManager>
-                <hashTree/>
-              </hashTree>
-              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/investigator/annual/registration/createAnnualRegistration.action" enabled="true">
-                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
-                  <collectionProp name="Arguments.arguments">
-                    <elementProp name="profile.id" elementType="HTTPArgument">
-                      <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                      <stringProp name="Argument.value">${profile.id}</stringProp>
-                      <stringProp name="Argument.metadata">=</stringProp>
-                      <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                      <stringProp name="Argument.name">profile.id</stringProp>
-                    </elementProp>
-                  </collectionProp>
-                </elementProp>
-                <stringProp name="HTTPSampler.domain"></stringProp>
-                <stringProp name="HTTPSampler.port"></stringProp>
-                <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-                <stringProp name="HTTPSampler.response_timeout"></stringProp>
-                <stringProp name="HTTPSampler.protocol"></stringProp>
-                <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                <stringProp name="HTTPSampler.path">/ocr/investigator/annual/registration/createAnnualRegistration.action</stringProp>
                 <stringProp name="HTTPSampler.method">GET</stringProp>
                 <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                 <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -14344,28 +14282,28 @@
                   </collectionProp>
                 </HeaderManager>
                 <hashTree/>
-                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="IRB External ID Extractor" enabled="true">
+                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="IRB ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                  <stringProp name="RegexExtractor.refname">irbExternalId</stringProp>
-                  <stringProp name="RegexExtractor.regex">var irbs = .*?&quot;organizationExternalId&quot;:&quot;(.*?)&quot;,</stringProp>
+                  <stringProp name="RegexExtractor.refname">irbId</stringProp>
+                  <stringProp name="RegexExtractor.regex">var irbs = .*?&quot;id&quot;:([0-9]*?),</stringProp>
                   <stringProp name="RegexExtractor.template">$1$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
                 </RegexExtractor>
                 <hashTree/>
-                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Practice Site External ID Extractor" enabled="true">
+                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Practice Site ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                  <stringProp name="RegexExtractor.refname">practiceSiteExternalId</stringProp>
-                  <stringProp name="RegexExtractor.regex">var practiceSites = .*?&quot;organizationExternalId&quot;:&quot;(.*?)&quot;,</stringProp>
+                  <stringProp name="RegexExtractor.refname">practiceSiteId</stringProp>
+                  <stringProp name="RegexExtractor.regex">var practiceSites = .*?&quot;id&quot;:([0-9]*?),</stringProp>
                   <stringProp name="RegexExtractor.template">$1$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
                 </RegexExtractor>
                 <hashTree/>
-                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Clinical Lab External ID Extractor" enabled="true">
+                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Clinical Lab ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                  <stringProp name="RegexExtractor.refname">clinicalLabExternalId</stringProp>
-                  <stringProp name="RegexExtractor.regex">var labs = .*?&quot;organizationExternalId&quot;:&quot;(.*?)&quot;,</stringProp>
+                  <stringProp name="RegexExtractor.refname">clinicalLabId</stringProp>
+                  <stringProp name="RegexExtractor.regex">var labs = .*?&quot;id&quot;:([0-9]*?),</stringProp>
                   <stringProp name="RegexExtractor.template">$1$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -14391,10 +14329,10 @@
                       <stringProp name="Argument.metadata">=</stringProp>
                       <boolProp name="HTTPArgument.use_equals">true</boolProp>
                     </elementProp>
-                    <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                    <elementProp name="organization.id" elementType="HTTPArgument">
                       <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                      <stringProp name="Argument.name">organizationExternalId</stringProp>
-                      <stringProp name="Argument.value">${practiceSiteExternalId}</stringProp>
+                      <stringProp name="Argument.name">organization.id</stringProp>
+                      <stringProp name="Argument.value">${practiceSiteId}</stringProp>
                       <stringProp name="Argument.metadata">=</stringProp>
                       <boolProp name="HTTPArgument.use_equals">true</boolProp>
                     </elementProp>
@@ -14479,10 +14417,10 @@
                       <stringProp name="Argument.metadata">=</stringProp>
                       <boolProp name="HTTPArgument.use_equals">true</boolProp>
                     </elementProp>
-                    <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                    <elementProp name="organization.id" elementType="HTTPArgument">
                       <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                      <stringProp name="Argument.name">organizationExternalId</stringProp>
-                      <stringProp name="Argument.value">${clinicalLabExternalId}</stringProp>
+                      <stringProp name="Argument.name">organization.id</stringProp>
+                      <stringProp name="Argument.value">${clinicalLabId}</stringProp>
                       <stringProp name="Argument.metadata">=</stringProp>
                       <boolProp name="HTTPArgument.use_equals">true</boolProp>
                     </elementProp>
@@ -14567,10 +14505,10 @@
                       <stringProp name="Argument.metadata">=</stringProp>
                       <boolProp name="HTTPArgument.use_equals">true</boolProp>
                     </elementProp>
-                    <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                    <elementProp name="organization.id" elementType="HTTPArgument">
                       <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                      <stringProp name="Argument.name">organizationExternalId</stringProp>
-                      <stringProp name="Argument.value">${irbExternalId}</stringProp>
+                      <stringProp name="Argument.name">organization.id</stringProp>
+                      <stringProp name="Argument.value">${irbId}</stringProp>
                       <stringProp name="Argument.metadata">=</stringProp>
                       <boolProp name="HTTPArgument.use_equals">true</boolProp>
                     </elementProp>
@@ -16039,7 +15977,7 @@
             <hashTree>
               <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Accept Form 1572" enabled="true"/>
               <hashTree>
-                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/ctep/registration/review/ajax/acceptForm.action" enabled="true">
+                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/registration/review/ajax/acceptForm.action" enabled="true">
                   <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                     <collectionProp name="Arguments.arguments">
                       <elementProp name="registration.id" elementType="HTTPArgument">
@@ -16064,7 +16002,7 @@
                   <stringProp name="HTTPSampler.response_timeout"></stringProp>
                   <stringProp name="HTTPSampler.protocol"></stringProp>
                   <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                  <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/ctep/registration/review/ajax/acceptForm.action</stringProp>
+                  <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/registration/review/ajax/acceptForm.action</stringProp>
                   <stringProp name="HTTPSampler.method">POST</stringProp>
                   <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                   <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -16184,7 +16122,7 @@
               </hashTree>
               <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Accept Financial Disclosure Form" enabled="true"/>
               <hashTree>
-                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/ctep/registration/review/ajax/acceptForm.action" enabled="true">
+                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/registration/review/ajax/acceptForm.action" enabled="true">
                   <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                     <collectionProp name="Arguments.arguments">
                       <elementProp name="registration.id" elementType="HTTPArgument">
@@ -16209,7 +16147,7 @@
                   <stringProp name="HTTPSampler.response_timeout"></stringProp>
                   <stringProp name="HTTPSampler.protocol"></stringProp>
                   <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                  <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/ctep/registration/review/ajax/acceptForm.action</stringProp>
+                  <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/registration/review/ajax/acceptForm.action</stringProp>
                   <stringProp name="HTTPSampler.method">POST</stringProp>
                   <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                   <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -16329,7 +16267,7 @@
               </hashTree>
               <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Accept Supplemental Investigator Data Form" enabled="true"/>
               <hashTree>
-                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/ctep/registration/review/ajax/acceptForm.action" enabled="true">
+                <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/registration/review/ajax/acceptForm.action" enabled="true">
                   <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                     <collectionProp name="Arguments.arguments">
                       <elementProp name="registration.id" elementType="HTTPArgument">
@@ -16354,7 +16292,7 @@
                   <stringProp name="HTTPSampler.response_timeout"></stringProp>
                   <stringProp name="HTTPSampler.protocol"></stringProp>
                   <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                  <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/ctep/registration/review/ajax/acceptForm.action</stringProp>
+                  <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/registration/review/ajax/acceptForm.action</stringProp>
                   <stringProp name="HTTPSampler.method">POST</stringProp>
                   <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                   <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -16475,7 +16413,7 @@
             </hashTree>
             <GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Accept and Approve Registration" enabled="true"/>
             <hashTree>
-              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/ctep/registration/review/ajax/acceptRegistration.action" enabled="true">
+              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/registration/review/ajax/acceptRegistration.action" enabled="true">
                 <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                   <collectionProp name="Arguments.arguments">
                     <elementProp name="registration.id" elementType="HTTPArgument">
@@ -16493,7 +16431,7 @@
                 <stringProp name="HTTPSampler.response_timeout"></stringProp>
                 <stringProp name="HTTPSampler.protocol"></stringProp>
                 <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/ctep/registration/review/ajax/acceptRegistration.action</stringProp>
+                <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/registration/review/ajax/acceptRegistration.action</stringProp>
                 <stringProp name="HTTPSampler.method">POST</stringProp>
                 <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                 <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -16556,7 +16494,7 @@
                 </HeaderManager>
                 <hashTree/>
               </hashTree>
-              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/ctep/registration/review/ajax/enterApproveRegistration.action" enabled="true">
+              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/registration/review/ajax/enterApproveRegistration.action" enabled="true">
                 <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                   <collectionProp name="Arguments.arguments">
                     <elementProp name="" elementType="HTTPArgument">
@@ -16573,7 +16511,7 @@
                 <stringProp name="HTTPSampler.response_timeout"></stringProp>
                 <stringProp name="HTTPSampler.protocol"></stringProp>
                 <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/ctep/registration/review/ajax/enterApproveRegistration.action</stringProp>
+                <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/registration/review/ajax/enterApproveRegistration.action</stringProp>
                 <stringProp name="HTTPSampler.method">POST</stringProp>
                 <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                 <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -16634,7 +16572,7 @@
                 </HeaderManager>
                 <hashTree/>
               </hashTree>
-              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/ctep/registration/review/ajax/approveRegistration.action" enabled="true">
+              <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="/ocr/sponsor/annual/registration/review/ajax/approveRegistration.action" enabled="true">
                 <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
                   <collectionProp name="Arguments.arguments">
                     <elementProp name="registration.id" elementType="HTTPArgument">
@@ -16652,7 +16590,7 @@
                 <stringProp name="HTTPSampler.response_timeout"></stringProp>
                 <stringProp name="HTTPSampler.protocol"></stringProp>
                 <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-                <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/ctep/registration/review/ajax/approveRegistration.action</stringProp>
+                <stringProp name="HTTPSampler.path">/ocr/sponsor/annual/registration/review/ajax/approveRegistration.action</stringProp>
                 <stringProp name="HTTPSampler.method">POST</stringProp>
                 <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
                 <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -16952,16 +16890,45 @@
                   </collectionProp>
                 </HeaderManager>
                 <hashTree/>
-                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Sponsor External ID Extractor" enabled="true">
+                <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Sponsor ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                  <stringProp name="RegexExtractor.refname">sponsorExternalId</stringProp>
-                  <stringProp name="RegexExtractor.regex">name=&quot;sponsorExternalId&quot; value=&quot;(.*?)&quot;</stringProp>
+                  <stringProp name="RegexExtractor.refname">sponsor.id</stringProp>
+                  <stringProp name="RegexExtractor.regex">name=&quot;sponsor.id&quot; value=&quot;(.*?)&quot;</stringProp>
                   <stringProp name="RegexExtractor.template">$1$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
                 </RegexExtractor>
                 <hashTree/>
               </hashTree>
+              <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Populate Protocol Variables" enabled="false">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="protocol.protocolTitle" elementType="Argument">
+                    <stringProp name="Argument.name">protocol.protocolTitle</stringProp>
+                    <stringProp name="Argument.value">${__RandomString(50, abcdefghijk)}</stringProp>
+                    <stringProp name="Argument.desc">false</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="protocol.protocolNumber" elementType="Argument">
+                    <stringProp name="Argument.name">protocol.protocolNumber</stringProp>
+                    <stringProp name="Argument.value">${__RandomString(10, abcdefghijk)}</stringProp>
+                    <stringProp name="Argument.desc">false</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="protocol.phase" elementType="Argument">
+                    <stringProp name="Argument.name">protocol.phase</stringProp>
+                    <stringProp name="Argument.value">PHASE_1</stringProp>
+                    <stringProp name="Argument.desc">false</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                  <elementProp name="agentList" elementType="Argument">
+                    <stringProp name="Argument.name">agentList</stringProp>
+                    <stringProp name="Argument.value"></stringProp>
+                    <stringProp name="Argument.desc">false</stringProp>
+                    <stringProp name="Argument.metadata">=</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </Arguments>
+              <hashTree/>
               <UserParameters guiclass="UserParametersGui" testclass="UserParameters" testname="Populate Protocol Variables" enabled="true">
                 <collectionProp name="UserParameters.names">
                   <stringProp name="-97820214">protocol.protocolTitle</stringProp>
@@ -16999,12 +16966,12 @@
                       <stringProp name="Argument.name">protocol.protocolNumber</stringProp>
                       <stringProp name="Argument.desc">false</stringProp>
                     </elementProp>
-                    <elementProp name="sponsorExternalId" elementType="HTTPArgument">
+                    <elementProp name="sponsor.id" elementType="HTTPArgument">
                       <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                      <stringProp name="Argument.value">${sponsorExternalId}</stringProp>
+                      <stringProp name="Argument.value">${sponsor.id}</stringProp>
                       <stringProp name="Argument.metadata">=</stringProp>
                       <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                      <stringProp name="Argument.name">sponsorExternalId</stringProp>
+                      <stringProp name="Argument.name">sponsor.id</stringProp>
                       <stringProp name="Argument.desc">false</stringProp>
                     </elementProp>
                     <elementProp name="protocol.phase" elementType="HTTPArgument">
@@ -17441,10 +17408,10 @@
                     </collectionProp>
                   </HeaderManager>
                   <hashTree/>
-                  <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Selected Person External ID Extractor" enabled="true">
+                  <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Search Key Extractor" enabled="true">
                     <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                    <stringProp name="RegexExtractor.refname">selectedPersonExternalId</stringProp>
-                    <stringProp name="RegexExtractor.regex">${investigatorDisplayName}.*{&quot;externalId&quot;:&quot;([^,]*?)&quot;</stringProp>
+                    <stringProp name="RegexExtractor.refname">searchkey</stringProp>
+                    <stringProp name="RegexExtractor.regex">&quot;key&quot;:&quot;([^,]*?)&quot;[^\}]+${investigatorDisplayName}</stringProp>
                     <stringProp name="RegexExtractor.template">$1$</stringProp>
                     <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                     <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -17462,12 +17429,12 @@
                         <stringProp name="Argument.name">protocol.id</stringProp>
                         <stringProp name="Argument.desc">false</stringProp>
                       </elementProp>
-                      <elementProp name="selectedPersonExternalId" elementType="HTTPArgument">
+                      <elementProp name="selectedPersonKey" elementType="HTTPArgument">
                         <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                        <stringProp name="Argument.value">${selectedPersonExternalId}</stringProp>
+                        <stringProp name="Argument.value">${searchkey}</stringProp>
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                        <stringProp name="Argument.name">selectedPersonExternalId</stringProp>
+                        <stringProp name="Argument.name">selectedPersonKey</stringProp>
                       </elementProp>
                     </collectionProp>
                   </elementProp>
@@ -17553,12 +17520,12 @@
                         <stringProp name="Argument.name">protocol.id</stringProp>
                         <stringProp name="Argument.desc">false</stringProp>
                       </elementProp>
-                      <elementProp name="selectedPersonExternalId" elementType="HTTPArgument">
+                      <elementProp name="selectedPersonKey" elementType="HTTPArgument">
                         <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                        <stringProp name="Argument.value">${selectedPersonExternalId}</stringProp>
+                        <stringProp name="Argument.value">${searchkey}</stringProp>
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                        <stringProp name="Argument.name">selectedPersonExternalId</stringProp>
+                        <stringProp name="Argument.name">selectedPersonKey</stringProp>
                       </elementProp>
                     </collectionProp>
                   </elementProp>
@@ -17826,12 +17793,12 @@
                         <stringProp name="Argument.name">protocol.id</stringProp>
                         <stringProp name="Argument.desc">false</stringProp>
                       </elementProp>
-                      <elementProp name="invitedRegistrationIds" elementType="HTTPArgument">
+                      <elementProp name="invitedRegistrations" elementType="HTTPArgument">
                         <boolProp name="HTTPArgument.always_encode">false</boolProp>
                         <stringProp name="Argument.value">${registration.id}</stringProp>
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                        <stringProp name="Argument.name">invitedRegistrationIds</stringProp>
+                        <stringProp name="Argument.name">invitedRegistrations</stringProp>
                       </elementProp>
                       <elementProp name="registration.id" elementType="HTTPArgument">
                         <boolProp name="HTTPArgument.always_encode">false</boolProp>
@@ -18265,7 +18232,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Form 1572 Type ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">form1572TypeId</stringProp>
-                  <stringProp name="RegexExtractor.regex">options_tab_form_form_fda_1572_tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
+                  <stringProp name="RegexExtractor.regex">options_tab_form_Form_FDA_1572Tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
                   <stringProp name="RegexExtractor.template">$2$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -18274,7 +18241,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Financial Disclosure Form Type ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">financialDisclosureTypeId</stringProp>
-                  <stringProp name="RegexExtractor.regex">options_tab_form_fdf_tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
+                  <stringProp name="RegexExtractor.regex">options_tab_form_FDFTab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
                   <stringProp name="RegexExtractor.template">$2$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -18283,7 +18250,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Curriculum Vitae Form Type ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">cvTypeId</stringProp>
-                  <stringProp name="RegexExtractor.regex">options_tab_form_cv_tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
+                  <stringProp name="RegexExtractor.regex">options_tab_form_CVTab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
                   <stringProp name="RegexExtractor.template">$2$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -18292,7 +18259,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Human Research Certificate Form Type ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">hrcTypeId</stringProp>
-                  <stringProp name="RegexExtractor.regex">options_tab_form_human_research_certificate_tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
+                  <stringProp name="RegexExtractor.regex">options_tab_form_Human_Research_CertificateTab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
                   <stringProp name="RegexExtractor.template">$2$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -18337,7 +18304,7 @@
               <hashTree>
                 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
                   <collectionProp name="Asserion.test_strings">
-                    <stringProp name="-1115514168">In Progress</stringProp>
+                    <stringProp name="-870469360">Status: In Progress</stringProp>
                   </collectionProp>
                   <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
                   <boolProp name="Assertion.assume_success">false</boolProp>
@@ -18491,28 +18458,28 @@
                     </collectionProp>
                   </HeaderManager>
                   <hashTree/>
-                  <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="IRB External ID Extractor" enabled="true">
+                  <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="IRB ID Extractor" enabled="true">
                     <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                    <stringProp name="RegexExtractor.refname">irbExternalId</stringProp>
-                    <stringProp name="RegexExtractor.regex">var irbs = .*?&quot;organizationExternalId&quot;:&quot;(.*?)&quot;,</stringProp>
+                    <stringProp name="RegexExtractor.refname">irbId</stringProp>
+                    <stringProp name="RegexExtractor.regex">var irbs = .*?&quot;id&quot;:([0-9]*?),</stringProp>
                     <stringProp name="RegexExtractor.template">$1$</stringProp>
                     <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                     <stringProp name="RegexExtractor.match_number">1</stringProp>
                   </RegexExtractor>
                   <hashTree/>
-                  <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Practice Site External ID Extractor" enabled="true">
+                  <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Practice Site ID Extractor" enabled="true">
                     <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                    <stringProp name="RegexExtractor.refname">practiceSiteExternalId</stringProp>
-                    <stringProp name="RegexExtractor.regex">var practiceSites = .*?&quot;organizationExternalId&quot;:&quot;(.*?)&quot;,</stringProp>
+                    <stringProp name="RegexExtractor.refname">practiceSiteId</stringProp>
+                    <stringProp name="RegexExtractor.regex">var practiceSites = .*?&quot;id&quot;:([0-9]*?),</stringProp>
                     <stringProp name="RegexExtractor.template">$1$</stringProp>
                     <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                     <stringProp name="RegexExtractor.match_number">1</stringProp>
                   </RegexExtractor>
                   <hashTree/>
-                  <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Clinical Lab External ID Extractor" enabled="true">
+                  <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Clinical Lab ID Extractor" enabled="true">
                     <stringProp name="RegexExtractor.useHeaders">false</stringProp>
-                    <stringProp name="RegexExtractor.refname">clinicalLabExternalId</stringProp>
-                    <stringProp name="RegexExtractor.regex">var labs = .*?&quot;organizationExternalId&quot;:&quot;(.*?)&quot;,</stringProp>
+                    <stringProp name="RegexExtractor.refname">clinicalLabId</stringProp>
+                    <stringProp name="RegexExtractor.regex">var labs = .*?&quot;id&quot;:([0-9]*?),</stringProp>
                     <stringProp name="RegexExtractor.template">$1$</stringProp>
                     <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                     <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -18538,10 +18505,10 @@
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
                       </elementProp>
-                      <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                      <elementProp name="organization.id" elementType="HTTPArgument">
                         <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                        <stringProp name="Argument.name">organizationExternalId</stringProp>
-                        <stringProp name="Argument.value">${practiceSiteExternalId}</stringProp>
+                        <stringProp name="Argument.name">organization.id</stringProp>
+                        <stringProp name="Argument.value">${practiceSiteId}</stringProp>
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
                       </elementProp>
@@ -18626,10 +18593,10 @@
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
                       </elementProp>
-                      <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                      <elementProp name="organization.id" elementType="HTTPArgument">
                         <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                        <stringProp name="Argument.name">organizationExternalId</stringProp>
-                        <stringProp name="Argument.value">${clinicalLabExternalId}</stringProp>
+                        <stringProp name="Argument.name">organization.id</stringProp>
+                        <stringProp name="Argument.value">${clinicalLabId}</stringProp>
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
                       </elementProp>
@@ -18714,10 +18681,10 @@
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
                       </elementProp>
-                      <elementProp name="organizationExternalId" elementType="HTTPArgument">
+                      <elementProp name="organization.id" elementType="HTTPArgument">
                         <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                        <stringProp name="Argument.name">organizationExternalId</stringProp>
-                        <stringProp name="Argument.value">${irbExternalId}</stringProp>
+                        <stringProp name="Argument.name">organization.id</stringProp>
+                        <stringProp name="Argument.value">${irbId}</stringProp>
                         <stringProp name="Argument.metadata">=</stringProp>
                         <boolProp name="HTTPArgument.use_equals">true</boolProp>
                       </elementProp>
@@ -19694,7 +19661,7 @@
               <hashTree>
                 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
                   <collectionProp name="Asserion.test_strings">
-                    <stringProp name="-1942320933">Submitted</stringProp>
+                    <stringProp name="162959651">Status: Submitted</stringProp>
                   </collectionProp>
                   <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
                   <boolProp name="Assertion.assume_success">false</boolProp>
@@ -19870,7 +19837,7 @@
               <hashTree>
                 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
                   <collectionProp name="Asserion.test_strings">
-                    <stringProp name="-1942320933">Submitted</stringProp>
+                    <stringProp name="162959651">Status: Submitted</stringProp>
                   </collectionProp>
                   <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
                   <boolProp name="Assertion.assume_success">false</boolProp>
@@ -19905,7 +19872,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Human Research Certificate Form ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">hrcId</stringProp>
-                  <stringProp name="RegexExtractor.regex">Protection of Human Research Subjects Training Certificate&lt;/div&gt;\s.*value=&quot;([0-9]*)&quot;</stringProp>
+                  <stringProp name="RegexExtractor.regex">&quot;Protection of Human Research Subjects Training Certificate&quot;,&quot;id&quot;:([0-9]*)</stringProp>
                   <stringProp name="RegexExtractor.template">$1$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -21182,7 +21149,7 @@
               <hashTree>
                 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
                   <collectionProp name="Asserion.test_strings">
-                    <stringProp name="1249888983">Approved</stringProp>
+                    <stringProp name="347969935">Status: Approved</stringProp>
                   </collectionProp>
                   <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
                   <boolProp name="Assertion.assume_success">false</boolProp>
@@ -21485,7 +21452,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Form 1572 Type ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">form1572TypeId</stringProp>
-                  <stringProp name="RegexExtractor.regex">options_tab_form_form_fda_1572_tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
+                  <stringProp name="RegexExtractor.regex">options_tab_form_Form_FDA_1572Tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
                   <stringProp name="RegexExtractor.template">$2$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -21494,7 +21461,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Financial Disclosure Form Type ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">financialDisclosureTypeId</stringProp>
-                  <stringProp name="RegexExtractor.regex">options_tab_form_fdf_tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
+                  <stringProp name="RegexExtractor.regex">options_tab_form_FDFTab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
                   <stringProp name="RegexExtractor.template">$2$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -21503,7 +21470,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Curriculum Vitae Form Type ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">cvTypeId</stringProp>
-                  <stringProp name="RegexExtractor.regex">options_tab_form_cv_tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
+                  <stringProp name="RegexExtractor.regex">options_tab_form_CVTab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
                   <stringProp name="RegexExtractor.template">$2$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -21512,7 +21479,7 @@
                 <RegexExtractor guiclass="RegexExtractorGui" testclass="RegexExtractor" testname="Human Research Certificate Form Type ID Extractor" enabled="true">
                   <stringProp name="RegexExtractor.useHeaders">false</stringProp>
                   <stringProp name="RegexExtractor.refname">hrcTypeId</stringProp>
-                  <stringProp name="RegexExtractor.regex">options_tab_form_human_research_certificate_tab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
+                  <stringProp name="RegexExtractor.regex">options_tab_form_Human_Research_CertificateTab.href = &quot;/ocr/investigator/registration/ajax/viewForm.action\?registration.id=([0-9]*?)&amp;amp;formType.id=([0-9]*?)&amp;amp;profile.id=</stringProp>
                   <stringProp name="RegexExtractor.template">$2$</stringProp>
                   <stringProp name="RegexExtractor.default">NOT FOUND</stringProp>
                   <stringProp name="RegexExtractor.match_number">1</stringProp>
@@ -21557,7 +21524,7 @@
               <hashTree>
                 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
                   <collectionProp name="Asserion.test_strings">
-                    <stringProp name="-1115514168">In Progress</stringProp>
+                    <stringProp name="-870469360">Status: In Progress</stringProp>
                   </collectionProp>
                   <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
                   <boolProp name="Assertion.assume_success">false</boolProp>
@@ -21662,7 +21629,7 @@
               <hashTree>
                 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
                   <collectionProp name="Asserion.test_strings">
-                    <stringProp name="-1115514168">In Progress</stringProp>
+                    <stringProp name="-870469360">Status: In Progress</stringProp>
                   </collectionProp>
                   <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
                   <boolProp name="Assertion.assume_success">false</boolProp>
@@ -21921,7 +21888,7 @@
               <hashTree>
                 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
                   <collectionProp name="Asserion.test_strings">
-                    <stringProp name="601036331">Completed</stringProp>
+                    <stringProp name="-1588650381">Status: Completed</stringProp>
                   </collectionProp>
                   <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
                   <boolProp name="Assertion.assume_success">false</boolProp>

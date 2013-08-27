@@ -59,10 +59,6 @@
       <priority value="${log.level.hibernate}"/>
    </category>
 
-   <category name="com.opensymphony.xwork2.validator">
-      <priority value="${log.level.struts.validator}"/>
-   </category>
-
    <category name="com.opensymphony.xwork2.ognl.OgnlValueStack">
       <priority value="error"/>
    </category>

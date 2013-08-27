@@ -117,7 +117,7 @@ import java.util.SortedSet;
 class CvPdfGenerator extends AbstractPdfWriterGenerator {
 
     private static final int INVESTIGATOR_NAME_INDEX = 1;
-    private static final int INVESTIGATOR_EXTERNAL_ID_INDEX = 2;
+    private static final int INVESTIGATOR_NES_ID_INDEX = 2;
     private static final int INVESTIGATOR_ADDRESS_INDEX = 3;
     private static final int INVESTIGATOR_EMAIL_INDEX = 4;
     private static final int INVESTIGATOR_PHONE_NUMBER_INDEX = 5;
@@ -147,7 +147,7 @@ class CvPdfGenerator extends AbstractPdfWriterGenerator {
         PdfPTable table = createTable(TWO_COLUMNS);
         contentHelper.addInvestigatorName(table, INVESTIGATOR_NAME_INDEX);
         contentHelper.addInvestigatorEmail(table, INVESTIGATOR_EMAIL_INDEX);
-        contentHelper.addInvestigatorExternalId(table, INVESTIGATOR_EXTERNAL_ID_INDEX);
+        contentHelper.addInvestigatorNesId(table, INVESTIGATOR_NES_ID_INDEX);
         contentHelper.addInvestigatorPhoneNumber(table, INVESTIGATOR_PHONE_NUMBER_INDEX);
         contentHelper.addInvestigatorAddress(table, INVESTIGATOR_ADDRESS_INDEX);
 

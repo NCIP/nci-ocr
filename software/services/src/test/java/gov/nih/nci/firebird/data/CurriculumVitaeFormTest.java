@@ -137,7 +137,7 @@ public class CurriculumVitaeFormTest extends AbstractRegistrationFormTest {
     public void testValidateUncuratedDegreeIssuer() throws CredentialAlreadyExistsException {
         ValidationResult result = new ValidationResult();
         Degree degree = CredentialFactory.getInstance().createDegree();
-        degree.getIssuer().setCurationStatus(CurationStatus.PENDING);
+        degree.getIssuer().setNesStatus(CurationStatus.PENDING);
         reg.getProfile().addCredential(degree);
         form.validate(result, getResources());
         assertTrue(result.isValid());

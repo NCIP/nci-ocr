@@ -82,10 +82,10 @@
  */
 package gov.nih.nci.firebird.service.sponsor;
 
-import static gov.nih.nci.firebird.nes.NesIdTestUtil.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+import static gov.nih.nci.firebird.nes.NesIdTestUtil.getNesIdExtension;
 import gov.nih.nci.firebird.cagrid.GridGrouperService;
 import gov.nih.nci.firebird.cagrid.GridInvocationException;
 import gov.nih.nci.firebird.data.AnnualRegistration;
@@ -96,6 +96,8 @@ import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.SponsorRole;
+import gov.nih.nci.firebird.nes.NesIIRoot;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.messages.FirebirdMessage;
 import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
 import gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter;
@@ -132,6 +134,8 @@ import com.google.inject.Provider;
 
 public class SponsorServiceBeanTest {
 
+    private static final String SPONSOR_NES_ID = NesIIRoot.ORGANIZATION.getRoot() + ":12345";
+    private static final String ANNUAL_REGISTRATION_SPONSOR_NES_ID = NesIIRoot.ORGANIZATION.getRoot() + ":67890";
     private static final String SPONSOR_MAILBOX_ADDRESS = "sponsorMail@example.com";
     private static final String ANNUAL_REGISTRATION_SPONSOR_MAILBOX_ADDRESS = "annualMail@example.com";
 
@@ -150,11 +154,10 @@ public class SponsorServiceBeanTest {
     @Mock
     private Session mockSession;
     private Organization annualRegistrationSponsor = OrganizationFactory.getInstance().create();
-    private Organization protocolRegistrationSponsor = OrganizationFactory.getInstance().create();
     private SponsorServiceBean bean;
 
     @Before
-    public void setUpBean() throws Exception {
+    public void setUpBean() throws UnavailableEntityException {
         MockitoAnnotations.initMocks(this);
         bean = new SponsorServiceBean();
         bean.setEmailService(mockEmailService);
@@ -164,8 +167,9 @@ public class SponsorServiceBeanTest {
         bean.setSessionProvider(mockSessionProvider);
         bean.setOrganizationService(mockOrganizationService);
         when(mockSessionProvider.get()).thenReturn(mockSession);
-        bean.setSponsorWithAnnualRegistrationsExternalId(annualRegistrationSponsor.getExternalId());
-        when(mockOrganizationService.getByExternalId(annualRegistrationSponsor.getExternalId())).thenReturn(
+        bean.setSponsorWithAnnualRegistrationsNesId(ANNUAL_REGISTRATION_SPONSOR_NES_ID);
+        annualRegistrationSponsor.setNesId(ANNUAL_REGISTRATION_SPONSOR_NES_ID);
+        when(mockOrganizationService.getByNesId(ANNUAL_REGISTRATION_SPONSOR_NES_ID)).thenReturn(
                 annualRegistrationSponsor);
     }
 
@@ -173,7 +177,7 @@ public class SponsorServiceBeanTest {
     public void testNotifySubmittedRegistration_AbstractProtocolRegistration() {
         InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
-        protocol.setSponsor(protocolRegistrationSponsor);
+        protocol.getSponsor().setNesId(SPONSOR_NES_ID);
         setUpTestSponsorEmailMapping();
         InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
                 profile, protocol);
@@ -201,8 +205,8 @@ public class SponsorServiceBeanTest {
 
     private void setUpTestSponsorEmailMapping() {
         Map<String, String> sponsorEmails = Maps.newHashMap();
-        sponsorEmails.put(protocolRegistrationSponsor.getExternalId(), SPONSOR_MAILBOX_ADDRESS);
-        sponsorEmails.put(annualRegistrationSponsor.getExternalId(), ANNUAL_REGISTRATION_SPONSOR_MAILBOX_ADDRESS);
+        sponsorEmails.put(SPONSOR_NES_ID, SPONSOR_MAILBOX_ADDRESS);
+        sponsorEmails.put(ANNUAL_REGISTRATION_SPONSOR_NES_ID, ANNUAL_REGISTRATION_SPONSOR_MAILBOX_ADDRESS);
         bean.setSponsorEmailMappings(sponsorEmails);
     }
 
@@ -210,7 +214,7 @@ public class SponsorServiceBeanTest {
     public void testNotifySubmittedRegistration_NoSponsorMailbox() {
         InvestigatorProfile inv = InvestigatorProfileFactory.getInstance().create();
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
-        protocol.setSponsor(protocolRegistrationSponsor);
+        protocol.getSponsor().setNesId(SPONSOR_NES_ID);
         InvestigatorRegistration reg = RegistrationFactory.getInstance().createInvestigatorRegistration(inv, protocol);
         reg.setStatus(RegistrationStatus.SUBMITTED);
         bean.notifySubmittedRegistration(reg);
@@ -226,8 +230,10 @@ public class SponsorServiceBeanTest {
     @Test
     public void testRemoveSponsorDelegateRole() throws GridInvocationException {
         FirebirdUser user = FirebirdUserFactory.getInstance().create();
+        Organization sponsor = OrganizationFactory.getInstance().create();
+        sponsor.setNesId(SPONSOR_NES_ID);
         setUpTestSponsorEmailMapping();
-        SponsorRole delegateRole = user.addSponsorDelegateRole(protocolRegistrationSponsor);
+        SponsorRole delegateRole = user.addSponsorDelegateRole(sponsor);
         assertTrue(user.getSponsorRoles().contains(delegateRole));
         bean.removeSponsorDelegateRole(delegateRole);
         verify(mockFirebirdUserService).save(user);
@@ -277,7 +283,9 @@ public class SponsorServiceBeanTest {
     @Test
     public void testGetSponsorEmailAddress() {
         setUpTestSponsorEmailMapping();
-        assertEquals(SPONSOR_MAILBOX_ADDRESS, bean.getSponsorEmailAddress(protocolRegistrationSponsor));
+        Organization sponsor = new Organization();
+        sponsor.setNesId(SPONSOR_NES_ID);
+        assertEquals(SPONSOR_MAILBOX_ADDRESS, bean.getSponsorEmailAddress(sponsor));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -288,23 +296,23 @@ public class SponsorServiceBeanTest {
     }
 
     @Test
-    public void testGetSponsorOrganizations() throws Exception {
-        bean.setValidSponsorExternalIds(Sets.newHashSet("sponsor1", "sponsor2"));
+    public void testGetSponsorOrganizations() throws UnavailableEntityException {
+        bean.setValidSponsorNesIds(Sets.newHashSet("sponsor1", "sponsor2"));
         Organization sponsor1 = OrganizationFactory.getInstance().create();
         Organization sponsor2 = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(anyString())).thenReturn(sponsor1).thenReturn(sponsor2);
+        when(mockOrganizationService.getByNesId(anyString())).thenReturn(sponsor1).thenReturn(sponsor2);
         assertEquals(2, bean.getSponsorOrganizations().size());
     }
 
     @Test
-    public void testInitializeSponsorOrganizations() throws GridInvocationException, Exception {
-        bean.setSponsorWithProtocolRegistrationsExternalIds(Sets.newHashSet("existingSponsor", "newSponsor"));
+    public void testInitializeSponsorOrganizations() throws GridInvocationException, UnavailableEntityException {
+        bean.setSponsorWithProtocolRegistrationsNesIds(Sets.newHashSet("existingSponsor", "newSponsor"));
         final Organization existingSponsor = OrganizationFactory.getInstance().create();
         final Organization newSponsor = OrganizationFactory.getInstance().create();
         Set<String> existingSponsorGroupNames = getSponsorGroupNames(existingSponsor);
         Set<String> newSponsorGroupNames = getSponsorGroupNames(newSponsor);
         Set<String> allSponsorGroupNames = Sets.union(existingSponsorGroupNames, newSponsorGroupNames);
-        when(mockOrganizationService.getByExternalId(anyString())).thenReturn(existingSponsor).thenReturn(newSponsor);
+        when(mockOrganizationService.getByNesId(anyString())).thenReturn(existingSponsor).thenReturn(newSponsor);
         when(mockGridGrouperService.doesGroupExist(anyString())).thenAnswer(new Answer<Boolean>() {
             @Override
             public Boolean answer(InvocationOnMock invocation) throws Throwable {
@@ -314,7 +322,7 @@ public class SponsorServiceBeanTest {
         });
 
         bean.initializeSponsorOrganizations();
-        verify(mockOrganizationService, times(2)).getByExternalId(anyString());
+        verify(mockOrganizationService, times(2)).getByNesId(anyString());
         checkDoesGroupExistCalled(allSponsorGroupNames);
         checkCreateGroupCalled(newSponsorGroupNames);
         checkAddGridGroupToGroupCalled(newSponsorGroupNames);
@@ -353,21 +361,21 @@ public class SponsorServiceBeanTest {
     }
 
     @Test
-    public void testGetSponsorOrganizationWithAnnualRegistrations() throws Exception {
-        String sponsorWithAnnualRegistrationExternalId = "ctep";
-        bean.setSponsorWithAnnualRegistrationsExternalId(sponsorWithAnnualRegistrationExternalId);
+    public void testGetSponsorOrganizationWithAnnualRegistrations() throws UnavailableEntityException {
+        String sponsorWithAnnualRegistrationNesId = "ctep";
+        bean.setSponsorWithAnnualRegistrationsNesId(sponsorWithAnnualRegistrationNesId);
         OrganizationService mockOrganizationService = mock(OrganizationService.class);
         bean.setOrganizationService(mockOrganizationService);
         Organization sponsorOrganization = new Organization();
-        when(mockOrganizationService.getByExternalId(sponsorWithAnnualRegistrationExternalId)).thenReturn(sponsorOrganization);
+        when(mockOrganizationService.getByNesId(sponsorWithAnnualRegistrationNesId)).thenReturn(sponsorOrganization);
         assertSame(sponsorOrganization, bean.getSponsorOrganizationWithAnnualRegistrations());
         assertSame(sponsorOrganization, bean.getSponsorOrganizationWithAnnualRegistrations());
-        verify(mockOrganizationService, times(1)).getByExternalId(sponsorWithAnnualRegistrationExternalId);
+        verify(mockOrganizationService, times(1)).getByNesId(sponsorWithAnnualRegistrationNesId);
     }
 
     @Test
-    public void testGetSponsorOrganizationWithAnnualRegistrations_NullId() {
-        bean.setSponsorWithAnnualRegistrationsExternalId(null);
+    public void testGetSponsorOrganizationWithAnnualRegistrations_NullId() throws UnavailableEntityException {
+        bean.setSponsorWithAnnualRegistrationsNesId(null);
         assertNull(bean.getSponsorOrganizationWithAnnualRegistrations());
     }
 

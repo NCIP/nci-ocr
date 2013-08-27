@@ -82,9 +82,10 @@
  */
 package gov.nih.nci.firebird.selenium2.pages.user.regsitration;
 
-import gov.nih.nci.firebird.commons.selenium2.util.TableUtils;
-
 import java.util.List;
+
+import gov.nih.nci.firebird.commons.selenium2.util.TableUtils;
+import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -93,9 +94,9 @@ import org.openqa.selenium.support.FindBy;
 
 import com.google.common.collect.Lists;
 
-public abstract class AbstractSponsorSelectionPage<T extends AbstractAccountRegistrationPage<T>>
+public abstract class AbstractSponsorSelectionPage<T extends AbstractAccountRegistrationPage<T>> 
 extends AbstractAccountRegistrationPage<T> {
-
+    
     private static final String SPONSORS_TABLE_ID = "sponsorOrganizationsTable";
 
     @FindBy(id = SPONSORS_TABLE_ID)
@@ -112,28 +113,28 @@ extends AbstractAccountRegistrationPage<T> {
         }
         return listings;
     }
-
+    
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
         assertElementWithIdPresent(SPONSORS_TABLE_ID);
     }
 
-    public static class SponsorListing {
-
+    public static class SponsorListing implements TableListing {
+        
         private static final int CHECKBOX_COLUMN_INDEX = 0;
         private static final int NAME_COLUMN_INDEX = 1;
         private static final int ADDRESS_COLUMN_INDEX = 2;
         private static final int EMAIL_COLUMN_INDEX = 3;
-
-        private final String id;
+        
+        private final Long id;
         private final WebElement checkbox;
         private final String name;
         private final String address;
         private final String email;
 
         public SponsorListing(WebElement row) {
-            this.id = AbstractSponsorSelectionPage.getId(row);
+            this.id = Long.valueOf(AbstractSponsorSelectionPage.getId(row));
             List<WebElement> cells = TableUtils.getCells(row);
             this.checkbox = cells.get(CHECKBOX_COLUMN_INDEX).findElement(By.tagName("input"));
             this.name = cells.get(NAME_COLUMN_INDEX).getText();
@@ -141,7 +142,8 @@ extends AbstractAccountRegistrationPage<T> {
             this.email = cells.get(EMAIL_COLUMN_INDEX).getText();
         }
 
-        public String getId() {
+        @Override
+        public Long getId() {
             return id;
         }
 

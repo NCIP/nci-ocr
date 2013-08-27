@@ -87,44 +87,28 @@ import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.InvestigatorStatus;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
-import gov.nih.nci.firebird.selenium2.pages.base.AbstractMenuPage;
-import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.AnnualAdditionalAttachmentsTab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.AnnualForm1572Tab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.BrowseAnnualRegistrationsPage;
-import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.BrowseAnnualRegistrationsPage.RegistrationListing;
-import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.FinancialDisclosureTab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.OverviewTab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.SupplementalInvestigatorDataFormTab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact.ProfessionalContactInformationTab;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.BrowseCtepInvestigatorsPage;
-import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.BrowseCtepInvestigatorsPage.InvestigatorListing;
-import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.LoginAccount.InvestigatorLogin;
+import gov.nih.nci.firebird.test.LoginAccount.SponsorLogin;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
 
-import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
 
 public class BrowseCtepInvestigatorsTest extends AbstractFirebirdWebDriverTest {
 
+    private static final String LAST_NAME = "Smith";
     private FirebirdUser investigator1;
     private FirebirdUser investigator2;
-    private LoginAccount ctepSponsorLogin;
-    private LoginAccount dcpSponsorLogin;
-    private LoginAccount dcpSponsorDelegateLogin;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
         DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
-        ctepSponsorLogin = builder.createSponsor().asCtepUser().getLogin();
-        dcpSponsorLogin = builder.createSponsor().getLogin();
-        dcpSponsorDelegateLogin = builder.createSponsor().asDelegate().getLogin();
+        builder.createSponsor().asCtepUser().get();
         investigator1 = builder.createInvestigator().asCtepUser().withInvestigatorStatus(InvestigatorStatus.ACTIVE)
                 .get();
         builder.createAnnualRegistration(investigator1).withDueDate(DateUtils.addYears(new Date(), -1))
@@ -134,22 +118,18 @@ public class BrowseCtepInvestigatorsTest extends AbstractFirebirdWebDriverTest {
         investigator2 = builder.createInvestigator().asCtepUser().withLogin(InvestigatorLogin.fbciinv2)
                 .withInvestigatorStatus(InvestigatorStatus.DISQUALIFIED).get();
         builder.createAnnualRegistration(investigator2).withStatus(RegistrationStatus.APPROVED).get();
+        investigator1.getPerson().setLastName(LAST_NAME);
+        investigator2.getPerson().setLastName(LAST_NAME);
         builder.build();
     }
 
     @Test
-    public void testBrowseCtepInvestigators() throws IOException {
-        HomePage homePage = openHomePage(ctepSponsorLogin, getCtepProvider());
-        checkInvestigatorListings(homePage);
-        checkInvestigatorProfileAccess(homePage, true);
-        checkInvestigatorRegistrations(homePage, true);
-    }
-
-    private void checkInvestigatorListings(HomePage homePage) {
+    public void testBrowseCtepInvestigators() {
+        HomePage homePage = openHomePage(SponsorLogin.fbcisponsor1, getCtepProvider());
         BrowseCtepInvestigatorsPage investigatorsPage = homePage.getAnnualRegistrationsMenu()
                 .clickBrowseInvestigators();
-        investigatorsPage.typeInSearchBox(investigator2.getPerson().getLastName());
-        assertNull(investigatorsPage.getHelper().getListing(investigator1));
+        investigatorsPage.typeInSearchBox(LAST_NAME);
+        assertNotNull(investigatorsPage.getHelper().getListing(investigator1));
         assertNotNull(investigatorsPage.getHelper().getListing(investigator2));
 
         investigatorsPage.typeInSearchBox(investigator1.getPerson().getEmail());
@@ -159,81 +139,6 @@ public class BrowseCtepInvestigatorsTest extends AbstractFirebirdWebDriverTest {
         investigatorsPage.typeInSearchBox(investigator2.getPerson().getCtepId());
         assertNull(investigatorsPage.getHelper().getListing(investigator1));
         assertNotNull(investigatorsPage.getHelper().getListing(investigator2));
-    }
-
-    private void checkInvestigatorProfileAccess(HomePage homePage, boolean profileAccessExpected) {
-        InvestigatorListing listing = getInvestigatorListing(homePage, investigator1);
-        assertEquals(profileAccessExpected, listing.hasProfileLink());
-        if (profileAccessExpected) {
-            checkProfileAccess(homePage);
-        }
-    }
-
-    private InvestigatorListing getInvestigatorListing(AbstractMenuPage<?> page, FirebirdUser investigator) {
-        BrowseCtepInvestigatorsPage investigatorsPage = page.getAnnualRegistrationsMenu()
-                .clickBrowseInvestigators();
-        investigatorsPage.typeInSearchBox(investigator.getPerson().getLastName());
-        InvestigatorListing listing = investigatorsPage.getHelper().getListing(investigator);
-        return listing;
-    }
-
-    private void checkProfileAccess(HomePage homePage) {
-        BrowseCtepInvestigatorsPage investigatorsPage = homePage.getAnnualRegistrationsMenu().clickBrowseInvestigators();
-        investigatorsPage.typeInSearchBox(investigator2.getPerson().getCtepId());
-        InvestigatorListing listing = investigatorsPage.getHelper().getListing(investigator2);
-        ProfessionalContactInformationTab contactInformationTab = listing.clickProfileLink();
-        contactInformationTab.getHelper().verifyProfessionalContactInformation(investigator2.getPerson());
-    }
-
-    private void checkInvestigatorRegistrations(HomePage homePage, boolean editCapabilitiesExpected) throws IOException {
-        InvestigatorListing investigatorListing = getInvestigatorListing(homePage, investigator1);
-        BrowseAnnualRegistrationsPage registrationsPage = investigatorListing.clickRegistrationsLink();
-        List<RegistrationListing> registrationListings = registrationsPage.getRegistrationListings();
-        assertEquals(2, registrationListings.size());
-        RegistrationListing approvedListing = registrationListings.get(0);
-        RegistrationListing inProgressListing = registrationListings.get(1);
-        checkExpectedButtonText(approvedListing, inProgressListing, editCapabilitiesExpected);
-        checkRegistrationAccess(inProgressListing, editCapabilitiesExpected);
-    }
-
-    private void checkExpectedButtonText(RegistrationListing approvedListing,
-            RegistrationListing inProgressListing, boolean editCapabilitiesExpected) {
-        assertEquals(getPropertyText("button.view"), approvedListing.getEditButtonLabel());
-        String expectedButtonTextForInProgressRegistration =
-                editCapabilitiesExpected ? getPropertyText("button.edit") : getPropertyText("button.view");
-        assertEquals(expectedButtonTextForInProgressRegistration, inProgressListing.getEditButtonLabel());
-    }
-
-    private void checkRegistrationAccess(RegistrationListing inProgressListing, boolean editCapabilitiesExpected) throws IOException {
-        OverviewTab overviewTab = inProgressListing.clickEditButton();
-        assertEquals(editCapabilitiesExpected, !overviewTab.isReadOnly());
-        AnnualForm1572Tab form1572Tab = overviewTab.getPage().clickForm1572Tab();
-        assertEquals(editCapabilitiesExpected, !form1572Tab.isReadOnly());
-        assertTrue(form1572Tab.clickViewGenerated1572().length() > 0);
-        FinancialDisclosureTab financialDisclosureTab = form1572Tab.getPage().clickFinancialDisclosureTab();
-        assertEquals(editCapabilitiesExpected, !financialDisclosureTab.isReadOnly());
-        assertTrue(financialDisclosureTab.clickViewPdfButton().length() > 0);
-        SupplementalInvestigatorDataFormTab sidfTab = financialDisclosureTab.getPage().clickSupplementalInvestigatorDataFormTab();
-        assertEquals(editCapabilitiesExpected, !sidfTab.isReadOnly());
-        assertTrue(sidfTab.clickViewPdfButton().length() > 0);
-        AnnualAdditionalAttachmentsTab attachmentsTab = sidfTab.getPage().clickAdditionalAttachmentsTab();
-        assertEquals(editCapabilitiesExpected, !attachmentsTab.isReadOnly());
-    }
-
-    @Test
-    public void testBrowseCtepInvestigatorsAsDcpSponsor() throws IOException {
-        HomePage homePage = openHomePage(dcpSponsorLogin);
-        checkInvestigatorListings(homePage);
-        checkInvestigatorProfileAccess(homePage, false);
-        checkInvestigatorRegistrations(homePage, false);
-    }
-
-    @Test
-    public void testBrowseCtepInvestigatorsAsDcpSponsorDelegate() throws IOException {
-        HomePage homePage = openHomePage(dcpSponsorDelegateLogin);
-        checkInvestigatorListings(homePage);
-        checkInvestigatorProfileAccess(homePage, false);
-        checkInvestigatorRegistrations(homePage, false);
     }
 
 }

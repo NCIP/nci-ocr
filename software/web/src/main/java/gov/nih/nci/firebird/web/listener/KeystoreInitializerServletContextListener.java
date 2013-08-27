@@ -82,15 +82,15 @@
  */
 package gov.nih.nci.firebird.web.listener;
 
+import com.fiveamsolutions.nci.commons.util.HibernateHelper;
 import gov.nih.nci.firebird.inject.GuiceInjectorHolder;
-import gov.nih.nci.firebird.service.user.CertificateAuthorityManager;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import gov.nih.nci.firebird.service.user.CertificateAuthorityManager;
 import org.apache.log4j.Logger;
 
-import com.fiveamsolutions.nci.commons.util.HibernateHelper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -115,10 +115,8 @@ public class KeystoreInitializerServletContextListener implements ServletContext
     @SuppressWarnings("PMD.AvoidCatchingGenericException")  // need to handle any unexpected exception
     public void contextInitialized(ServletContextEvent servletContext) {
         try {
-            LOG.info("Initializing Root Key-Store");
             hibernateHelper.openAndBindSession();
             caManager.initRootKeystore();
-            LOG.info("Initialization of Root Key-Store successful");
         } catch (Exception e) {
             LOG.error("An Error occurred while trying to initialize the root key-store.", e);
         } finally {

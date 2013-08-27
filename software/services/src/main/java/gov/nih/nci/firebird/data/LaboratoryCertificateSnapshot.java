@@ -110,6 +110,13 @@ public class LaboratoryCertificateSnapshot extends AbstractLaboratoryCertificate
     }
 
     /**
+     * @param type the type of this certificate.
+     */
+    public LaboratoryCertificateSnapshot(LaboratoryCertificateType type) {
+        super(type);
+    }
+
+    /**
      * @return owner
      */
     @ManyToOne(cascade = CascadeType.ALL)

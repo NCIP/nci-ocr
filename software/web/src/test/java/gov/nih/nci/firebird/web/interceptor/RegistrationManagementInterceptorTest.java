@@ -83,30 +83,21 @@
 package gov.nih.nci.firebird.web.interceptor;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Set;
-
 import gov.nih.nci.firebird.data.InvestigatorProfile;
-import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.ManagedInvestigator;
 import gov.nih.nci.firebird.data.user.ManagedInvestigatorStatus;
 import gov.nih.nci.firebird.data.user.RegistrationCoordinatorRoleUtil;
-import gov.nih.nci.firebird.data.user.SponsorRole;
-import gov.nih.nci.firebird.security.UserSessionInformation;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
-import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 public class RegistrationManagementInterceptorTest extends AbstractWebTest {
@@ -117,13 +108,10 @@ public class RegistrationManagementInterceptorTest extends AbstractWebTest {
     @Inject
     private SponsorService sponsorService;
     private RegistrationManagementInterceptor interceptor;
-    private Organization annualRegistrationSponsorOrganization;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        annualRegistrationSponsorOrganization = OrganizationFactory.getInstance().create();
-        when(sponsorService.getSponsorOrganizationWithAnnualRegistrations()).thenReturn(annualRegistrationSponsorOrganization);
         interceptor = new RegistrationManagementInterceptor(userService, profileService, sponsorService);
     }
 
@@ -150,37 +138,6 @@ public class RegistrationManagementInterceptorTest extends AbstractWebTest {
     public void testGetSuspendedStrutsForward() {
         assertEquals(FirebirdUIConstants.RETURN_REGISTRATION_ACCESS_SUSPENDED_ENTER,
                 interceptor.getSuspendedStrutsForward());
-    }
-
-    @Test
-    public void testIsPermittedSponsor_False() {
-        UserSessionInformation mockSessionInformation = createMockSessionInformation();
-        FirebirdUser currentUser = FirebirdUserFactory.getInstance().create();
-        assertFalse(interceptor.isPermittedSponsor(currentUser, mockSessionInformation));
-    }
-
-    private UserSessionInformation createMockSessionInformation(String... groupNames) {
-        UserSessionInformation mockSessionInformation = mock(UserSessionInformation.class);
-        Set<String> groupNameSet = Sets.newHashSet(groupNames);
-        when(mockSessionInformation.getGroupNames()).thenReturn(groupNameSet);
-        return mockSessionInformation;
-    }
-
-    @Test
-    public void testIsPermittedSponsor_CtepSponsor() {
-        UserSessionInformation mockSessionInformation = createMockSessionInformation();
-        FirebirdUser currentUser = FirebirdUserFactory.getInstance().create();
-        currentUser.addSponsorRepresentativeRole(annualRegistrationSponsorOrganization);
-        assertTrue(interceptor.isPermittedSponsor(currentUser, mockSessionInformation));
-    }
-
-    @Test
-    public void testIsPermittedSponsor_VerifiedDcpSponsor() {
-        FirebirdUser currentUser = FirebirdUserFactory.getInstance().create();
-        Organization organization = OrganizationFactory.getInstance().create();
-        SponsorRole sponsorRole = currentUser.addSponsorRepresentativeRole(organization);
-        UserSessionInformation mockSessionInformation = createMockSessionInformation(sponsorRole.getVerifiedSponsorGroupName());
-        assertTrue(interceptor.isPermittedSponsor(currentUser, mockSessionInformation));
     }
 
 }

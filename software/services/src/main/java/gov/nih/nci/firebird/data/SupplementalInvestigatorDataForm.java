@@ -173,6 +173,7 @@ public class SupplementalInvestigatorDataForm extends AbstractAnnualRegistration
     public void copyForm(AbstractRegistrationForm form) {
         checkArgument(form instanceof SupplementalInvestigatorDataForm,
                 "Passed in form to copy wasn't an instance of SupplementalInvestigatorDataForm");
+        // TODO implement when page 2 is implemented. Page 1 is all generated from the current profile
     }
 
     /**

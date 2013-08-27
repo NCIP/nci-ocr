@@ -86,7 +86,7 @@ import java.io.IOException;
 import java.util.List;
 
 import gov.nih.nci.firebird.data.Person;
-import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.export.PersonsTab.PersonListing;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 public class PersonsTabHelper extends AbstractExportCurationDataTabHelper {
    
@@ -102,18 +102,13 @@ public class PersonsTabHelper extends AbstractExportCurationDataTabHelper {
     }
 
     public boolean contains(Person person) {
-        for (PersonListing listing : tab.getListings()) {
-            if (listing.getExternalId().equals(person.getExternalId())) {
-                return true;
-            }
-        }
-        return false;
+        return FirebirdTableUtils.getListing(tab.getListings(), person) != null;
     }
 
     public void downloadAndCheckCsvFile(Person... persons) throws IOException {
         List<String> fileContents = getCsvFileContents();
         for (Person person : persons) {
-            String expectedLine = person.getExternalId() + ",\"" + person.getDisplayNameForList() + "\"";
+            String expectedLine = person.getNesId() + ",\"" + person.getDisplayNameForList() + "\"";
             assertLineIsPresent(expectedLine, fileContents);
         }
     }

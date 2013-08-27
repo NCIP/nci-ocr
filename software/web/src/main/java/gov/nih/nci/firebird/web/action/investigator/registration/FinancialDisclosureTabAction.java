@@ -226,8 +226,6 @@ public class FinancialDisclosureTabAction extends AbstractRegistrationTabAction 
     /**
      * @param processor the processor to set
      */
-    @SuppressWarnings("ucd")
-    // used to inject mock processor from tests
     void setProcessor(FinancialDisclosureTabProcessor<AbstractProtocolRegistration> processor) {
         this.processor = processor;
     }

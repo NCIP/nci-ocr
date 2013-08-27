@@ -98,7 +98,7 @@ import com.google.inject.Inject;
 /**
  * Translates between NES ResearchOrganization and FIREBIRD Organization objects.
  */
-class ResearchOrganizationTranslator extends AbstractCorrelationTranslator {
+public class ResearchOrganizationTranslator extends AbstractCorrelationTranslator {
 
     @Inject
     ResearchOrganizationTranslator(OrganizationNameTranslator nameTranslator, NesTranslatorHelper translatorHelper) {
@@ -107,19 +107,15 @@ class ResearchOrganizationTranslator extends AbstractCorrelationTranslator {
 
     ResearchOrganization toResearchOrganization(Organization organization, ResearchOrganizationType type) {
         ResearchOrganization researchOrganization = new ResearchOrganization();
-        if (organization.hasExternalRecord()) {
-            ResearchOrganizationData researchOrganizationData = 
-                    (ResearchOrganizationData) organization.getExternalData();
-            handleIdentifier(researchOrganization, researchOrganizationData.getExternalId());
-            handlePlayerIdentifier(researchOrganization, researchOrganizationData.getPlayerId());
-        }
+        handleIdentifier(researchOrganization, organization.getNesId());
+        handlePlayerIdentifier(researchOrganization, organization.getPlayerIdentifier());
         researchOrganization.setName(toNesName(organization.getName()));
         researchOrganization.setTypeCode(toCd(type));
         researchOrganization.setPostalAddress(new DSETAD());
         researchOrganization.getPostalAddress().getItem()
                 .add(getTranslatorHelper().toAd(organization.getPostalAddress()));
         researchOrganization.setTelecomAddress(buildTelecomAddress(organization));
-        researchOrganization.setStatus(getTranslatorHelper().toStatusCode(organization.getCurationStatus()));
+        researchOrganization.setStatus(getTranslatorHelper().toStatusCode(organization.getNesStatus()));
         return researchOrganization;
     }
 
@@ -142,19 +138,14 @@ class ResearchOrganizationTranslator extends AbstractCorrelationTranslator {
     Organization toFirebirdOrganization(ResearchOrganization researchOrganization,
             gov.nih.nci.coppa.po.Organization player) {
         Organization firebirdOrganization = new Organization();
-        ResearchOrganizationData researchOrganizationData = new ResearchOrganizationData();
-        researchOrganizationData.setExternalId(getTranslatorHelper().toNesIdString(getIi(researchOrganization)));
-        researchOrganizationData.setPlayerId(getTranslatorHelper().toNesIdString(
+        firebirdOrganization.setNesId(getTranslatorHelper().toNesIdString(getIi(researchOrganization)));
+        firebirdOrganization.setPlayerIdentifier(getTranslatorHelper().toNesIdString(
                 researchOrganization.getPlayerIdentifier()));
-        String typeCode = researchOrganization.getTypeCode().getCode();
-        researchOrganizationData.setResearchOrganizationType(ResearchOrganizationType.getByCode(typeCode));
-        firebirdOrganization.setExternalData(researchOrganizationData);
         firebirdOrganization.setName(getName(researchOrganization, player));
         firebirdOrganization.setPostalAddress(getAddress(researchOrganization, player));
         firebirdOrganization.setEmail(getEmail(researchOrganization, player));
         firebirdOrganization.setPhoneNumber(getPhoneNumber(researchOrganization, player));
-        firebirdOrganization.setCurationStatus(getTranslatorHelper().
-                toCurationStatus(researchOrganization.getStatus()));
+        firebirdOrganization.setNesStatus(getTranslatorHelper().toCurationStatus(researchOrganization.getStatus()));
         return firebirdOrganization;
     }
 

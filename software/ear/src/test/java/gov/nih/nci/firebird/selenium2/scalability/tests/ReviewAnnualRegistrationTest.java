@@ -93,7 +93,7 @@ import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ApproveRegistrationDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ApproveRegistrationValidationDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ReviewAnnualRegistrationPage;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable.RegistrationListing;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ReviewAnnualRegistrationPage.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FormReviewCommentDialog;
 import gov.nih.nci.firebird.test.data.DataSet;
 
@@ -132,7 +132,7 @@ public class ReviewAnnualRegistrationTest extends AbstractScalabilityTest {
     }
 
     private ReviewAnnualRegistrationPage openRegistration(final HomePage homePage) {
-        ReviewAnnualRegistrationPage reviewPage =
+        ReviewAnnualRegistrationPage reviewPage = 
                 new TimedAction<ReviewAnnualRegistrationPage>("Open Submitted Annual Registration from Task List") {
             @Override
             public ReviewAnnualRegistrationPage perform() {
@@ -173,7 +173,7 @@ public class ReviewAnnualRegistrationTest extends AbstractScalabilityTest {
         final FormReviewCommentDialog commentsDialog = new TimedAction<FormReviewCommentDialog>("Reject " + form.getFormType().getName()) {
             @Override
             public FormReviewCommentDialog perform() throws IOException {
-                return reviewPage.getHelper().getListingById(form).clickReject();
+                return reviewPage.getHelper().getListingById(form).clickRejectRadio();
             }
         }.time();
         commentsDialog.typeComments(reviewPage.getHelper().getFormRejectionComments(form));
@@ -198,7 +198,7 @@ public class ReviewAnnualRegistrationTest extends AbstractScalabilityTest {
         new TimedAction<Void>("Accept " + form.getFormType().getName()) {
             @Override
             public Void perform() throws IOException {
-                reviewPage.getHelper().getListingById(form).clickAccept();
+                reviewPage.getHelper().getListingById(form).clickAcceptRadio();
                 return null;
             }
         }.time();
@@ -213,7 +213,7 @@ public class ReviewAnnualRegistrationTest extends AbstractScalabilityTest {
     }
 
     private void approveRegistration(final ApproveRegistrationDialog approveDialog) {
-        ApproveRegistrationValidationDialog validationDialog =
+        ApproveRegistrationValidationDialog validationDialog = 
                 new TimedAction<ApproveRegistrationValidationDialog>("Approve Registration") {
             @Override
             public ApproveRegistrationValidationDialog perform() {

@@ -7,7 +7,7 @@
         <div class="ui-tabs-panel">
             <firebird:dialogHeader><fmt:message key="investigator.profile.contactInformation.organization" /></firebird:dialogHeader>
             <s:form id="selectForm" action="selectOrganizationAndClose" namespace="/investigator/profile/contact/ajax" onsubmit="return false">
-                <s:hidden id="organizationExternalId" name="organizationExternalId" />
+                <s:hidden id="searchKey" name="searchKey" />
                 <s:hidden name = "profile.id" value="%{profile.id}"/>
             </s:form>
 
@@ -17,8 +17,8 @@
             </firebird:organizationSearch>
             <script type="text/javascript">
                 $(document).ready(function() {
-                    organizationSearch.clickSelectButton = function(organization) {
-                        $('#organizationExternalId').val(organization.externalId);
+                    organizationSearch.clickSelectButton = function(organizationId) {
+                        $('#searchKey').val(organizationId);
                         var url = $('#selectForm').attr('action');
                         var target = "#profileDialog";
                         var serializedForm = $('#selectForm').serialize();

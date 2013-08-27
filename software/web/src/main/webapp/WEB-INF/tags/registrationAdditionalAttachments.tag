@@ -6,20 +6,36 @@
 <s:url var="downloadLink" action="downloadFile" namespace="/util/ajax" />
 <s:url var="downloadIconUrl" value='/images/ico_document.png' />
 
-<firebird:additionalDocumentationDialog titleKey="registration.attachments.title">
-        <table id="additionalAttachmentsTable" class="ui-jqgrid-htable ui-jqgrid-btable"
-                summary="This table displays the list of additional documents that were attached by the investigator.
-                        It displays the file name, the description, the upload date, and a link to download the file.">
-            <thead>
-                <tr>
-                    <th scope="col" width="275px"><div><fmt:message key="label.file.name"/></div></th>
-                    <th scope="col" width="125px"><div><fmt:message key="label.description"/></div></th>
-                    <th scope="col" width="125px"><div><fmt:message key="label.upload.date"/></div></th>
-                    <th scope="col" width="35px"><div><fmt:message key="label.download"/></div></th>
-                </tr>
-            </thead>
-        </table>
-</firebird:additionalDocumentationDialog>
+<!--Content-->
+<div id="tabwrapper">
+    <div class="ui-tabs">
+        <div class="ui-tabs-panel">
+            <firebird:dialogHeader>
+                <fmt:message key="registration.attachments.title" />
+            </firebird:dialogHeader>
+            <firebird:messages />
+                <table id="additionalAttachmentsTable" class="ui-jqgrid-htable ui-jqgrid-btable"
+                        summary="This table displays the list of additional documents that were attached by the investigator.
+                                It displays the file name, the description, the upload date, and a link to download the file.">
+                    <thead>
+                        <tr>
+                            <th scope="col" width="275px"><div><fmt:message key="label.file.name"/></div></th>
+                            <th scope="col" width="125px"><div><fmt:message key="label.description"/></div></th>
+                            <th scope="col" width="125px"><div><fmt:message key="label.upload.date"/></div></th>
+                            <th scope="col" width="35px"><div><fmt:message key="label.download"/></div></th>
+                        </tr>
+                    </thead>
+                </table>
+
+            <br />
+            <div class="formcol_xthin">
+                <br />
+                <s:a id="closeBtn" href="#" cssClass="button" onclick="closeDialog();"><fmt:message key="button.close"/></s:a>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </div>
+</div>
 <script>
     function buildDownloadLink(file) {
         var cellvalue = file.id;

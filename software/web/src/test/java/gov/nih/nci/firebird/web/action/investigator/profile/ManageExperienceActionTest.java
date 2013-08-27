@@ -95,6 +95,7 @@ import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
 import java.io.IOException;
 
+import org.dom4j.DocumentException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -139,7 +140,7 @@ public class ManageExperienceActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testGetCleanText() {
+    public void testGetCleanText() throws DocumentException {
         String evilHtml = "hello <script>do XSS</script><b>world</b><br/>";
         InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
         profile.setClinicalResearchExperience(new ClinicalResearchExperience(evilHtml));
@@ -149,7 +150,7 @@ public class ManageExperienceActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testLongText() {
+    public void testLongText() throws DocumentException {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 51; i++) {
             sb.append("<b>01234<u>56789</u></b>");

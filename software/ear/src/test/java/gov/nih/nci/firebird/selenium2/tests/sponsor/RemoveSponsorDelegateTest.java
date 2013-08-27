@@ -110,7 +110,7 @@ public class RemoveSponsorDelegateTest extends AbstractFirebirdWebDriverTest {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        Iterator<Organization> sponsorIterator = getTestDataSource().getProtocolSponsorOrganizations().iterator();
+        Iterator<Organization> sponsorIterator = getNesTestDataSource().getProtocolSponsorOrganizations().iterator();
         Organization sponsorOrg1 = sponsorIterator.next();
         Organization sponsorOrg2 = sponsorIterator.next();
         representativeUserLogin = helper.createNewGridUser();

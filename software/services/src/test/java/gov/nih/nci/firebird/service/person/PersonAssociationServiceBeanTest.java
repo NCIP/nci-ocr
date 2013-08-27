@@ -82,53 +82,48 @@
  */
 package gov.nih.nci.firebird.service.person;
 
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.OrderingDesignee;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
+import gov.nih.nci.firebird.test.AbstractHibernateTestCase;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
 
-import org.hibernate.Session;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-import com.google.inject.Provider;
+import com.google.inject.Inject;
 
-public class PersonAssociationServiceBeanTest {
+public class PersonAssociationServiceBeanTest extends AbstractHibernateTestCase {
 
-    private PersonAssociationServiceBean bean = new PersonAssociationServiceBean();
-    
-    @Mock
-    private PersonService mockPersonService;
-
-    @Mock
-    private Provider<Session> mockProvider;
-
-    @Mock
-    private Session mockSession;
-    
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        bean.setPersonService(mockPersonService);
-        when(mockProvider.get()).thenReturn(mockSession);
-        bean.setSessionProvider(mockProvider);
-    }
+    @Inject private PersonAssociationServiceBean bean;
 
     @Test
     public void testHandleNew() throws AssociationAlreadyExistsException, ValidationException {
+        NesPersonIntegrationService mockNesPersonService = mock(NesPersonIntegrationService.class);
+        when(mockNesPersonService.createPerson(any(Person.class))).thenReturn("nes_assigned_id");
+        bean.setNesPersonService(mockNesPersonService);
         InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
+        getCurrentSession().save(profile);
         Person associatedPerson = PersonFactory.getInstance().create();
+        associatedPerson.setNesId("lookup_id");
         OrderingDesignee orderingDesignee = profile.addOrderingDesignee(associatedPerson);
         bean.handleNew(orderingDesignee);
+        assertNotNull(orderingDesignee.getId());
+        assertEquals("lookup_id", associatedPerson.getNesId());
+        verify(mockNesPersonService, never()).createPerson(associatedPerson);
 
-        verify(mockPersonService).save(associatedPerson);
-        verify(mockSession).saveOrUpdate(orderingDesignee);
+        associatedPerson = PersonFactory.getInstance().create();
+        associatedPerson.setNesId(null);
+        orderingDesignee = profile.addOrderingDesignee(associatedPerson);
+        bean.handleNew(orderingDesignee);
+        assertNotNull(orderingDesignee.getId());
+        assertEquals("nes_assigned_id", associatedPerson.getNesId());
+        verify(mockNesPersonService).createPerson(associatedPerson);
     }
 
 }

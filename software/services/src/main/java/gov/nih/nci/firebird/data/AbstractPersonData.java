@@ -82,6 +82,8 @@
  */
 package gov.nih.nci.firebird.data;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.EnumType;
@@ -90,6 +92,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import org.apache.commons.lang.StringUtils;
@@ -115,8 +119,10 @@ public abstract class AbstractPersonData implements PersistentObject {
     private static final int LONG_COL_LENGTH = 50;
 
     private Long id;
+    private String nesId;
     private String ctepId;
-    private CurationStatus curationStatus = CurationStatus.UNSAVED;
+    private CurationStatus nesStatus = CurationStatus.PRE_NES_VALIDATION;
+    private Date updateRequested;
     private String firstName;
     private String middleName;
     private String lastName;
@@ -125,6 +131,7 @@ public abstract class AbstractPersonData implements PersistentObject {
     private String email;
     private String phoneNumber;
     private Address postalAddress = new Address();
+    private Date lastNesRefresh;
     private String providerNumber;
 
     @Id
@@ -201,20 +208,74 @@ public abstract class AbstractPersonData implements PersistentObject {
     }
 
     /**
-     * @return the curationStatus
+     * @return the nesId
+     */
+    @NotEmpty
+    @Column(name = "nes_id", unique = true)
+    @Searchable(matchMode = Searchable.MATCH_MODE_EXACT, caseSensitive = true)
+    @Index(name = "person_nes_id_index")
+    public String getNesId() {
+        return nesId;
+    }
+
+    /**
+     * @param nesId the nesId to set
+     */
+    public void setNesId(String nesId) {
+        this.nesId = nesId;
+    }
+
+    /**
+     * @return the nesStatus
      */
     @Column(name = "curation_status", length = CurationStatus.MAXIMUM_NAME_LENGTH)
     @Enumerated(EnumType.STRING)
     @NotNull
-    public CurationStatus getCurationStatus() {
-        return curationStatus;
+    public CurationStatus getNesStatus() {
+        return nesStatus;
     }
 
     /**
-     * @param curationStatus the curationStatus to set
+     * @param nesStatus the nesStatus to set
      */
-    public void setCurationStatus(CurationStatus curationStatus) {
-        this.curationStatus = curationStatus;
+    public void setNesStatus(CurationStatus nesStatus) {
+        this.nesStatus = nesStatus;
+    }
+
+    /**
+     * @return whether or not this person is pending curation updates
+     */
+    @Transient
+    public boolean isUpdatePending() {
+        return getUpdateRequested() != null;
+    }
+
+    /**
+     * @return the updateRequested
+     */
+    @Column(name = "update_requested")
+    @Temporal(TemporalType.TIMESTAMP)
+    public Date getUpdateRequested() {
+        return updateRequested;
+    }
+
+    private void setUpdateRequested(Date updateRequested) {
+        this.updateRequested = updateRequested;
+    }
+
+    /**
+     * Updates the updateRequested Flag date to a new date, keeping it up to date with
+     * requests.
+     */
+    public void requestUpdate() {
+        setUpdateRequested(new Date());
+    }
+
+    /**
+     * Updates the updateRequested Flag date to to null.
+     */
+    public void clearPendingUpdate() {
+        setUpdateRequested(null);
     }
 
     /**
@@ -352,6 +413,22 @@ public abstract class AbstractPersonData implements PersistentObject {
     }
 
     /**
+     * @return the lastNesRefresh
+     */
+    @Column(name = "last_nes_refresh")
+    @Temporal(TemporalType.TIMESTAMP)
+    public Date getLastNesRefresh() {
+        return lastNesRefresh;
+    }
+
+    /**
+     * @param lastNesRefresh the lastNesRefresh to set
+     */
+    public void setLastNesRefresh(Date lastNesRefresh) {
+        this.lastNesRefresh = lastNesRefresh;
+    }
+
+    /**
      * @return the ctepId
      */
     @Column(name = "ctep_id", unique = true)
@@ -390,20 +467,10 @@ public abstract class AbstractPersonData implements PersistentObject {
     }
 
     /**
-     * Copies the contact information from the given person into this person.
-     *
-     * @param person person to copy contact information from
+     * @return whether the person has a record in NES.
      */
-    public void copyContactInformation(Person person) {
-        setPrefix(person.getPrefix());
-        setFirstName(person.getFirstName());
-        setMiddleName(person.getMiddleName());
-        setLastName(person.getLastName());
-        setSuffix(person.getSuffix());
-        setEmail(person.getEmail());
-        setPhoneNumber(person.getPhoneNumber());
-        setProviderNumber(person.getProviderNumber());
-        getPostalAddress().copyFrom(person.getPostalAddress());
+    public boolean hasNesRecord() {
+        return StringUtils.isNotEmpty(nesId);
     }
 
 }

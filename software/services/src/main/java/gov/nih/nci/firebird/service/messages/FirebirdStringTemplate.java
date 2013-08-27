@@ -301,7 +301,7 @@ public enum FirebirdStringTemplate implements FirebirdTemplate {
     /**
      * A Registration Coordinator can renew one of their managed investigator's annual registration.
      */
-    COORDINATOR_REGISTRATION_RENEWAL_TASK_TITLE(ANNUAL_REGISTRATION),
+    COORDINATOR_REGISTRATION_RENEWAL_TASK_TITLE,
 
     /**
      * An investigator can renew their annual registration.
@@ -527,13 +527,7 @@ public enum FirebirdStringTemplate implements FirebirdTemplate {
     /**
      * Email notifying a sponsor that one of their investigators has canceled a revision to their registration.
      */
-    REGISTRATION_REVISION_CANCELED_EMAIL_TO_SPONSOR_SUBJECT(INVESTIGATOR_REGISTRATION),
-
-    /**
-     * Email notifying coordinator and others that one of their managed investigators has deleted their annual
-     * registration packet.
-     */
-    INVESTIGATOR_DELETED_ANNUAL_REGISTRATION_EMAIL_TO_OTHERS_SUBJECT(INVESTIGATOR);
+    REGISTRATION_REVISION_CANCELED_EMAIL_TO_SPONSOR_SUBJECT(INVESTIGATOR_REGISTRATION);
 
 
     private static final String TEMPLATE_PROPERTY_NAME_PREFIX = "template.string.";

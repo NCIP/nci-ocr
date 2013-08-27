@@ -149,7 +149,7 @@ public class AbstractSponsorSelectionPageFlowActionTest extends AbstractFlowActi
 
     @Test
     public void testPrepare() {
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(dcpSponsorOrganization.getExternalId(), otherSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(dcpSponsorOrganization.getId(), otherSponsorOrganization.getId()));
         action.prepare();
         assertEquals(2, action.getSelectedSponsors().size());
         assertTrue(action.getSelectedSponsors().contains(dcpSponsorOrganization));
@@ -169,7 +169,7 @@ public class AbstractSponsorSelectionPageFlowActionTest extends AbstractFlowActi
 
     @Test
     public void testPrepare_SingleSelect() {
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(dcpSponsorOrganization.getExternalId()));
+        action.setSelectedSponsorIds(Sets.newHashSet(dcpSponsorOrganization.getId()));
         action.prepare();
         assertEquals(1, action.getSelectedSponsors().size());
         assertTrue(action.getSelectedSponsors().contains(dcpSponsorOrganization));
@@ -197,7 +197,7 @@ public class AbstractSponsorSelectionPageFlowActionTest extends AbstractFlowActi
         getAccountConfigurationData().getSponsorOrganizations().add(existingUnselectedOrganization);
         action.prepare();
         assertEquals(Sets.newHashSet(existingUnselectedOrganization), action.getSelectedSponsors());
-        action.getSelectedSponsorExternalIds().add(newSelectedOrganization.getExternalId());
+        action.getSelectedSponsorIds().add(newSelectedOrganization.getId());
         assertEquals(ActionSupport.SUCCESS, action.saveAndProceedNext());
         assertEquals(Sets.newHashSet(newSelectedOrganization), action.getSelectedSponsors());
     }
@@ -213,7 +213,7 @@ public class AbstractSponsorSelectionPageFlowActionTest extends AbstractFlowActi
 
     @Test
     public void testFindSelectedSponsorById_None() {
-        Set<Organization> sponsors = action.findSelectedSponsorsByExternalId();
+        Set<Organization> sponsors = action.findSelectedSponsorsById();
         assertNotNull(sponsors);
         assertTrue(sponsors.isEmpty());
 
@@ -222,8 +222,8 @@ public class AbstractSponsorSelectionPageFlowActionTest extends AbstractFlowActi
     @Test
     public void testFindSelectedSponsorById_Single() {
         action.prepare();
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(dcpSponsorOrganization.getExternalId()));
-        Set<Organization> sponsors = action.findSelectedSponsorsByExternalId();
+        action.setSelectedSponsorIds(Sets.newHashSet(dcpSponsorOrganization.getId()));
+        Set<Organization> sponsors = action.findSelectedSponsorsById();
         assertEquals(1, sponsors.size());
         assertTrue(sponsors.contains(dcpSponsorOrganization));
     }
@@ -231,8 +231,8 @@ public class AbstractSponsorSelectionPageFlowActionTest extends AbstractFlowActi
     @Test
     public void testFindSelectedSponsorById_Both() {
         action.prepare();
-        action.setSelectedSponsorExternalIds(Sets.newHashSet(dcpSponsorOrganization.getExternalId(), otherSponsorOrganization.getExternalId()));
-        Set<Organization> sponsors = action.findSelectedSponsorsByExternalId();
+        action.setSelectedSponsorIds(Sets.newHashSet(dcpSponsorOrganization.getId(), otherSponsorOrganization.getId()));
+        Set<Organization> sponsors = action.findSelectedSponsorsById();
         assertEquals(2, sponsors.size());
         assertTrue(sponsors.contains(dcpSponsorOrganization));
         assertTrue(sponsors.contains(otherSponsorOrganization));
@@ -252,7 +252,7 @@ public class AbstractSponsorSelectionPageFlowActionTest extends AbstractFlowActi
         action.getFlowController().setupFlowBodyWithSteps(EnumSet.of(VERIFICATION), ROLE_SELECTION);
         assertEquals(VERIFICATION, action.getFlowController().stepForward());
         assertTrue(action.getFlowController().getVisitedSteps().contains(VERIFICATION));
-        action.setSelectedSponsorExternalIds(Sets.newHashSet("externalId"));
+        action.setSelectedSponsorIds(Sets.newHashSet(1L));
         action.leaveEditModeIfNoSponsorSelected();
         assertTrue(action.getFlowController().getVisitedSteps().contains(VERIFICATION));
     }

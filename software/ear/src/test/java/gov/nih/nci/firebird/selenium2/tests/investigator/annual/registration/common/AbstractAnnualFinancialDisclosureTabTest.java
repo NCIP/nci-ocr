@@ -218,7 +218,7 @@ public abstract class AbstractAnnualFinancialDisclosureTabTest extends AbstractF
     }
 
     private void checkPharmaceuticalCompanySelection() {
-        Organization newPharmaceuticalCompany = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization newPharmaceuticalCompany = OrganizationFactory.getInstance().create();
         Organization existingPharmaceuticalCompany = getExistingPharmaceuticalCompany();
         createNewPharmaceuticalCompany(newPharmaceuticalCompany);
         selectExistingPharmaceuticalCompany(existingPharmaceuticalCompany);

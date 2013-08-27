@@ -153,7 +153,7 @@ public class LoginAction extends FirebirdActionSupport {
     }
 
     private void addIamProviderIfNecessary() {
-        if (!isEmpty(getSponsorService().getSponsorWithAnnualRegistrationsExternalId())) {
+        if (!isEmpty(getSponsorService().getSponsorWithAnnualRegistrationsNesId())) {
             idps.add(iamAuthenticationProvider);
         }
     }

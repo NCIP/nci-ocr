@@ -84,6 +84,7 @@ package gov.nih.nci.firebird.data;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -139,7 +140,7 @@ import com.google.common.collect.Sets;
 @Entity
 @Table(name = Protocol.PROTOCOL_STRING, uniqueConstraints = { @UniqueConstraint(columnNames = { "protocol_number",
                                                                                                 "sponsor_id" }) })
-@SuppressWarnings({ "PMD.AvoidDuplicateLiterals", "PMD.TooManyMethods" })
+@SuppressWarnings({ "PMD.AvoidDuplicateLiterals", "PMD.TooManyMethods" }) 
 // literals appear in warning suppressions, class exposes mostly getters and setters
 public final class Protocol implements PersistentObject, Cloneable {
 
@@ -155,6 +156,11 @@ public final class Protocol implements PersistentObject, Cloneable {
      * Maximum allowable length for protocol title field.
      */
     public static final int MAX_TITLE_LENGTH = 4000;
+
+    /**
+     * sort protocols by protocol number.
+     */
+    public static final Comparator<Protocol> PROTOCOL_NUMBER_COMPARATOR = new ProtocolNumberComparator();
 
     private Long id;
     private String protocolNumber;
@@ -363,9 +369,7 @@ public final class Protocol implements PersistentObject, Cloneable {
         return registrationConfiguration;
     }
 
-    @SuppressWarnings("unused")
-    // setter required by hibernate
-    private void setRegistrationConfiguration(ProtocolRegistrationConfiguration registrationConfiguration) {
+    void setRegistrationConfiguration(ProtocolRegistrationConfiguration registrationConfiguration) {
         this.registrationConfiguration = registrationConfiguration;
     }
 
@@ -451,7 +455,7 @@ public final class Protocol implements PersistentObject, Cloneable {
     @Transient
     public Set<SubInvestigatorRegistration> getSubinvestigatorRegistrations() {
         return FluentIterable.from(getRegistrationsInternal()).filter(SubInvestigatorRegistration.class)
-                .toSet();
+                .toImmutableSet();
     }
 
     /**
@@ -462,7 +466,7 @@ public final class Protocol implements PersistentObject, Cloneable {
         return FluentIterable
                 .from(getSubinvestigatorRegistrations())
                 .filter(Predicates.and(AbstractProtocolRegistration.IS_INVITED_PREDICATE,
-                        SubInvestigatorRegistration.IS_ACTIVE_PREDICATE)).toSet();
+                        SubInvestigatorRegistration.IS_ACTIVE_PREDICATE)).toImmutableSet();
     }
 
     /**
@@ -516,9 +520,12 @@ public final class Protocol implements PersistentObject, Cloneable {
     }
 
     /**
-     * @return a copy of this protocol
+     * @return a clone to be used for state change comparison.
      */
-    public Protocol createCopy() {
+    @SuppressWarnings("PMD.ProperCloneImplementation")
+    // PMD, this is how I want to clone a protocol.
+    @Override
+    public Protocol clone() {
         Protocol copy = new Protocol();
         copy.getAgents().addAll(getAgents());
         copy.getDocuments().addAll(getDocuments());
@@ -553,12 +560,22 @@ public final class Protocol implements PersistentObject, Cloneable {
 
     /**
      * Removes a registration association from a protocol.
-     *
+     * 
      * @param registration the registration to remove from this protocol
      */
-    void removeRegistration(AbstractProtocolRegistration registration) {
+    public void removeRegistration(AbstractProtocolRegistration registration) {
         registration.setProtocol(null);
         getRegistrationsInternal().remove(registration);
+    }
+
+    /**
+     * comparator for ordering registrations by protocol number.
+     */
+    private static final class ProtocolNumberComparator implements Comparator<Protocol> {
+        @Override
+        public int compare(Protocol p1, Protocol p2) {
+            return p1.getProtocolNumber().compareTo(p2.getProtocolNumber());
+        }
     }
 
 }

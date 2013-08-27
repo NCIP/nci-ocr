@@ -2,21 +2,33 @@
 <s:url var="downloadLink" action="downloadFile" namespace="/util/ajax" />
 <s:url var="downloadIconUrl" value='/images/ico_document.png' />
 
-<firebird:additionalDocumentationDialog titleKey="registration.human.research.certificate.title">
-    <table id="humanResearchCertificatesTable" class="ui-jqgrid-htable ui-jqgrid-btable"
-           summary="This table displays the Protection of Human Research Certificates included as part of this
-                    registration. It displays the Name of uploaded file, the effective date of the certificate, the
-                    expiration date of the certificate, and a link to download the certificate file.">
-        <thead>
-            <tr>
-                <th scope="col" width="275px"><div><fmt:message key="label.file.name"/></div></th>
-                <th scope="col" width="125px"><div><fmt:message key="textfield.effectiveDate"/></div></th>
-                <th scope="col" width="125px"><div><fmt:message key="textfield.expirationDate"/></div></th>
-                <th scope="col" width="35px"><%--Download Link--%></th>
-            </tr>
-        </thead>
-    </table>
-</firebird:additionalDocumentationDialog>
+<!--Content-->
+<firebird:dialogLayout>
+    <firebird:dialogHeader>
+        <fmt:message key="registration.human.research.certificate.title" />
+    </firebird:dialogHeader>
+    <firebird:messages />
+        <table id="humanResearchCertificatesTable" class="ui-jqgrid-htable ui-jqgrid-btable"
+               summary="This table displays the Protection of Human Research Certificates included as part of this
+                        registration. It displays the Name of uploaded file, the effective date of the certificate, the
+                        expiration date of the certificate, and a link to download the certificate file.">
+            <thead>
+                <tr>
+                    <th scope="col" width="275px"><div><fmt:message key="label.file.name"/></div></th>
+                    <th scope="col" width="125px"><div><fmt:message key="textfield.effectiveDate"/></div></th>
+                    <th scope="col" width="125px"><div><fmt:message key="textfield.expirationDate"/></div></th>
+                    <th scope="col" width="35px"><%--Download Link--%></th>
+                </tr>
+            </thead>
+        </table>
+
+    <br />
+    <div class="formcol_xthin">
+        <br />
+        <s:a id="closeBtn" href="#" cssClass="button" onclick="closeDialogAndReload();"><fmt:message key="button.close"/></s:a>
+    </div>
+    <div class="clear"></div>
+</firebird:dialogLayout>
 <script>
     function buildDownloadLink(certificate) {
             var cellvalue = certificate.file.id;

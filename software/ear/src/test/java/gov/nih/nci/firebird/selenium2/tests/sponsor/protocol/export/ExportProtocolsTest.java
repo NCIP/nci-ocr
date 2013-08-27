@@ -83,17 +83,16 @@
 package gov.nih.nci.firebird.selenium2.tests.sponsor.protocol.export;
 
 import static org.junit.Assert.*;
-import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.Protocol;
-import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.protocol.ExportProtocolsTab;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.protocol.ExportProtocolsTab.ProtocolListing;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.FailingAction;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.ProtocolFactory;
+import gov.nih.nci.firebird.test.RegistrationFactory;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
 
 import java.io.IOException;
 import java.util.List;
@@ -102,35 +101,29 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 public class ExportProtocolsTest extends AbstractFirebirdWebDriverTest {
 
-    private static final int REGISTRATION_COUNT_REQUIRING_TWO_PAGES = 11;
-    
-    @Inject
-    private DataSetBuilder builder;
     private ExportProtocolsTab exportProtocolsTab;
-    private DataSet dataSet;
-    private List<Protocol> protocols = Lists.newArrayList();
+    private InvestigatorRegistrationTestDataSet dataSet;
+    private List<Protocol> addedProtocols = Lists.newArrayList();
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        builder.createSponsor();
-        addProtocolsToDataSet();
-        dataSet = builder.build();
+        dataSet = InvestigatorRegistrationTestDataSet.createReadyForSubmissionNoMd(getDataLoader(), getGridResources());
+        addTenMoreProtocolsToDataSet();
         HomePage homePage = openHomePage(dataSet.getSponsorLogin());
         exportProtocolsTab = homePage.getProtocolsMenu().clickExport();
     }
 
-    private void addProtocolsToDataSet() {
-        FirebirdUser investigator = builder.createInvestigator().get();
-        for (int i = 0; i < REGISTRATION_COUNT_REQUIRING_TWO_PAGES; i++) {
-            InvestigatorRegistration registration = builder.createRegistration(investigator).get();
-            Protocol protocol = registration.getProtocol();
-            protocols.add(protocol);
+    private void addTenMoreProtocolsToDataSet() {
+        for (int i = 0; i < 10; i++) {
+            Protocol protocol = ProtocolFactory.getInstance().create(dataSet.getProtocol().getSponsor());
+            protocol.addRegistration(RegistrationFactory.getInstance().createInvestigatorRegistration());
+            addedProtocols.add(protocol);
         }
+        dataSet.save(addedProtocols.toArray(new Protocol[10]));
     }
 
     @Test
@@ -158,8 +151,8 @@ public class ExportProtocolsTest extends AbstractFirebirdWebDriverTest {
     }
 
     private void checkSingleProtocolExport() throws IOException {
-        exportProtocolsTab.getHelper().getListing(protocols.get(0)).select();
-        exportProtocolsTab.getHelper().downloadAndCheckCsvFile(protocols.get(0));
+        exportProtocolsTab.getHelper().getListing(dataSet.getProtocol()).select();
+        exportProtocolsTab.getHelper().downloadAndCheckCsvFile(dataSet.getProtocol());
     }
 
     private void checkSelectAllCheckboxFunctionality() {
@@ -187,8 +180,8 @@ public class ExportProtocolsTest extends AbstractFirebirdWebDriverTest {
     }
 
     private void checkMultipleProtocolExport() throws IOException {
-        exportProtocolsTab.getHelper().getListing(protocols.get(0)).select();
-        exportProtocolsTab.getHelper().getListing(protocols.get(1)).select();
-        exportProtocolsTab.getHelper().downloadAndCheckCsvFile(protocols.get(1), protocols.get(1));
+        exportProtocolsTab.getHelper().getListing(dataSet.getProtocol()).select();
+        exportProtocolsTab.getHelper().getListing(addedProtocols.get(0)).select();
+        exportProtocolsTab.getHelper().downloadAndCheckCsvFile(dataSet.getProtocol(), addedProtocols.get(0));
     }
 }

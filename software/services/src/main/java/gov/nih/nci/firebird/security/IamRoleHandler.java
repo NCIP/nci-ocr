@@ -84,9 +84,7 @@ package gov.nih.nci.firebird.security;
 
 import gov.nih.nci.coppa.common.LimitOffset;
 import gov.nih.nci.coppa.po.HealthCareFacility;
-import gov.nih.nci.coppa.po.IdentifiedPerson;
 import gov.nih.nci.coppa.services.structuralroles.healthcarefacility.common.HealthCareFacilityI;
-import gov.nih.nci.coppa.services.structuralroles.identifiedperson.common.IdentifiedPersonI;
 import gov.nih.nci.ctep.ces.ocr.api.CesInvestigatorService;
 import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
@@ -99,12 +97,13 @@ import gov.nih.nci.firebird.data.user.InvestigatorStatus;
 import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
 import gov.nih.nci.firebird.service.ctep.iam.IamIntegrationService;
 import gov.nih.nci.firebird.service.investigator.InvestigatorService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 import gov.nih.nci.firebird.service.user.UserCnUtils;
@@ -113,7 +112,6 @@ import java.rmi.RemoteException;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.log4j.Logger;
 import org.iso._21090.CD;
@@ -124,22 +122,17 @@ import com.google.inject.Inject;
 /**
  * Retrieves authorized group information from CTEP's IAM system.
  */
-@SuppressWarnings("PMD.TooManyMethods")
-// will refactor when no longer using stubbed CTEP functionality
 class IamRoleHandler extends AbstractCredentialHandler implements RoleHandler {
 
-    private static final Logger LOG = Logger.getLogger(IamRoleHandler.class);
-    private static final String CTEP_ROOT = "2.16.840.1.113883.3.26.6.1";
     private static final int RANDOM_ORGANIZATION_OFFSET_RANGE = 500;
-
     private final IamIntegrationService iamIntegrationService;
     private final PersonService personService;
     private final InvestigatorService investigatorService;
     private final CesInvestigatorService cesInvestigatorService;
     private final SponsorService sponsorService;
     private final HealthCareFacilityI healthCareFacilityService;
+    private final NesOrganizationIntegrationServiceFactory nesServiceFactory;
     private final OrganizationService organizationService;
-    private final IdentifiedPersonI identifiedPersonService;
 
     @Inject
     @SuppressWarnings("PMD.ExcessiveParameterList")
@@ -148,8 +141,8 @@ class IamRoleHandler extends AbstractCredentialHandler implements RoleHandler {
     IamRoleHandler(FirebirdUserService userService, IamIntegrationService iamIntegrationService,
             PersonService personService, CesInvestigatorService cesInvestigatorService,
             InvestigatorService investigatorService, SponsorService sponsorService,
-            HealthCareFacilityI healthCareFacilityService, OrganizationService organizationService,
-            IdentifiedPersonI identifiedPersonService) {
+            HealthCareFacilityI healthCareFacilityService, NesOrganizationIntegrationServiceFactory nesServiceFactory,
+            OrganizationService organizationService) {
         // CHECKSTYLE:ON
         super(userService);
         this.iamIntegrationService = iamIntegrationService;
@@ -158,8 +151,8 @@ class IamRoleHandler extends AbstractCredentialHandler implements RoleHandler {
         this.investigatorService = investigatorService;
         this.sponsorService = sponsorService;
         this.healthCareFacilityService = healthCareFacilityService;
+        this.nesServiceFactory = nesServiceFactory;
         this.organizationService = organizationService;
-        this.identifiedPersonService = identifiedPersonService;
     }
 
     @Override
@@ -197,7 +190,10 @@ class IamRoleHandler extends AbstractCredentialHandler implements RoleHandler {
         Organization organization = null;
         try {
             organization = getOrganization(ii);
-        } catch (InvalidatedOrganizationException e) {
+            organization = replaceOrganizationWithLocalIfPresent(organization);
+        } catch (RemoteException e) {
+            Logger.getLogger(getClass()).error("Couldn't load Primary Organization", e);
+        } catch (UnavailableEntityException e) {
             Logger.getLogger(getClass()).error("Couldn't load Primary Organization", e);
         }
         return new PrimaryOrganization(organization, PrimaryOrganizationType.HEALTH_CARE_FACILITY);
@@ -236,13 +232,21 @@ class IamRoleHandler extends AbstractCredentialHandler implements RoleHandler {
         throw new IllegalArgumentException("No II in Correlation for root " + NesIIRoot.HEALTH_CARE_FACILITY.getRoot());
     }
 
-    private Organization getOrganization(II identifier) throws InvalidatedOrganizationException {
-        String externalId = new NesId(identifier).toString();
-        return getOrganization(externalId);
+    private Organization getOrganization(II identifier) throws RemoteException, UnavailableEntityException {
+        return getOrganization(new NesId(identifier).toString());
     }
 
-    private Organization getOrganization(String externalId) throws InvalidatedOrganizationException {
-        return organizationService.getByExternalId(externalId);
+    private Organization getOrganization(String nesId) throws UnavailableEntityException {
+        try {
+            return nesServiceFactory.getService(nesId).getById(nesId);
+        } catch (ReplacedEntityException e) {
+            return getOrganization(e.getReplacmentNesId());
+        }
+    }
+
+    private Organization replaceOrganizationWithLocalIfPresent(Organization organization) {
+        Organization localOrganization = organizationService.getByNesIdLocal(organization.getNesId());
+        return localOrganization != null ? localOrganization : organization;
     }
 
     private void checkCoordinatorRole(FirebirdUser user, Set<String> groupNames) {
@@ -288,45 +292,9 @@ class IamRoleHandler extends AbstractCredentialHandler implements RoleHandler {
     private FirebirdUser createUser(UserSessionInformation sessionInformation) {
         FirebirdUser user = new FirebirdUser();
         user.setUsername(sessionInformation.getFullyQualifiedUsername());
-        Person person = getByCtepId(sessionInformation.getAccount().getCtepId());
+        Person person = personService.getByCtepId(sessionInformation.getAccount().getCtepId());
         user.setPerson(person);
         return user;
-    }
-
-    private Person getByCtepId(String ctepId) {
-        String nesId = getNesId(ctepId);
-        try {
-            return personService.getByExternalId(nesId);
-        } catch (InvalidatedPersonException e) {
-            LOG.error("Couldn't retrieve person with CTEP Id: " + ctepId, e);
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private String getNesId(String ctepId) {
-        IdentifiedPerson identifiedPerson = createIdentifiedPersonForCtepId(ctepId);
-        LimitOffset limitOffset = new LimitOffset();
-        limitOffset.setLimit(1);
-        try {
-            IdentifiedPerson[] results = identifiedPersonService.query(identifiedPerson, limitOffset);
-            if (!ArrayUtils.isEmpty(results)) {
-                return results[0].getPlayerIdentifier().getExtension();
-            } else {
-                throw new IllegalArgumentException("No IdentifiedPerson found for CTEP Id: " + ctepId);
-            }
-        } catch (RemoteException e) {
-            LOG.error("Couldn't retrieve NES ID for CTEP ID: " + ctepId, e);
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private IdentifiedPerson createIdentifiedPersonForCtepId(String ctepId) {
-        II assignedId = new II();
-        assignedId.setRoot(CTEP_ROOT);
-        assignedId.setExtension(ctepId);
-        IdentifiedPerson searchIdentifiedPerson = new IdentifiedPerson();
-        searchIdentifiedPerson.setAssignedId(assignedId);
-        return searchIdentifiedPerson;
     }
 
 }

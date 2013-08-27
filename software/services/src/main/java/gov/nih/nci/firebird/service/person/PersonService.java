@@ -82,20 +82,76 @@
  */
 package gov.nih.nci.firebird.service.person;
 
-import gov.nih.nci.firebird.data.CurationDataset;
+import gov.nih.nci.firebird.data.Person;
+import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.service.GenericService;
+
+import java.util.List;
 
 import javax.ejb.Local;
 
 /**
- * Provides person entity management methods.
+ * Provides person persistence functionality and NES functionality.
  */
 @Local
-public interface PersonService extends BasePersonService {
+public interface PersonService extends GenericService<Person> {
 
     /**
-     * Returns information about persons requiring curation.
-     * 
-     * @return the curation information result.
+     * Finds the person in NES and saves / updates the local record.
+     *
+     * @param nesId the unique identifier for a person in the NCI Enterprise Service (NES)
+     * @return a Person instance as defined in the Firebird framework
+     * @throws UnavailableEntityException if the corresponding person has been nullified
      */
-    CurationDataset getPersonsToBeCurated();
+    Person importNesPerson(String nesId) throws UnavailableEntityException;
+
+    /**
+     * Create a new Person in the NES.
+     *
+     * @param person the person to be created
+     * @return the Person object updated with the NES ID
+     * @throws ValidationException when NES Data Problems occur.
+     */
+    Person createNesPerson(Person person) throws ValidationException;
+
+    /**
+     * Update a Person in the NES.
+     *
+     * @param person disconnected person representation to be updated.
+     * @throws ValidationException when NES Data Problems occur.
+     */
+    void updateNesPerson(Person person) throws ValidationException;
+
+    /**
+     * Refreshes a Person record with the current data from the corresponding record in NES.
+     *
+     * @param person record to refresh from NES
+     */
+    void refreshFromNes(Person person);
+
+    /**
+     * Validate a Person object against NES and throws a Validation Exception if there are problems found.
+     *
+     * @param person The Person to validate.
+     * @throws ValidationException if there are NES Validation problems.
+     */
+    void validatePerson(Person person) throws ValidationException;
+
+    /**
+     * Obtains a list of all Persons within Firebird that are currently in a PENDING state in
+     * NES.
+     *
+     * @return the Set of all matching persons.
+     */
+    List<Person> getPersonsToBeCurated();
+
+    /**
+     * Returns the Person record with the given CTEP ID, either from the local database or from NES.
+     * 
+     * @param ctepId the CTEP identifier
+     * @return the corresponding person
+     */
+    Person getByCtepId(String ctepId);
+
 }

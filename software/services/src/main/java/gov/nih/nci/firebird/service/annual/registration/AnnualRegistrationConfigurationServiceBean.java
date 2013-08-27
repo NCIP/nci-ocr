@@ -95,7 +95,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -103,6 +102,7 @@ import javax.ejb.TransactionAttributeType;
 import org.hibernate.criterion.Order;
 
 import com.google.common.collect.Iterables;
+import com.google.inject.Inject;
 
 /**
  * Provides persistence functionality and other services for annual registration's configuration.
@@ -118,12 +118,12 @@ public class AnnualRegistrationConfigurationServiceBean extends
 
     private static final ResourceBundle APPLICATION_RESOURCES = ResourceBundle.getBundle("ApplicationResources");
 
-    @Resource(mappedName = "firebird/SponsorServiceBean/local")
+    @Inject
     void setSponsorService(SponsorService sponsorService) {
         this.sponsorService = sponsorService;
     }
 
-    @Resource(mappedName = "firebird/FormTypeServiceBean/local")
+    @Inject
     void setFormTypeService(FormTypeService formTypeService) {
         this.formTypeService = formTypeService;
     }
@@ -132,7 +132,7 @@ public class AnnualRegistrationConfigurationServiceBean extends
     @Override
     public AnnualRegistrationConfiguration getCurrentConfiguration() {
         return (AnnualRegistrationConfiguration) Iterables.getFirst(
-                getSession().createCriteria(AnnualRegistrationConfiguration.class)
+                getSessionProvider().get().createCriteria(AnnualRegistrationConfiguration.class)
                         .addOrder(Order.desc("timestamp")).list(), null);
     }
 

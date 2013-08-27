@@ -83,22 +83,23 @@
 package gov.nih.nci.firebird.selenium2.tests.sponsor.annual.registration.review;
 
 import static org.junit.Assert.*;
+
+import gov.nih.nci.firebird.commons.selenium2.util.WaitUtils;
 import gov.nih.nci.firebird.data.AdditionalAttachmentsForm;
 import gov.nih.nci.firebird.data.AnnualRegistration;
 import gov.nih.nci.firebird.data.AnnualRegistrationForm1572;
 import gov.nih.nci.firebird.data.CtepFinancialDisclosure;
 import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag.CommentType;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.OverviewTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.RegistrationReviewCommentDialog;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ApproveRegistrationDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ApproveRegistrationValidationDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ReviewAnnualRegistrationPage;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ReviewAnnualRegistrationPage.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ToggleReviewOnHoldCommentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.AdditionalAttachmentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FinancialDisclosuresSupportingDocumentsDialog;
@@ -108,32 +109,21 @@ import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.FailingAction;
 import gov.nih.nci.firebird.selenium2.pages.util.FirebirdEmailUtils;
 import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
-import gov.nih.nci.firebird.test.FirebirdFileFactory;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.AnnualRegistrationTestDataSet;
 
 import java.io.IOException;
 
 import org.junit.Test;
 
-import com.google.inject.Inject;
-
 public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFirebirdWebDriverTest {
 
-    @Inject
-    private DataSetBuilder builder;
-    protected DataSet dataSet;
+    protected AnnualRegistrationTestDataSet dataSet;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        FirebirdUser investigator = builder.createInvestigatorWithCompleteProfile().asCtepUser().get();
-        builder.createCoordinator().asCtepUser().withApprovedMangedInvestigator(investigator);
-        builder.createSponsor().asCtepUser();
-        builder.createSponsor().asCtepUser().asDelegate();
-        AnnualRegistration registration = builder.createAnnualRegistration(investigator).complete().withStatus(RegistrationStatus.SUBMITTED).get();
-        registration.getFinancialDisclosure().getSupportingDocumentation().add(FirebirdFileFactory.getInstance().create());
-        dataSet = builder.build();
+        dataSet = AnnualRegistrationTestDataSet.createWithStatus(getDataLoader(), getGridResources(),
+                RegistrationStatus.SUBMITTED);
     }
 
     @Test
@@ -183,7 +173,7 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
     public abstract HomePage getHomePage();
 
     private AnnualRegistration getRegistration() {
-        return dataSet.getAnnualRegistration();
+        return dataSet.getRenewalRegistration();
     }
 
     private void checkOnHoldToggleSwitchFunctionality(ReviewAnnualRegistrationPage reviewRegistrationPage) {
@@ -243,7 +233,7 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
 
     private RegistrationListing performSelectAcceptTest(ReviewAnnualRegistrationPage reviewRegistrationPage,
             RegistrationListing listing) {
-        listing.clickAccept();
+        listing.clickAcceptRadio();
         listing = getForm1572Listing(reviewRegistrationPage);
         assertEquals(FormStatus.ACCEPTED.getDisplay(), listing.getStatus());
         return listing;
@@ -251,7 +241,7 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
 
     private RegistrationListing performUnselectAcceptTest(ReviewAnnualRegistrationPage reviewRegistrationPage,
             RegistrationListing listing) {
-        listing.clickAccept();
+        listing.clickAcceptRadio();
         listing = getForm1572Listing(reviewRegistrationPage);
         assertEquals(FormStatus.IN_REVIEW.getDisplay(), listing.getStatus());
         return listing;
@@ -259,7 +249,7 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
 
     private RegistrationListing performSelectRejectTest(ReviewAnnualRegistrationPage reviewRegistrationPage,
             RegistrationListing listing) {
-        FormReviewCommentDialog commentDialog = listing.clickReject();
+        FormReviewCommentDialog commentDialog = listing.clickRejectRadio();
         checkThatCommentsAreRequired(commentDialog);
         commentDialog.typeComments("comments");
         commentDialog.clickSave();
@@ -270,7 +260,7 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
 
     private RegistrationListing performCancelRejectionTest(ReviewAnnualRegistrationPage reviewRegistrationPage,
             RegistrationListing listing) {
-        FormReviewCommentDialog commentDialog = listing.clickReject();
+        FormReviewCommentDialog commentDialog = listing.clickRejectRadio();
         commentDialog.clickCancel();
         listing = getForm1572Listing(reviewRegistrationPage);
         assertEquals(FormStatus.ACCEPTED.getDisplay(), listing.getStatus());
@@ -279,9 +269,9 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
 
     private void checkAcceptingThenRejectingRetainsRejectionComments(
             ReviewAnnualRegistrationPage reviewRegistrationPage, RegistrationListing listing) {
-        listing.clickAccept();
+        listing.clickAcceptRadio();
         listing = getForm1572Listing(reviewRegistrationPage);
-        FormReviewCommentDialog commentsDialog = listing.clickReject();
+        FormReviewCommentDialog commentsDialog = listing.clickRejectRadio();
         assertTrue(commentsDialog.getComments().contains("comments"));
         commentsDialog.clickSave();
     }
@@ -289,7 +279,7 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
     private void performUnselectRejectTest(ReviewAnnualRegistrationPage reviewRegistrationPage,
             RegistrationListing listing) {
         listing = getForm1572Listing(reviewRegistrationPage);
-        listing.clickReject();
+        listing.clickRejectRadio();
         listing = getForm1572Listing(reviewRegistrationPage);
         assertEquals(FormStatus.IN_REVIEW.getDisplay(), listing.getStatus());
     }
@@ -344,11 +334,12 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
 
         ApproveRegistrationDialog reviewCompletionDialog = (ApproveRegistrationDialog) reviewRegistrationPage
                 .clickCompleteReview();
-        checkApproveVerificationDialog(reviewRegistrationPage, reviewCompletionDialog.clickApproveRegistration());
+        checkApproveVerificationDialog(reviewCompletionDialog.clickApproveRegistration());
     }
 
-    private void checkApproveVerificationDialog(ReviewAnnualRegistrationPage reviewRegistrationPage, final ApproveRegistrationValidationDialog validationDialog) {
-        validationDialog.clickClose();
+    private void checkApproveVerificationDialog(final ApproveRegistrationValidationDialog validationDialog) {
+        ReviewAnnualRegistrationPage reviewRegistrationPage = validationDialog.clickClose();
+        WaitUtils.pause(400);
         assertEquals(RegistrationStatus.APPROVED.getDisplay(), reviewRegistrationPage.getRegistrationStatus());
     }
 
@@ -361,7 +352,7 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
                 .clickCompleteReview();
         reviewCompletionDialog.clickReturnToOverview();
         reviewRegistrationPage.waitUntilReady();
-        checkApproveVerificationDialog(reviewRegistrationPage, (ApproveRegistrationValidationDialog) reviewRegistrationPage
+        checkApproveVerificationDialog((ApproveRegistrationValidationDialog) reviewRegistrationPage
                 .clickApproveRegistration());
     }
 
@@ -388,11 +379,11 @@ public abstract class AbstractReviewAnnualRegistrationTest extends AbstractFireb
     private void checkForNotificationEmailContent(FirebirdMessageTemplate investigatorSubjectTemplate,
             FirebirdMessageTemplate othersSubjectedTemplate) {
 
-        String investigatorEmail = dataSet.getInvestigator().getPerson().getEmail();
+        String investigatorEmail = dataSet.getInvestigatorUser().getPerson().getEmail();
         String investigatorsExpectedSubject = FirebirdEmailUtils.getExpectedSubject(investigatorSubjectTemplate);
         getEmailChecker().getSentEmail(investigatorEmail, investigatorsExpectedSubject);
 
-        String coordinatorEmail = dataSet.getCoordinator().getPerson().getEmail();
+        String coordinatorEmail = dataSet.getRegistrationCoordinatorUser().getPerson().getEmail();
         String othersExpectedSubject = FirebirdEmailUtils
                 .getExpectedSubject(othersSubjectedTemplate, getRegistration());
         getEmailChecker().getSentEmail(coordinatorEmail, othersExpectedSubject);

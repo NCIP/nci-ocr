@@ -91,7 +91,9 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * Provides access to US states.
@@ -104,9 +106,17 @@ implements StateLookupService {
     @Override
     @SuppressWarnings("unchecked")  // Query.list() method returns generic List
     public List<State> getAll() {
-        Query query = getSession().createQuery("from " + State.class.getName() + " order by name");
+        Query query = getSessionProvider().get().createQuery("from " + State.class.getName() + " order by name");
         query.setCacheRegion("org.hibernate.cache.StateQueryCache");
         return query.list();
+    }
+
+    @Override
+    public State getStateByCode(String code) {
+        Criteria criteria = getSessionProvider().get().createCriteria(State.class);
+        criteria.add(Restrictions.eq("code", code));
+
+        return (State) criteria.uniqueResult();
     }
 
 }

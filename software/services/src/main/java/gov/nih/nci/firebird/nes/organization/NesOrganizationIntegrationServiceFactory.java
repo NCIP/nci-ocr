@@ -91,16 +91,16 @@ public interface NesOrganizationIntegrationServiceFactory {
 
     /**
      * Returns the integration service associated with the given organization.
-     *
+     * 
      * @param organization retrieve service to handle this organization
      * @return the service (as the common base interface)
      */
     BaseOrganizationIntegrationService getService(Organization organization);
 
     /**
-     * Returns the integration service that handles organizations of the
+     * Returns the integration service that handles organizations of the 
      * type represented in an NES ID.
-     *
+     * 
      * @param nesIdString retrieve service related to this identifiers root
      * @return the service (as the common base interface)
      */
@@ -125,5 +125,5 @@ public interface NesOrganizationIntegrationServiceFactory {
      * @return the integration service for ResearchOrganizations.
      */
     ResearchOrganizationIntegrationService getResearchOrganizationService();
-
+    
 }

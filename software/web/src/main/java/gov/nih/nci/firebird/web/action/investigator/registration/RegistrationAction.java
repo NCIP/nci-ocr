@@ -84,10 +84,8 @@ package gov.nih.nci.firebird.web.action.investigator.registration;
 
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.FormType;
-import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.InvitationStatus;
 import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.data.RevisedInvestigatorRegistration;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 import gov.nih.nci.firebird.web.action.AbstractProtocolRegistrationAction;
@@ -101,6 +99,8 @@ import org.apache.struts2.convention.annotation.InterceptorRef;
 import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.Result;
 import org.apache.struts2.convention.annotation.Results;
+import org.apache.struts2.json.JSONException;
+import org.apache.struts2.json.JSONUtil;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -115,14 +115,9 @@ import com.google.inject.Inject;
 @InterceptorRef(value = "registrationManagementStack")
 public class RegistrationAction extends AbstractProtocolRegistrationAction {
 
-    private static final long serialVersionUID = 1L;
-
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String VIEW_RESULT = "view";
-    @SuppressWarnings("ucd")
-    // annotations access these
     static final String BROWSE_RESULT = "browse";
+    private static final long serialVersionUID = 1L;
 
     /**
      * Creates an action instance.
@@ -143,7 +138,7 @@ public class RegistrationAction extends AbstractProtocolRegistrationAction {
      */
     @Action("enterRegistrations")
     public String enterRegistrations() {
-        if (!isRegistrationDeleted()) {
+        if (getRegistration() != null && getId() != null) {
             updateRegistrationStatus();
             return VIEW_RESULT;
         }
@@ -177,11 +172,18 @@ public class RegistrationAction extends AbstractProtocolRegistrationAction {
     }
 
     /**
-     * @return registration listing objects
+     * Return a JSON list of registration listings.
+     *
+     * @return JSON list of registration listings
+     * @throws JSONException when serialization issues occur.
      */
-    public List<RegistrationListing> getRegistrationListings() {
+    public String getRegistrations() throws JSONException {
+        return JSONUtil.serialize(getRegistrationListings());
+    }
+
+    private List<RegistrationListing> getRegistrationListings() {
         List<RegistrationListing> listings = Lists.newArrayList();
-        for (AbstractProtocolRegistration registration : getProfile().getCurrentProtocolRegistrations()) {
+        for (AbstractProtocolRegistration registration : getProfile().getAllProtocolRegistrations()) {
             if (registration.getInvitation().getInvitationStatus() != InvitationStatus.NOT_INVITED) {
                 listings.add(new RegistrationListing(registration));
             }
@@ -189,8 +191,6 @@ public class RegistrationAction extends AbstractProtocolRegistrationAction {
         Collections.sort(listings);
         return listings;
     }
-
-
 
     private void updateRegistrationStatus() {
         if ((getRegistration().getStatus() == RegistrationStatus.NOT_STARTED || getRegistration().getInvitation()
@@ -212,15 +212,13 @@ public class RegistrationAction extends AbstractProtocolRegistrationAction {
     /**
      * Table listing for a registration.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
-    public class RegistrationListing implements Comparable<RegistrationListing> {
+    public static class RegistrationListing implements Comparable<RegistrationListing> {
         private final AbstractProtocolRegistration registration;
 
         /**
          * @param registration The Registration this listing is based on.
          */
-        RegistrationListing(AbstractProtocolRegistration registration) {
+        public RegistrationListing(AbstractProtocolRegistration registration) {
             this.registration = registration;
         }
 
@@ -255,19 +253,8 @@ public class RegistrationAction extends AbstractProtocolRegistrationAction {
         /**
          * @return the status
          */
-        public RegistrationStatus getStatus() {
-            return registration.getStatus();
-        }
-
-        /**
-         * @return type of registration
-         */
-        public String getType() {
-            if (isInvestigatorRegistration()) {
-                return getText("label.investigator");
-            } else {
-                return getText("label.subinvestigator");
-            }
+        public String getStatus() {
+            return registration.getStatus().getDisplay();
         }
 
         /**
@@ -285,26 +272,6 @@ public class RegistrationAction extends AbstractProtocolRegistrationAction {
                 return registration.getCurrentRegistration().getId();
             }
             return null;
-        }
-
-        /**
-         * @return all revised registrations
-         */
-        public List<RegistrationListing> getRevisedRegistrations() {
-            if (!registration.isInvestigatorRegistration()) {
-                return Collections.emptyList();
-            }
-            List<RegistrationListing> listings = Lists.newArrayList();
-            for (RevisedInvestigatorRegistration revisedRegistration : ((InvestigatorRegistration) registration)
-                    .getRevisedRegistrations()) {
-                listings.add(new RegistrationListing(revisedRegistration));
-            }
-            Collections.sort(listings);
-            return listings;
-        }
-
-        public boolean isSubmittable() {
-            return registration.isSubmittable();
         }
 
         @Override

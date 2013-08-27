@@ -292,46 +292,4 @@ public class AnnualRegistrationTest {
         registration.getForm1572().getLabs().add(organization);
     }
 
-    @Test
-    public void testSetRenewal() throws Exception {
-        AnnualRegistration parent = new AnnualRegistration();
-        AnnualRegistration renewal = new AnnualRegistration();
-        parent.setRenewal(renewal);
-        assertEquals(renewal, parent.getRenewal());
-        assertEquals(parent, renewal.getParent());
-    }
-
-    @Test
-    public void testSetRenewal_Null() throws Exception {
-        AnnualRegistration parent = new AnnualRegistration();
-        parent.setRenewal(null);
-        assertNull(parent.getRenewal());
-    }
-
-    @Test
-    public void testSetParent() throws Exception {
-        AnnualRegistration renewal = new AnnualRegistration();
-        renewal.setParent(null);
-        assertNull(renewal.getParent());
-    }
-
-    @Test
-    public void testPrepareForDeletion() throws Exception {
-        AnnualRegistration parent = AnnualRegistrationFactory.getInstance().create();
-        AnnualRegistration renewal = AnnualRegistrationFactory.getInstance().create();
-        parent.setRenewal(renewal);
-        assertEquals(renewal, parent.getRenewal());
-        assertEquals(parent, renewal.getParent());
-        renewal.prepareForDeletion();
-        assertNull(parent.getRenewal());
-        assertNull(renewal.getParent());
-    }
-
-    @Test
-    public void testPrepareForDeletion_NoParent() throws Exception {
-        AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
-        registration.prepareForDeletion();
-        assertNull(registration.getParent());
-    }
-
 }

@@ -6,42 +6,58 @@
 <s:url var="downloadLink" action="downloadFile" namespace="/util/ajax" />
 <s:url var="downloadIconUrl" value='/images/ico_document.png' />
 
-<firebird:additionalDocumentationDialog titleKey="clinical.laboratory.certificates.title">
-    <table id="labCertificatesGrid" class="ui-jqgrid-htable ui-jqgrid-btable registrationFormsTable"
-           summary="Displays all of the clinical laboratory certificates that have been added to the laboratory.
-                    It displays the organization, the certificate type, the effective date, the expiration date,
-                    and a link to download the certificate.">
-        <thead>
-        <tr>
-            <th scope="col" width="250px">
-                <div>
-                    <fmt:message key="clinical.laboratory.certificates.organization.column.header"/>
-                </div>
-            </th>
-            <th scope="col" width="150px">
-                <div>
-                    <fmt:message key="clinical.laboratory.certificates.certificate.column.header"/>
-                </div>
-            </th>
-            <th scope="col" width="150px">
-                <div>
-                    <fmt:message key="clinical.laboratory.certificates.effective.date.column.header"/>
-                </div>
-            </th>
-            <th scope="col" width="75px">
-                <div>
-                    <fmt:message key="clinical.laboratory.certificates.expiration.date.column.header"/>
-                </div>
-            </th>
-            <th scope="col" width="75px">
-                <div>
-                    <fmt:message key="clinical.laboratory.certificates.download.column.header"/>
-                </div>
-            </th>
-        </tr>
-        </thead>
-    </table>
-</firebird:additionalDocumentationDialog>
+<!--Content-->
+<div id="tabwrapper">
+    <div class="ui-tabs">
+        <div class="ui-tabs-panel">
+            <firebird:dialogHeader>
+                <fmt:message key="clinical.laboratory.certificates.title"/>
+            </firebird:dialogHeader>
+            <firebird:messages/>
+            <table id="labCertificatesGrid" class="ui-jqgrid-htable ui-jqgrid-btable registrationFormsTable"
+                   summary="Displays all of the clinical laboratory certificates that have been added to the laboratory.
+                            It displays the organization, the certificate type, the effective date, the expiration date,
+                            and a link to download the certificate.">
+                <thead>
+                <tr>
+                    <th scope="col" width="250px">
+                        <div>
+                            <fmt:message key="clinical.laboratory.certificates.organization.column.header"/>
+                        </div>
+                    </th>
+                    <th scope="col" width="150px">
+                        <div>
+                            <fmt:message key="clinical.laboratory.certificates.certificate.column.header"/>
+                        </div>
+                    </th>
+                    <th scope="col" width="150px">
+                        <div>
+                            <fmt:message key="clinical.laboratory.certificates.effective.date.column.header"/>
+                        </div>
+                    </th>
+                    <th scope="col" width="75px">
+                        <div>
+                            <fmt:message key="clinical.laboratory.certificates.expiration.date.column.header"/>
+                        </div>
+                    </th>
+                    <th scope="col" width="75px">
+                        <div>
+                            <fmt:message key="clinical.laboratory.certificates.download.column.header"/>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+            </table>
+            <br/>
+
+            <div class="formcol_xthin">
+                <br/>
+                <s:a id="closeCertificates" href="#" cssClass="button" onclick="closeDialogAndReload();"><fmt:message key="button.close"/></s:a>
+            </div>
+            <div class="clear"></div>
+        </div>
+    </div>
+</div>
 <script>
     function buildDownloadLink(certificate) {
         if (certificate.fileAttached) {

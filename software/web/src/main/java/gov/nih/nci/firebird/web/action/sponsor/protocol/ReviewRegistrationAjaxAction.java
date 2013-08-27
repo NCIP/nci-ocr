@@ -111,7 +111,7 @@ import com.google.inject.Inject;
  * Action class for handling the navigation and activities related to protocol registrations.
  */
 @Namespace("/sponsor/protocol/review/ajax")
-@InterceptorRef("protocolManagementStack")
+@InterceptorRef(value = "protocolManagementStack")
 public class ReviewRegistrationAjaxAction extends AbstractProtocolRegistrationAction {
 
     private static final long serialVersionUID = 1L;
@@ -124,6 +124,8 @@ public class ReviewRegistrationAjaxAction extends AbstractProtocolRegistrationAc
     private static final Set<FormTypeEnum> LINK_TO_ADDITIONAL_DOCUMENTS_FORM_TYPES = EnumSet.of(
             FormTypeEnum.HUMAN_RESEARCH_CERTIFICATE,
             FormTypeEnum.ADDITIONAL_ATTACHMENTS);
+
+    static final int MAX_CHAR_COUNT = 500;
 
     private final ProtocolRegistrationReviewService registrationReviewService;
 
@@ -148,7 +150,6 @@ public class ReviewRegistrationAjaxAction extends AbstractProtocolRegistrationAc
     private void setToInReviewIfAllFormsReviewed() {
         if (getRegistration().getStatus() == RegistrationStatus.SUBMITTED && areAllFormsReviewed()) {
             getRegistration().setStatus(RegistrationStatus.IN_REVIEW);
-            getRegistrationService().save(getRegistration());
         }
     }
 
@@ -216,9 +217,7 @@ public class ReviewRegistrationAjaxAction extends AbstractProtocolRegistrationAc
     /**
      * Table listing object for registration forms.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
-    protected final class RegistrationFormListing {
+    protected class RegistrationFormListing {
 
         private final SimpleDateFormat dateFormat = new SimpleDateFormat(getText("date.format.timestamp"),
                 Locale.getDefault());
@@ -236,7 +235,7 @@ public class ReviewRegistrationAjaxAction extends AbstractProtocolRegistrationAc
         /**
          * @param form registration form
          */
-        RegistrationFormListing(AbstractRegistrationForm form) {
+        protected RegistrationFormListing(AbstractRegistrationForm form) {
             this.id = form.getId();
             this.showLink = DISPLAY_LINK_FOR_FORM_TYPES.contains(form.getFormType().getFormTypeEnum());
             this.formTypeDescription = form.getFormType().getDescription();

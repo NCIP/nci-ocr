@@ -84,7 +84,6 @@ package gov.nih.nci.firebird.selenium2.pages.sponsor.annual;
 
 import static gov.nih.nci.firebird.commons.selenium2.util.TableUtils.*;
 import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
-import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
 import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
 import gov.nih.nci.firebird.selenium2.pages.components.DataTable;
@@ -120,8 +119,7 @@ public class BrowseCtepInvestigatorsPage extends AbstractLoadableComponent<Brows
 
     public void typeInSearchBox(String searchString) {
         type(searchBox, searchString);
-        pause(350); // pause before searching is 300 milliseconds in search_support.js
-        JQueryUtils.waitForAjaxCallToFinish(getDriver(), 120); // searches are taking more than 60 seconds on CI server
+        pause(600);
         table.waitUntilReady();
     }
 
@@ -162,7 +160,7 @@ public class BrowseCtepInvestigatorsPage extends AbstractLoadableComponent<Brows
         public InvestigatorListing(WebElement row) {
             id = Long.valueOf(WebElementUtils.getId(row));
             List<WebElement> cells = getCells(row);
-            profileLink = getElementIfPresent(cells.get(NAME_COLUMN), By.tagName("a"));
+            profileLink = cells.get(NAME_COLUMN).findElement(By.tagName("a"));
             name = cells.get(NAME_COLUMN).getText();
             email = cells.get(EMAIL_COLUMN).getText();
             ctepId = cells.get(CTEP_ID_COLUMN).getText();
@@ -173,10 +171,6 @@ public class BrowseCtepInvestigatorsPage extends AbstractLoadableComponent<Brows
         @Override
         public Long getId() {
             return id;
-        }
-
-        public boolean hasProfileLink() {
-            return profileLink != null;
         }
 
         public ProfessionalContactInformationTab clickProfileLink() {

@@ -8,16 +8,20 @@
 <%@ attribute name="confirmUrl" required="true"%>
 <%@ attribute name="dialogId" rtexprvalue="true" required="false" %>
 
-<firebird:dialogLayout>
-    <firebird:messages />
-    <firebird:dialogHeader>
-        <fmt:message key="${titleKey}" />
-    </firebird:dialogHeader>
-    <jsp:doBody/>
-    <div class="btn_bar clear">
-        <sj:a id="confirmBtn" value="Confirm" cssClass="button"
-            href="%{#attr.confirmUrl}" onClickTopics="submit" targets="%{#attr.dialogId}"
-            onErrorTopics="ajaxError"><fmt:message key="button.confirm"/></sj:a>
-        <s:a id="cancelBtn" href="# " cssClass="button" onclick="closeDialog();"><fmt:message key="button.cancel"/></s:a>
+<div id="tabwrapper">
+    <div class="ui-tabs">
+        <div class="ui-tabs-panel">
+            <firebird:messages />
+            <firebird:dialogHeader>
+                <fmt:message key="${titleKey}" />
+            </firebird:dialogHeader>
+            <jsp:doBody/>
+            <div class="btn_bar clear">
+                <sj:a id="confirmBtn" value="Confirm" cssClass="button"
+                    href="%{#attr.confirmUrl}" onClickTopics="submit" targets="%{#attr.dialogId}"
+                    onErrorTopics="ajaxError"><fmt:message key="button.confirm"/></sj:a>
+                <s:a id="cancelBtn" href="# " cssClass="button" onclick="closeDialog();"><fmt:message key="button.cancel"/></s:a>
+            </div>
+        </div>
     </div>
-</firebird:dialogLayout>
+</div>

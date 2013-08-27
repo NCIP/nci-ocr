@@ -91,11 +91,11 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.State;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.GenericDataRetrievalService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 
 import java.text.ParseException;
 import java.util.Date;
@@ -109,7 +109,7 @@ import com.google.inject.Inject;
 /**
  * Action class to handle the back and forth of dealing with credential edits.
  */
-abstract class AbstractManageCredentialsAction extends AbstractProfileAction {
+public abstract class AbstractManageCredentialsAction extends AbstractProfileAction {
     private static final long serialVersionUID = 1L;
 
     private final GenericDataRetrievalService dataService;
@@ -121,7 +121,7 @@ abstract class AbstractManageCredentialsAction extends AbstractProfileAction {
     private String effectiveDate;
     private String expirationDate;
     private AbstractCredential<?> credential;
-    private String issuingOrganizationExternalId;
+    private String issuerSearchKey;
     private Long id;
     private List<AbstractCredential<?>> existingCredentials = Lists.newArrayList();
 
@@ -161,10 +161,10 @@ abstract class AbstractManageCredentialsAction extends AbstractProfileAction {
 
     private Organization findIssuer() {
         Organization issuer = null;
-        if (StringUtils.isNotEmpty(getIssuingOrganizationExternalId())) {
+        if (StringUtils.isNotEmpty(getIssuerSearchKey())) {
             try {
-                issuer = getOrganizationService().getByExternalId(getIssuingOrganizationExternalId());
-            } catch (InvalidatedOrganizationException e) {
+                issuer = getOrganizationSearchService().getOrganization(getIssuerSearchKey());
+            } catch (UnavailableEntityException e) {
                 addActionError(getText("organization.search.selected.organization.unavailable"));
             }
         }
@@ -337,17 +337,17 @@ abstract class AbstractManageCredentialsAction extends AbstractProfileAction {
     }
 
     /**
-     * @return the issuingOrganizationExternalId
+     * @return the issuerSearchKey
      */
-    public String getIssuingOrganizationExternalId() {
-        return issuingOrganizationExternalId;
+    public String getIssuerSearchKey() {
+        return issuerSearchKey;
     }
 
     /**
-     * @param issuingOrganizationExternalId the issuingOrganizationExternalId to set
+     * @param issuerSearchKey the issuerSearchKey to set
      */
-    public void setIssuingOrganizationExternalId(String issuingOrganizationExternalId) {
-        this.issuingOrganizationExternalId = issuingOrganizationExternalId;
+    public void setIssuerSearchKey(String issuerSearchKey) {
+        this.issuerSearchKey = issuerSearchKey;
     }
 
     /**

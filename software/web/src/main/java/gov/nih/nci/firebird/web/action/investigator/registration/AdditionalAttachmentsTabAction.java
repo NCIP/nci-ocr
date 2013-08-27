@@ -233,8 +233,6 @@ public class AdditionalAttachmentsTabAction extends AbstractRegistrationTabActio
         this.dataFile = uploadedFileInfo;
     }
 
-    @SuppressWarnings("ucd")
-    // used to inject mock processor in tests
     void setProcessor(AdditionalAttachmentsTabActionProcessor<AbstractProtocolRegistration> processor) {
         this.processor = processor;
     }

@@ -51,12 +51,12 @@
                     }},
                     {mDataProp: "name"},
                     {mDataProp: "address", fnRender: function (obj) {
-                        return addressFormatter(obj.aData.address);
+                        return __addressFormatter(obj.aData.address);
                     }},
                     {mDataProp: "phoneNumber"}
                 ],
                 fnRowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-                    $(nRow).attr("id", aData.organizationExternalId);
+                    $(nRow).attr("id", aData.id);
                     return nRow;
                 }
             });
@@ -72,22 +72,22 @@
 
         function createLabCheckColumn(lab) {
             var checkboxHtml = "<input type='checkbox' name='selectedIds' ";
-            var checkBoxId = "lab_"+ lab.organizationExternalId;
+            var checkBoxId = "lab_"+ lab.id;
             checkboxHtml += "id='" + checkBoxId + "' ";
-            checkboxHtml += "value='" + lab.organizationExternalId + "' ";
+            checkboxHtml += "value='" + lab.id + "' ";
             if (lab.selected) {
                 checkboxHtml += "checked='checked' ";
             }
-            checkboxHtml += "onclick=\"handleLabClick('" + lab.organizationExternalId + "');\" />";
+            checkboxHtml += "onclick=\"handleLabClick('" + lab.id + "');\" />";
             return createHiddenCheckboxLabel(checkBoxId) + checkboxHtml;
         }
 
-        function handleLabClick(organizationExternalId) {
+        function handleLabClick(id) {
             indicateLoading(true);
             var formData = {};
             formData["registration.id"] = ${registration.id};
-            formData["organizationExternalId"] = organizationExternalId;
-            var selecting = $('#lab_' + escapeForJquery(organizationExternalId)).is(':checked');
+            formData["organization.id"] = id;
+            var selecting = $('#lab_' + id).is(':checked');
             var url = selecting ? '${selectLabUrl}' : '${deselectLabUrl}';
             $.post(url, formData, function (errorMessages) {
                 setPageErrorMessages(errorMessages);

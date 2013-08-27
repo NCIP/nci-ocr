@@ -82,8 +82,6 @@
  */
 package gov.nih.nci.firebird.service.registration.review;
 
-import javax.annotation.Resource;
-
 import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.data.AbstractRegistration;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
@@ -153,7 +151,7 @@ AbstractGenericServiceBean<T> implements BaseRegistrationReviewService<T> {
     /**
      * @param sponsorService the sponsor service to set
      */
-    @Resource(mappedName = "firebird/SponsorServiceBean/local")
+    @Inject
     public void setSponsorService(SponsorService sponsorService) {
         this.sponsorService = sponsorService;
     }
@@ -162,7 +160,7 @@ AbstractGenericServiceBean<T> implements BaseRegistrationReviewService<T> {
     public void acceptForm(AbstractRegistrationForm form) {
         checkFormIsInReviewState(form);
         form.setFormStatus(FormStatus.ACCEPTED);
-        getSession().save(form);
+        getSessionProvider().get().save(form);
     }
 
     private void checkFormIsInReviewState(AbstractRegistrationForm form) {
@@ -176,14 +174,14 @@ AbstractGenericServiceBean<T> implements BaseRegistrationReviewService<T> {
         checkFormIsInReviewState(form);
         form.setFormStatus(FormStatus.REJECTED);
         form.setComments(comments);
-        getSession().save(form);
+        getSessionProvider().get().save(form);
     }
 
     @Override
     public void clearFormReviewStatus(AbstractRegistrationForm form) {
         checkFormIsInReviewState(form);
         form.setFormStatus(FormStatus.IN_REVIEW);
-        getSession().save(form);
+        getSessionProvider().get().save(form);
     }
 
     @Override
@@ -205,7 +203,7 @@ AbstractGenericServiceBean<T> implements BaseRegistrationReviewService<T> {
      *
      * @param registration the registration to prepare.
      */
-    private void cleanUpForRevision(T registration) {
+    protected void cleanUpForRevision(T registration) {
         deleteAll(registration.prepareFormsForReturn());
     }
 

@@ -85,7 +85,7 @@ package gov.nih.nci.firebird.web.action.sponsor.protocol;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.ProtocolAgent;
-import gov.nih.nci.firebird.service.protocol.ProtocolAgentService;
+import gov.nih.nci.firebird.service.protocol.ProtocolService;
 import gov.nih.nci.firebird.web.AutocompleterResult;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
@@ -102,7 +102,7 @@ import com.google.inject.Inject;
 public class AgentSearchActionTest extends AbstractWebTest {
 
     @Inject
-    private ProtocolAgentService mockProtocolAgentService = mock(ProtocolAgentService.class);
+    private ProtocolService mockProtocolService = mock(ProtocolService.class);
     @Inject
     private AgentSearchAction action;
     private List<String> agents = new ArrayList<String>(Arrays.asList("aspirin", "aleve", "advil", "ibuprofen", "motrin", "midol"));
@@ -112,14 +112,14 @@ public class AgentSearchActionTest extends AbstractWebTest {
      */
     @Test
     public void testExecute() {
-        when(mockProtocolAgentService.getAgents(anyString())).thenAnswer(new Answer<List<ProtocolAgent>>() {
+        when(mockProtocolService.getAgents(anyString())).thenAnswer(new Answer<List<ProtocolAgent>>() {
             public List<ProtocolAgent> answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
-                String arg = args[ 0 ].toString().toLowerCase();
+                String arg = args[0].toString().toLowerCase();
                 List<ProtocolAgent> ret = new ArrayList<ProtocolAgent>();
 
-                for (String str : agents) {
-                    if (str.startsWith(arg)) {
+                for(String str : agents) {
+                    if(str.startsWith(arg)) {
                         ret.add(new ProtocolAgent(str));
                     }
                 }
@@ -138,8 +138,8 @@ public class AgentSearchActionTest extends AbstractWebTest {
             }
         }
 
-        reset(mockProtocolAgentService);
-        when(mockProtocolAgentService.getAgents(anyString())).thenReturn(new ArrayList<ProtocolAgent>());
+        reset(mockProtocolService);
+        when(mockProtocolService.getAgents(anyString())).thenReturn(new ArrayList<ProtocolAgent>());
         action.execute();
         assertNotNull(action.getResults());
     }
@@ -148,13 +148,13 @@ public class AgentSearchActionTest extends AbstractWebTest {
     public void testExecute_EmptySearchString() {
         action.setTerm("  ");
         action.execute();
-        verifyZeroInteractions(mockProtocolAgentService);
+        verifyZeroInteractions(mockProtocolService);
     }
 
     @Test
     public void testExecute_NullSearchString() {
         action.setTerm(null);
         action.execute();
-        verifyZeroInteractions(mockProtocolAgentService);
+        verifyZeroInteractions(mockProtocolService);
     }
 }

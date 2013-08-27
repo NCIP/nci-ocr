@@ -82,24 +82,24 @@
  */
 package gov.nih.nci.firebird.service.protocol;
 
-import static gov.nih.nci.firebird.data.OrganizationRoleType.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+import com.google.common.collect.Iterables;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.data.ProtocolLeadOrganization;
 import gov.nih.nci.firebird.data.ProtocolRegistrationConfiguration;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
 
 import java.io.File;
 import java.text.MessageFormat;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -112,24 +112,29 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Provider;
 
 public class ProtocolImportDetailServiceBeanTest {
 
-    private static final String INVALID_INVESTIGATOR_ID_VALIDATION_FAILURE_MESSAGE_KEY = "validation.failure.protocol.import.invalid.investigator.id";
-    private static final String INVALID_INVESTIGATOR_ID_FORMAT_VALIDATION_FAILURE_MESSAGE_KEY = "validation.failure.protocol.import.invalid.investigator.id.format";
-    private static final String INVALID_LEAD_ORGANIZATION_ID_VALIDATION_FAILURE_MESSAGE_KEY = "validation.failure.protocol.import.invalid.lead.organization.ctep.id";
-    private static final String INVALID_LEAD_ORGANIZATION_KEY_VALIDATION_FAILURE_MESSAGE_KEY = "validation.failure.protocol.import.invalid.lead.organization.key";
-    private static final String INVALID_LEAD_ORGANIZATION_OLD_FORMAT_VALIDATION_FAILURE_MESSAGE_KEY = "validation.failure.protocol.import.invalid.lead.organization.mapping";
-    private static final String TOO_MANY_LEAD_ORGANIZATIONS_RETURNED_VALIDATION_FAILURE_MESSAGE_KEY = "validation.failure.protocol.import.too.many.lead.organizations.returned";
+    private static final String INVALID_INVESTIGATOR_ID_VALIDATION_FAILURE_MESSAGE_KEY
+            = "validation.failure.protocol.import.invalid.investigator.id";
+    private static final String INVALID_INVESTIGATOR_ID_FORMAT_VALIDATION_FAILURE_MESSAGE_KEY
+            = "validation.failure.protocol.import.invalid.investigator.id.format";
+    private static final String INVALID_LEAD_ORGANIZATION_ID_VALIDATION_FAILURE_MESSAGE_KEY
+            = "validation.failure.protocol.import.invalid.lead.organization.ctep.id";
+    private static final String INVALID_LEAD_ORGANIZATION_KEY_VALIDATION_FAILURE_MESSAGE_KEY
+            = "validation.failure.protocol.import.invalid.lead.organization.key";
+    private static final String INVALID_LEAD_ORGANIZATION_OLD_FORMAT_VALIDATION_FAILURE_MESSAGE_KEY
+            = "validation.failure.protocol.import.invalid.lead.organization.mapping";
+    private static final String TOO_MANY_LEAD_ORGANIZATIONS_RETURNED_VALIDATION_FAILURE_MESSAGE_KEY
+            = "validation.failure.protocol.import.too.many.lead.organizations.returned";
 
     private ProtocolImportDetailServiceBean bean = new ProtocolImportDetailServiceBean();
     @Mock
     private PersonService mockPersonService;
     @Mock
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockOrganizationSearchService;
     @Mock
     private ProtocolService mockProtocolService;
     @Mock
@@ -143,41 +148,41 @@ public class ProtocolImportDetailServiceBeanTest {
         MockitoAnnotations.initMocks(this);
         bean.setPersonService(mockPersonService);
         bean.setProtocolService(mockProtocolService);
-        bean.setOrganizationService(mockOrganizationService);
+        bean.setOrganizationSearchService(mockOrganizationSearchService);
         bean.setResources(resources);
         bean.setSessionProvider(mockSessionProvider);
         when(mockSessionProvider.get()).thenReturn(mockSession);
     }
 
     @Test
-    public void testValidate_Valid() throws Exception {
+    public void testValidate_Valid() throws ValidationException, UnavailableEntityException {
         Person person1 = PersonFactory.getInstance().create();
         Person person2 = PersonFactory.getInstance().create();
         Organization organization = OrganizationFactory.getInstance().create();
-        when(mockPersonService.getByExternalId("22248")).thenReturn(person1);
-        when(mockPersonService.getByExternalId("23084")).thenReturn(person2);
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+        when(mockPersonService.importNesPerson("22248")).thenReturn(person1);
+        when(mockPersonService.importNesPerson("23084")).thenReturn(person2);
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(organization));
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         bean.validate(detail);
-        verify(mockPersonService, times(1)).getByExternalId("22248");
-        verify(mockPersonService).getByExternalId("23084");
+        verify(mockPersonService, times(1)).importNesPerson("22248");
+        verify(mockPersonService).importNesPerson("23084");
         assertEquals(ProtocolImportDetailStatus.VALID, detail.getStatus());
         assertTrue(detail.isMarkedForImport());
         assertEquals(person1, detail.getInvestigators().get(0));
         assertEquals(person2, detail.getInvestigators().get(1));
 
         ProtocolLeadOrganization leadOrganization = Iterables.getFirst(detail.getProtocol().getLeadOrganizations(),
-                null);
+                                                                       null);
         assertEquals(organization, leadOrganization.getOrganization());
         assertEquals(person1, leadOrganization.getPrincipalInvestigator());
     }
 
-    private ProtocolImportDetail getValidProtocolImportDetail() throws Exception {
+    private ProtocolImportDetail getValidProtocolImportDetail() throws ValidationException {
         return getValidProtocolImportDetail(ImportTestFile.TEST_IMPORT_SINGLE_PROTOCOL);
     }
 
-    private ProtocolImportDetail getValidProtocolImportDetail(ImportTestFile testFile) throws Exception {
+    private ProtocolImportDetail getValidProtocolImportDetail(ImportTestFile testFile) throws ValidationException {
         Organization sponsor = OrganizationFactory.getInstanceWithId().create();
         File importFile = getImportTestFile(testFile);
         ProtocolImportJob job = new ProtocolImportJob(sponsor);
@@ -192,26 +197,27 @@ public class ProtocolImportDetailServiceBeanTest {
     }
 
     @Test
-    public void testValidate_ValidMultipleLeadOrganizations() throws Exception {
+    public void testValidate_ValidMultipleLeadOrganizations() throws ValidationException, UnavailableEntityException {
         Person person1 = PersonFactory.getInstance().create();
         Person person2 = PersonFactory.getInstance().create();
         Organization leadOrg1 = OrganizationFactory.getInstanceWithId().create();
         Organization leadOrg2 = OrganizationFactory.getInstanceWithId().create();
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(person1).thenReturn(person2);
-        when(mockPersonService.getByExternalId("269650")).thenReturn(person1);
-        when(mockPersonService.getByExternalId("269720")).thenReturn(person2);
-        when(mockOrganizationService.getByAlternateIdentifier("VA166", GENERIC_ORGANIZATION)).thenReturn(
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(person1).thenReturn(person2);
+        when(mockPersonService.importNesPerson("269650")).thenReturn(person1);
+        when(mockPersonService.importNesPerson("269720")).thenReturn(person2);
+        when(mockOrganizationSearchService.searchByAssignedIdentifier("VA166")).thenReturn(
                 Lists.newArrayList(leadOrg1));
-        when(mockOrganizationService.getByAlternateIdentifier("02019", GENERIC_ORGANIZATION)).thenReturn(
+        when(mockOrganizationSearchService.searchByAssignedIdentifier("02019")).thenReturn(
                 Lists.newArrayList(leadOrg2));
-        ProtocolImportDetail detail = getValidProtocolImportDetail(ImportTestFile.TEST_IMPORT_SINGLE_PROTOCOL_MULTIPLE_LEAD_ORGANIZATIONS);
+        ProtocolImportDetail detail = getValidProtocolImportDetail(
+                ImportTestFile.TEST_IMPORT_SINGLE_PROTOCOL_MULTIPLE_LEAD_ORGANIZATIONS);
         bean.validate(detail);
-        verify(mockPersonService).getByExternalId("22248");
-        verify(mockPersonService).getByExternalId("23084");
-        verify(mockPersonService).getByExternalId("269650");
-        verify(mockPersonService).getByExternalId("269720");
-        verify(mockOrganizationService).getByAlternateIdentifier("VA166", GENERIC_ORGANIZATION);
-        verify(mockOrganizationService).getByAlternateIdentifier("02019", GENERIC_ORGANIZATION);
+        verify(mockPersonService).importNesPerson("22248");
+        verify(mockPersonService).importNesPerson("23084");
+        verify(mockPersonService).importNesPerson("269650");
+        verify(mockPersonService).importNesPerson("269720");
+        verify(mockOrganizationSearchService).searchByAssignedIdentifier("VA166");
+        verify(mockOrganizationSearchService).searchByAssignedIdentifier("02019");
         assertEquals(ProtocolImportDetailStatus.VALID, detail.getStatus());
         assertTrue(detail.isMarkedForImport());
         for (ProtocolLeadOrganization leadOrganization : detail.getProtocol().getLeadOrganizations()) {
@@ -226,24 +232,25 @@ public class ProtocolImportDetailServiceBeanTest {
     }
 
     @Test
-    public void testValidate_ValidNoLeadOrganizations() throws Exception {
+    public void testValidate_ValidNoLeadOrganizations() throws ValidationException, UnavailableEntityException {
         Person person1 = PersonFactory.getInstance().create();
         Person person2 = PersonFactory.getInstance().create();
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(person1).thenReturn(person2);
-        ProtocolImportDetail detail = getValidProtocolImportDetail(ImportTestFile.TEST_IMPORT_SINGLE_PROTOCOL_NO_LEAD_ORGANIZATIONS);
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(person1).thenReturn(person2);
+        ProtocolImportDetail detail = getValidProtocolImportDetail(
+                ImportTestFile.TEST_IMPORT_SINGLE_PROTOCOL_NO_LEAD_ORGANIZATIONS);
         bean.validate(detail);
-        verify(mockPersonService).getByExternalId("22248");
-        verify(mockPersonService).getByExternalId("23084");
-        verify(mockOrganizationService, never()).search(anyString(), eq(GENERIC_ORGANIZATION));
+        verify(mockPersonService).importNesPerson("22248");
+        verify(mockPersonService).importNesPerson("23084");
+        verify(mockOrganizationSearchService, never()).searchByAssignedIdentifier(anyString());
         assertEquals(ProtocolImportDetailStatus.VALID, detail.getStatus());
         assertTrue(detail.isMarkedForImport());
         assertTrue(detail.getProtocol().getLeadOrganizations().isEmpty());
     }
 
     @Test
-    public void testValidate_DuplicateProtocolNumber() throws Exception {
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(new Person());
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+    public void testValidate_DuplicateProtocolNumber() throws ValidationException, UnavailableEntityException {
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(new Person());
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(new Organization()));
         String duplicateProtocolNumber = "duplicate";
         ProtocolImportDetail detail = getValidProtocolImportDetail();
@@ -252,7 +259,7 @@ public class ProtocolImportDetailServiceBeanTest {
         bean.validate(detail);
         assertEquals(ProtocolImportDetailStatus.INVALID, detail.getStatus());
         String failureMessage = getMessage("validation.failure.protocol.import.duplicate.number", "1", "1",
-                duplicateProtocolNumber);
+                                           duplicateProtocolNumber);
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
@@ -262,7 +269,7 @@ public class ProtocolImportDetailServiceBeanTest {
     }
 
     @Test
-    public void testValidate_AlreadyInvalid() throws Exception {
+    public void testValidate_AlreadyInvalid() throws ValidationException {
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         detail.addFailure(resources, "validation.failure.protocol.import.missing.value", 1);
         bean.validate(detail);
@@ -271,131 +278,140 @@ public class ProtocolImportDetailServiceBeanTest {
     }
 
     @Test
-    public void testValidate_InvestigatorIdNotFound() throws Exception {
-        String invalidExternalId = "23084";
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(new Person());
-        when(mockPersonService.getByExternalId(invalidExternalId)).thenReturn(null);
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+    public void testValidate_InvestigatorIdNotFound() throws ValidationException, UnavailableEntityException {
+        String invalidNesId = "23084";
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(new Person());
+        when(mockPersonService.importNesPerson(invalidNesId)).thenReturn(null);
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(new Organization()));
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         bean.validate(detail);
         assertEquals(ProtocolImportDetailStatus.INVALID, detail.getStatus());
         String failureMessage = getMessage(INVALID_INVESTIGATOR_ID_VALIDATION_FAILURE_MESSAGE_KEY, "1", "6",
-                invalidExternalId);
+                                           invalidNesId);
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testValidate_InvestigatorIdUnavailableEntityException() throws Exception {
-        String invalidExternalId = "23084";
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(new Person());
-        when(mockPersonService.getByExternalId(invalidExternalId)).thenThrow(new InvalidatedPersonException());
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+    public void testValidate_InvestigatorIdUnavailableEntityException() throws ValidationException,
+            UnavailableEntityException {
+        String invalidNesId = "23084";
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(new Person());
+        when(mockPersonService.importNesPerson(invalidNesId)).thenThrow(
+                new UnavailableEntityException(null, invalidNesId));
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(new Organization()));
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         bean.validate(detail);
         assertEquals(ProtocolImportDetailStatus.INVALID, detail.getStatus());
         String failureMessage = getMessage(INVALID_INVESTIGATOR_ID_VALIDATION_FAILURE_MESSAGE_KEY, "1", "6",
-                invalidExternalId);
+                                           invalidNesId);
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testValidate_InvalidLeadOrganizationCtepId() throws Exception {
+    public void testValidate_InvalidLeadOrganizationCtepId() throws ValidationException, UnavailableEntityException {
         String invalidCtepId = "VA166";
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(new Person());
-        List<Organization> emptyList = Collections.emptyList();
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
-                emptyList);
+        List<Organization> emptyList = Lists.newArrayList();
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(new Person());
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(emptyList);
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         bean.validate(detail);
         assertEquals(ProtocolImportDetailStatus.INVALID, detail.getStatus());
-        String failureMessage = getMessage(INVALID_LEAD_ORGANIZATION_ID_VALIDATION_FAILURE_MESSAGE_KEY, "1", "4",
-                invalidCtepId);
+        String failureMessage = getMessage(INVALID_LEAD_ORGANIZATION_ID_VALIDATION_FAILURE_MESSAGE_KEY, "1",
+                                           "4", invalidCtepId);
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testValidate_NullCtepId() throws Exception {
+    public void testValidate_NullCtepId() throws ValidationException, UnavailableEntityException {
         Person person1 = PersonFactory.getInstance().create();
         Person person2 = PersonFactory.getInstance().create();
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(person1).thenReturn(person2);
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(person1).thenReturn(person2);
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         Map.Entry<String, String> mapping = Iterables.getFirst(detail.getLeadOrganizationMappings().entrySet(), null);
         detail.getLeadOrganizationMappings().put(null, mapping.getValue());
         detail.getLeadOrganizationMappings().remove(mapping.getKey());
         bean.validate(detail);
-        String failureMessage = getMessage(INVALID_LEAD_ORGANIZATION_KEY_VALIDATION_FAILURE_MESSAGE_KEY, "1", "4",
-                Iterables.getFirst(detail.getLeadOrganizationMappings().entrySet(), null));
+        String failureMessage = getMessage(INVALID_LEAD_ORGANIZATION_KEY_VALIDATION_FAILURE_MESSAGE_KEY,
+                                           "1",
+                                           "4",
+                                           Iterables.getFirst(detail.getLeadOrganizationMappings().entrySet(), null));
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testValidate_OldFormatLeadOrganization() throws Exception {
+    public void testValidate_OldFormatLeadOrganization() throws ValidationException, UnavailableEntityException {
         Person person1 = PersonFactory.getInstance().create();
         Person person2 = PersonFactory.getInstance().create();
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(person1).thenReturn(person2);
-        ProtocolImportDetail detail = getValidProtocolImportDetail(ImportTestFile.TEST_IMPORT_SINGLE_PROTOCOL_OLD_FORMAT);
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(person1).thenReturn(person2);
+        ProtocolImportDetail detail = getValidProtocolImportDetail(
+                ImportTestFile.TEST_IMPORT_SINGLE_PROTOCOL_OLD_FORMAT);
         bean.validate(detail);
-        String failureMessage = getMessage(INVALID_LEAD_ORGANIZATION_OLD_FORMAT_VALIDATION_FAILURE_MESSAGE_KEY, "1",
-                "4", "VA166");
+        String failureMessage = getMessage(INVALID_LEAD_ORGANIZATION_OLD_FORMAT_VALIDATION_FAILURE_MESSAGE_KEY,
+                                           "1",
+                                           "4",
+                                           "VA166");
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testValidate_InvalidPrincipalInvestigatorExternalId() throws Exception {
-        String invalidExternalId = "ABC1234";
+    public void testValidate_InvalidPrincipalInvestigatorNesId()
+            throws ValidationException, UnavailableEntityException {
+        String invalidNesId = "ABC1234";
         Person person1 = PersonFactory.getInstance().create();
         Person person2 = PersonFactory.getInstance().create();
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(new Organization()));
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(person1).thenReturn(person2);
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(person1).thenReturn(person2);
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         Map.Entry<String, String> mapping = Iterables.getFirst(detail.getLeadOrganizationMappings().entrySet(), null);
-        detail.getLeadOrganizationMappings().put(mapping.getKey(), invalidExternalId);
+        detail.getLeadOrganizationMappings().put(mapping.getKey(), invalidNesId);
         bean.validate(detail);
         String failureMessage = getMessage(INVALID_INVESTIGATOR_ID_FORMAT_VALIDATION_FAILURE_MESSAGE_KEY, "1", "4",
-                invalidExternalId);
+                                           invalidNesId);
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testValidate_NullPrincipalInvestigatorExternalId() throws Exception {
+    public void testValidate_NullPrincipalInvestigatorNesId() throws ValidationException, UnavailableEntityException {
         Person person1 = PersonFactory.getInstance().create();
         Person person2 = PersonFactory.getInstance().create();
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(person1).thenReturn(person2);
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(person1).thenReturn(person2);
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(new Organization()));
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         Map.Entry<String, String> mapping = Iterables.getFirst(detail.getLeadOrganizationMappings().entrySet(), null);
         detail.getLeadOrganizationMappings().put(mapping.getKey(), null);
         bean.validate(detail);
-        String failureMessage = getMessage(INVALID_LEAD_ORGANIZATION_KEY_VALIDATION_FAILURE_MESSAGE_KEY, "1", "4",
-                Iterables.getFirst(detail.getLeadOrganizationMappings().entrySet(), null));
+        String failureMessage = getMessage(INVALID_LEAD_ORGANIZATION_KEY_VALIDATION_FAILURE_MESSAGE_KEY,
+                                           "1",
+                                           "4",
+                                           Iterables.getFirst(detail.getLeadOrganizationMappings().entrySet(), null));
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testValidate_TooManyLeadOrganizationsReturned() throws Exception {
+    public void testValidate_TooManyLeadOrganizationsReturned() throws ValidationException, UnavailableEntityException {
         String ctepId = "VA166";
         List<Organization> leadOrganizations = Lists.newArrayList(new Organization(), new Organization());
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(new Person());
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(leadOrganizations);
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(new Person());
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(leadOrganizations);
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         bean.validate(detail);
         assertEquals(ProtocolImportDetailStatus.INVALID, detail.getStatus());
         String failureMessage = getMessage(TOO_MANY_LEAD_ORGANIZATIONS_RETURNED_VALIDATION_FAILURE_MESSAGE_KEY, "1",
-                "4", ctepId);
+                                           "4", ctepId);
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testImportProtocol() throws Exception {
+    public void testImportProtocol() throws ValidationException, UnavailableEntityException {
         String[] ignoreFields = new String[] { "revisionHistory", "registrations", "registrationConfiguration" };
         Person investigator = new Person();
         ArgumentCaptor<Protocol> protocolCaptor = ArgumentCaptor.forClass(Protocol.class);
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(investigator);
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(investigator);
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(new Organization()));
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         bean.importProtocol(detail);
@@ -409,36 +425,36 @@ public class ProtocolImportDetailServiceBeanTest {
     }
 
     @Test
-    public void testImportProtocol_InvalidInvestigatorId() throws Exception {
-        String invalidExternalId = "23084";
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(new Person());
-        when(mockPersonService.getByExternalId(invalidExternalId)).thenReturn(null);
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+    public void testImportProtocol_InvalidInvestigatorId() throws ValidationException, UnavailableEntityException {
+        String invalidNesId = "23084";
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(new Person());
+        when(mockPersonService.importNesPerson(invalidNesId)).thenReturn(null);
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(new Organization()));
         ProtocolImportDetail detail = getValidProtocolImportDetail();
         bean.importProtocol(detail);
         assertEquals(ProtocolImportDetailStatus.IMPORT_ERROR, detail.getStatus());
         String failureMessage = getMessage(INVALID_INVESTIGATOR_ID_VALIDATION_FAILURE_MESSAGE_KEY, "1", "6",
-                invalidExternalId);
+                                           invalidNesId);
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
     @Test
-    public void testImportProtocol_InvestigatorIdNotANumber() throws Exception {
-        String invalidExternalId = "23XZ4";
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(new Person());
-        when(mockPersonService.getByExternalId(invalidExternalId)).thenReturn(null);
-        when(mockOrganizationService.getByAlternateIdentifier(anyString(), eq(GENERIC_ORGANIZATION))).thenReturn(
+    public void testImportProtocol_InvestigatorIdNotANumber() throws ValidationException, UnavailableEntityException {
+        String invalidNesId = "23XZ4";
+        when(mockPersonService.importNesPerson(anyString())).thenReturn(new Person());
+        when(mockPersonService.importNesPerson(invalidNesId)).thenReturn(null);
+        when(mockOrganizationSearchService.searchByAssignedIdentifier(anyString())).thenReturn(
                 Lists.newArrayList(new Organization()));
         ProtocolImportDetail detail = getInvalidProtocolImportDetail();
         bean.importProtocol(detail);
         assertEquals(ProtocolImportDetailStatus.IMPORT_ERROR, detail.getStatus());
         String failureMessage = getMessage(INVALID_INVESTIGATOR_ID_FORMAT_VALIDATION_FAILURE_MESSAGE_KEY, "1", "6",
-                invalidExternalId);
+                                           invalidNesId);
         ProtocolImportServiceBeanTest.checkForExpectedFailures(detail, failureMessage);
     }
 
-    private ProtocolImportDetail getInvalidProtocolImportDetail() throws Exception {
+    private ProtocolImportDetail getInvalidProtocolImportDetail() throws ValidationException {
         Organization sponsor = OrganizationFactory.getInstanceWithId().create();
         File importFile = getImportTestFile(ImportTestFile.TEST_IMPORT_INVALID_INVESTIGATOR_ID_FORMAT);
         ProtocolImportJob job = new ProtocolImportJob(sponsor);

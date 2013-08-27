@@ -97,72 +97,72 @@ import com.google.inject.name.Named;
 public class TargetGridResources {
 
     private final String identityProvider;
-    private ExternalEntityTestDataSource testDataSource;
+    private NesTestDataSource nesTestDataSource;
     private final String distinguishedNameRoot;
-    private final Set<String> sponsorExternalIds;
-    private final Iterator<String> sponsorExternalIdIterator;
-    private final Iterator<String> protocolSponsorExternalIdIterator;
-    private final String sponsorWithAnnualRegistrationsExternalId;
-    private final Set<String> sponsorWithProtocolRegistrationsExternalIds;
+    private final Set<String> sponsorNesIds;
+    private final Iterator<String> sponsorNesIdIterator;
+    private final Iterator<String> protocolSponsorNesIdIterator;
+    private final String sponsorWithAnnualRegistrationsNesId;
+    private final Set<String> sponsorWithProtocolRegistrationsNesIds;
     private final String ctepUsernamePrefix;
 
     @Inject
     TargetGridResources(@Named("identity.provider") String identityProvider,
             @Named("distinguished.name.root") String distinguishedNameRoot,
-            ExternalEntityTestDataSource testDataSource,
-            @Named("sponsor.organization.nes.ids") Set<String> sponsorExternalIds,
-            @Named("sponsor.organization.with.annual.registrations.nes.id") String sponsorWithAnnualRegistrationsExternalId,
-            @Named("sponsor.organization.with.protocol.registrations.nes.ids") Set<String> sponsorWithProtocolRegistrationsExternalIds,
+            NesTestDataSource nesTestDataSource,
+            @Named("sponsor.organization.nes.ids") Set<String> sponsorNesIds,
+            @Named("sponsor.organization.with.annual.registrations.nes.id") String sponsorWithAnnualRegistrationsNesId,
+            @Named("sponsor.organization.with.protocol.registrations.nes.ids") Set<String> sponsorWithProtocolRegistrationsNesIds,
             @Named(FirebirdConstants.LOGIN_CTEP_IAM_USERNAME_PREFIX) String ctepUsernamePrefix
             ) {
         this.identityProvider = identityProvider;
         this.distinguishedNameRoot = distinguishedNameRoot;
-        this.testDataSource = testDataSource;
-        this.sponsorExternalIds = sponsorExternalIds;
-        this.sponsorWithAnnualRegistrationsExternalId = sponsorWithAnnualRegistrationsExternalId;
-        this.sponsorWithProtocolRegistrationsExternalIds = sponsorWithProtocolRegistrationsExternalIds;
+        this.nesTestDataSource = nesTestDataSource;
+        this.sponsorNesIds = sponsorNesIds;
+        this.sponsorWithAnnualRegistrationsNesId = sponsorWithAnnualRegistrationsNesId;
+        this.sponsorWithProtocolRegistrationsNesIds = sponsorWithProtocolRegistrationsNesIds;
         this.ctepUsernamePrefix = ctepUsernamePrefix;
-        sponsorExternalIdIterator = Iterators.cycle(sponsorExternalIds);
-        protocolSponsorExternalIdIterator = Iterators.cycle(sponsorWithProtocolRegistrationsExternalIds);
+        sponsorNesIdIterator = Iterators.cycle(sponsorNesIds);
+        protocolSponsorNesIdIterator = Iterators.cycle(sponsorWithProtocolRegistrationsNesIds);
     }
 
     public String getIdentityProvider() {
         return identityProvider;
     }
 
-    public ExternalEntityTestDataSource getTestDataSource() {
-        return testDataSource;
+    public NesTestDataSource getNesTestDataSource() {
+        return nesTestDataSource;
     }
 
     public String getDistinguishedNameRoot() {
         return distinguishedNameRoot;
     }
 
-    public Set<String> getSponsorExternalIds() {
-        return sponsorExternalIds;
+    public Set<String> getSponsorNesIds() {
+        return sponsorNesIds;
     }
 
-    public String getValidSponsorExternalId() {
-        return sponsorExternalIdIterator.next();
+    public String getValidSponsorNesId() {
+        return sponsorNesIdIterator.next();
     }
 
-    public String getValidProtocolSponsorExternalId() {
-        return protocolSponsorExternalIdIterator.next();
+    public String getValidProtocolSponsorNesId() {
+        return protocolSponsorNesIdIterator.next();
     }
 
-    public Set<String> getSponsorWithProtocolRegistrationsExternalIds() {
-        return sponsorWithProtocolRegistrationsExternalIds;
+    public Set<String> getSponsorWithProtocolRegistrationsNesIds() {
+        return sponsorWithProtocolRegistrationsNesIds;
     }
 
-    public String getSponsorWithAnnualRegistrationsExternalId() {
-        return sponsorWithAnnualRegistrationsExternalId;
+    public String getSponsorWithAnnualRegistrationsNesId() {
+        return sponsorWithAnnualRegistrationsNesId;
     }
 
     public String getCtepUsernamePrefix() {
         return ctepUsernamePrefix;
     }
 
-    public void setTestDataSource(ExternalEntityTestDataSource testDataSource) {
-        this.testDataSource = testDataSource;
+    public void setNesTestDataSource(NesTestDataSource nesTestDataSource) {
+        this.nesTestDataSource = nesTestDataSource;
     }
 }

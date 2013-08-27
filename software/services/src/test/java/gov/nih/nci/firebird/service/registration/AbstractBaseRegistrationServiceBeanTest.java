@@ -109,9 +109,10 @@ import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.file.FileMetadata;
 import gov.nih.nci.firebird.service.file.FileService;
-import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.messages.FirebirdMessage;
 import gov.nih.nci.firebird.service.messages.TemplateService;
 import gov.nih.nci.firebird.service.messages.email.EmailService;
@@ -210,8 +211,6 @@ public class AbstractBaseRegistrationServiceBeanTest {
     private EmailService mockEmailService;
     @Mock
     private TemplateService mockTemplateService;
-    @Mock
-    private InvestigatorProfileService mockProfileService;
     @Inject
     private FileService fileService;
     private FirebirdMessage message = new FirebirdMessage("", "");
@@ -229,7 +228,6 @@ public class AbstractBaseRegistrationServiceBeanTest {
         bean.setCertificateAuthorityManager(mockCertificateAuthorityManager);
         bean.setEmailService(mockEmailService);
         bean.setTemplateService(mockTemplateService);
-        bean.setProfileService(mockProfileService);
         System.setProperty("registration.validation.require.nes.status.active", "true");
     }
 
@@ -271,8 +269,7 @@ public class AbstractBaseRegistrationServiceBeanTest {
     }
 
     @Test
-    public void testGeneratePdf_CvWithNullTrainingCertificateIssuer() throws IOException,
-            CredentialAlreadyExistsException {
+    public void testGeneratePdf_CvWithNullTrainingCertificateIssuer() throws IOException, CredentialAlreadyExistsException {
         configureBeanForNonMockPdfGeneration();
         InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration();
         TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate();
@@ -305,8 +302,7 @@ public class AbstractBaseRegistrationServiceBeanTest {
     }
 
     @Test
-    public void testGeneratePdf_SidfWithNullTrainingCertificateIssuer() throws IOException,
-            CredentialAlreadyExistsException {
+    public void testGeneratePdf_SidfWithNullTrainingCertificateIssuer() throws IOException, CredentialAlreadyExistsException {
         configureBeanForNonMockPdfGeneration();
         AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
         TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate();
@@ -591,10 +587,11 @@ public class AbstractBaseRegistrationServiceBeanTest {
         fileToUpload = new File(fileToUpload, getClass().getName().replace('.', '/') + ".class");
         FileMetadata metaData = new FileMetadata(null, null);
 
-        when(mockProfileService.addFile(eq(profile), any(File.class), any(FileMetadata.class))).thenReturn(testFile);
+        when(mockFileService.addFileToProfile(eq(profile), any(File.class), any(FileMetadata.class))).thenReturn(
+                testFile);
 
         bean.uploadAndSelectAdditionalAttachment(registration, fileToUpload, metaData);
-        verify(mockProfileService).addFile(eq(profile), any(File.class), any(FileMetadata.class));
+        verify(mockFileService).addFileToProfile(eq(profile), any(File.class), any(FileMetadata.class));
         assertEquals(1, registration.getAdditionalAttachmentsForm().getAdditionalAttachments().size());
         verify(mockSession).saveOrUpdate(registration);
     }
@@ -661,7 +658,8 @@ public class AbstractBaseRegistrationServiceBeanTest {
     }
 
     @Test
-    public void testPrepareForSubmission_Valid() throws Exception {
+    public void testPrepareForSubmission_Valid() throws ValidationException, AssociationAlreadyExistsException,
+            CredentialAlreadyExistsException, UnavailableEntityException, ReplacedEntityException {
         TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate(
                 CertificateType.HUMAN_RESEARCH_CERTIFICATE);
         InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration();
@@ -674,15 +672,16 @@ public class AbstractBaseRegistrationServiceBeanTest {
         bean.prepareForSubmission(registration);
         assertFalse(registration.getOrganizations().isEmpty());
         assertFalse(registration.getPersons().isEmpty());
-        verify(mockOrganizationService, times(registration.getOrganizations().size())).refreshNow(
+        verify(mockOrganizationService, times(registration.getOrganizations().size())).refreshFromNes(
                 any(Organization.class));
-        verify(mockPersonService, times(registration.getPersons().size())).refreshNow(any(Person.class));
+        verify(mockPersonService, times(registration.getPersons().size())).refreshFromNes(any(Person.class));
         assertEquals(RegistrationStatus.COMPLETED, registration.getStatus());
         assertEquals(FormStatus.COMPLETED, registration.getForm1572().getFormStatus());
     }
 
     @Test
-    public void testPrepareForSubmission_Returned() throws Exception {
+    public void testPrepareForSubmission_Returned() throws ValidationException, AssociationAlreadyExistsException,
+            CredentialAlreadyExistsException, UnavailableEntityException, ReplacedEntityException {
         TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate(
                 CertificateType.HUMAN_RESEARCH_CERTIFICATE);
         InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration();
@@ -698,9 +697,9 @@ public class AbstractBaseRegistrationServiceBeanTest {
         bean.prepareForSubmission(registration);
         assertFalse(registration.getOrganizations().isEmpty());
         assertFalse(registration.getPersons().isEmpty());
-        verify(mockOrganizationService, times(registration.getOrganizations().size())).refreshNow(
+        verify(mockOrganizationService, times(registration.getOrganizations().size())).refreshFromNes(
                 any(Organization.class));
-        verify(mockPersonService, times(registration.getPersons().size())).refreshNow(any(Person.class));
+        verify(mockPersonService, times(registration.getPersons().size())).refreshFromNes(any(Person.class));
         assertEquals(RegistrationStatus.RETURNED, registration.getStatus());
         assertEquals(FormStatus.ACCEPTED, registration.getForm1572().getFormStatus());
     }
@@ -714,7 +713,7 @@ public class AbstractBaseRegistrationServiceBeanTest {
         registration.getProfile().addCredential(
                 CredentialFactory.getInstance().createCertificate(CertificateType.HUMAN_RESEARCH_CERTIFICATE));
         registration.getProfile().addCredential(CredentialFactory.getInstance().createLicense());
-        registration.getProfile().getPerson().setCurationStatus(CurationStatus.INACTIVE);
+        registration.getProfile().getPerson().setNesStatus(CurationStatus.INACTIVE);
         try {
             bean.prepareForSubmission(registration);
             fail("A Validation Exception should have been thrown.");
@@ -733,7 +732,7 @@ public class AbstractBaseRegistrationServiceBeanTest {
         registration.getProfile().addCredential(
                 CredentialFactory.getInstance().createCertificate(CertificateType.HUMAN_RESEARCH_CERTIFICATE));
         registration.getProfile().addCredential(CredentialFactory.getInstance().createLicense());
-        registration.getProfile().getPerson().setCurationStatus(CurationStatus.UNSAVED);
+        registration.getProfile().getPerson().setNesStatus(CurationStatus.PRE_NES_VALIDATION);
         try {
             bean.prepareForSubmission(registration);
             fail("A Validation Exception should have been thrown.");
@@ -753,7 +752,7 @@ public class AbstractBaseRegistrationServiceBeanTest {
                 CredentialFactory.getInstance().createCertificate(CertificateType.HUMAN_RESEARCH_CERTIFICATE));
         registration.getProfile().addCredential(CredentialFactory.getInstance().createLicense());
         registration.getProfile().getPrimaryOrganization().getOrganization()
-                .setCurationStatus(CurationStatus.UNSAVED);
+                .setNesStatus(CurationStatus.PRE_NES_VALIDATION);
 
         try {
             bean.prepareForSubmission(registration);
@@ -790,6 +789,7 @@ public class AbstractBaseRegistrationServiceBeanTest {
         verifyServiceCalls(user, password);
     }
 
+    @SuppressWarnings("unchecked")
     private void verifyServiceCalls(FirebirdUser user, String password) throws Exception {
         verify(mockCertificateAuthorityManager).getOrCreateUserKey(user, password);
         verify(mockPdfService, times(3)).flattenPdf(any(InputStream.class), any(OutputStream.class));

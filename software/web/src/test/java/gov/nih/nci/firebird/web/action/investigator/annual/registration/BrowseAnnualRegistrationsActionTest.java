@@ -135,6 +135,27 @@ public class BrowseAnnualRegistrationsActionTest extends AbstractWebTest {
     }
 
     @Test
+    public void testPrepare_WithoutInitialRegistrations() {
+        action.prepare();
+        verify(mockAnnualRegistrationService).createInitial(profile);
+    }
+
+    @Test
+    public void testPrepare_WithoutInitialRegistrations_Withdrawn() {
+        profile.getUser().getInvestigatorRole().setStatus(InvestigatorStatus.WITHDRAWN);
+        action.prepare();
+        verifyZeroInteractions(mockAnnualRegistrationService);
+    }
+
+    @Test
+    public void testPrepare_WithInitialRegistrations() {
+        AnnualRegistration registration = new AnnualRegistration();
+        profile.addRegistration(registration);
+        action.prepare();
+        verifyZeroInteractions(mockAnnualRegistrationService);
+    }
+
+    @Test
     public void testEnter() {
         assertEquals(ActionSupport.SUCCESS, action.enter());
     }
@@ -147,7 +168,7 @@ public class BrowseAnnualRegistrationsActionTest extends AbstractWebTest {
         registration2.setDueDate(new Date());
         AnnualRegistration registration3 = AnnualRegistrationFactory.getInstanceWithId().create();
         registration3.setDueDate(DateUtils.addYears(new Date(), 1));
-
+        
         profile.addRegistration(registration1);
         profile.addRegistration(registration2);
         profile.addRegistration(registration3);
@@ -323,41 +344,6 @@ public class BrowseAnnualRegistrationsActionTest extends AbstractWebTest {
         AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
         registration.setStatus(status);
         return action.new AnnualRegistrationListing(registration);
-    }
-
-    @Test
-    public void testIsReadOnly() {
-        FirebirdUser user = FirebirdUserFactory.getInstance().create();
-        user.setCtepUser(false);
-        FirebirdWebTestUtility.setCurrentUser(action, user);
-        assertTrue(action.isReadOnly());
-        user.setCtepUser(true);
-        assertFalse(action.isReadOnly());
-    }
-
-    @Test
-    public void testIsCreateRegistrationAllowed_False() throws Exception {
-        profile.getUser().setCtepUser(false);
-        assertFalse(action.isCreateRegistrationAllowed());
-    }
-
-    @Test
-    public void testIsCreateRegistrationAllowed_True() throws Exception {
-        profile.getUser().setCtepUser(true);
-        assertTrue(action.isCreateRegistrationAllowed());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testCreateAnnualRegistration_NonCtepUser() throws Exception {
-        profile.getUser().setCtepUser(false);
-        action.createAnnualRegistration();
-    }
-
-    @Test
-    public void testCreateAnnualRegistration() throws Exception {
-        profile.getUser().setCtepUser(true);
-        assertEquals(ActionSupport.SUCCESS, action.createAnnualRegistration());
-        verify(mockAnnualRegistrationService).createRegistration(profile);
     }
 
 }

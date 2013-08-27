@@ -83,15 +83,17 @@
 
 package gov.nih.nci.firebird.web.listener;
 
-import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import com.fiveamsolutions.nci.commons.util.HibernateHelper;
+import com.google.inject.Injector;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.fiveamsolutions.nci.commons.util.HibernateHelper;
-import com.google.inject.Injector;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class NihOerOrganizationInitializationListenerTest {
 
@@ -102,27 +104,27 @@ public class NihOerOrganizationInitializationListenerTest {
     };
     private OrganizationService mockOrganizationService = mock(OrganizationService.class);
     private HibernateHelper mockHibernateHelper = mock(HibernateHelper.class);
-    private String nihOerOrganizationExternalId = "123";
+    private String nihOerOrganizationNesId = "123";
 
     @Before
     public void setUp() {
         listener.setOrganizationService(mockOrganizationService);
         listener.setHibernateHelper(mockHibernateHelper);
-        listener.setNihOerOrganizationExternalId(nihOerOrganizationExternalId);
+        listener.setNihOerOrganizationNesId(nihOerOrganizationNesId);
     }
 
     @Test
-    public void testContextInitialized() throws Exception {
+    public void testContextInitialized() throws  UnavailableEntityException {
         listener.contextInitialized(null);
         verify(mockHibernateHelper).openAndBindSession();
-        verify(mockOrganizationService).getByExternalId(nihOerOrganizationExternalId);
+        verify(mockOrganizationService).getByNesId(nihOerOrganizationNesId);
         verify(mockHibernateHelper).unbindAndCleanupSession();
     }
 
+
     @Test(expected = IllegalStateException.class)
-    public void testContextInitialized_InvalidatedOrganizationException() throws Exception {
-        doThrow(mock(InvalidatedOrganizationException.class)).when(mockOrganizationService).getByExternalId(
-                nihOerOrganizationExternalId);
+    public void testContextInitialized_UnavailableEntityException() throws UnavailableEntityException {
+        doThrow(mock(UnavailableEntityException.class)).when(mockOrganizationService).getByNesId(nihOerOrganizationNesId);
         listener.contextInitialized(null);
     }
 

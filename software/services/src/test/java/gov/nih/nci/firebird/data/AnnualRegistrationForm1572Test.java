@@ -91,11 +91,12 @@ import gov.nih.nci.firebird.test.OrganizationFactory;
 
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import com.opensymphony.xwork2.interceptor.annotations.Before;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AnnualRegistrationForm1572Test extends AbstractRegistrationFormTest {

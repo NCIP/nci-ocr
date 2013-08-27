@@ -82,214 +82,51 @@
  */
 package gov.nih.nci.firebird.service.organization;
 
-import static gov.nih.nci.firebird.data.OrganizationRoleType.*;
-import static org.junit.Assert.*;
+import static gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactoryTestUtil.createFactoryWithMocks;
 import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.data.AbstractOrganizationRole;
-import gov.nih.nci.firebird.data.CurationDataset;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.external.ExternalOrganizationService;
-import gov.nih.nci.firebird.service.organization.local.LocalOrganizationDataService;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 
-import java.util.Collections;
-import java.util.List;
-
+import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.google.common.collect.Lists;
+import com.google.inject.Provider;
 
 public class OrganizationServiceBeanTest {
 
-    private static final String SEARCH_TERM = "term";
-
-    private static final String EXTERNAL_ID = "externalId";
-
     private OrganizationServiceBean bean = new OrganizationServiceBean();
-    private Organization organization = OrganizationFactory.getInstance().create();
-
     @Mock
-    private ExternalOrganizationService mockExternalOrganizationService;
-
+    private Provider<Session> mockProvider;
     @Mock
-    private LocalOrganizationDataService mockLocalOrganizationService;
+    private Session mockSesion;
+    private NesOrganizationIntegrationServiceFactory nesServiceFactory = createFactoryWithMocks();
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        bean.setExternalOrganizationService(mockExternalOrganizationService);
-        bean.setLocalOrganizationDataService(mockLocalOrganizationService);
+        bean.setSessionProvider(mockProvider);
+        when(mockProvider.get()).thenReturn(mockSesion);
+        bean.setNesServiceFactory(nesServiceFactory);
     }
 
     @Test
-    public void testSearch_ExternalResultsOnly() {
-        List<Organization> externalResults = Lists.newArrayList(organization);
-        when(mockExternalOrganizationService.search(SEARCH_TERM, GENERIC_ORGANIZATION)).thenReturn(externalResults);
-        List<Organization> results = bean.search(SEARCH_TERM, GENERIC_ORGANIZATION);
-        assertEquals(1, results.size());
-        assertEquals(organization, results.get(0));
-    }
-
-    @Test
-    public void testSearch_LocalResultReplacement() {
-        Organization organization1External = OrganizationFactory.getInstance().create();
-        Organization organization2External = OrganizationFactory.getInstance().create();
-        Organization organization2Local = OrganizationFactory.getInstance().create();
-        List<Organization> externalResults = Lists.newArrayList(organization1External, organization2External);
-        when(mockExternalOrganizationService.search(SEARCH_TERM, GENERIC_ORGANIZATION)).thenReturn(externalResults);
-        when(mockLocalOrganizationService.getByExternalId(organization2External.getExternalId())).thenReturn(
-                organization2Local);
-        List<Organization> results = bean.search(SEARCH_TERM, GENERIC_ORGANIZATION);
-        assertEquals(2, results.size());
-        assertTrue(results.contains(organization1External));
-        assertTrue(results.contains(organization2Local));
-    }
-
-    @Test
-    public void testSearch_ResultsAreSorted() {
-        Organization organization1 = OrganizationFactory.getInstance().create();
-        organization1.setName("Aaaaa");
-        Organization organization2 = OrganizationFactory.getInstance().create();
-        organization2.setName("Zzzzz");
-        List<Organization> externalResults = Lists.newArrayList(organization2, organization1);
-        when(mockExternalOrganizationService.search(SEARCH_TERM, GENERIC_ORGANIZATION)).thenReturn(externalResults);
-        List<Organization> results = bean.search(SEARCH_TERM, GENERIC_ORGANIZATION);
-        assertEquals(2, results.size());
-        assertEquals(organization1, results.get(0));
-        assertEquals(organization2, results.get(1));
-    }
-
-    @Test
-    public void testGetByAlternateIdentifier() {
-        String alternateIdentifier = "id";
-        when(mockExternalOrganizationService.getByAlternateIdentifier(alternateIdentifier, GENERIC_ORGANIZATION))
-                .thenReturn(Lists.newArrayList(organization));
-        assertEquals(Lists.newArrayList(organization),
-                bean.getByAlternateIdentifier(alternateIdentifier, GENERIC_ORGANIZATION));
-        verify(mockLocalOrganizationService).save(organization);
-    }
-
-    @Test
-    public void testGetByAlternateIdentifier_NoResult() {
-        String alternateIdentifier = "id";
-        List<Organization> emptyList = Collections.emptyList();
-        when(mockExternalOrganizationService.getByAlternateIdentifier(alternateIdentifier, GENERIC_ORGANIZATION))
-                .thenReturn(emptyList);
-        assertEquals(emptyList, bean.getByAlternateIdentifier(alternateIdentifier, GENERIC_ORGANIZATION));
-        verifyZeroInteractions(mockLocalOrganizationService);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testSearch_EmptyTerm() {
-        assertNull(bean.search("  ", GENERIC_ORGANIZATION));
+    public void testRefreshFromNes() throws UnavailableEntityException, ReplacedEntityException {
+        Organization organization = OrganizationFactory.getInstance().create();
+        bean.refreshFromNes(organization);
+        verify(nesServiceFactory.getOrganizationEntityService()).refresh(organization);
     }
 
     @Test(expected = NullPointerException.class)
-    public void testSearch_NullType() {
-        assertNull(bean.search(SEARCH_TERM, null));
-    }
-
-    @Test
-    public void testGetByExternalId_LocalRecord() throws InvalidatedOrganizationException {
-        when(mockLocalOrganizationService.getByExternalId(EXTERNAL_ID)).thenReturn(organization);
-        Organization result = bean.getByExternalId(EXTERNAL_ID);
-        assertEquals(organization, result);
-        verify(mockLocalOrganizationService, times(0)).save(organization);
-    }
-
-    @Test
-    public void testGetByExternalId_NoLocalRecord() throws InvalidatedOrganizationException {
-        when(mockExternalOrganizationService.getByExternalId(EXTERNAL_ID)).thenReturn(organization);
-        Organization result = bean.getByExternalId(EXTERNAL_ID);
-        assertEquals(organization, result);
-        verify(mockLocalOrganizationService).save(result);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testGetByExternalId_NullExternalId() throws InvalidatedOrganizationException {
-        bean.getByExternalId(null);
-    }
-
-    @Test
-    public void testValidate() throws ValidationException {
-        Object args = null;
-        bean.validate(organization, IRB, args);
-        verify(mockExternalOrganizationService).validate(organization, IRB, args);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testValidate_NullOrganization() throws ValidationException {
-        bean.validate(null, IRB);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testValidate_NullType() throws ValidationException {
-        bean.validate(organization, null);
-    }
-
-    @Test
-    public void testCreate() throws ValidationException {
-        bean.create(organization, GENERIC_ORGANIZATION);
-        verify(mockExternalOrganizationService).create(organization, GENERIC_ORGANIZATION);
-        verify(mockLocalOrganizationService).save(organization);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testCreate_NullArguments() throws ValidationException {
-        bean.create(null, null);
-    }
-
-    @Test
-    public void testRefreshNow() {
-        bean.refreshNow(organization);
-        verify(mockExternalOrganizationService).refreshNow(organization);
-        verify(mockLocalOrganizationService).save(organization);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void testRefreshNow_NullArgument() {
-        bean.refreshNow(null);
-    }
-
-    @Test
-    public void testRefreshIfStale() {
-        bean.refreshIfStale(organization);
-        verify(mockExternalOrganizationService).refreshIfStale(organization);
-        verify(mockLocalOrganizationService).save(organization);
-    }
-
-    @Test
-    public void testGetPracticeSiteType() {
-        bean.getPracticeSiteType(organization);
-        verify(mockExternalOrganizationService).getPracticeSiteType(organization);
-    }
-
-    @Test
-    public void testGetPrimaryOrganizationType() {
-        bean.getPrimaryOrganizationType(organization);
-        verify(mockExternalOrganizationService).getPrimaryOrganizationType(organization);
-    }
-    
-    @Test
-    public void testGetOrganizationsToBeCurated() {
-        List<Organization> candidates = Lists.newArrayList();
-        when(mockLocalOrganizationService.getCandidateOrganizationsToBeCurated()).thenReturn(candidates);
-        CurationDataset mockResult = mock(CurationDataset.class);
-        when(mockExternalOrganizationService.getOrganizationsToBeCurated(candidates)).thenReturn(mockResult);
-        assertEquals(mockResult, bean.getOrganizationsToBeCurated());
-    }
-
-    @Test
-    public void testGetRolesToBeCurated() {
-        List<AbstractOrganizationRole> candidates = Lists.newArrayList();
-        when(mockLocalOrganizationService.getCandidateRolesToBeCurated()).thenReturn(candidates);
-        CurationDataset mockResult = mock(CurationDataset.class);
-        when(mockExternalOrganizationService.getRolesToBeCurated(candidates)).thenReturn(mockResult);
-        assertEquals(mockResult, bean.getRolesToBeCurated());
+    public void testRefreshFromNes_Invalid() throws UnavailableEntityException, ReplacedEntityException {
+        Organization organization = OrganizationFactory.getInstance().create();
+        organization.setNesId(null);
+        bean.refreshFromNes(organization);
     }
 
 }

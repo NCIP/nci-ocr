@@ -147,17 +147,17 @@ var _associatedOrgPage = (function () {
     }
 
     function createEditDiv(column, ohrp, associationId) {
-        var organizationExternalId = $(column).parent().data('organizationExternalId');
+        var organizationId = $(column).parent().data('organizationId');
         var newDiv = $('<div class="ohrpCell" id="' + _associatedOrgPage.ohrpDivPrefix + associationId + '"></div>');
-        var form = createOhrpForm(organizationExternalId, ohrp);
+        var form = createOhrpForm(organizationId, ohrp);
         var btnDiv = createButtonDiv(associationId, ohrp);
         $(form).append(btnDiv);
         $(newDiv).append(form).appendTo(column);
     };
 
-    function createOhrpForm(organizationExternalId, ohrp) {
+    function createOhrpForm(organizationId, ohrp) {
         var form = $('<form></form>');
-        $('<input name="organizationExternalId" type="hidden" />').val(organizationExternalId).appendTo(form);
+        $('<input name="searchKey" type="hidden" />').val(organizationId).appendTo(form);
         $('<input name="associationType" type="hidden"/>').val(associatedOrgPage.practiceSite).appendTo(form);
         $(createNamedElement('input', 'associationOhrp')).val(ohrp).attr('maxlength', 30).width(85).keydown(testForEnter).appendTo(form);
         return form;
@@ -241,7 +241,7 @@ $(document).ready(function () {
             {mDataProp: "email"},
             {mDataProp: "phoneNumber"},
             {mDataProp: "postalAddress", fnRender: function (obj) {
-                return addressFormatter(obj.aData.postalAddress);
+                return __addressFormatter(obj.aData.postalAddress);
             }},
             {"mDataProp": null, "fnRender": function (obj) {
                 return createOrgAssociationDeleteLink(obj.aData, baseUrl,
@@ -251,7 +251,7 @@ $(document).ready(function () {
         "fnRowCallback": function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
             _associatedOrgPage.setUpEditOhrp(nRow, aData.id);
             $(nRow).attr("id", aData.id);
-            $(nRow).data("organizationExternalId", aData.externalId);
+            $(nRow).data("organizationId", aData.organizationId);
             return nRow;
         }
     });
@@ -268,7 +268,7 @@ $(document).ready(function () {
             {mDataProp: "email"},
             {mDataProp: "phoneNumber"},
             {mDataProp: "postalAddress", fnRender: function (obj) {
-                return addressFormatter(obj.aData.postalAddress);
+                return __addressFormatter(obj.aData.postalAddress);
             }},
             {mDataProp: null, fnRender: function (obj) {
                 return labCertificateViewLinkFormatter(obj.aData, '<s:property value="%{certificateUrl}" />');
@@ -296,7 +296,7 @@ $(document).ready(function () {
             {mDataProp: "email"},
             {mDataProp: "phoneNumber"},
             {mDataProp: "postalAddress", fnRender: function (obj) {
-                return addressFormatter(obj.aData.postalAddress);
+                return __addressFormatter(obj.aData.postalAddress);
             }},
             {"mDataProp": null, "fnRender": function (obj) {
                 return createOrgAssociationDeleteLink(obj.aData, baseUrl,

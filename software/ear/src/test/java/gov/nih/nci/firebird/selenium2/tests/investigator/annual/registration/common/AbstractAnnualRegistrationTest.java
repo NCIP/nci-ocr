@@ -100,9 +100,8 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.Bro
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.BrowseAnnualRegistrationsPage.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.FinancialDisclosureTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.OverviewTab;
+import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.OverviewTab.FormListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.SupplementalInvestigatorDataFormTab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
 import gov.nih.nci.firebird.test.LoginAccount.SponsorDelegateLogin;
 import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
@@ -124,20 +123,12 @@ public abstract class AbstractAnnualRegistrationTest extends AbstractFirebirdWeb
     public void testBrowseRegistrations_NoExistingRegistration() {
         DataSet dataSet = createAnnualRegistrationConfigurationDataSet();
         assertTrue(dataSet.getInvestigator().getInvestigatorRole().getProfile().getAnnualRegistrations().isEmpty());
-        BrowseAnnualRegistrationsPage annualRegistrationsPage = createInitialRegistration(dataSet);
+        BrowseAnnualRegistrationsPage annualRegistrationsPage = openRegistrationsPage(dataSet);
+        dataSet.reload();
         AnnualRegistration registration = Iterables.getOnlyElement(dataSet.getInvestigator().getInvestigatorRole()
                 .getProfile().getAnnualRegistrations());
         checkCreatedRegistrationAgainstConfiguration(registration, dataSet.getAnnualRegistrationConfiguration());
         checkRegistrationDisplayed(annualRegistrationsPage, registration);
-    }
-
-    private BrowseAnnualRegistrationsPage createInitialRegistration(DataSet dataSet) {
-        BrowseAnnualRegistrationsPage annualRegistrationsPage = openRegistrationsPage(dataSet);
-        assertTrue(annualRegistrationsPage.getRegistrationListings().isEmpty());
-        annualRegistrationsPage.clickCreateRegistration();
-        assertEquals(1, annualRegistrationsPage.getRegistrationListings().size());
-        dataSet.reload();
-        return annualRegistrationsPage;
     }
 
     abstract protected BrowseAnnualRegistrationsPage openRegistrationsPage(DataSet dataSet);
@@ -185,12 +176,10 @@ public abstract class AbstractAnnualRegistrationTest extends AbstractFirebirdWeb
     @Test
     public void testBrowsePage() throws ParseException {
         DataSet dataSet = createAnnualRegistrationConfigurationDataSet();
-        createInitialRegistration(dataSet);
-
         checkRegistrationListing(dataSet);
 
-        AnnualRegistration annualRegistration = (AnnualRegistration) dataSet.getInvestigator().getInvestigatorRole()
-                .getProfile().getAnnualRegistrations().toArray()[0];
+        AnnualRegistration annualRegistration = (AnnualRegistration) dataSet.getInvestigator()
+                .getInvestigatorRole().getProfile().getAnnualRegistrations().toArray()[0];
         annualRegistration.setStatus(RegistrationStatus.SUBMITTED);
         dataSet.update(annualRegistration);
         checkRegistrationListing(dataSet);
@@ -198,9 +187,10 @@ public abstract class AbstractAnnualRegistrationTest extends AbstractFirebirdWeb
 
     private void checkRegistrationListing(DataSet dataSet) throws ParseException {
         BrowseAnnualRegistrationsPage annualRegistrationsPage = openRegistrationsPage(dataSet);
+        dataSet.reload();
 
-        Set<AnnualRegistration> annualRegistrationSet = dataSet.getInvestigator().getInvestigatorRole().getProfile()
-                .getAnnualRegistrations();
+        Set<AnnualRegistration> annualRegistrationSet = dataSet.getInvestigator().getInvestigatorRole()
+                .getProfile().getAnnualRegistrations();
 
         for (AnnualRegistration registration : annualRegistrationSet) {
             RegistrationListing registrationListing = annualRegistrationsPage.getHelper().getRegistrationListing(
@@ -242,7 +232,7 @@ public abstract class AbstractAnnualRegistrationTest extends AbstractFirebirdWeb
         registration = reloadRegistration(dataSet);
         overviewTab.getHelper().checkProgressBar(1, 3);
 
-        List<InvestigatorRegistrationFormTablesTag.FormListing> forms = overviewTab.getFormsListing();
+        List<OverviewTab.FormListing> forms = overviewTab.getFormsListing();
         assertEquals("Not all forms are listed on the Overview tab", registration.getForms().size(), forms.size());
 
         for (AbstractRegistrationForm form : registration.getForms()) {
@@ -273,13 +263,18 @@ public abstract class AbstractAnnualRegistrationTest extends AbstractFirebirdWeb
         Date initialRegistrationDate = DateUtils.addMonths(now, -11);
         Date renewalDueDate = DateUtils.addYears(initialRegistrationDate, 1);
         AnnualRegistration initialRegistration = builder.createAnnualRegistration(investigator)
-                .withType(AnnualRegistrationType.INITIAL).withStatus(RegistrationStatus.APPROVED)
-                .withStatusDate(initialRegistrationDate).complete().get();
-        builder.createAnnualRegistration(investigator).renewalOf(initialRegistration).withDueDate(renewalDueDate);
+                .withType(AnnualRegistrationType.INITIAL)
+                .withStatus(RegistrationStatus.APPROVED)
+                .withStatusDate(initialRegistrationDate)
+                .complete()
+                .get();
+        builder.createAnnualRegistration(investigator)
+                .renewalOf(initialRegistration)
+                .withDueDate(renewalDueDate);
     }
 
-    private void checkFormLink(FormListing formListing, AbstractRegistrationForm form) {
-        AbstractAnnualRegistrationTab<?> tab = (AbstractAnnualRegistrationTab<?>) formListing.click();
+    private void checkFormLink(OverviewTab.FormListing formListing, AbstractRegistrationForm form) {
+        AbstractAnnualRegistrationTab<?> tab = formListing.click();
         assertEquals(form.getFormType().getFormTypeEnum(), tab.getFormType());
         WaitUtils.pause(100);
         tab.getPage().clickOverviewTab();
@@ -333,8 +328,7 @@ public abstract class AbstractAnnualRegistrationTest extends AbstractFirebirdWeb
     }
 
     protected void configureRegistrationDataSetWithNoForms(DataSetBuilder builder, FirebirdUser investigator) {
-        AnnualRegistrationConfiguration configuration = builder.createAnnualRegistrationConfiguration().withNoForms()
-                .get();
+        AnnualRegistrationConfiguration configuration = builder.createAnnualRegistrationConfiguration().withNoForms().get();
         AnnualRegistration initial = builder.createAnnualRegistration(investigator, configuration)
                 .withType(AnnualRegistrationType.INITIAL).get();
         builder.createAnnualRegistration(investigator, configuration).renewalOf(initial);

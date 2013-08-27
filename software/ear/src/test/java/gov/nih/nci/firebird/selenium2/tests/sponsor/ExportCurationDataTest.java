@@ -91,7 +91,6 @@ import gov.nih.nci.firebird.data.InstitutionalReviewBoard;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.PracticeSite;
-import gov.nih.nci.firebird.nes.person.NesPersonData;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.export.ExportCurationDataPage;
@@ -139,35 +138,35 @@ public class ExportCurationDataTest extends AbstractFirebirdWebDriverTest {
     private void createTestOrganizations() {
         activeOrganization = OrganizationFactory.getInstance().create();
         pendingOrganization = OrganizationFactory.getInstance().create();
-        pendingOrganization.setCurationStatus(CurationStatus.PENDING);
+        pendingOrganization.setNesStatus(CurationStatus.PENDING);
         dataSet.save(activeOrganization, pendingOrganization);
     }
 
     private void createTestPersons() {
         activePerson = PersonFactory.getInstance().create();
         pendingCurationPerson = PersonFactory.getInstance().create();
-        pendingCurationPerson.setCurationStatus(CurationStatus.PENDING);
+        pendingCurationPerson.setNesStatus(CurationStatus.PENDING);
         pendingUpdatesPerson = PersonFactory.getInstance().create();
-        ((NesPersonData) pendingUpdatesPerson.getExternalData()).requestUpdate();
+        pendingUpdatesPerson.requestUpdate();
         dataSet.save(activePerson, pendingCurationPerson, pendingUpdatesPerson);
     }
 
     private void createTestOrganizationRoles() {
-        PracticeSite activePracticeSiteRole = getTestDataSource().getPracticeSite();
-        ClinicalLaboratory activeClinicalLabRole = getTestDataSource().getClinicalLab();
-        InstitutionalReviewBoard activeIrbRole = getTestDataSource().getIrb();
-        PracticeSite pendingPracticeSiteRole = getTestDataSource().getPracticeSite();
-        pendingPracticeSiteRole.getOrganization().setCurationStatus(CurationStatus.PENDING);
-        ClinicalLaboratory pendingClinicalLabRole = getTestDataSource().getClinicalLab();
-        pendingClinicalLabRole.getOrganization().setCurationStatus(CurationStatus.PENDING);
-        InstitutionalReviewBoard pendingIrbRole = getTestDataSource().getIrb();
-        pendingIrbRole.getOrganization().setCurationStatus(CurationStatus.PENDING);
+        PracticeSite activePracticeSiteRole = getNesTestDataSource().getPracticeSite();
+        ClinicalLaboratory activeClinicalLabRole = getNesTestDataSource().getClinicalLab();
+        InstitutionalReviewBoard activeIrbRole = getNesTestDataSource().getIrb();
+        PracticeSite pendingPracticeSiteRole = getNesTestDataSource().getPracticeSite();
+        pendingPracticeSiteRole.getOrganization().setNesStatus(CurationStatus.PENDING);
+        ClinicalLaboratory pendingClinicalLabRole = getNesTestDataSource().getClinicalLab();
+        pendingClinicalLabRole.getOrganization().setNesStatus(CurationStatus.PENDING);
+        InstitutionalReviewBoard pendingIrbRole = getNesTestDataSource().getIrb();
+        pendingIrbRole.getOrganization().setNesStatus(CurationStatus.PENDING);
         dataSet.save(activePracticeSiteRole, activeClinicalLabRole, activeIrbRole,
                 pendingPracticeSiteRole, pendingClinicalLabRole, pendingIrbRole);
         activeCurationOrganizationRoles = newHashSet(activePracticeSiteRole, activeClinicalLabRole, activeIrbRole);
         pendingCurationOrganizationRoles = newHashSet(pendingPracticeSiteRole, pendingClinicalLabRole, pendingIrbRole);
     }
-
+    
     private void createDataSet() {
         builder.createSponsor();
         dataSet = builder.build();
@@ -214,7 +213,7 @@ public class ExportCurationDataTest extends AbstractFirebirdWebDriverTest {
     }
 
     private void curatePendingPerson() {
-        pendingCurationPerson.setCurationStatus(CurationStatus.ACTIVE);
+        pendingCurationPerson.setNesStatus(CurationStatus.ACTIVE);
         dataSet.update(pendingCurationPerson);
     }
 

@@ -115,16 +115,16 @@ public class SearchUtils {
     }
 
     public static <T extends AbstractLoadableComponent<?>> SearchResultListing<T> getMatchingResult(Person person, List<SearchResultListing<T>> results) {
-        return getMatchingResult(person.getExternalId(), results);
+        return getMatchingResult(person.getNesId(), results);
     }
 
     public static <T extends AbstractLoadableComponent<?>> SearchResultListing<T> getMatchingResult(Organization organization, List<SearchResultListing<T>> results) {
-        return getMatchingResult(organization.getExternalId(), results);
+        return getMatchingResult(organization.getNesId(), results);
     }
 
-    private static <T extends AbstractLoadableComponent<?>> SearchResultListing<T> getMatchingResult(String externalId, List<SearchResultListing<T>> results) {
+    private static <T extends AbstractLoadableComponent<?>> SearchResultListing<T> getMatchingResult(String nesId, List<SearchResultListing<T>> results) {
         for (SearchResultListing<T> result : results) {
-            if (externalId.equals(result.getExternalId())) {
+            if (nesId.equals(result.getNesId())) {
                 return result;
             }
         }

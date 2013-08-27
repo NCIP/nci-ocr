@@ -144,7 +144,7 @@ public class LoginActionTest extends AbstractWebTest {
 
     @Test
     public void testGetIdps_WithAnnualRegistrationSponsor() throws Exception {
-        when(mockSponsorService.getSponsorWithAnnualRegistrationsExternalId()).thenReturn("externalId");
+        when(mockSponsorService.getSponsorWithAnnualRegistrationsNesId()).thenReturn("nesId");
         TrustedIdentityProvider dcpProvider = new TrustedIdentityProvider();
         when(mockGridService.getIdentityProviders()).thenReturn(Lists.newArrayList(dcpProvider));
         assertEquals(2, action.getIdps().size());
@@ -152,7 +152,7 @@ public class LoginActionTest extends AbstractWebTest {
 
     @Test
     public void testGetIdps_WithoutAnnualRegistrationSponsor() throws Exception {
-        when(mockSponsorService.getSponsorWithAnnualRegistrationsExternalId()).thenReturn(null);
+        when(mockSponsorService.getSponsorWithAnnualRegistrationsNesId()).thenReturn(null);
         TrustedIdentityProvider dcpProvider = new TrustedIdentityProvider();
         when(mockGridService.getIdentityProviders()).thenReturn(Lists.newArrayList(dcpProvider));
         assertEquals(1, action.getIdps().size());

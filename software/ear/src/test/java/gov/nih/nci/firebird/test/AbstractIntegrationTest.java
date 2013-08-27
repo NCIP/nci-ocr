@@ -84,7 +84,7 @@ package gov.nih.nci.firebird.test;
 
 import gov.nih.nci.firebird.cagrid.CaGridModule;
 import gov.nih.nci.firebird.nes.NesIntegrationModule;
-import gov.nih.nci.firebird.test.nes.ExternalEntityTestDataSource;
+import gov.nih.nci.firebird.test.nes.NesTestDataSource;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -102,7 +102,7 @@ import com.google.inject.Module;
 public abstract class AbstractIntegrationTest {
 
     private Injector injector;
-    @Inject private ExternalEntityTestDataSource testDataSource;
+    @Inject private NesTestDataSource nesTestDataSource;
 
     private void setInjector(Injector injector) {
         this.injector = injector;
@@ -139,8 +139,8 @@ public abstract class AbstractIntegrationTest {
         modules.add(new NesIntegrationModule());
     }
 
-    protected ExternalEntityTestDataSource getTestDataSource() {
-        return testDataSource;
+    protected NesTestDataSource getNesTestDataSource() {
+        return nesTestDataSource;
     }
 
 }

@@ -169,9 +169,7 @@ public class PacketOverviewAction extends AbstractProtocolRegistrationAction {
     /**
      * Class to describe the an entry of the Registration Packet Overview table.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
-    protected final class RegistrationListing {
+    protected class RegistrationListing {
         private final SimpleDateFormat dateFormat = new SimpleDateFormat(getText("date.format.timestamp"),
                 Locale.getDefault());
         private final Long id;
@@ -186,7 +184,7 @@ public class PacketOverviewAction extends AbstractProtocolRegistrationAction {
          *
          * @param registration the registration that this listing is of.
          */
-        RegistrationListing(AbstractProtocolRegistration registration) {
+        protected RegistrationListing(AbstractProtocolRegistration registration) {
             this.id = registration.getId();
             Person person = registration.getProfile().getPerson();
             this.investigator = person.getDisplayNameForList();

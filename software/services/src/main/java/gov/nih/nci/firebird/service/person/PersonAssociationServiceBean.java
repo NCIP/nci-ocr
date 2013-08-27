@@ -83,16 +83,19 @@
 package gov.nih.nci.firebird.service.person;
 
 import gov.nih.nci.firebird.data.OrderingDesignee;
+import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.AbstractPersonAssociation;
 import gov.nih.nci.firebird.data.ShippingDesignee;
 import gov.nih.nci.firebird.data.SubInvestigator;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
 import gov.nih.nci.firebird.service.AbstractGenericServiceBean;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
+import com.google.inject.Inject;
 
 /**
  * process the creation of a new {@link AbstractPersonAssociation}.
@@ -102,32 +105,43 @@ import javax.ejb.TransactionAttributeType;
 public class PersonAssociationServiceBean extends AbstractGenericServiceBean<AbstractPersonAssociation> implements
         PersonAssociationService {
 
-    private PersonService personService;
+    private NesPersonIntegrationService nesPersonService;
 
-    @Resource(mappedName = "firebird/PersonServiceBean/local")
-    void setPersonService(PersonService personService) {
-        this.personService = personService;
+    @Inject
+    void setNesPersonService(NesPersonIntegrationService nesPersonService) {
+        this.nesPersonService = nesPersonService;
+    }
+
+    /**
+     * @return the nesPersonService
+     */
+    public NesPersonIntegrationService getNesPersonService() {
+        return nesPersonService;
     }
 
     @Override
     public void handleNew(AbstractPersonAssociation association) throws ValidationException {
-        personService.save(association.getPerson());
+        Person person = association.getPerson();
+        if (person.getNesId() == null) {
+            String nesId = getNesPersonService().createPerson(person);
+            person.setNesId(nesId);
+        }
         save(association);
     }
 
     @Override
     public SubInvestigator getSubInvestigatorById(Long id) {
-        return (SubInvestigator) getSession().get(SubInvestigator.class, id);
+        return (SubInvestigator) getSessionProvider().get().get(SubInvestigator.class, id);
     }
 
     @Override
     public OrderingDesignee getOrderingDesigneeById(Long id) {
-        return (OrderingDesignee) getSession().get(OrderingDesignee.class, id);
+        return (OrderingDesignee) getSessionProvider().get().get(OrderingDesignee.class, id);
     }
 
     @Override
     public ShippingDesignee getShippingDesigneeById(Long id) {
-        return (ShippingDesignee) getSession().get(ShippingDesignee.class, id);
+        return (ShippingDesignee) getSessionProvider().get().get(ShippingDesignee.class, id);
     }
 
 }

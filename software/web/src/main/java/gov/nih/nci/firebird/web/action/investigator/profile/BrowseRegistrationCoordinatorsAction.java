@@ -106,7 +106,7 @@ public class BrowseRegistrationCoordinatorsAction extends AbstractProfileAction 
 
     /**
      * Constructor.
-     *
+     * 
      * @param profileService profile service
      */
     @Inject
@@ -116,7 +116,7 @@ public class BrowseRegistrationCoordinatorsAction extends AbstractProfileAction 
 
     /**
      * Action called to list all available registration coordinators for an investigator.
-     *
+     * 
      * @return the struts result
      */
     @Action(value = "browse", results = @Result(location = "browse_coordinators.jsp"))
@@ -147,8 +147,6 @@ public class BrowseRegistrationCoordinatorsAction extends AbstractProfileAction 
     /**
      * Table listing for an approved registration coordinator.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
     public class ApprovedRegistrationCoordinatorListing {
         private final Long id;
         private final String displayName;
@@ -159,7 +157,7 @@ public class BrowseRegistrationCoordinatorsAction extends AbstractProfileAction 
         /**
          * @param managedInvestigator Managed Investigator
          */
-        ApprovedRegistrationCoordinatorListing(ManagedInvestigator managedInvestigator) {
+        public ApprovedRegistrationCoordinatorListing(ManagedInvestigator managedInvestigator) {
             this.id = managedInvestigator.getId();
             Person coordinator = managedInvestigator.getUser().getPerson();
             this.displayName = coordinator.getDisplayNameForList();

@@ -116,7 +116,7 @@ import com.opensymphony.xwork2.validator.annotations.Validations;
 public class ManageWorkHistoryCredentialsAction extends AbstractManageCredentialsAction {
 
     private static final long serialVersionUID = 1L;
-    private static final String ISSUER_RESOURCE = "workHistory.issuer";
+    static final String ISSUER_RESOURCE = "workHistory.issuer";
 
     /**
      * @param profileService the profileService to set
@@ -160,7 +160,7 @@ public class ManageWorkHistoryCredentialsAction extends AbstractManageCredential
     public String manageCredentialsAjaxEnter() {
         if (getPage() == null || FirebirdUIConstants.RETURN_SEARCH_PAGE.equals(getPage())) {
             setPage(FirebirdUIConstants.RETURN_SEARCH_PAGE);
-            setIssuingOrganizationExternalId(null);
+            setIssuerSearchKey(null);
         }
 
         return getPage();
@@ -175,7 +175,7 @@ public class ManageWorkHistoryCredentialsAction extends AbstractManageCredential
     @Validations(
             customValidators = { @CustomValidator(type = "hibernate", fieldName = "workHistory.issuer", parameters = {
                 @ValidationParameter(name = "resourceKeyBase", value = "profile.organization"),
-                @ValidationParameter(name = "excludes", value = "externalId") }) },
+                @ValidationParameter(name = "excludes", value = "nesId") }) },
             requiredStrings = { @RequiredStringValidator(fieldName = "effectiveDate",
                     key = "error.start.date.required") },
             requiredFields = @RequiredFieldValidator(

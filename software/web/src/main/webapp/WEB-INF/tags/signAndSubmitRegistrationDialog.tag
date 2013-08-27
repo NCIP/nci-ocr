@@ -39,7 +39,7 @@
                     <br/>
 
                     <div class="btn_bar">
-                        <sj:a id="sign" value="Sign" targets="registrationDialog" onclick="indicateLoading(true)"
+                        <sj:a id="sign" value="Sign" targets="registrationDialog" onclick="indicateLoading(true)" 
                         cssClass="button" formIds="signForm" href="#" onClickTopics="submit" onSuccessTopics="enable">
                             <fmt:message key="button.sign"/></sj:a>
                         <s:a id="closeButton" href="#" cssClass="button" onclick="closeDialog();"><fmt:message key="button.close"/></s:a>
@@ -60,7 +60,6 @@
 
 $(function() {
     indicateLoading(false);
-    $("#username").focus();
     var documentRows = ${documentsJson};
     var formDownloadUrl = '<s:property value="downloadFormUrl" />';
     var documentDownloadUrl = '<s:property value="downloadDocumentUrl" />';

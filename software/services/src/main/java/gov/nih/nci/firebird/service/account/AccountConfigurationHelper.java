@@ -82,8 +82,10 @@
  */
 package gov.nih.nci.firebird.service.account;
 
-import static gov.nih.nci.firebird.data.user.UserRoleType.*;
-import static org.apache.commons.lang3.StringUtils.*;
+import static gov.nih.nci.firebird.data.user.UserRoleType.INVESTIGATOR;
+import static gov.nih.nci.firebird.data.user.UserRoleType.REGISTRATION_COORDINATOR;
+import static gov.nih.nci.firebird.data.user.UserRoleType.SPONSOR;
+import static gov.nih.nci.firebird.data.user.UserRoleType.SPONSOR_DELEGATE;
 import gov.nih.nci.firebird.cagrid.GridGrouperService;
 import gov.nih.nci.firebird.cagrid.GridInvocationException;
 import gov.nih.nci.firebird.common.ValidationFailure;
@@ -101,11 +103,9 @@ import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
 import gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter;
 import gov.nih.nci.firebird.service.messages.TemplateService;
 import gov.nih.nci.firebird.service.messages.email.EmailService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 import gov.nih.nci.firebird.service.organization.OrganizationAssociationService;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 
 import java.util.EnumMap;
@@ -122,14 +122,13 @@ import com.google.inject.name.Named;
 /**
  * Helper class used during initial account registration and addition and removal of roles later.
  */
-@SuppressWarnings("PMD.TooManyMethods")
-// contains many private helper methods
+@SuppressWarnings("PMD.TooManyMethods") //contains many private helper methods
 class AccountConfigurationHelper {
 
     private static final String PERSON_ALREADY_ASSOCIATED_ERROR_KEY = "investigator.profile.alreadyAssociated";
 
-    private static final Set<UserRoleType> ROLES_REQUIRING_NOTIFICATION = EnumSet.of(INVESTIGATOR, SPONSOR,
-            SPONSOR_DELEGATE);
+    private static final Set<UserRoleType> ROLES_REQUIRING_NOTIFICATION =
+            EnumSet.of(INVESTIGATOR, SPONSOR, SPONSOR_DELEGATE);
 
     private InvestigatorProfileService profileService;
     private PersonService personService;
@@ -179,8 +178,7 @@ class AccountConfigurationHelper {
     }
 
     @Inject
-    void setSupportEmailAddress(@Named("firebird.email.support.address")
-    String supportEmailAddress) {
+    void setSupportEmailAddress(@Named("firebird.email.support.address") String supportEmailAddress) {
         this.supportEmailAddress = supportEmailAddress;
     }
 
@@ -211,8 +209,8 @@ class AccountConfigurationHelper {
     }
 
     private void handlePerson(FirebirdUser user) throws ValidationException {
-        if (!user.getPerson().hasExternalRecord()) {
-            personService.save(user.getPerson());
+        if (!user.getPerson().hasNesRecord()) {
+            personService.createNesPerson(user.getPerson());
         } else {
             checkPersonFreeForSelection(user.getPerson());
         }
@@ -227,8 +225,8 @@ class AccountConfigurationHelper {
         }
     }
 
-    private void handleRoles(FirebirdUser user, AccountConfigurationData configurationData, boolean addGroupMemberships)
-            throws ValidationException, GridInvocationException {
+    private void handleRoles(FirebirdUser user, AccountConfigurationData configurationData,
+            boolean addGroupMemberships)  throws ValidationException, GridInvocationException {
         if (configurationData.getRoles().contains(UserRoleType.INVESTIGATOR)) {
             addInvestigatorRole(user, configurationData, addGroupMemberships);
         }
@@ -252,10 +250,11 @@ class AccountConfigurationHelper {
         }
         profile.setPrimaryOrganization(configurationData.getPrimaryOrganization());
         user.createInvestigatorRole(profile);
-        if (!configurationData.getPrimaryOrganization().getOrganization().hasExternalRecord()) {
+        if (!configurationData.getPrimaryOrganization().getOrganization().hasNesRecord()) {
             organizationAssociationService.createNewPrimaryOrganization(configurationData.getPrimaryOrganization());
         }
         profileService.setPrimaryOrganization(profile, configurationData.getPrimaryOrganization());
+        profileService.setPrimaryPerson(profile, profile.getPerson());
         if (addGroupMemberships) {
             gridGrouperService.addGridUserToGroup(user.getUsername(), INVESTIGATOR.getGroupName());
         }
@@ -294,8 +293,8 @@ class AccountConfigurationHelper {
         }
     }
 
-    void addRoles(FirebirdUser user, AccountConfigurationData configurationData) throws ValidationException,
-            GridInvocationException {
+    void addRoles(FirebirdUser user, AccountConfigurationData configurationData)
+            throws ValidationException, GridInvocationException {
         refreshConfigurationEntities(configurationData);
         handleRoles(user, configurationData, true);
         if (isSupportEmailRequired(configurationData)) {
@@ -313,7 +312,8 @@ class AccountConfigurationHelper {
         parameterValues.put(FirebirdTemplateParameter.ACCOUNT_DATA, configurationData);
         parameterValues.put(FirebirdTemplateParameter.FIREBIRD_USER, user);
         FirebirdMessage message = templateService.generateMessage(
-                FirebirdMessageTemplate.ADDED_ROLES_SUPPORT_NOTIFICATION_EMAIL, parameterValues);
+                FirebirdMessageTemplate.ADDED_ROLES_SUPPORT_NOTIFICATION_EMAIL,
+                parameterValues);
         emailService.sendMessage(supportEmailAddress, null, null, message);
     }
 
@@ -354,34 +354,17 @@ class AccountConfigurationHelper {
 
     private Person getRefreshedPerson(Person person) {
         if (person != null && person.getId() != null) {
-            return retrievePerson(person);
+            return personService.getById(person.getId());
         } else {
             return person;
         }
     }
 
-    private Person retrievePerson(Person person) {
-        try {
-            return personService.getByExternalId(person.getExternalId());
-        } catch (InvalidatedPersonException e) {
-            throw new IllegalStateException("Unexpected failure for person external id: " + person.getExternalId(), e);
-        }
-    }
-
     private Organization getRefreshedOrganization(Organization organization) {
-        if (organization != null && !isEmpty(organization.getExternalId())) {
-            return getOrganization(organization);
+        if (organization != null && organization.getId() != null) {
+            return organizationService.getById(organization.getId());
         } else {
             return organization;
-        }
-    }
-
-    private Organization getOrganization(Organization organization) {
-        try {
-            return organizationService.getByExternalId(organization.getExternalId());
-        } catch (InvalidatedOrganizationException e) {
-            throw new IllegalStateException("Unexpected failure for organization external id: "
-                    + organization.getExternalId(), e);
         }
     }
 

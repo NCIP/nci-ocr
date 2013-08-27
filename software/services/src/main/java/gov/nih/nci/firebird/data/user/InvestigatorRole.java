@@ -94,6 +94,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.Cascade;
@@ -110,6 +111,7 @@ public class InvestigatorRole implements Serializable {
 
     private FirebirdUser user;
     private InvestigatorProfile profile;
+    private boolean verified;
     private InvestigatorWithdrawalRequest withdrawalRequest;
     private InvestigatorStatus status;
     private boolean statusChangeNotificationRequiredForInvestigator;
@@ -149,8 +151,6 @@ public class InvestigatorRole implements Serializable {
         return profile;
     }
 
-    @SuppressWarnings("ucd")
-    // setter required by hibernate, used in tests
     void setProfile(InvestigatorProfile profile) {
         this.profile = profile;
     }
@@ -168,6 +168,21 @@ public class InvestigatorRole implements Serializable {
      */
     public void setWithdrawalRequest(InvestigatorWithdrawalRequest withdrawalRequest) {
         this.withdrawalRequest = withdrawalRequest;
+    }
+
+    /**
+     * @return true if this investigator is in the verified Grid Grouper group
+     */
+    @Transient
+    public boolean isVerified() {
+        return verified;
+    }
+
+    /**
+     * @param verified the verified to set
+     */
+    public void setVerified(boolean verified) {
+        this.verified = verified;
     }
 
     /**

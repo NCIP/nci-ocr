@@ -3,7 +3,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib tagdir="/WEB-INF/tags" prefix="firebird" %>
-<%@ attribute name="selectedSponsorExternalIds" required="true" rtexprvalue="true" %>
+<%@ attribute name="selectedSponsorIds" required="true" rtexprvalue="true" %>
 <%@ attribute name="disabledSponsorIds" required="true" rtexprvalue="true" %>
 <%@ attribute name="disabledSponsorKey" required="true"%>
 
@@ -18,7 +18,7 @@
             <s:form id="sponsorOrganizationSelectionForm" action="nextStep" onsubmit="return false">
                 <table id="sponsorOrganizationsTable" class="ui-jqgrid-htable ui-jqgrid-btable"
                         summary="This table displays the sponsor organizations available for selection. It displays a
-                                checkbox for selection, the name of the sponsor organization, the mailing address,
+                                checkbox for selection, the name of the sponsor organization, the mailing address, 
                                 and the email.">
                     <thead>
                         <tr>
@@ -41,14 +41,13 @@
 <script type="text/javascript">
     var _sponsorSelectionPage = (function(){
         var page = {};
-        page.selectedSponsorExternalIds = ${selectedSponsorExternalIds} ? ${selectedSponsorExternalIds} : [];
+        page.selectedSponsorIds = ${selectedSponsorIds} ? ${selectedSponsorIds} : [];
         page.disabledSponsorIds = ${disabledSponsorIds} ? ${disabledSponsorIds} : [];
         page.createCheckColumn = function(organization) {
-            var checkboxHtml = "<input type='checkbox' name='selectedSponsorExternalIds' ";
-            checkboxHtml += "id='sponsor_"+ organization.externalId + "' ";
-            checkboxHtml += "value='" + organization.externalId + "' ";
-
-            if (_.indexOf(this.selectedSponsorExternalIds, organization.id) >= 0) {
+            var checkboxHtml = "<input type='checkbox' name='selectedSponsorIds' ";
+            checkboxHtml += "id='sponsor_"+ organization.id + "' ";
+            checkboxHtml += "value='" + organization.id + "' ";
+            if (_.indexOf(this.selectedSponsorIds, organization.id) >= 0) {
                 checkboxHtml += "checked ";
             }
             if (_.indexOf(this.disabledSponsorIds, organization.id) >= 0) {
@@ -79,13 +78,13 @@
             }},
             {mDataProp: "name"},
             {mDataProp: "postalAddress", fnRender : function(obj) {
-              return addressFormatter(obj.aData.postalAddress);
+              return __addressFormatter(obj.aData.postalAddress);
             }},
             {mDataProp: "email"}
         ],
         "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-           $(nRow).attr("id", aData.externalId);
-           if (_.indexOf(_sponsorSelectionPage.disabledSponsorIds, aData.externalId) >= 0) {
+           $(nRow).attr("id", aData.id);
+           if (_.indexOf(_sponsorSelectionPage.disabledSponsorIds, aData.id) >= 0) {
                $(nRow).addClass("selectedSponsor disabledText")
            }
            return nRow;

@@ -98,7 +98,7 @@ import org.hibernate.validator.NotNull;
 public class FellowshipSnapshot extends AbstractCredentialSnapshot {
 
     private static final long serialVersionUID = 1L;
-
+    
     private MedicalSubSpecialty specialty;
 
     /**

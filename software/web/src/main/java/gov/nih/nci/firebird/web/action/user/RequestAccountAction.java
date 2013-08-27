@@ -138,8 +138,8 @@ public class RequestAccountAction extends FirebirdActionSupport implements Prepa
     private List<Country> countries;
     private List<State> states;
     private Set<Organization> sponsorOrganizations;
-    private Set<String> selectedSponsorExternalIds = Sets.newHashSet();
-    private Set<String> selectedSponsorDelegateExternalIds = Sets.newHashSet();
+    private Set<String> selectedSponsorIds = Sets.newHashSet();
+    private Set<String> selectedSponsorDelegateIds = Sets.newHashSet();
     private List<TrustedIdentityProvider> identityProviders;
 
     /**
@@ -197,26 +197,23 @@ public class RequestAccountAction extends FirebirdActionSupport implements Prepa
     customValidators = {
             @CustomValidator(type = "hibernate", fieldName = "newAccount.person", parameters = {
                             @ValidationParameter(name = "resourceKeyBase", value = "account"),
-                            @ValidationParameter(name = "excludes", value = "externalId") }) },
+                            @ValidationParameter(name = "excludes", value = "nesId") }) },
             fieldExpressions = {
                 @FieldExpressionValidator(fieldName = "newAccount.person.postalAddress.stateOrProvince",
                 expression = "newAccount.person.postalAddress.country != 'USA' || "
-                           + "(newAccount.person.postalAddress.stateOrProvince != null &&"
-                           + "newAccount.person.postalAddress.stateOrProvince.trim() != '')",
+                           + "newAccount.person.postalAddress.stateOrProvince.trim() != ''",
                 key = "stateOrProvince.required"),
                 @FieldExpressionValidator(fieldName = "newAccount.username",
                 expression = "!newAccount.existingLdapAccount || "
-                           + "(newAccount.username != null &&"
-                           + "newAccount.username.trim() != '')",
+                           + "newAccount.username.trim() != ''",
                 key = "username.required"),
                 @FieldExpressionValidator(fieldName = "newAccount.password",
                 expression = "!newAccount.existingLdapAccount || "
-                           + "(newAccount.password != null &&"
-                           + "newAccount.password.trim() != '')",
+                           + "newAccount.password.trim() != ''",
                 key = "password.required") },
             regexFields = { @RegexFieldValidator(fieldName = "newAccount.username",
                 key = "username.contains.invalid.characters",
-                    regexExpression = "[a-zA-Z0-9_-]*") }
+                regexExpression = "[a-zA-Z0-9_-]*") }
     )
     @Action(value = "requestAccount", results = { @Result(location = "request_account_confirmation.jsp"),
             @Result(name = ActionSupport.INPUT, location = "request_account.jsp") })
@@ -229,16 +226,14 @@ public class RequestAccountAction extends FirebirdActionSupport implements Prepa
     /**
      * Validate method which is called before requestAccount().
      */
-    @SuppressWarnings("ucd")
-    // automatically called before requestAccount()
     public void validateRequestAccount() {
         validateRoleSelected();
         validateAuthenticationSuccessful();
     }
 
     private void validateRoleSelected() {
-        if (getNewAccount().getRoles().isEmpty() && getSelectedSponsorExternalIds().isEmpty()
-                && getSelectedSponsorDelegateExternalIds().isEmpty()) {
+        if (getNewAccount().getRoles().isEmpty() && getSelectedSponsorIds().isEmpty()
+                && getSelectedSponsorDelegateIds().isEmpty()) {
             addActionError(getText("user.registration.role.selection.error"));
         }
     }
@@ -268,10 +263,10 @@ public class RequestAccountAction extends FirebirdActionSupport implements Prepa
 
     private Set<Organization> getSelectedSponsors(boolean delegate) {
         Set<Organization> sponsors = Sets.newHashSet();
-        Set<String> sponsorIds = getSelectedSponsorExternalIds(delegate);
+        Set<String> sponsorIds = getSelectedSponsorIds(delegate);
         if (sponsorIds != null) {
             for (Organization sponsor : getSponsorOrganizations()) {
-                if (sponsorIds.contains(sponsor.getExternalId())) {
+                if (sponsorIds.contains(sponsor.getNesId())) {
                     sponsors.add(sponsor);
                 }
             }
@@ -279,11 +274,11 @@ public class RequestAccountAction extends FirebirdActionSupport implements Prepa
         return sponsors;
     }
 
-    private Set<String> getSelectedSponsorExternalIds(boolean delegate) {
+    private Set<String> getSelectedSponsorIds(boolean delegate) {
         if (delegate) {
-            return getSelectedSponsorDelegateExternalIds();
+            return getSelectedSponsorDelegateIds();
         } else {
-            return getSelectedSponsorExternalIds();
+            return getSelectedSponsorIds();
         }
     }
 
@@ -332,31 +327,31 @@ public class RequestAccountAction extends FirebirdActionSupport implements Prepa
     }
 
     /**
-     * @return the selectedSponsorExternalIds
+     * @return the selectedSponsorIds
      */
-    public Set<String> getSelectedSponsorExternalIds() {
-        return selectedSponsorExternalIds;
+    public Set<String> getSelectedSponsorIds() {
+        return selectedSponsorIds;
     }
 
     /**
-     * @param selectedSponsorExternalIds the selectedSponsorExternalIds to set
+     * @param selectedSponsorIds the selectedSponsorIds to set
      */
-    public void setSelectedSponsorExternalIds(Set<String> selectedSponsorExternalIds) {
-        this.selectedSponsorExternalIds = selectedSponsorExternalIds;
+    public void setSelectedSponsorIds(Set<String> selectedSponsorIds) {
+        this.selectedSponsorIds = selectedSponsorIds;
     }
 
     /**
-     * @return the selectedSponsorDelegateExternalIds
+     * @return the selectedSponsorDelegateIds
      */
-    public Set<String> getSelectedSponsorDelegateExternalIds() {
-        return selectedSponsorDelegateExternalIds;
+    public Set<String> getSelectedSponsorDelegateIds() {
+        return selectedSponsorDelegateIds;
     }
 
     /**
-     * @param selectedSponsorDelegateExternalIds the selectedSponsorDelegateExternalIds to set
+     * @param selectedSponsorDelegateIds the selectedSponsorDelegateIds to set
      */
-    public void setSelectedSponsorDelegateExternalIds(Set<String> selectedSponsorDelegateExternalIds) {
-        this.selectedSponsorDelegateExternalIds = selectedSponsorDelegateExternalIds;
+    public void setSelectedSponsorDelegateIds(Set<String> selectedSponsorDelegateIds) {
+        this.selectedSponsorDelegateIds = selectedSponsorDelegateIds;
     }
 
     /**

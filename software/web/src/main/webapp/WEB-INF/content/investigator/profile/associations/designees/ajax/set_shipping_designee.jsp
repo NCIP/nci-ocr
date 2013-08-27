@@ -51,25 +51,25 @@
                   <s:a id="createNewPerson" cssClass="button" href="javascript:void(0);"><fmt:message key="button.create.new"/></s:a>
                 </firebird:personSearch>
             </div>
-            <div id="selectedPerson" class="<s:property value='%{shippingDesignee.person == null || shippingDesignee.person.externalId == null ? \"hide\" : \"\"}'/>">
-                <s:hidden id="selectedPersonExternalId" name="selectedPersonExternalId" />
+            <div id="selectedPerson" class="<s:property value='%{shippingDesignee.person == null || shippingDesignee.person.nesId == null ? \"hide\" : \"\"}'/>">
+                <s:hidden id="selectedPersonKey" name="selectedPersonKey" />
                 <firebird:searchAgainLink/>
                 <firebird:viewPerson person="${shippingDesignee.person}" tagVariableName="designeePerson"/>
             </div>
-            <div id="newPerson" class="<s:property value='%{shippingDesignee.person == null || shippingDesignee.person.externalId != null ? \"hide\" : \"\"}'/>">
+            <div id="newPerson" class="<s:property value='%{shippingDesignee.person == null || shippingDesignee.person.nesId != null ? \"hide\" : \"\"}'/>">
                 <firebird:searchAgainLink/>
                 <firebird:managePersonFormFields beanPrefix="shippingDesignee.person"/>
                 <s:hidden name="createNewPerson" value="true"/>
             </div>
             <script>
             $(document).ready(function() {
-                personSearch.clickSelectButton = function(person) {
-                $('#selectedPersonExternalId').val(person.externalId);
+                personSearch.clickSelectButton = function(personId, rowData) {
+                $('#selectedPersonKey').val(personId);
                 $("#selectPerson > div").each(function(index) {
                     if (index === 1) {
                       $(this).wrapInner("<form/>").show();
-                      $(this).data("selection", person);
-                      designeePerson.setPerson(person);
+                      $(this).data("selection", rowData.person);
+                      designeePerson.setPerson(rowData.person);
                     } else {
                       $(this).hide();
                     }
@@ -91,12 +91,12 @@
                     <s:a id="createNewOrganization" cssClass="button" href="javascript:void(0);"><fmt:message key="button.create.new"/></s:a>
                 </firebird:organizationSearch>
             </div>
-            <div id="selectedOrganization" class="<s:property value='%{shippingDesignee.organization == null || shippingDesignee.organization.externalId == null ? \"hide\" : \"\"}'/>">
-                <s:hidden id="selectedOrganizationExternalId" name="selectedOrganizationExternalId" />
+            <div id="selectedOrganization" class="<s:property value='%{shippingDesignee.organization == null || shippingDesignee.organization.nesId == null ? \"hide\" : \"\"}'/>">
+                <s:hidden id="selectedOrganizationKey" name="selectedOrganizationKey" />
                 <firebird:searchAgainLink/>
                 <firebird:organizationDisplay organization="${shippingDesignee.organization}" tagVariableName="organizationDisplay"/>
             </div>
-            <div id="newOrganization" class="<s:property value='%{shippingDesignee.organization == null || shippingDesignee.organization.externalId != null ? \"hide\" : \"\"}'/>">
+            <div id="newOrganization" class="<s:property value='%{shippingDesignee.organization == null || shippingDesignee.organization.nesId != null ? \"hide\" : \"\"}'/>">
                 <firebird:searchAgainLink/>
                 <div class="formcol">
                    <s:textfield id="shippingDesignee.organization.name" name="shippingDesignee.organization.name" maxlength="160" size="30" requiredLabel="true"
@@ -117,13 +117,13 @@
             <script>
             $(document).ready(function() {
                 organizationSearch.clickSelectButton = (function() {
-                    return function(organization) {
-                        $('#selectedOrganizationExternalId').val(organization.externalId);
+                    return function(organizationId, rowData) {
+                        $('#selectedOrganizationKey').val(organizationId);
                         $("#selectOrganization > div").each(function(index) {
                             if (index === 1) {
                                 $(this).wrapInner("<form/>").show();
-                                $(this).data("selection", organization); //The selection
-                                organizationDisplay.setOrganization(organization);
+                                $(this).data("selection", rowData.organization); //The selection
+                                organizationDisplay.setOrganization(rowData.organization);
                             } else {
                                 $(this).hide();
                             }

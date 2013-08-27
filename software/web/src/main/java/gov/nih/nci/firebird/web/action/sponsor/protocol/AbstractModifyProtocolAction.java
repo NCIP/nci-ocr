@@ -82,13 +82,16 @@
  */
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import com.fiveamsolutions.nci.commons.data.persistent.PersistentObject;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import gov.nih.nci.firebird.data.ProtocolLeadOrganization;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.ProtocolAgent;
-import gov.nih.nci.firebird.data.ProtocolLeadOrganization;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 
 import java.util.HashSet;
@@ -100,31 +103,30 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * Helper action for protocol management.
  */
-@SuppressWarnings("PMD.TooManyMethods")
-// broken down for easier readability.
-abstract class AbstractModifyProtocolAction extends AbstractProtocolAction {
+@SuppressWarnings("PMD.TooManyMethods") //broken down for easier readability.
+public abstract class AbstractModifyProtocolAction extends AbstractProtocolAction {
     private static final long serialVersionUID = 1L;
 
+    private final OrganizationService organizationService;
     private String agentList = "";
     private Organization sponsor;
-    private String sponsorExternalId;
-    private final Map<String, List<String>> leadOrganizationIdMappings = Maps.newHashMap();
-    private final Map<Organization, List<Person>> leadOrganizationMappings = Maps.newHashMap();
+    private Map<String, List<String>> leadOrganizationMappings = Maps.newHashMap();
+    private final Map<String, Organization> leadOrganizations = Maps.newHashMap();
+    private final Map<String, Person> principalInvestigators = Maps.newHashMap();
 
     /**
      * @param protocolService the protocol service
+     * @param organizationService the organization service
      */
-    protected AbstractModifyProtocolAction(ProtocolService protocolService) {
+    protected AbstractModifyProtocolAction(ProtocolService protocolService, OrganizationService organizationService) {
         super(protocolService);
+        this.organizationService = organizationService;
     }
 
     @Override
@@ -133,60 +135,57 @@ abstract class AbstractModifyProtocolAction extends AbstractProtocolAction {
         if (getId(getProtocol()) == null) {
             setProtocol(getProtocolService().create());
         }
-        setSponsor(lookupSponsor());
+        setSponsor(getExistingOrganization(getSponsor()));
         configureLeadOrganizationMappings();
         agentList = StringUtils.trimToNull(getProtocol().getAgentListForDisplay());
     }
 
     private void configureLeadOrganizationMappings() {
-        if (!leadOrganizationIdMappings.isEmpty()) {
+        if (!leadOrganizationMappings.isEmpty()) {
             populateFromSubmittedValues();
         }
     }
 
-    private Organization lookupSponsor() {
-        if (!isEmpty(getSponsorExternalId())) {
-            return getOrganization(getSponsorExternalId());
-        } else {
-            return null;
-        }
-    }
-
     private void populateFromSubmittedValues() {
-        leadOrganizationMappings.clear();
-        Iterator<Entry<String, List<String>>> mappingIterator = leadOrganizationIdMappings.entrySet().iterator();
+        Iterator<Entry<String, List<String>>> mappingIterator = leadOrganizationMappings.entrySet().iterator();
         while (mappingIterator.hasNext()) {
             Entry<String, List<String>> mapping = mappingIterator.next();
-            List<Person> investigators = lookupPrincipalInvestigators(mapping.getValue());
-            try {
-                this.leadOrganizationMappings.put(getOrganizationService().getByExternalId(mapping.getKey()),
-                        investigators);
-            } catch (InvalidatedOrganizationException e) {
-                mappingIterator.remove();
-                addActionError(getText("sponsor.protocol.lead.organization.unavailable.organization.error"));
+            //Iterable<String> personKeys = Splitter.on(',').trimResults().omitEmptyStrings().split(mapping.getValue());
+            for (String personKey : mapping.getValue()) {
+                try {
+                    leadOrganizations.put(mapping.getKey(),
+                            getOrganizationSearchService().getOrganization(mapping.getKey()));
+                    lookupPrincipalInvestigator(personKey);
+                } catch (UnavailableEntityException e) {
+                    mappingIterator.remove();
+                    addActionError(getText("sponsor.protocol.lead.organization.unavailable.organization.error"));
+                }
             }
         }
     }
 
-    private List<Person> lookupPrincipalInvestigators(List<String> externalIds) {
-        List<Person> investigators = Lists.newArrayList();
-        if (!externalIds.isEmpty()) {
-            for (String externalId : externalIds) {
-                Person investigator = getPerson(externalId);
-                if (!investigators.contains(investigator)) {
-                    investigators.add(investigator);
-                }
+    private void lookupPrincipalInvestigator(String personKey) {
+        if (StringUtils.isNotBlank(personKey)) {
+            if (!principalInvestigators.containsKey(personKey)) {
+                principalInvestigators.put(personKey, getPersonSearchService().getPerson(personKey));
             }
         } else {
             addActionError(getText("sponsor.protocol.lead.organization.principal.investigator.required"));
         }
-        return investigators;
+    }
+
+    private Organization getExistingOrganization(Organization org) {
+        Long id = getId(org);
+        if (id != null) {
+            return organizationService.getById(id);
+        }
+        return org;
     }
 
     /**
      * @return parse agentList into individual agent Names.
      */
-    Set<String> getAgentNameSet() {
+    protected Set<String> getAgentNameSet() {
         Set<String> agentNameSet = new HashSet<String>();
         agentList = StringUtils.trimToEmpty(agentList);
         for (String agentName : Splitter.on(',').omitEmptyStrings().trimResults().split(agentList)) {
@@ -204,16 +203,21 @@ abstract class AbstractModifyProtocolAction extends AbstractProtocolAction {
      */
     protected void doExistingLeadOrganizationMappingSetup() {
         for (ProtocolLeadOrganization leadOrganization : getProtocol().getLeadOrganizations()) {
-            Organization organization = leadOrganization.getOrganization();
-            Person principalInvestigator = leadOrganization.getPrincipalInvestigator();
-            if (leadOrganizationMappings.containsKey(organization)) {
-                leadOrganizationMappings.get(organization).add(principalInvestigator);
+            String organizationId = getIdAsString(leadOrganization.getOrganization());
+            String principalInvestigatorId = getIdAsString(leadOrganization.getPrincipalInvestigator());
+            if (leadOrganizationMappings.containsKey(organizationId)) {
+                leadOrganizationMappings.get(organizationId).add(principalInvestigatorId);
             } else {
-                leadOrganizationMappings.put(organization, Lists.newArrayList(principalInvestigator));
+                leadOrganizationMappings.put(organizationId, Lists.newArrayList(principalInvestigatorId));
             }
+            leadOrganizations.put(organizationId, leadOrganization.getOrganization());
+            principalInvestigators.put(principalInvestigatorId, leadOrganization.getPrincipalInvestigator());
         }
     }
 
+    String getIdAsString(PersistentObject object) {
+        return (object == null) ? null : ObjectUtils.toString(getId(object));
+    }
     /**
      * @return struts forward.
      */
@@ -233,7 +237,7 @@ abstract class AbstractModifyProtocolAction extends AbstractProtocolAction {
     }
 
     private void updateLeadOrganizations() {
-        if (leadOrganizationIdMappings.isEmpty()) {
+        if (leadOrganizationMappings.isEmpty()) {
             getProtocol().getLeadOrganizations().clear();
         } else {
             removeLeadOrganizationsFromProtocol();
@@ -242,7 +246,8 @@ abstract class AbstractModifyProtocolAction extends AbstractProtocolAction {
     }
 
     private void removeLeadOrganizationsFromProtocol() {
-        Iterator<ProtocolLeadOrganization> leadOrganizationIterator = getProtocol().getLeadOrganizations().iterator();
+        Iterator<ProtocolLeadOrganization> leadOrganizationIterator = getProtocol().getLeadOrganizations()
+                .iterator();
         while (leadOrganizationIterator.hasNext()) {
             if (!checkLeadOrganizationSelected(leadOrganizationIterator.next())) {
                 leadOrganizationIterator.remove();
@@ -250,18 +255,11 @@ abstract class AbstractModifyProtocolAction extends AbstractProtocolAction {
         }
     }
 
-    private boolean checkLeadOrganizationSelected(ProtocolLeadOrganization leadOrganization) {
-        String organizationExternalId = leadOrganization.getOrganization().getExternalId();
-        String investigatorExternalId = leadOrganization.getPrincipalInvestigator().getExternalId();
-        return leadOrganizationIdMappings.containsKey(organizationExternalId)
-                && leadOrganizationIdMappings.get(organizationExternalId).contains(investigatorExternalId);
-    }
-
     private void addNewLeadOrganizations() {
-        for (Entry<String, List<String>> leadOrganizationIdMapping : leadOrganizationIdMappings.entrySet()) {
-            Organization organization = getOrganizationWithId(leadOrganizationIdMapping.getKey());
-            for (String personKey : leadOrganizationIdMapping.getValue()) {
-                Person principalInvestigator = getInvestigatorWithId(organization, personKey);
+        for (Entry<String, List<String>> leadOrganizationMapping : leadOrganizationMappings.entrySet()) {
+            Organization organization = leadOrganizations.get(leadOrganizationMapping.getKey());
+            for (String personKey : leadOrganizationMapping.getValue()) {
+                Person principalInvestigator = principalInvestigators.get(personKey);
                 if (!getProtocol().hasExistingLeadOrganization(organization, principalInvestigator)) {
                     getProtocol().addLeadOrganization(organization, principalInvestigator);
                 }
@@ -269,63 +267,74 @@ abstract class AbstractModifyProtocolAction extends AbstractProtocolAction {
         }
     }
 
-    private Organization getOrganizationWithId(final String id) {
-        return Iterables.find(leadOrganizationMappings.keySet(), new Predicate<Organization>() {
-            public boolean apply(Organization organization) {
-                return id.equals(organization.getExternalId());
-            }
-        });
+    private boolean checkLeadOrganizationSelected(ProtocolLeadOrganization leadOrganization) {
+        String leadOrganizationId = getIdAsString(leadOrganization.getOrganization());
+        String leadOrganizationPIId = getIdAsString(leadOrganization.getPrincipalInvestigator());
+        return leadOrganizationMappings.containsKey(leadOrganizationId)
+               && ObjectUtils.equals(leadOrganizationMappings.get(leadOrganizationId), leadOrganizationPIId);
     }
 
-    private Person getInvestigatorWithId(Organization organization, final String id) {
-        return Iterables.find(leadOrganizationMappings.get(organization), new Predicate<Person>() {
-            public boolean apply(Person person) {
-                return id.equals(person.getExternalId());
-            }
-        });
-    }
 
     /**
      * @throws ValidationException if Validation errors exist.
      */
     protected abstract void performSave() throws ValidationException;
 
+    /**
+     * @param agentList the agentList to set
+     */
     public void setAgentList(String agentList) {
         this.agentList = agentList;
     }
 
+    /**
+     * @return the agentList
+     */
     public String getAgentList() {
         return agentList;
     }
 
-    public String getSponsorExternalId() {
-        return sponsorExternalId;
-    }
-
-    public void setSponsorExternalId(String sponsorExternalId) {
-        this.sponsorExternalId = sponsorExternalId;
-    }
-
+    /**
+     * @return the selected sponsor organization.
+     */
     public Organization getSponsor() {
         return sponsor;
     }
 
-    void setSponsor(Organization sponsor) {
+    /**
+     * @param sponsor the selected sponsor organization.
+     */
+    public void setSponsor(Organization sponsor) {
         this.sponsor = sponsor;
     }
 
     /**
-     * @return The Map identifying the lead organization's external ID to the principal investigator's external ID.
+     * @return The Map identifying the lead organization id / searchkey to the
+     * principal investigator id / searchkey.
      */
-    public Map<String, List<String>> getLeadOrganizationIdMappings() {
-        return leadOrganizationIdMappings;
-    }
-
-    /**
-     * @return The mapping of lead organizations to primary investigators
-     */
-    public Map<Organization, List<Person>> getLeadOrganizationMappings() {
+    public Map<String, List<String>> getLeadOrganizationMappings() {
         return leadOrganizationMappings;
     }
 
+    /**
+     * @param leadOrganizationMappings The Map identifying the lead organization id / searchkey to the
+     *                                 principal investigator id / searchkey.
+     */
+    public void setLeadOrganizationMappings(Map<String, List<String>> leadOrganizationMappings) {
+        this.leadOrganizationMappings = leadOrganizationMappings;
+    }
+
+    /**
+     * @return The mapping of ID / searchString to Organizations.
+     */
+    public Map<String, Organization> getLeadOrganizations() {
+        return leadOrganizations;
+    }
+
+    /**
+     * @return the Mapping of Principal Investigator Search Keys to their objects.
+     */
+    public Map<String, Person> getPrincipalInvestigators() {
+        return principalInvestigators;
+    }
 }

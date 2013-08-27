@@ -93,7 +93,6 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.Upl
 
 import java.util.List;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
 /**
@@ -102,8 +101,8 @@ import org.openqa.selenium.WebDriver;
 public class ProtocolAdditionalAttachmentsTab extends AbstractFormTab<ProtocolAdditionalAttachmentsTab> implements
         AdditionalAttachmentsTab {
 
-    private static final String TAB_ID = "form_additional_attachments_tab";
-    static final String TAB_LINK_CSS_SELECTOR = "#" + TAB_ID + " > a";
+    static final String TAB_LINK_CSS_SELECTOR = "#form_Additional_AttachmentsTab > a";
+    private static final String TAB_ID = "form_Additional_AttachmentsTab";
 
     private AdditionalAttachmentsTabTag additionalAttachmentsTabTag;
 
@@ -147,7 +146,6 @@ public class ProtocolAdditionalAttachmentsTab extends AbstractFormTab<ProtocolAd
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
-        assertPresent(By.cssSelector(CurriculumVitaeTab.TAB_LINK_CSS_SELECTOR));
         assertFalse(JQueryUtils.isDialogDisplayed(getDriver()));
     }
 

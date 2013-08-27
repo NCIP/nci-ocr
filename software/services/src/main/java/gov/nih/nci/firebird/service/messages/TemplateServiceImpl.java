@@ -114,17 +114,17 @@ public class TemplateServiceImpl implements TemplateService {
      * @param velocity the velocity to set
      * @param resources the FIREBIRD resource bundle
      * @param baseUrl the base URL path for FIREBIRD links
-     * @param sponsorWithAnnualRegistrationsExternalId the sponsorWithAnnualRegistrationsExternalId
+     * @param sponsorWithAnnualRegistrationsNesId the sponsorWithAnnualRegistrationsNesId
      */
     @Inject
     public TemplateServiceImpl(VelocityEngine velocity, ResourceBundle resources,
             @Named("firebird.base.url") String baseUrl,
             @Named("sponsor.organization.with.annual.registrations.nes.id")
-                String sponsorWithAnnualRegistrationsExternalId) {
+                String sponsorWithAnnualRegistrationsNesId) {
         this.velocity = velocity;
         this.resources = resources;
         this.baseUrl = baseUrl;
-        hasAnnualRegistrationSponsor = !isEmpty(sponsorWithAnnualRegistrationsExternalId);
+        hasAnnualRegistrationSponsor = !isEmpty(sponsorWithAnnualRegistrationsNesId);
     }
 
     @Override

@@ -104,7 +104,7 @@ public class ProtocolImportDetail implements Serializable {
 
     private final Protocol protocol = new Protocol();
     private ProtocolImportDetailStatus status = ProtocolImportDetailStatus.NOT_STARTED;
-    private List<String> investigatorExternalIds;
+    private List<String> investigatorNesIds;
     private final List<Person> investigators = Lists.newArrayList();
     private final Map<String, String> leadOrganizationMappings = Maps.newHashMap();
     private final ValidationResult validationResult = new ValidationResult();
@@ -125,12 +125,15 @@ public class ProtocolImportDetail implements Serializable {
         return protocol;
     }
 
-    void setInvestigatorExternalIds(List<String> investigatorExternalIds) {
-        this.investigatorExternalIds = investigatorExternalIds;
+    void setInvestigatorNesIds(List<String> investigatorNesIds) {
+        this.investigatorNesIds = investigatorNesIds;
     }
 
-    public List<String> getInvestigatorExternalIds() {
-        return investigatorExternalIds;
+    /**
+     * @return the investigatorNesIds
+     */
+    public List<String> getInvestigatorNesIds() {
+        return investigatorNesIds;
     }
 
     /**

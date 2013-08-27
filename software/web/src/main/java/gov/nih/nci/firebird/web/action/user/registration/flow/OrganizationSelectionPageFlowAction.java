@@ -84,15 +84,16 @@ package gov.nih.nci.firebird.web.action.user.registration.flow;
 
 import gov.nih.nci.firebird.data.Country;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.PrimaryOrganization;
 import gov.nih.nci.firebird.data.PrimaryOrganizationType;
 import gov.nih.nci.firebird.data.State;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.account.AccountManagementService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.service.organization.OrganizationAssociationService;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.web.common.registration.RegistrationFlowStep;
 
 import java.util.List;
@@ -126,26 +127,33 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
     static final String ORG_SEARCH = "search";
     private static final String ORGANIZATION_FIELD_PREFIX = "accountConfigurationData.primaryOrganization";
 
-    private String selectedOrganizationExternalId;
+    private String selectedOrganizationKey;
     private String navigationOption;
+    private final OrganizationService organizationService;
+    private final OrganizationAssociationService organizationAssociationService;
     private final StateLookupService stateLookup;
     private final CountryLookupService countryLookup;
     private List<Country> countries;
     private List<State> states;
 
     /**
+     * @param organizationService .
+     * @param organizationAssociationService .
      * @param stateLookup .
      * @param countryLookup .
      * @param accountService .
      */
     @Inject
-    public OrganizationSelectionPageFlowAction(
+    public OrganizationSelectionPageFlowAction(OrganizationService organizationService,
+            OrganizationAssociationService organizationAssociationService,
             StateLookupService stateLookup,
             CountryLookupService countryLookup,
             AccountManagementService accountService) {
         super(accountService);
         this.stateLookup = stateLookup;
+        this.organizationService = organizationService;
         this.countryLookup = countryLookup;
+        this.organizationAssociationService = organizationAssociationService;
     }
 
     @Override
@@ -153,7 +161,7 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
         super.prepare();
         states = stateLookup.getAll();
         countries = countryLookup.getAll();
-        selectedOrganizationExternalId = getExistingOrganizationId();
+        selectedOrganizationKey = getExistingOrganizationId();
     }
 
     /**
@@ -169,7 +177,7 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
     @Validations(customValidators = { @CustomValidator(type = "hibernate",
             fieldName = "accountConfigurationData.primaryOrganization.organization", parameters = {
                     @ValidationParameter(name = "resourceKeyBase", value = "organization"),
-                    @ValidationParameter(name = "excludes", value = "externalId") }) },
+                    @ValidationParameter(name = "excludes", value = "nesId") }) },
             fieldExpressions = {
                 @FieldExpressionValidator(
                 fieldName = "accountConfigurationData.primaryOrganization.organization.postalAddress.stateOrProvince",
@@ -178,7 +186,7 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
                             key = "stateOrProvince.required"),
                 @FieldExpressionValidator(
                 fieldName = "accountConfigurationData.primaryOrganization.type",
-                expression = "selectedOrganizationExternalId != null || "
+                expression = "selectedOrganizationKey != null || "
                  + "accountConfigurationData.primaryOrganization.type != null",
                 key = "organization.type.required")
                 })
@@ -186,19 +194,12 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
     public String saveAndProceedNext() {
         try {
             String strutsForward = super.saveAndProceedNext();
-            if (StringUtils.isEmpty(selectedOrganizationExternalId)) {
-                validatePrimaryOrganization();
-            }
+            organizationService.validateOrganization(getAccountConfigurationData().getPrimaryOrganization()
+                    .getOrganization());
             return strutsForward;
         } catch (ValidationException e) {
             return handleValidationException(e, ORGANIZATION_FIELD_PREFIX);
         }
-    }
-
-    private void validatePrimaryOrganization() throws ValidationException {
-        getOrganizationService().validate(getAccountConfigurationData().getPrimaryOrganization().getOrganization(),
-                OrganizationRoleType.PRIMARY_ORGANIZATION,
-                getAccountConfigurationData().getPrimaryOrganization().getType());
     }
 
     /**
@@ -210,7 +211,8 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
     @Action("enter")
     public String enterAction() {
         checkAccountConfigurationData();
-        if (!getAccountConfigurationData().hasPrimaryOrganization() || ORG_SEARCH.equals(navigationOption)) {
+        if (!getAccountConfigurationData().hasPrimaryOrganization()
+                || ORG_SEARCH.equals(navigationOption)) {
             return ORG_SEARCH;
         } else {
             return INPUT;
@@ -222,7 +224,7 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
         String strutsForward = SUCCESS;
         if (StringUtils.isNotEmpty(navigationOption)) {
             strutsForward = handleNavigation();
-        } else if (StringUtils.isNotEmpty(selectedOrganizationExternalId)) {
+        } else if (StringUtils.isNotEmpty(selectedOrganizationKey)) {
             strutsForward = handleExistingOrganization();
         } else {
             removeReturnLinkIfInvalid();
@@ -241,19 +243,20 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
     }
 
     private void clearPreviouslySelectedOrg() {
-        if (getSelectedOrganizationExternalId() == null) {
+        if (getSelectedOrganizationKey() == null) {
             getAccountConfigurationData().setPrimaryOrganization(null);
         }
     }
 
     private String handleExistingOrganization() {
-        if (!StringUtils.equals(getExistingOrganizationId(), selectedOrganizationExternalId)) {
+        if (!StringUtils.equals(getExistingOrganizationId(), selectedOrganizationKey)) {
             try {
-                Organization organization = getOrganizationService().getByExternalId(
-                        getSelectedOrganizationExternalId());
-                PrimaryOrganizationType type = getOrganizationService().getPrimaryOrganizationType(organization);
+                Organization organization = getOrganizationSearchService()
+                        .getOrganization(getSelectedOrganizationKey());
+                PrimaryOrganizationType type = organizationAssociationService
+                        .getExistingPrimaryOrganizationType(organization);
                 getAccountConfigurationData().setPrimaryOrganization(new PrimaryOrganization(organization, type));
-            } catch (InvalidatedOrganizationException e) {
+            } catch (UnavailableEntityException e) {
                 addActionError(getText("organization.search.selected.organization.unavailable"));
                 return INPUT;
             }
@@ -263,7 +266,7 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
 
     private String getExistingOrganizationId() {
         if (getAccountConfigurationData().hasPrimaryOrganization()) {
-            return getAccountConfigurationData().getPrimaryOrganization().getExternalId();
+            return getAccountConfigurationData().getPrimaryOrganization().getNesId();
         } else {
             return null;
         }
@@ -271,30 +274,27 @@ public class OrganizationSelectionPageFlowAction extends AbstractPageFlowAction 
 
     private void removeReturnLinkIfInvalid() {
         if (getAccountConfigurationData().hasPrimaryOrganization()) {
-            if (getAccountConfigurationData().getPrimaryOrganization().getType() == null) {
+            try {
+                organizationService.validateOrganization(getAccountConfigurationData().getPrimaryOrganization()
+                        .getOrganization());
+            } catch (ValidationException e) {
                 getFlowController().removeVisitedStep(RegistrationFlowStep.VERIFICATION);
-            } else {
-                try {
-                    validatePrimaryOrganization();
-                } catch (ValidationException e) {
-                    getFlowController().removeVisitedStep(RegistrationFlowStep.VERIFICATION);
-                }
             }
         }
     }
 
     /**
-     * @return the selectedOrganizationExternalId
+     * @return the selectedOrganizationKey
      */
-    public String getSelectedOrganizationExternalId() {
-        return selectedOrganizationExternalId;
+    public String getSelectedOrganizationKey() {
+        return selectedOrganizationKey;
     }
 
     /**
-     * @param selectedOrganizationExternalId the selectedOrganizationExternalId to set
+     * @param selectedOrganizationKey the selectedOrganizationKey to set
      */
-    public void setSelectedOrganizationExternalId(String selectedOrganizationExternalId) {
-        this.selectedOrganizationExternalId = selectedOrganizationExternalId;
+    public void setSelectedOrganizationKey(String selectedOrganizationKey) {
+        this.selectedOrganizationKey = selectedOrganizationKey;
     }
 
     /**

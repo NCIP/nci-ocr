@@ -213,7 +213,7 @@ public class ExportProtocolsTabActionTest extends AbstractWebTest {
         for (Protocol protocol : protocols) {
             for (AbstractProtocolRegistration registration : protocol.getAllRegistrations()) {
                 Person person = registration.getProfile().getPerson();
-                person.setCtepId(person.getExternalId() + "ctepId");
+                person.setCtepId(person.getNesId() + "ctepId");
             }
         }
     }
@@ -242,8 +242,8 @@ public class ExportProtocolsTabActionTest extends AbstractWebTest {
         for (AbstractProtocolRegistration registration : getRegistrations(protocols)) {
             assertTrue(content.contains(registration.getProtocol().getProtocolNumber()));
             assertTrue(content.contains(registration.getProfile().getPerson().getDisplayNameForList()));
-            assertTrue(content.contains(registration.getProfile().getPerson().getExternalId() + "ctepId"));
-            assertTrue(content.contains(registration.getProfile().getPerson().getExternalId()));
+            assertTrue(content.contains(registration.getProfile().getPerson().getNesId() + "ctepId"));
+            assertTrue(content.contains(registration.getProfile().getPerson().getNesId()));
             assertTrue(content.contains(registration.getStatus().getDisplay()));
             assertTrue(content.contains(dateFormat.format(registration.getStatusDate())));
         }

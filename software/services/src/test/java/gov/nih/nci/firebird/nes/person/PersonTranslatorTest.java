@@ -86,16 +86,14 @@ import static org.junit.Assert.*;
 import gov.nih.nci.coppa.po.Person;
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.nes.NesIIRoot;
+import gov.nih.nci.firebird.nes.common.NesTranslatorHelperUtils;
 import gov.nih.nci.firebird.test.PersonFactory;
 import gov.nih.nci.iso21090.extensions.Id;
 
-import java.util.List;
-
 import org.iso._21090.ADXP;
 import org.iso._21090.AddressPartType;
-import org.iso._21090.CD;
-import org.iso._21090.II;
+import org.iso._21090.ENXP;
+import org.iso._21090.EntityNamePartType;
 import org.iso._21090.TEL;
 import org.iso._21090.TELEmail;
 import org.iso._21090.TELPhone;
@@ -103,19 +101,77 @@ import org.junit.Test;
 
 public class PersonTranslatorTest {
     private PersonFactory personFactory = PersonFactory.getInstance();
-    
+
+    /**
+     * Test building firebird people.
+     * @throws ValidationException
+     */
+    @Test
+    public void testBuildFirebirdPeople() throws ValidationException {
+        new PersonTranslator(); // coverage only - no real need to create.
+        Person[] people = new Person[2];
+
+        gov.nih.nci.firebird.data.Person newPerson = new gov.nih.nci.firebird.data.Person();
+        newPerson.setNesStatus(CurationStatus.ACTIVE);
+        newPerson.setPostalAddress(null);
+        gov.nih.nci.firebird.data.Person fbPerson1 = personFactory.create();
+        gov.nih.nci.firebird.data.Person fbPerson2 = personFactory.create();
+        fbPerson2.setNesId(null);
+        people[0] = PersonTranslator.buildNesPerson(fbPerson1);
+        people[1] = PersonTranslator.buildNesPerson(fbPerson2);
+
+        gov.nih.nci.firebird.data.Person[] results = PersonTranslator.buildFirebirdPeople(people);
+        assertEquals(2, results.length);
+        assertTrue(fbPerson1.isEquivalent(results[0]));
+        assertTrue(fbPerson2.isEquivalent(results[1]));
+
+        people[0] = new Person();
+        people[0].setStatusCode(NesTranslatorHelperUtils.buildStatus(CurationStatus.ACTIVE));
+        ENXP extraPart = new ENXP();
+        extraPart.setType(EntityNamePartType.DEL);
+        people[1].getName().getPart().add(extraPart);
+        results = PersonTranslator.buildFirebirdPeople(people);
+        assertEquals(2, results.length);
+        assertTrue(results[0].isEquivalent(newPerson));
+        assertTrue(results[1].isEquivalent(fbPerson2));
+
+        results = PersonTranslator.buildFirebirdPeople(null);
+        assertNull(results);
+
+        people[0] = null;
+        results = PersonTranslator.buildFirebirdPeople(people);
+        assertEquals(2, results.length);
+        assertNull(results[0]);
+        assertTrue(fbPerson2.isEquivalent(results[1]));
+
+        gov.nih.nci.firebird.data.Person testPerson = personFactory.create();
+        Person testNesPerson = null;
+
+        //activity to make sure coverage is higher
+        testPerson.getPostalAddress().setDeliveryAddress(null);
+        testPerson.setMiddleName(null);
+        testPerson.setNesId(null);
+        testNesPerson = PersonTranslator.buildNesPerson(testPerson);
+        testPerson = PersonTranslator.buildFirebirdPerson(testNesPerson);
+
+        testPerson.setPostalAddress(null);
+        testNesPerson = PersonTranslator.buildNesPerson(testPerson);
+        assertEquals(0,testNesPerson.getPostalAddress().getPart().size());
+        testPerson = PersonTranslator.buildFirebirdPerson(testNesPerson);
+    }
+
     /**
      * Test building the id.
      */
     @Test
     public void testBuildId() {
-        Id id = PersonTranslator.buildId(null);
-        assertNull(id);
+       Id id = PersonTranslator.buildId(null);
+       assertNull(id);
 
-        id = PersonTranslator.buildId("1");
-        assertEquals("1", id.getExtension());
+       id = PersonTranslator.buildId("1");
+       assertEquals("1", id.getExtension());
 
-        assertNull(PersonTranslator.buildId(null));
+       assertNull(PersonTranslator.buildId(null));
     }
 
     @Test
@@ -126,9 +182,9 @@ public class PersonTranslatorTest {
         TEL newTel = new TEL();
         newTel.setValue("tst:13245654321");
         nesPerson.getTelecomAddress().getItem().add(newTel);
-        boolean[] tests = new boolean[3];
-        for (TEL t : nesPerson.getTelecomAddress().getItem()) {
-            if (t instanceof TELEmail) {
+        boolean [] tests = new boolean[3];
+        for(TEL t : nesPerson.getTelecomAddress().getItem()) {
+            if(t instanceof TELEmail) {
                 t.setValue("123546577");
                 PersonTranslator.buildFirebirdPerson(nesPerson);
                 tests[0] = true;
@@ -138,13 +194,13 @@ public class PersonTranslatorTest {
                 tests[1] = true;
             } else {
                 PersonTranslator.buildFirebirdPerson(nesPerson);
-                if (!tests[2]) {
+                if(!tests[2]) {
                     tests[2] = true;
                 }
             }
         }
 
-        if (!(tests[0] && tests[1] && tests[2])) {
+        if(!(tests[0] && tests[1] && tests[2])) {
             fail("Did not hit all tests: " + tests[0] + " | " + tests[1] + " | " + tests[2]);
         }
 
@@ -154,66 +210,21 @@ public class PersonTranslatorTest {
 
     @Test
     public void testHandlePostalAddresses() throws ValidationException {
-        gov.nih.nci.firebird.data.Person person = personFactory.create();
-        person.setProviderNumber(null);
-        person.getPostalAddress().setDeliveryAddress("Rm 100");
+        gov.nih.nci.firebird.data.Person p = personFactory.create();
+        p.getPostalAddress().setDeliveryAddress("Rm 100");
 
-        Person nesPerson = PersonTranslator.buildNesPerson(person);
+        Person nesPerson = PersonTranslator.buildNesPerson(p);
 
-        for (ADXP ap : nesPerson.getPostalAddress().getPart()) {
-            if (AddressPartType.ADL.equals(ap.getType())) {
-                assertTrue(person.isEquivalent(PersonTranslator.buildFirebirdPerson(nesPerson)));
+        for(ADXP ap : nesPerson.getPostalAddress().getPart()) {
+            if(AddressPartType.ADL.equals(ap.getType())) {
+                assertTrue(p.isEquivalent(PersonTranslator.buildFirebirdPerson(nesPerson)));
 
                 ap.setType(AddressPartType.DAL);
-                assertFalse(person.isEquivalent(PersonTranslator.buildFirebirdPerson(nesPerson)));
+                assertFalse(p.isEquivalent(PersonTranslator.buildFirebirdPerson(nesPerson)));
             }
         }
         nesPerson.setPostalAddress(null);
         assertNull(PersonTranslator.buildFirebirdPerson(nesPerson).getPostalAddress());
-    }
-
-    @Test
-    public void testBuildFirebirdPersons_Empty() throws Exception {
-        List<gov.nih.nci.firebird.data.Person> persons = PersonTranslator.buildFirebirdPersons(null);
-        assertTrue(persons.isEmpty());
-    }
-
-    @Test
-    public void testBuildFirebirdPersons() throws Exception {
-        Person[] people = new Person[2];
-
-        gov.nih.nci.firebird.data.Person newPerson = new gov.nih.nci.firebird.data.Person();
-        newPerson.setCurationStatus(CurationStatus.ACTIVE);
-        newPerson.setPostalAddress(null);
-        gov.nih.nci.firebird.data.Person fbPerson1 = personFactory.create();
-        fbPerson1.setProviderNumber(null);
-        gov.nih.nci.firebird.data.Person fbPerson2 = personFactory.createWithoutExternalData();
-        fbPerson2.setProviderNumber(null);
-        people[0] = PersonTranslator.buildNesPerson(fbPerson1);
-        people[1] = PersonTranslator.buildNesPerson(fbPerson2);
-
-        List<gov.nih.nci.firebird.data.Person> results = PersonTranslator.buildFirebirdPersons(people);
-        assertEquals(2, results.size());
-        assertTrue(fbPerson1.isEquivalent(results.get(0)));
-        assertTrue(fbPerson2.isEquivalent(results.get(1)));
-    }
-    
-    @Test
-    public void testBuildFirebirdPerson() {
-        Person nesPerson = new Person();
-        II ii = new II();
-        ii.setRoot(NesIIRoot.PERSON.getRoot());
-        ii.setExtension("id");
-        nesPerson.setIdentifier(ii);
-        CD cd = new CD();
-        cd.setCode(CurationStatus.ACTIVE.getCodeValue());
-        nesPerson.setStatusCode(cd);
-        gov.nih.nci.firebird.data.Person firebirdPerson = PersonTranslator.buildFirebirdPerson(nesPerson);
-        NesPersonData nesPersonData = (NesPersonData) firebirdPerson.getExternalData();
-        assertEquals(ii.getExtension(), nesPersonData.getExternalId());
-        assertNotNull(nesPersonData.getLastNesRefresh());
-        assertNull(nesPersonData.getUpdateRequested());
-        assertEquals(CurationStatus.ACTIVE, firebirdPerson.getCurationStatus());
     }
 
 }

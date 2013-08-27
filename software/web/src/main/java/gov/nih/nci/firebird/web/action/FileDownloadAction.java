@@ -108,7 +108,7 @@ public class FileDownloadAction extends FirebirdActionSupport implements Servlet
     /**
      * if the parameter file.id is not set, a request attribute <code>file</code> of type FirebirdFile is expected.
      */
-    static final String FILE_ATTRIBUTE_NAME = "file";
+    public static final String FILE_ATTRIBUTE_NAME = "file";
     private final FileService fileService;
     private FirebirdFile file;
     private HttpServletResponse response;

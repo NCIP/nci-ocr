@@ -85,6 +85,7 @@ package gov.nih.nci.firebird.service.organization;
 import gov.nih.nci.firebird.data.AbstractOrganizationRole;
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.ClinicalLaboratory;
+import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.FirebirdFile;
 import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.data.InstitutionalReviewBoard;
@@ -94,8 +95,15 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.OrganizationAssociation;
 import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.PracticeSite;
+import gov.nih.nci.firebird.data.PracticeSiteType;
 import gov.nih.nci.firebird.data.PrimaryOrganization;
+import gov.nih.nci.firebird.data.PrimaryOrganizationType;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.NesIIRoot;
+import gov.nih.nci.firebird.nes.NesId;
+import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
+import gov.nih.nci.firebird.nes.organization.OversightCommitteeType;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
 import gov.nih.nci.firebird.service.AbstractGenericServiceBean;
 import gov.nih.nci.firebird.service.file.FileMetadata;
 import gov.nih.nci.firebird.service.file.FileService;
@@ -103,14 +111,17 @@ import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import org.hibernate.Query;
+
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 /**
  * Processes the creation of a new {@link OrganizationAssociation}.
@@ -120,14 +131,29 @@ import com.google.common.collect.Sets;
 public class OrganizationAssociationServiceBean extends AbstractGenericServiceBean<OrganizationAssociation> implements
         OrganizationAssociationService {
 
-    private OrganizationService organizationService;
+    private NesOrganizationIntegrationServiceFactory nesServiceFactory;
     private FileService fileService;
     private ProtocolRegistrationService registrationService;
+
+    @Inject
+    void setNesServiceFactory(NesOrganizationIntegrationServiceFactory nesServiceFactory) {
+        this.nesServiceFactory = nesServiceFactory;
+    }
+
+    @Inject
+    void setFileService(FileService fileService) {
+        this.fileService = fileService;
+    }
+
+    @Inject
+    void setRegistrationService(ProtocolRegistrationService registrationService) {
+        this.registrationService = registrationService;
+    }
 
     @Override
     public void handleNew(OrganizationAssociation association) throws ValidationException {
         AbstractOrganizationRole organizationRole = association.getOrganizationRole();
-        if (!organizationRole.getOrganization().hasExternalRecord()) {
+        if (!organizationRole.getOrganization().hasNesRecord()) {
             createOrganization(organizationRole);
         } else if (organizationRole.getRoleType() == OrganizationRoleType.PRACTICE_SITE) {
             handleExistingPracticeSite(organizationRole);
@@ -135,45 +161,97 @@ public class OrganizationAssociationServiceBean extends AbstractGenericServiceBe
         save(association);
     }
 
-    private void createOrganization(AbstractOrganizationRole organizationRole) throws ValidationException {
+    private void createOrganization(AbstractOrganizationRole organizationRole) {
         switch (organizationRole.getRoleType()) {
-        case PRACTICE_SITE:
-            createPracticeSite((PracticeSite) organizationRole);
-            break;
-        case CLINICAL_LABORATORY:
-            createLab((ClinicalLaboratory) organizationRole);
-            break;
-        case IRB:
-            createIrb((InstitutionalReviewBoard) organizationRole);
-            break;
-        case PRIMARY_ORGANIZATION:
-            createPrimaryOrganization((PrimaryOrganization) organizationRole);
-        default:
-            throw new IllegalArgumentException("Invalid OrganizationRoleType: " + organizationRole.getRoleType());
+            case PRACTICE_SITE:
+                createPracticeSite((PracticeSite) organizationRole);
+                break;
+            case CLINICAL_LABORATORY:
+                createLab((ClinicalLaboratory) organizationRole);
+                break;
+            case IRB:
+                createIrb((InstitutionalReviewBoard) organizationRole);
+                break;
+            case PRIMARY_ORGANIZATION:
+                createPrimaryOrganization((PrimaryOrganization) organizationRole);
+            default:
+                throw new IllegalArgumentException("Invalid OrganizationRoleType: " + organizationRole.getRoleType());
         }
     }
 
-    private void createPracticeSite(PracticeSite practiceSite) throws ValidationException {
-        organizationService.create(practiceSite.getOrganization(), OrganizationRoleType.PRACTICE_SITE,
-                practiceSite.getType());
+    private void createPracticeSite(PracticeSite practiceSite) {
+        Organization organization = practiceSite.getOrganization();
+        switch (practiceSite.getType()) {
+            case CANCER_CENTER:
+                nesServiceFactory.getResearchOrganizationService().create(organization,
+                        ResearchOrganizationType.CANCER_CENTER);
+                break;
+            case CLINICAL_CENTER:
+                nesServiceFactory.getResearchOrganizationService().create(organization,
+                        ResearchOrganizationType.CLINICAL_CENTER);
+                break;
+            case HEALTH_CARE_FACILITY:
+                nesServiceFactory.getHealthCareFacilityService().create(organization);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid PracticeSiteType: " + practiceSite.getType());
+        }
     }
 
-    private void createLab(ClinicalLaboratory lab) throws ValidationException {
-        organizationService.create(lab.getOrganization(), OrganizationRoleType.CLINICAL_LABORATORY);
+    private void createLab(ClinicalLaboratory lab) {
+        nesServiceFactory.getHealthCareFacilityService().create(lab.getOrganization());
     }
 
-    private void createIrb(InstitutionalReviewBoard irb) throws ValidationException {
-        organizationService.create(irb.getOrganization(), OrganizationRoleType.IRB);
+    private void createIrb(InstitutionalReviewBoard irb) {
+        nesServiceFactory.getOversightCommitteeService().create(irb.getOrganization(),
+                OversightCommitteeType.INSTITUTIONAL_REVIEW_BOARD);
     }
 
-    private void createPrimaryOrganization(PrimaryOrganization primaryOrganization) throws ValidationException {
-        organizationService.create(primaryOrganization.getOrganization(), OrganizationRoleType.PRIMARY_ORGANIZATION,
-                primaryOrganization.getType());
+    private void createPrimaryOrganization(PrimaryOrganization primaryOrganization) {
+        Organization organization = primaryOrganization.getOrganization();
+        switch (primaryOrganization.getType()) {
+            case CANCER_CENTER:
+                nesServiceFactory.getResearchOrganizationService().create(organization,
+                        ResearchOrganizationType.CANCER_CENTER);
+                break;
+            case CLINICAL_CENTER:
+                nesServiceFactory.getResearchOrganizationService().create(organization,
+                        ResearchOrganizationType.CLINICAL_CENTER);
+                break;
+            case HEALTH_CARE_FACILITY:
+                nesServiceFactory.getHealthCareFacilityService().create(organization);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid PrimaryOrganizationType: " + primaryOrganization.getType());
+        }
     }
 
     private void handleExistingPracticeSite(AbstractOrganizationRole organizationRole) {
         PracticeSite practiceSite = (PracticeSite) organizationRole;
-        practiceSite.setType(organizationService.getPracticeSiteType(practiceSite.getOrganization()));
+        practiceSite.setType(getPracticeSiteType(practiceSite));
+    }
+
+    private PracticeSiteType getPracticeSiteType(PracticeSite practiceSite) {
+        return getType(practiceSite.getOrganization(), PracticeSiteType.class);
+    }
+
+    private <T extends Enum<T>> T getType(Organization organization, Class<T> enumClass) {
+        NesId nesId = new NesId(organization.getNesId());
+        if (NesIIRoot.HEALTH_CARE_FACILITY == NesIIRoot.getByRoot(nesId.getRoot())) {
+            return Enum.valueOf(enumClass, NesIIRoot.HEALTH_CARE_FACILITY.name());
+        } else if (NesIIRoot.RESEARCH_ORGANIZATION == NesIIRoot.getByRoot(nesId.getRoot())) {
+            ResearchOrganizationType researchOrganizationType = nesServiceFactory.getResearchOrganizationService()
+                    .getType(organization.getNesId());
+            return Enum.valueOf(enumClass, researchOrganizationType.name());
+        } else {
+            throw new IllegalArgumentException(
+                    "Organization's NES ID's root wasn't of type Health Care Facility or Research Organization");
+        }
+    }
+
+    @Override
+    public PrimaryOrganizationType getExistingPrimaryOrganizationType(Organization primaryOrganization) {
+        return getType(primaryOrganization, PrimaryOrganizationType.class);
     }
 
     @Override
@@ -204,8 +282,8 @@ public class OrganizationAssociationServiceBean extends AbstractGenericServiceBe
     private Set<AbstractProtocolRegistration> getAffectedRegistrations(InvestigatorProfile profile,
             Organization organization) {
         Set<AbstractProtocolRegistration> registrations = Sets.newHashSet();
-        for (AbstractProtocolRegistration registration : registrationService.
-                getReturnedOrRevisedRegistrations(profile)) {
+        for (AbstractProtocolRegistration registration
+                : registrationService.getReturnedOrRevisedRegistrations(profile)) {
             if (registration.getForm1572() != null && registration.getForm1572().isOrganizationSelected(organization)) {
                 registrations.add(registration);
             }
@@ -213,24 +291,18 @@ public class OrganizationAssociationServiceBean extends AbstractGenericServiceBe
         return registrations;
     }
 
+    @SuppressWarnings("unchecked") //Hibernate does not provide typed results
     @Override
-    public void createNewPrimaryOrganization(PrimaryOrganization primaryOrganization) throws ValidationException {
+    public List<AbstractOrganizationRole> getRolesToBeCurated() {
+        String hql = "from " + AbstractOrganizationRole.class.getName() + " where organization.nesStatus = :nesStatus";
+        Query query = getSessionProvider().get().createQuery(hql);
+        query.setParameter("nesStatus", CurationStatus.PENDING);
+        return query.list();
+    }
+
+    @Override
+    public void createNewPrimaryOrganization(PrimaryOrganization primaryOrganization) {
         createPrimaryOrganization(primaryOrganization);
-    }
-
-    @Resource(mappedName = "firebird/ProtocolRegistrationServiceBean/local")
-    void setRegistrationService(ProtocolRegistrationService registrationService) {
-        this.registrationService = registrationService;
-    }
-
-    @Resource(mappedName = "firebird/OrganizationServiceBean/local")
-    void setOrganizationService(OrganizationService organizationService) {
-        this.organizationService = organizationService;
-    }
-
-    @Resource(mappedName = "firebird/FileServiceBean/local")
-    void setFileService(FileService fileService) {
-        this.fileService = fileService;
     }
 
 }

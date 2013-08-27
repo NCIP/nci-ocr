@@ -97,17 +97,17 @@ import org.apache.log4j.Logger;
 /**
  * Handler to be used by a dynamic proxy that will borrow the delegate-client from a pool.
  */
-class PoolingHandler implements InvocationHandler {
+public class PoolingHandler implements InvocationHandler {
 
     private static final Logger LOG = Logger.getLogger(PoolingHandler.class);
-    private ObjectPool<Object> pool;
+    private ObjectPool pool;
     private List<Class<? extends Throwable>> validExceptions = new ArrayList<Class<? extends Throwable>>(0);
 
 
     /**
      * @param pool the pool to borrow from.
      */
-    public PoolingHandler(ObjectPool<Object> pool) {
+    public PoolingHandler(ObjectPool pool) {
         this.pool = pool;
     }
 
@@ -118,8 +118,8 @@ class PoolingHandler implements InvocationHandler {
      * @param initIdleCapacity - initial size of the pool (this specifies the size of the container,
      * it does not cause the pool to be pre-populated.)
      */
-    public PoolingHandler(PoolableObjectFactory<Object> factory, int maxIdle, int initIdleCapacity) {
-        this(new StackObjectPool<Object>(factory, maxIdle, initIdleCapacity));
+    public PoolingHandler(PoolableObjectFactory factory, int maxIdle, int initIdleCapacity) {
+        this(new StackObjectPool(factory, maxIdle, initIdleCapacity));
     }
 
     /**
@@ -129,8 +129,6 @@ class PoolingHandler implements InvocationHandler {
      * @param initIdleCapacity - initial size of the pool (this specifies the size of the container,
      * it does not cause the pool to be pre-populated.)
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public PoolingHandler(Provider<?> provider, int maxIdle, int initIdleCapacity) {
         this(new ProviderObjectFactory(provider), maxIdle, initIdleCapacity);
     }
@@ -152,7 +150,7 @@ class PoolingHandler implements InvocationHandler {
     /**
      * @return the client pool.
      */
-    public ObjectPool<Object> getPool() {
+    public ObjectPool getPool() {
         return pool;
     }
 
@@ -190,7 +188,7 @@ class PoolingHandler implements InvocationHandler {
     /**
      * PoolableObjectFactory wrapper for a provider.
      */
-    public static class ProviderObjectFactory extends BasePoolableObjectFactory<Object> {
+    public static class ProviderObjectFactory extends BasePoolableObjectFactory {
 
         private final Provider<?> provider;
 

@@ -170,7 +170,7 @@ public class CreatePrimaryOrganizationAction extends AbstractProfileAction {
      */
     @Validations(customValidators = { @CustomValidator(type = "hibernate", fieldName = RESOURCE, parameters = {
             @ValidationParameter(name = "resourceKeyBase", value = "organization"),
-            @ValidationParameter(name = "excludes", value = "externalId") }) },
+            @ValidationParameter(name = "excludes", value = "nesId") }) },
             fieldExpressions = @FieldExpressionValidator(
                     fieldName = "profile.primaryOrganization.organization.postalAddress.stateOrProvince",
                     expression = "profile.primaryOrganization.organization.postalAddress.stateOrProvinceValid",

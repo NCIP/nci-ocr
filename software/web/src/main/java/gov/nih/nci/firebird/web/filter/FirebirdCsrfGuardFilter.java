@@ -127,6 +127,10 @@ public class FirebirdCsrfGuardFilter implements Filter {
             InterceptRedirectResponse httpResponse = new InterceptRedirectResponse((HttpServletResponse) response,
                     httpRequest, csrfGuard);
 
+            // if(MultipartHttpServletRequest.isMultipartRequest(httpRequest)) {
+            // httpRequest = new MultipartHttpServletRequest(httpRequest);
+            // }
+
             if (BooleanUtils.toBoolean(filterConfig.getInitParameter("Owasp.CsrfGuard.Config.Log.Results"))) {
                 logCsrfGuardResults(request, httpRequest, csrfGuard);
             }

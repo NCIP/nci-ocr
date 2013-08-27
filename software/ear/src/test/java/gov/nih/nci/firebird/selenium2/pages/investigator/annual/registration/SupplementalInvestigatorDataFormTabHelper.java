@@ -123,7 +123,7 @@ public class SupplementalInvestigatorDataFormTabHelper {
     }
 
     public void checkGeneratedPdf() throws IOException {
-        assertTrue(tab.clickViewPdfButton().length() > 0);
+        assertTrue(tab.clickViewPdfButton().getFile().length() > 0);
     }
 
 }

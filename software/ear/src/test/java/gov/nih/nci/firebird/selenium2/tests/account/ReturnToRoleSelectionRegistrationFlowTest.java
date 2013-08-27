@@ -116,7 +116,7 @@ public class ReturnToRoleSelectionRegistrationFlowTest extends AbstractFirebirdW
         super.setUp();
         sponsorAccount = helper.createNewGridUser();
         String sponsorGroupName = UserRoleType.SPONSOR.getGroupName() + "_"
-                + getNesIdExtension(getGridResources().getValidSponsorExternalId());
+                + getNesIdExtension(getGridResources().getValidSponsorNesId());
         helper.addGroupMemberships(sponsorAccount.getUsername(), sponsorGroupName);
     }
 
@@ -129,24 +129,26 @@ public class ReturnToRoleSelectionRegistrationFlowTest extends AbstractFirebirdW
 
     @Test
     public void testReturnToRoleSelectionFromVerificationPage() {
-        Person person = getExistingExternalPerson();
-        returnToRoleSelectionFromVerificationPage(person);
+        Person person = getExistingNesPerson();
+        Organization organization = getExistingNesOrganization();
+        returnToRoleSelectionFromVerificationPage(person, organization);
     }
 
-    private void returnToRoleSelectionFromVerificationPage(Person person) {
+    private void returnToRoleSelectionFromVerificationPage(Person person, Organization organization) {
         ViewSelectedRolesPage rolesPage = (ViewSelectedRolesPage) openLoginPage().getHelper()
                 .login(sponsorAccount, getProvider()).clickAccept();
-        VerificationPage verificationPage = completeWorkflowToVerificationPage(person, rolesPage);
+        VerificationPage verificationPage = completeWorkflowToVerificationPage(person, organization, rolesPage);
 
         rolesPage = clickBackToRolePage(verificationPage);
-        verificationPage = completeWorkflowToVerificationPage(person, rolesPage);
+        verificationPage = completeWorkflowToVerificationPage(person, organization, rolesPage);
         FunctionalityWarningDialog dialog = (FunctionalityWarningDialog) verificationPage.clickSave();
         dialog.getHelper().checkForRoles(UserRoleType.SPONSOR);
         HomePage homePage = (HomePage) dialog.clickConfirm();
         assertEquals(person.getDisplayName(), homePage.getUserDisplayName());
     }
 
-    private VerificationPage completeWorkflowToVerificationPage(Person person, ViewSelectedRolesPage rolesPage) {
+    private VerificationPage completeWorkflowToVerificationPage(Person person, Organization organization,
+            ViewSelectedRolesPage rolesPage) {
         EditPersonPage editPersonPage = proceedToEditPersonPage(person, rolesPage);
         VerificationPage verificationPage = (VerificationPage) editPersonPage.clickNext();
         return verificationPage;
@@ -164,7 +166,7 @@ public class ReturnToRoleSelectionRegistrationFlowTest extends AbstractFirebirdW
     }
 
     private EditPersonPage selectOrCreatePerson(Person person, PersonSelectionPage personSelectionPage) {
-        if (person.hasExternalRecord()) {
+        if (person.hasNesRecord()) {
             return selectPerson(personSelectionPage, person);
         } else {
             return createPerson(personSelectionPage, person);
@@ -190,8 +192,10 @@ public class ReturnToRoleSelectionRegistrationFlowTest extends AbstractFirebirdW
 
     @Test
     public void testReturnToRoleSelectionFromVerificationPageWithNewPerson() {
-        Person person = PersonFactory.getInstance().createWithoutExternalData();
-        returnToRoleSelectionFromVerificationPage(person);
+        Person person = PersonFactory.getInstance().create();
+        person.setNesId(null);
+        Organization organization = getExistingNesOrganization();
+        returnToRoleSelectionFromVerificationPage(person, organization);
     }
 
 }

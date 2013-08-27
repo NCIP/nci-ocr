@@ -94,7 +94,7 @@ import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.BrowseRegistrationsPage;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.BrowseRegistrationsPage.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab.FormListing;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.CreateLeadOrganizationDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.CreateProtocolPage;
@@ -221,11 +221,11 @@ public class CreateProtocolTest extends AbstractFirebirdWebDriverTest {
     }
 
     private Organization getLeadOrganization() {
-        return getExistingExternalOrganization();
+        return getExistingNesOrganization();
     }
 
     private Person getPrincipalInvestigator() {
-        return getExistingExternalPerson();
+        return getExistingNesPerson();
     }
 
     private ProtocolLeadOrganization getValidLeadOrganization() {
@@ -251,7 +251,7 @@ public class CreateProtocolTest extends AbstractFirebirdWebDriverTest {
         if (leadOrganization.getPrincipalInvestigator() != null) {
             createLeadOrganizationDialog.getHelper().searchAndSelectPerson(leadOrganization.getPrincipalInvestigator());
         } else {
-            createLeadOrganizationDialog.getHelper().searchAndSelectPerson(getExistingExternalPerson());
+            createLeadOrganizationDialog.getHelper().searchAndSelectPerson(getExistingNesPerson());
         }
         createLeadOrganizationDialog.clickSave();
         createPage.getHelper().checkLeadOrganizationSelected(leadOrganization);

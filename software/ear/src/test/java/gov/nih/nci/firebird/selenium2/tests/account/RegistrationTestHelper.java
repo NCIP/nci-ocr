@@ -94,8 +94,6 @@ import gov.nih.nci.firebird.test.PersonFactory;
 import gov.nih.nci.firebird.test.nes.TargetGridResources;
 
 import java.rmi.RemoteException;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Set;
 
 import org.cagrid.gaards.dorian.client.LocalUserClient;
@@ -117,10 +115,6 @@ public class RegistrationTestHelper {
     private TargetGridResources gridResources;
 
     public void addGroupMemberships(String username, String... groupNames) throws GridInvocationException {
-        addGroupMemberships(username, Arrays.asList(groupNames));
-    }
-
-    public void addGroupMemberships(String username, Collection<String> groupNames) throws GridInvocationException {
         String fullyQualifiedUsername = getFullyQualifiedTestUsername(username);
         for (String groupName : groupNames) {
             gridGrouperService.addGridUserToGroup(fullyQualifiedUsername, groupName);

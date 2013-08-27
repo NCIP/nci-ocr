@@ -90,7 +90,7 @@ import org.iso._21090.II;
 /**
  * Provides helper methods for working with <code>Correlations</code>.
  */
-final class CorrelationUtility {
+public final class CorrelationUtility {
     
     /**
      * Private constructor to prevent instantiation of utility class.

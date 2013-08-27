@@ -85,17 +85,16 @@ package gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+import gov.nih.nci.firebird.data.AbstractRegistrationForm;
 import gov.nih.nci.firebird.data.AnnualRegistration;
 import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.service.annual.registration.AnnualRegistrationService;
 import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
-import gov.nih.nci.firebird.test.FirebirdUserFactory;
-import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
+import org.apache.struts2.json.JSONException;
 import org.junit.Test;
 
 import com.google.inject.Inject;
@@ -113,11 +112,11 @@ public class ViewOverviewActionTest extends AbstractWebTest {
     public void setUp() throws Exception {
         super.setUp();
         when(mockRegistrationService.getById(anyLong())).thenReturn(registration);
-        action.setRegistration(registration);
     }
 
     @Test
     public void testEnter() throws ValidationException {
+        action.setRegistration(registration);
         assertEquals(ActionSupport.SUCCESS, action.enter());
         verify(mockRegistrationService).checkFormCompletionStatus(registration);
     }
@@ -125,6 +124,7 @@ public class ViewOverviewActionTest extends AbstractWebTest {
     @Test
     public void testEnter_Locked() throws ValidationException {
         registration.setStatus(RegistrationStatus.INACTIVE);
+        action.setRegistration(registration);
         assertEquals(ActionSupport.SUCCESS, action.enter());
         verifyZeroInteractions(mockRegistrationService);
     }
@@ -132,60 +132,31 @@ public class ViewOverviewActionTest extends AbstractWebTest {
     @Test
     public void testEnter_Returned() throws ValidationException {
         registration.setStatus(RegistrationStatus.RETURNED);
+        action.setRegistration(registration);
         assertEquals(ActionSupport.SUCCESS, action.enter());
         verifyZeroInteractions(mockRegistrationService);
     }
 
     @Test
     public void testEnter_NoRegistration() {
-        action.setRegistration(new AnnualRegistration());
         assertEquals(FirebirdUIConstants.RETURN_ACCESS_DENIED_ENTER, action.enter());
     }
 
     @Test
-    public void testIsSubmittable_True() {
-        FirebirdUser user = FirebirdUserFactory.getInstance().create();
-        user.setCtepUser(true);
-        FirebirdWebTestUtility.setCurrentUser(action, user);
-        registration.setStatus(RegistrationStatus.IN_PROGRESS);
-        assertTrue(action.isSubmittable());
+    public void testGetFormListings() throws JSONException {
+        AnnualRegistration registration = AnnualRegistrationFactory.getInstanceWithId().create();
+        action.setRegistration(registration);
+        String formListings = action.getFormListings();
+        for (AbstractRegistrationForm form : registration.getForms()) {
+            checkFormListingsForForm(formListings, form);
+        }
     }
 
-    @Test
-    public void testIsSubmittable_FalseRegistrationNotSubmittable() {
-        FirebirdUser user = FirebirdUserFactory.getInstance().create();
-        user.setCtepUser(true);
-        FirebirdWebTestUtility.setCurrentUser(action, user);
-        registration.setStatus(RegistrationStatus.SUBMITTED);
-        assertFalse(action.isSubmittable());
-    }
-
-    @Test
-    public void testIsSubmittable_FalseReadOnlyUser() {
-        FirebirdUser user = FirebirdUserFactory.getInstance().create();
-        FirebirdWebTestUtility.setCurrentUser(action, user);
-        registration.setStatus(RegistrationStatus.IN_PROGRESS);
-        assertFalse(action.isSubmittable());
-    }
-
-    @Test
-    public void testIsDeleteRegistrationAllowed_True() throws Exception {
-        FirebirdWebTestUtility.setCurrentUser(action, registration.getProfile().getUser());
-        assertTrue(action.isDeleteRegistrationAllowed());
-    }
-
-    @Test
-    public void testIsDeleteRegistrationAllowed_FalseAlreadySubmitted() throws Exception {
-        registration.setStatus(RegistrationStatus.SUBMITTED);
-        FirebirdUser user = registration.getProfile().getUser();
-        FirebirdWebTestUtility.setCurrentUser(action, user);
-        assertFalse(action.isDeleteRegistrationAllowed());
-    }
-
-    @Test
-    public void testIsDeleteRegistrationAllowed_FalseNotInvestigatorsRegistration() throws Exception {
-        FirebirdWebTestUtility.setCurrentUser(action, FirebirdUserFactory.getInstance().createInvestigator());
-        assertFalse(action.isDeleteRegistrationAllowed());
+    private void checkFormListingsForForm(String formListings, AbstractRegistrationForm form) {
+        assertTrue(formListings.contains(form.getFormStatus().getDisplay()));
+        assertTrue(formListings.contains(form.getFormStatus().name()));
+        assertTrue(formListings.contains(form.getFormOptionality().getDisplay()));
+        assertTrue(formListings.contains(form.getFormOptionality().name()));
     }
 
 }

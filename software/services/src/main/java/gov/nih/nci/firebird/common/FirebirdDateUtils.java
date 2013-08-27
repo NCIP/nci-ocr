@@ -91,8 +91,6 @@ import java.util.concurrent.TimeUnit;
 /**
  * Utility method for Dates.
  */
-@SuppressWarnings("ucd")
-// utility class used in production and from tests
 public final class FirebirdDateUtils {
 
     /**

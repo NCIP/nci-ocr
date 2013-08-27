@@ -121,8 +121,9 @@ public class ResearchOrganizationTranslatorTest {
     }
 
     @Test
-    public void testToResearchOrganization() {
-        Organization organization = createTestOrganization();
+    public void testToHealthCareFacility() {
+        Organization organization = OrganizationFactory.getInstance().create();
+        organization.setPlayerIdentifier(NesIdTestUtil.TEST_NES_ID_STRING);
         when(mockHelper.getCountry(any(Address.class))).thenReturn(organization.getPostalAddress().getCountry());
         ResearchOrganization researchOrganization = translator.toResearchOrganization(organization, TYPE);
         assertEquals(TYPE.getCode(), researchOrganization.getTypeCode().getCode());
@@ -134,17 +135,9 @@ public class ResearchOrganizationTranslatorTest {
                 address.getCountry());
     }
 
-    private Organization createTestOrganization() {
-        Organization organization = OrganizationFactory.getInstance().create();
-        ResearchOrganizationData researchOrganizationData = new ResearchOrganizationData();
-        researchOrganizationData.setPlayerId(NesIdTestUtil.TEST_NES_ID_STRING);
-        organization.setExternalData(researchOrganizationData);
-        return organization;
-    }
-
     @Test
-    public void testToResearchOrganization_NoType() {
-        Organization organization = createTestOrganization();
+    public void testToHealthCareFacility_NoType() {
+        Organization organization = OrganizationFactory.getInstance().create();
         when(mockHelper.getCountry(any(Address.class))).thenReturn(organization.getPostalAddress().getCountry());
         ResearchOrganization researchOrganization = translator.toResearchOrganization(organization, null);
         assertNull(researchOrganization.getTypeCode());
@@ -159,14 +152,12 @@ public class ResearchOrganizationTranslatorTest {
     public void testToFirebirdOrganization() {
         gov.nih.nci.coppa.po.Organization player = nesObjectFactory.getTestNesOrganization();
         ResearchOrganization researchOrganization = nesObjectFactory.getTestResearchOrganization(TYPE);
-        Organization organization = translator.toFirebirdOrganization(researchOrganization, player);
+        translator.toFirebirdOrganization(researchOrganization, player);
         verify(mockHelper).toNesIdString(researchOrganization.getIdentifier().getItem().get(0));
         verify(mockHelper).toNesIdString(researchOrganization.getPlayerIdentifier());
         verify(mockHelper).toAddress(researchOrganization.getPostalAddress().getItem().get(0));
         verify(mockHelper).getEmail(researchOrganization.getTelecomAddress());
         verify(mockHelper).getPhoneNumber(researchOrganization.getTelecomAddress());
-        ResearchOrganizationData researchOrganizationData = (ResearchOrganizationData) organization.getExternalData();
-        assertEquals(TYPE, researchOrganizationData.getResearchOrganizationType());
     }
 
     @Test

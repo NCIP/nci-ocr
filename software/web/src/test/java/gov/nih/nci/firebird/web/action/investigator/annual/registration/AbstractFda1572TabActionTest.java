@@ -99,19 +99,16 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.opensymphony.xwork2.ActionSupport;
 import com.opensymphony.xwork2.interceptor.annotations.Before;
 
 public class AbstractFda1572TabActionTest extends AbstractWebTest {
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationService mockOrganizationsService;
     @Inject
     private AnnualRegistrationService mockRegistrationService;
     @Inject
     private InvestigatorProfileService mockProfileService;
-    @Inject
-    private Provider<OrganizationService> mockOrganizationServiceProvider;
     @Mock
     private Fda1572TabActionProcessor<AnnualRegistration> mockProcessor;
     private AbstractFda1572TabAction action;
@@ -119,7 +116,8 @@ public class AbstractFda1572TabActionTest extends AbstractWebTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        action = new AbstractFda1572TabAction(mockRegistrationService, mockProfileService, null) {
+        action = new AbstractFda1572TabAction(mockRegistrationService, mockOrganizationsService, mockProfileService,
+                null) {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -127,7 +125,6 @@ public class AbstractFda1572TabActionTest extends AbstractWebTest {
                 return OrganizationRoleType.IRB;
             }
         };
-        action.setOrganizationServiceProvider(mockOrganizationServiceProvider);
         action.setProcessor(mockProcessor);
     }
 
@@ -138,18 +135,18 @@ public class AbstractFda1572TabActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testPrepare_WithOrganization() throws Exception {
+    public void testPrepare_WithOrganization() {
         Organization organization = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(organization.getExternalId())).thenReturn(organization);
-        action.setOrganizationExternalId(organization.getExternalId());
+        organization.setId(1L);
+        action.setOrganization(organization);
         action.prepare();
-        verify(mockOrganizationService).getByExternalId(organization.getExternalId());
+        verify(mockOrganizationsService).getById(organization.getId());
     }
 
     @Test
     public void testPrepare_WithoutOrganization() {
         action.prepare();
-        verifyZeroInteractions(mockOrganizationService);
+        verifyZeroInteractions(mockOrganizationsService);
     }
 
     @Test

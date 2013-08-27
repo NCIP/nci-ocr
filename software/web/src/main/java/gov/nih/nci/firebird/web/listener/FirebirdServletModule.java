@@ -97,7 +97,7 @@ import com.opensymphony.sitemesh.webapp.SiteMeshFilter;
 /**
  * Module that configures all servlet filters.
  */
-class FirebirdServletModule extends ServletModule {
+public class FirebirdServletModule extends ServletModule {
 
     private static final String ALL_ACTIONS = "*.action";
     private static final String ALL_REQUESTS = "/*";

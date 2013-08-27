@@ -82,7 +82,6 @@
  */
 package gov.nih.nci.firebird.web.action.investigator.annual.registration;
 
-import static com.google.common.base.Preconditions.*;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
 import gov.nih.nci.firebird.data.AnnualRegistration;
 import gov.nih.nci.firebird.data.AnnualRegistrationType;
@@ -118,11 +117,17 @@ public class BrowseAnnualRegistrationsAction extends AbstractProfileAction {
     private static final long serialVersionUID = 1L;
     private final AnnualRegistrationService annualRegistrationService;
 
-    /**
-     * @return whether or not the current user can create a registration
-     */
-    public boolean isCreateRegistrationAllowed() {
-        return getProfile().canCreateAnnualRegistration();
+    @Override
+    public void prepare() {
+        super.prepare();
+        if (getAnnualRegistrations().isEmpty()
+                && !isInvestigatorsStatusWithdrawn()) {
+            annualRegistrationService.createInitial(getProfile());
+        }
+    }
+
+    private boolean isInvestigatorsStatusWithdrawn() {
+        return getProfile().getUser().getInvestigatorRole().getStatus() == InvestigatorStatus.WITHDRAWN;
     }
 
     /**
@@ -143,18 +148,6 @@ public class BrowseAnnualRegistrationsAction extends AbstractProfileAction {
      */
     @Action(value = "enterBrowseAnnualRegistrations", results = @Result(location = "browse_annual_registrations.jsp"))
     public String enter() {
-        return SUCCESS;
-    }
-
-    /**
-     * Navigate to the Required Forms Tab.
-     *
-     * @return the struts forward.
-     */
-    @Action(value = "createAnnualRegistration", results = @Result(location = "browse_annual_registrations.jsp"))
-    public String createAnnualRegistration() {
-        checkArgument(isCreateRegistrationAllowed(), "User is not able to create an annual registration");
-        annualRegistrationService.createRegistration(getProfile());
         return SUCCESS;
     }
 
@@ -204,10 +197,6 @@ public class BrowseAnnualRegistrationsAction extends AbstractProfileAction {
         return annualRegistrationListings;
     }
 
-    public boolean isReadOnly() {
-        return !getCurrentUser().isCtepUser();
-    }
-
     private Set<AnnualRegistration> getAnnualRegistrations() {
         return getProfile().getAnnualRegistrations();
     }
@@ -215,8 +204,6 @@ public class BrowseAnnualRegistrationsAction extends AbstractProfileAction {
     /**
      * Listing object for an annual registration.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
     public class AnnualRegistrationListing implements Comparable<AnnualRegistrationListing> {
         private final Long id;
         private final String type;
@@ -229,7 +216,7 @@ public class BrowseAnnualRegistrationsAction extends AbstractProfileAction {
         /**
          * @param registration annual registration
          */
-        AnnualRegistrationListing(AnnualRegistration registration) {
+        public AnnualRegistrationListing(AnnualRegistration registration) {
             this.id = registration.getId();
             this.type = registration.getAnnualRegistrationType().getDisplay();
             this.status = registration.getStatus();
@@ -329,9 +316,7 @@ public class BrowseAnnualRegistrationsAction extends AbstractProfileAction {
     /**
      * Listing object for an annual registration form.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
-    public final class AnnualRegistrationFormListing {
+    public class AnnualRegistrationFormListing {
         private final Long id;
         private final Long registrationId;
         private final String title;
@@ -343,7 +328,7 @@ public class BrowseAnnualRegistrationsAction extends AbstractProfileAction {
         /**
          * @param form annual registration form
          */
-        AnnualRegistrationFormListing(AbstractRegistrationForm form) {
+        public AnnualRegistrationFormListing(AbstractRegistrationForm form) {
             this.id = form.getId();
             this.registrationId = form.getRegistration().getId();
             this.title = form.getFormType().getDescription();

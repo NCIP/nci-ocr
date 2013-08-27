@@ -106,8 +106,8 @@ import com.google.inject.name.Names;
 public class FirebirdModule extends AbstractModule {
 
     private static final String FIREBIRD_PROPERTIES = "firebird.properties";
-    private static final String VALID_SPONSOR_EXTERNAL_ID_PROPERTY = "sponsor.organization.nes.ids";
-    private static final String SPONSOR_WITH_PROTOCOLS_EXTERNAL_IDS_PROPERTY =
+    private static final String VALID_SPONSOR_NES_ID_PROPERTY = "sponsor.organization.nes.ids";
+    private static final String SPONSOR_WITH_PROTOCOLS_NES_IDS_PROPERTY =
             "sponsor.organization.with.protocol.registrations.nes.ids";
     private static final String SPONSOR_EMAIL_MAPPING_PROPERTY = "sponsor.organization.email.mappings";
 
@@ -138,8 +138,11 @@ public class FirebirdModule extends AbstractModule {
         return props;
     }
 
-    /**
+    /*
      * Obtains a resource bundle with any necessary messages needed in the service layer, mainly message subjects.
+     *
+     * TODO Right now I don't know how we will handle the setting of the proper Locale as it seems we need to get that
+     * from the Request object.
      */
     @Provides
     ResourceBundle provideFirebirdResources() {
@@ -148,21 +151,20 @@ public class FirebirdModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named(VALID_SPONSOR_EXTERNAL_ID_PROPERTY)
-    Set<String> provideValidSponsorExternalIds(@Named(FIREBIRD_PROPERTIES) Properties firebirdProperties) {
-        String validSponsorIds = firebirdProperties.getProperty(VALID_SPONSOR_EXTERNAL_ID_PROPERTY);
+    @Named(VALID_SPONSOR_NES_ID_PROPERTY)
+    Set<String> provideValidSponsorNesIds(@Named(FIREBIRD_PROPERTIES) Properties firebirdProperties) {
+        String validSponsorIds = firebirdProperties.getProperty(VALID_SPONSOR_NES_ID_PROPERTY);
         Iterable<String> splitValidSponsorIds = Splitter.on(',').split(validSponsorIds);
         return Sets.newHashSet(splitValidSponsorIds);
     }
 
     @Provides
     @Singleton
-    @Named(SPONSOR_WITH_PROTOCOLS_EXTERNAL_IDS_PROPERTY)
-    Set<String> provideSponsorWithProtocolsExternalIds(@Named(FIREBIRD_PROPERTIES) Properties firebirdProperties) {
-        String sponsorWithProtocolsExternalIds = firebirdProperties
-                .getProperty(SPONSOR_WITH_PROTOCOLS_EXTERNAL_IDS_PROPERTY);
-        Iterable<String> splitSponsorWithProtocolsExternalIds = Splitter.on(',').split(sponsorWithProtocolsExternalIds);
-        return Sets.newHashSet(splitSponsorWithProtocolsExternalIds);
+    @Named(SPONSOR_WITH_PROTOCOLS_NES_IDS_PROPERTY)
+    Set<String> provideSponsorWithProtocolsNesIds(@Named(FIREBIRD_PROPERTIES) Properties firebirdProperties) {
+        String sponsorWithProtocolsNesIds = firebirdProperties.getProperty(SPONSOR_WITH_PROTOCOLS_NES_IDS_PROPERTY);
+        Iterable<String> splitSponsorWithProtocolsNesIds = Splitter.on(',').split(sponsorWithProtocolsNesIds);
+        return Sets.newHashSet(splitSponsorWithProtocolsNesIds);
     }
 
     @Provides
@@ -180,9 +182,9 @@ public class FirebirdModule extends AbstractModule {
 
     private void addEmailMapping(Map<String, String> emailMapping, String emailMappingString) {
         if (emailMappingString.contains(":")) {
-            String sponsorExternalId = StringUtils.substringBeforeLast(emailMappingString, ":");
+            String sponsorNesId = StringUtils.substringBeforeLast(emailMappingString, ":");
             String sponsorEmail = StringUtils.substringAfterLast(emailMappingString, ":");
-            emailMapping.put(sponsorExternalId, sponsorEmail);
+            emailMapping.put(sponsorNesId, sponsorEmail);
         }
     }
 

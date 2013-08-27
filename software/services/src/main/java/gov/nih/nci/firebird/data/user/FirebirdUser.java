@@ -235,8 +235,6 @@ public class FirebirdUser implements PersistentObject {
         return sponsorRoles;
     }
 
-    @SuppressWarnings("ucd")
-    // setter required by hibernate
     void setSponsorRoles(Set<SponsorRole> sponsorRoles) {
         this.sponsorRoles = sponsorRoles;
     }
@@ -248,6 +246,13 @@ public class FirebirdUser implements PersistentObject {
      */
     public void createInvestigatorRole(InvestigatorProfile profile) {
         setInvestigatorRole(new InvestigatorRole(this, profile));
+    }
+
+    /**
+     * Remove the Investigator Role from the user, useful if adjusting FIREBIRD roles.
+     */
+    public void removeInvestigatorRole() {
+        setInvestigatorRole(null);
     }
 
     /**
@@ -310,6 +315,14 @@ public class FirebirdUser implements PersistentObject {
         return getVerifiedSponsorOrganizations(groupNames, getSponsorRepresentativeOrganizations());
     }
 
+    /**
+     * @param groupNames the current group names for all Grid Grouper groups for this user
+     * @return all sponsor organizations the user is verified for as a delegate.
+     */
+    public List<Organization> getVerifiedSponsorDelegateOrganizations(Set<String> groupNames) {
+        return getVerifiedSponsorOrganizations(groupNames, getSponsorDelegateOrganizations());
+    }
+
     private List<Organization> getSponsorOrganizations(Boolean isDelegate) {
         List<Organization> sponsors = new ArrayList<Organization>();
         for (SponsorRole role : getSponsorRoles()) {
@@ -354,8 +367,6 @@ public class FirebirdUser implements PersistentObject {
      * @return the acceptedEULA
      */
     @Column(name = "accepted_eula")
-    @SuppressWarnings("ucd")
-    // required by hibernate to create column
     public Boolean isEulaAccepted() {
         return eulaAccepted;
     }

@@ -170,8 +170,6 @@ public enum FormStatus {
      * @param display the display string to match
      * @return the status that matches the requested value or null
      */
-    @SuppressWarnings("ucd")
-    // convenience method used in Selenium tests
     public static FormStatus getByDisplay(String display) {
         for (FormStatus status : FormStatus.values()) {
             if (status.getDisplay().equals(display)) {

@@ -110,13 +110,13 @@ public interface OversightCommitteeIntegrationService extends BaseOrganizationIn
     List<Organization> searchByName(String searchName, OversightCommitteeType type);
 
     /**
-     * Returns the OversightCommittees (if any) matching the assigned identifier provided. This is used to locate
+     * Returns a list of OversightCommittees matching the assigned identifier provided. This is used to locate
      * organizations with additional externally assigned identifiers (e.g. CTEP codes). Note that only the
      * extension is required and not the identifier root.
      *
      * @param extension the identifier extension to search for.
      * @param type limit returned organizations to this type.
-     * @return the matching organizations.
+     * @return any matching organizations.
      */
     List<Organization> searchByAssignedIdentifier(String extension, OversightCommitteeType type);
 

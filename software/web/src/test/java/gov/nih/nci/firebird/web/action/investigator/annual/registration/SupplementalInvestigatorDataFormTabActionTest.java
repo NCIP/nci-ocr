@@ -95,7 +95,6 @@ import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Pattern;
 
@@ -137,17 +136,15 @@ public class SupplementalInvestigatorDataFormTabActionTest extends AbstractWebTe
         action.getProfile().addCredential(degree1);
         action.getProfile().addCredential(degree2);
 
-        ArrayList<Pattern> excludes = Lists.newArrayList(Pattern.compile(".*\\.byteDataSource"),
-                Pattern.compile(".*\\.profile"), Pattern.compile(".*\\.roles"));
-        String expectedJson = JSONUtil.serialize(Lists.newArrayList(degree2, degree1), excludes, null, false, true,
-                false);
+        String expectedJson = JSONUtil.serialize(Lists.newArrayList(degree2, degree1),
+                Lists.newArrayList(Pattern.compile(".*\\.byteDataSource"), Pattern.compile(".*\\.profile")), null,
+                false, true, false);
         assertEquals(expectedJson, action.getDegreesJson());
     }
 
     @Test
     public void testGetTrainingJson() throws CredentialAlreadyExistsException, JSONException {
-        TrainingCertificate certificate1 = CredentialFactory.getInstance().createCertificate(
-                CertificateType.HUMAN_RESEARCH_CERTIFICATE);
+        TrainingCertificate certificate1 = CredentialFactory.getInstance().createCertificate(CertificateType.HUMAN_RESEARCH_CERTIFICATE);
         Date newestDate = new Date();
         certificate1.setEffectiveDate(newestDate);
         action.getProfile().addCredential(certificate1);
@@ -185,5 +182,7 @@ public class SupplementalInvestigatorDataFormTabActionTest extends AbstractWebTe
                 false, true, false);
         assertEquals(expectedJson, action.getSpecialtiesJson());
     }
+
+
 
 }

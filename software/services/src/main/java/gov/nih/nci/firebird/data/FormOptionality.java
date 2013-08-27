@@ -125,8 +125,6 @@ public enum FormOptionality {
      * @param display the display string to match
      * @return the optionality that matches the requested value or null
      */
-    @SuppressWarnings("ucd")
-    // convenience method used in Selenium tests
     public static FormOptionality getByDisplay(String display) {
         for (FormOptionality optionality : FormOptionality.values()) {
             if (optionality.getDisplay().equals(display)) {
@@ -139,7 +137,7 @@ public enum FormOptionality {
     /**
      * @return true if this form should be included in a registration.
      */
-    boolean shouldConfigure() {
+    public boolean shouldConfigure() {
         return !NONE.equals(this);
     }
 

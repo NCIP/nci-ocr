@@ -87,7 +87,7 @@ import javax.security.auth.login.LoginException;
 /**
  * Interface to look up role memberships for a given user and update any existing FIREBIRD user object if necessary.
  */
-interface RoleHandler {
+public interface RoleHandler {
     
     /**
      * Handles roles for the given user, updating the sesssion information with authorized

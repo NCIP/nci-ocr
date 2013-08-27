@@ -107,7 +107,7 @@ import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
-import gov.nih.nci.firebird.web.action.sponsor.annual.registration.ViewRegistrationFormAction;
+import gov.nih.nci.firebird.web.action.sponsor.annual.registration.ReviewRegistrationFormAction;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
@@ -119,6 +119,7 @@ import java.util.Set;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.struts2.json.JSONException;
+import org.dom4j.DocumentException;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -132,7 +133,7 @@ public class ReviewRegistrationFormActionProcessorTest extends AbstractWebTest {
     @Inject
     private AnnualRegistrationReviewService mockRegistrationReviewService;
     @Inject
-    private ViewRegistrationFormAction action;
+    private ReviewRegistrationFormAction action;
     private ReviewRegistrationFormActionProcessor<AnnualRegistration> processor;
     private AnnualRegistration registration = AnnualRegistrationFactory.getInstanceWithId().create();
 
@@ -220,7 +221,7 @@ public class ReviewRegistrationFormActionProcessorTest extends AbstractWebTest {
     }
 
     @Test
-    public void testRejectForm_LongText() {
+    public void testRejectForm_LongText() throws DocumentException {
         ProtocolForm1572 protocolForm = new ProtocolForm1572();
         protocolForm.setComments(getLongText());
         processor.setRegistrationForm(protocolForm);
@@ -228,7 +229,7 @@ public class ReviewRegistrationFormActionProcessorTest extends AbstractWebTest {
     }
 
     @Test
-    public void testRejectForm_emptyText() {
+    public void testRejectForm_emptyText() throws DocumentException {
         ProtocolForm1572 protocolForm = new ProtocolForm1572();
         protocolForm.setComments("<p> </p>");
         processor.setRegistrationForm(protocolForm);

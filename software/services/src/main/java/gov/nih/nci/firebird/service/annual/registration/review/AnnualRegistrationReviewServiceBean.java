@@ -96,10 +96,11 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+
+import com.google.inject.Inject;
 
 /**
  * Provides functionality for annual registration reviewal.
@@ -114,7 +115,7 @@ public class AnnualRegistrationReviewServiceBean extends AbstractRegistrationRev
     /**
      * @param esysIntegrationService the ESYS Integration Service to set
      */
-    @Resource(mappedName = "firebird/EsysIntegrationServiceBean/local")
+    @Inject
     void setEsysIntegrationService(EsysIntegrationService esysIntegrationService) {
         this.esysIntegrationService = esysIntegrationService;
     }

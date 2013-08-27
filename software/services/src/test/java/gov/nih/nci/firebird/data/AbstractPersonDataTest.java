@@ -83,7 +83,6 @@
 package gov.nih.nci.firebird.data;
 
 import static org.junit.Assert.*;
-import gov.nih.nci.firebird.test.PersonFactory;
 
 import org.junit.Test;
 
@@ -113,14 +112,6 @@ public class AbstractPersonDataTest {
         person.setPrefix("Dr.");
         person.setSuffix("Ph.D.");
         assertEquals("Doe, John G., Ph.D.", person.getSortableName());
-    }
-
-    @Test
-    public void testCopyContactInformation() throws Exception {
-        Person person = PersonFactory.getInstance().create();
-        Person copiedPerson = new Person();
-        copiedPerson.copyContactInformation(person);
-        assertTrue(copiedPerson.isEquivalent(person));
     }
 
 }

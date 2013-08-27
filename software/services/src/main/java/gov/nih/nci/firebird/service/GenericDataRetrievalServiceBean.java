@@ -100,7 +100,7 @@ import com.google.inject.Provider;
  * The generic data retrieval service used by the persisten object type converter. Note that this is not an EJB because
  * we don't need to define any transaction boundaries here.
  */
-class GenericDataRetrievalServiceBean implements GenericDataRetrievalService {
+public class GenericDataRetrievalServiceBean implements GenericDataRetrievalService {
 
     private final Provider<Session> sessionProvider;
 

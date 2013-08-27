@@ -132,7 +132,7 @@ public abstract class AbstractScalabilityTest extends AbstractFirebirdWebDriverT
     @Override
     public void tearDown() throws Exception {
         stopwatch.stop();
-        long durationSeconds = stopwatch.elapsed(TimeUnit.SECONDS);
+        long durationSeconds = stopwatch.elapsedTime(TimeUnit.SECONDS);
         System.out.println("Duration: " + durationSeconds + " seconds");
         deleteTestData();
         super.tearDown();

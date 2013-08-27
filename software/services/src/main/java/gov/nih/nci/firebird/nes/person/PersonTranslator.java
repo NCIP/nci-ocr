@@ -82,23 +82,18 @@
  */
 package gov.nih.nci.firebird.nes.person;
 
+import java.util.Date;
+
 import gov.nih.nci.coppa.po.Person;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.common.NesTranslatorHelperUtils;
 import gov.nih.nci.iso21090.extensions.Id;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.iso._21090.ENPN;
 import org.iso._21090.ENXP;
 import org.iso._21090.EntityNamePartType;
 import org.iso._21090.II;
-
-import com.google.common.collect.Lists;
 
 /**
  * Helper to translate PO persons into Firebird persons.
@@ -106,15 +101,23 @@ import com.google.common.collect.Lists;
 @SuppressWarnings("PMD.TooManyMethods")
 public class PersonTranslator {
 
-    static List<gov.nih.nci.firebird.data.Person> buildFirebirdPersons(Person[] source) {
-        if (ArrayUtils.isEmpty(source)) {
-            return Collections.emptyList();
+    /**
+     * Translate an array of people.
+     *
+     * @param source the source.
+     * @return the dest.
+     */
+
+    public static gov.nih.nci.firebird.data.Person[] buildFirebirdPeople(Person[] source) {
+        if (source == null) {
+            return null;
         }
-        List<gov.nih.nci.firebird.data.Person> persons = Lists.newArrayListWithExpectedSize(source.length);
-        for (Person person : source) {
-            persons.add(buildFirebirdPerson(person));
+
+        gov.nih.nci.firebird.data.Person[] dest = new gov.nih.nci.firebird.data.Person[source.length];
+        for (int i = 0; i < source.length; i++) {
+            dest[i] = buildFirebirdPerson(source[i]);
         }
-        return persons;
+        return dest;
     }
 
     /**
@@ -123,21 +126,19 @@ public class PersonTranslator {
      * @param sourcePerson the source.
      * @return the FB person.
      */
-    static gov.nih.nci.firebird.data.Person buildFirebirdPerson(Person sourcePerson) {
+    public static gov.nih.nci.firebird.data.Person buildFirebirdPerson(Person sourcePerson) {
         if (sourcePerson == null) {
             return null;
         }
 
         gov.nih.nci.firebird.data.Person destPerson = new gov.nih.nci.firebird.data.Person();
+        destPerson.setNesId(NesTranslatorHelperUtils.handleIi(sourcePerson.getIdentifier()));
         handleName(destPerson, sourcePerson);
         destPerson.setPostalAddress(NesTranslatorHelperUtils.getAddress(sourcePerson.getPostalAddress()));
         destPerson.setEmail(NesTranslatorHelperUtils.getEmailTelValue(sourcePerson.getTelecomAddress()));
         destPerson.setPhoneNumber(NesTranslatorHelperUtils.getPhoneTelValue(sourcePerson.getTelecomAddress()));
-        destPerson.setCurationStatus(NesTranslatorHelperUtils.handleCurationStatus(sourcePerson.getStatusCode()));
-        NesPersonData nesPersonData = new NesPersonData();
-        nesPersonData.setExternalId(NesTranslatorHelperUtils.handleIi(sourcePerson.getIdentifier()));
-        nesPersonData.setLastNesRefresh(new Date());
-        destPerson.setExternalData(nesPersonData);
+        destPerson.setNesStatus(NesTranslatorHelperUtils.handleCurationStatus(sourcePerson.getStatusCode()));
+        destPerson.setLastNesRefresh(new Date());
         return destPerson;
     }
 
@@ -174,8 +175,8 @@ public class PersonTranslator {
      */
     public static Person buildNesPerson(gov.nih.nci.firebird.data.Person source) {
         Person p = new Person();
-        if (source.hasExternalRecord()) {
-            p.setIdentifier(buildIi(source.getExternalId()));
+        if (source.getNesId() != null) {
+            p.setIdentifier(buildIi(source.getNesId()));
         }
         p.setName(buildNesName(source));
         p.setPostalAddress(NesTranslatorHelperUtils.toAd(source.getPostalAddress()));
@@ -183,7 +184,7 @@ public class PersonTranslator {
         String phoneNumber = source.getPhoneNumber();
         String country = NesTranslatorHelperUtils.getCountry(source.getPostalAddress());
         p.setTelecomAddress(NesTranslatorHelperUtils.buildNesTelcommInfo(emailAddress, phoneNumber, country));
-        p.setStatusCode(NesTranslatorHelperUtils.buildStatus(source.getCurationStatus()));
+        p.setStatusCode(NesTranslatorHelperUtils.buildStatus(source.getNesStatus()));
         return p;
     }
 

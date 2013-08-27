@@ -132,7 +132,7 @@ public class ManageCertificateCredentialsActionTest extends AbstractWebTest {
     private CountryLookupService mockCountryLookup;
 
     private ManageCertificateCredentialsAction action;
-    private final String nihOerOrganizationExternalId = "123";
+    private final String nihOerOrganizationNesId = "123";
     private final Organization nihOerOrganization = OrganizationFactory.getInstance().create();
     private ValidationException validationException;
     private static final String ERROR_MESSAGE = "This is an error";
@@ -140,9 +140,9 @@ public class ManageCertificateCredentialsActionTest extends AbstractWebTest {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        when(mockOrganizationService.getByExternalId(nihOerOrganizationExternalId)).thenReturn(nihOerOrganization);
+        when(mockOrganizationService.getByNesIdLocal(nihOerOrganizationNesId)).thenReturn(nihOerOrganization);
         action = new ManageCertificateCredentialsAction(mockProfileService, dataService, mockStateLookup,
-                mockCountryLookup, mockOrganizationService, nihOerOrganizationExternalId);
+                mockCountryLookup, mockOrganizationService, nihOerOrganizationNesId);
         action.setServletRequest(getMockRequest());
         ValidationResult result = new ValidationResult(new ValidationFailure(ERROR_MESSAGE));
         validationException = new ValidationException(result);
@@ -255,12 +255,13 @@ public class ManageCertificateCredentialsActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testSaveCertificate_nih_oer_Issued() throws Exception {
+    public void testSaveCertificate_nih_oer_Issued() throws IOException, CredentialAlreadyExistsException,
+            ValidationException {
         action.setNihOerIssued(true);
         makeCertificateRequest();
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveCertificate());
         assertEquals(nihOerOrganization, action.getCertificate().getIssuer());
-        verify(mockOrganizationService).getByExternalId(nihOerOrganizationExternalId);
+        verify(mockOrganizationService).getByNesIdLocal(nihOerOrganizationNesId);
     }
 
     @Test
@@ -279,7 +280,8 @@ public class ManageCertificateCredentialsActionTest extends AbstractWebTest {
     public void testSaveCertificate_IssuedByOrganization() throws IOException, CredentialAlreadyExistsException,
             ValidationException {
         makeCertificateRequest();
-        Organization issuer = OrganizationFactory.getInstance().create();
+        Organization issuer = new Organization();
+        issuer.setNesId("1234");
         action.getCertificate().setIssuer(issuer);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveCertificate());
     }
@@ -298,7 +300,7 @@ public class ManageCertificateCredentialsActionTest extends AbstractWebTest {
         profile.addCredential(trainingCertificate);
         action.setProfile(profile);
 
-        when(mockOrganizationService.getByExternalId(nihOerOrganizationExternalId)).thenReturn(nihOerOrganization);
+        when(mockOrganizationService.getByNesIdLocal(nihOerOrganizationNesId)).thenReturn(nihOerOrganization);
         when(mockProfileService.getById(profile.getId())).thenReturn(profile);
         action.prepare();
 

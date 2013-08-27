@@ -82,20 +82,54 @@
  */
 package gov.nih.nci.firebird.service.investigatorprofile;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Provider;
-import gov.nih.nci.firebird.data.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
+import gov.nih.nci.firebird.data.CertificateType;
+import gov.nih.nci.firebird.data.Degree;
+import gov.nih.nci.firebird.data.DegreeType;
+import gov.nih.nci.firebird.data.FormTypeEnum;
+import gov.nih.nci.firebird.data.InvestigatorProfile;
+import gov.nih.nci.firebird.data.InvestigatorRegistration;
+import gov.nih.nci.firebird.data.InvitationStatus;
+import gov.nih.nci.firebird.data.OrderingDesignee;
+import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.data.OrganizationAssociation;
+import gov.nih.nci.firebird.data.OrganizationRoleType;
+import gov.nih.nci.firebird.data.Person;
+import gov.nih.nci.firebird.data.PracticeSite;
+import gov.nih.nci.firebird.data.PracticeSiteType;
+import gov.nih.nci.firebird.data.RegistrationStatus;
+import gov.nih.nci.firebird.data.ShippingDesignee;
+import gov.nih.nci.firebird.data.SubInvestigator;
+import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
+import gov.nih.nci.firebird.data.SubmittedTrainingCertificate;
+import gov.nih.nci.firebird.data.TrainingCertificate;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.correlation.NesPersonRoleIntegrationService;
+import gov.nih.nci.firebird.nes.correlation.PersonRoleType;
 import gov.nih.nci.firebird.service.file.FileService;
 import gov.nih.nci.firebird.service.organization.OrganizationAssociationService;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.person.PersonAssociationService;
 import gov.nih.nci.firebird.service.person.PersonService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
-import gov.nih.nci.firebird.test.*;
+import gov.nih.nci.firebird.test.CredentialFactory;
+import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
+import gov.nih.nci.firebird.test.OrganizationFactory;
+import gov.nih.nci.firebird.test.PersonAssociationFactory;
+import gov.nih.nci.firebird.test.PersonFactory;
+import gov.nih.nci.firebird.test.RegistrationFactory;
+import gov.nih.nci.firebird.test.ValueGenerator;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Set;
+
 import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
@@ -103,27 +137,20 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Set;
-
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anySetOf;
-import static org.mockito.Mockito.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Provider;
 
 public class InvestigatorProfileServiceBeanTest {
 
     private InvestigatorProfileServiceBean bean = new InvestigatorProfileServiceBean();
-    private InvestigatorProfileHelper investigatorProfileHelper = new InvestigatorProfileHelper();
-    private InvestigatorRegistrationHelper investigatorRegistrationHelper = new InvestigatorRegistrationHelper();
 
     @Mock
     private OrganizationService mockOrganizationService;
     @Mock
     private PersonService mockPersonService;
+    @Mock
+    private NesPersonRoleIntegrationService mockNesPersonRoleService;
     @Mock
     private ProtocolRegistrationService mockRegistrationService;
     @Mock
@@ -140,14 +167,9 @@ public class InvestigatorProfileServiceBeanTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-
-        //set the helpers
-        investigatorProfileHelper.setPersonService(mockPersonService);
-        investigatorRegistrationHelper.setRegistrationService(mockRegistrationService);
-        bean.setInvestigatorProfileHelper(investigatorProfileHelper);
-        bean.setInvestigatorRegistrationHelper(investigatorRegistrationHelper);
-
+        bean.setPersonService(mockPersonService);
         bean.setOrganizationService(mockOrganizationService);
+        bean.setNesPersonRoleService(mockNesPersonRoleService);
         bean.setRegistrationService(mockRegistrationService);
         bean.setPersonAssociationService(mockPersonAssociationService);
         bean.setOrganizationAssociationService(mockOrganizationAssociationService);
@@ -156,7 +178,23 @@ public class InvestigatorProfileServiceBeanTest {
         when(mockSessionProvider.get()).thenReturn(mockSession);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
+    public void testSetPrimaryPerson() throws ValidationException, InterruptedException {
+        InvestigatorProfile profile = createTestProfile();
+        Person person = PersonFactory.getInstance().create();
+        bean.setPrimaryPerson(profile, person);
+        assertEquals(person, profile.getPerson());
+        verify(mockPersonService).save(person);
+        Thread.sleep(400);  // allow time for asynchronous invocation
+        verify(mockNesPersonRoleService).ensureCorrelated(profile.getPerson(),
+                profile.getPrimaryOrganization().getOrganization(), PersonRoleType.HEALTH_CARE_PROVIDER);
+
+        Person existingPerson = PersonFactory.getInstance().create();
+        bean.setPrimaryPerson(profile, existingPerson);
+        assertEquals(existingPerson, profile.getPerson());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void testSetPrimaryOrganization_NullOrganization() throws ValidationException {
         InvestigatorProfile profile = createTestProfile();
         bean.setPrimaryOrganization(profile, null);
@@ -198,7 +236,8 @@ public class InvestigatorProfileServiceBeanTest {
         assertEquals(PracticeSiteType.CANCER_CENTER,
                 ((PracticeSite) retrievedAssociation.getOrganizationRole()).getType());
 
-        Organization newOrganization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization newOrganization = OrganizationFactory.getInstance().create();
+        newOrganization.setNesId(null);
         bean.addAssociatedPracticeSite(profile, newOrganization, "1234", PracticeSiteType.HEALTH_CARE_FACILITY);
         assertEquals(2, profile.getOrganizationAssociations().size());
         verifyZeroInteractions(mockRegistrationService);
@@ -218,7 +257,8 @@ public class InvestigatorProfileServiceBeanTest {
                 .iterator().next();
         assertEquals(association.getId(), retrievedAssociation.getId());
 
-        Organization newOrganization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization newOrganization = OrganizationFactory.getInstance().create();
+        newOrganization.setNesId(null);
         bean.addAssociatedInstitutionalReviewBoard(profile, newOrganization);
         assertEquals(2, profile.getOrganizationAssociations().size());
         verifyZeroInteractions(mockRegistrationService);
@@ -237,7 +277,8 @@ public class InvestigatorProfileServiceBeanTest {
                 .getOrganizationAssociations(OrganizationRoleType.CLINICAL_LABORATORY).iterator().next();
         assertEquals(association.getId(), retrievedAssociation.getId());
 
-        Organization newOrganization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization newOrganization = OrganizationFactory.getInstance().create();
+        newOrganization.setNesId(null);
         bean.addAssociatedClinicalLab(profile, newOrganization);
         assertEquals(2, profile.getOrganizationAssociations().size());
         verifyZeroInteractions(mockRegistrationService);
@@ -249,9 +290,8 @@ public class InvestigatorProfileServiceBeanTest {
         AbstractProtocolRegistration registration = createRegistration(RegistrationStatus.IN_PROGRESS);
         InvestigatorProfile profile = registration.getProfile();
         mockRegistrationService = mock(ProtocolRegistrationService.class);
-        investigatorRegistrationHelper.setRegistrationService(mockRegistrationService);
-        when(mockRegistrationService.getReturnedOrRevisedRegistrations(profile)).thenReturn(
-                Sets.newHashSet(registration));
+        bean.setRegistrationService(mockRegistrationService);
+        when(mockRegistrationService.getReturnedOrRevisedRegistrations(profile)).thenReturn(Sets.newHashSet(registration));
         when(mockRegistrationService.save(any(AbstractProtocolRegistration.class))).thenReturn(1L);
         performDeleteAssociatedOrganization(registration, profile, OrganizationFactory.getInstance().create());
         verify(mockRegistrationService).setRegistrationFormStatusesToRevisedIfReviewed(Sets.newHashSet(registration),
@@ -320,8 +360,7 @@ public class InvestigatorProfileServiceBeanTest {
         InvestigatorProfile profile = createTestProfile();
         Person person = PersonFactory.getInstance().create();
         PersonService mockOS = mock(PersonService.class);
-        investigatorProfileHelper.setPersonService(mockOS);
-
+        bean.setPersonService(mockOS);
         SubInvestigator subInvestigator = bean.addSubInvestigator(profile, person);
         assertNotNull(subInvestigator);
         assertEquals(1, profile.getSubInvestigators().size());
@@ -365,7 +404,8 @@ public class InvestigatorProfileServiceBeanTest {
     @Test
     public void testAddCredentialNewIssuer() throws CredentialAlreadyExistsException, ValidationException {
         DegreeType dt = new DegreeType("foo");
-        Organization issuer = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization issuer = OrganizationFactory.getInstance().create();
+        issuer.setNesId(null);
         InvestigatorProfile profile = createTestProfile();
 
         Degree degree = new Degree();
@@ -377,7 +417,7 @@ public class InvestigatorProfileServiceBeanTest {
 
         assertEquals(1, profile.getCredentials().size());
         assertEquals(degree.getId(), profile.getCredentials().iterator().next().getId());
-        verify(mockOrganizationService).create(issuer, OrganizationRoleType.GENERIC_ORGANIZATION);
+        verify(mockOrganizationService).create(issuer);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -466,8 +506,7 @@ public class InvestigatorProfileServiceBeanTest {
         }
         assertEquals(1, profile.getCredentials().size());
         bean.deleteCertificate(profile, certificate);
-        verify(mockRegistrationService)
-                .setReturnedOrRevisedRegistrationsFormStatusesToRevised(profile, FormTypeEnum.CV);
+        verify(mockRegistrationService).setReturnedOrRevisedRegistrationsFormStatusesToRevised(profile, FormTypeEnum.CV);
         Set<AbstractProtocolRegistration> affectedRegistrations = Collections.emptySet();
         if (returnedRegistrations) {
             affectedRegistrations = Sets.newHashSet(affectedRegistration);
@@ -548,12 +587,12 @@ public class InvestigatorProfileServiceBeanTest {
         ProtocolRegistrationService mockRegistrationService = mock(ProtocolRegistrationService.class);
         when(mockRegistrationService.getSubinvestigatorRegistrations(profile, subInvestigatorProfile.getPerson()))
                 .thenReturn(Lists.newArrayList(subInvestigatorRegistration));
-        investigatorRegistrationHelper.setRegistrationService(mockRegistrationService);
+        bean.setRegistrationService(mockRegistrationService);
 
         bean.deleteAssociatedSubInvestigator(profile, subInvestigator);
         verify(mockPersonAssociationService).delete(subInvestigator);
         if (!registration.isLockedForInvestigator()
-                && !InvestigatorRegistrationHelper.INVALID_SUBINVESTIGATOR_REMOVAL_STATES.contains(status)) {
+                && !InvestigatorProfileServiceBean.INVALID_SUBINVESTIGATOR_REMOVAL_STATES.contains(status)) {
             verify(mockRegistrationService).removeSubInvestigatorRegistrationAndNotify(
                     anyListOf(SubInvestigatorRegistration.class));
         } else {
@@ -620,20 +659,20 @@ public class InvestigatorProfileServiceBeanTest {
     }
 
     @Test
-    public void testSetShippingDesignee_NoOrganizationExternalId() throws Exception {
+    public void testSetShippingDesignee_NoOrganizationNesId() throws Exception {
         InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
         ShippingDesignee shippingDesignee = PersonAssociationFactory.getInstance().createShippingDesignee();
         Organization organization = shippingDesignee.getOrganization();
-        organization.setExternalData(null);
+        organization.setNesId(null);
         bean.setShippingDesignee(profile, shippingDesignee);
         assertEquals(profile, shippingDesignee.getProfile());
         assertEquals(shippingDesignee, profile.getShippingDesignee());
         verify(mockPersonAssociationService).handleNew(shippingDesignee);
-        verify(mockOrganizationService).create(organization, OrganizationRoleType.GENERIC_ORGANIZATION);
+        verify(mockOrganizationService).create(organization);
     }
 
     @Test
-    public void testSetShippingDesignee_WithOrganizationExternalId() throws Exception {
+    public void testSetShippingDesignee_WithOrganizationNesId() throws Exception {
         InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
         ShippingDesignee shippingDesignee = PersonAssociationFactory.getInstance().createShippingDesignee();
         bean.setShippingDesignee(profile, shippingDesignee);

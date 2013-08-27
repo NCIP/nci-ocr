@@ -96,7 +96,7 @@ import com.opensymphony.sitemesh.webapp.SiteMeshFilter;
 /**
  * Binds filters for Guice injection.
  */
-class ListenerModule extends AbstractModule {
+public class ListenerModule extends AbstractModule {
 
     @Override
     protected void configure() {

@@ -161,11 +161,11 @@ public class CreateLeadOrganizationTest extends AbstractFirebirdWebDriverTest {
     }
 
     private Person getPrincipalInvestigator() {
-        return getExistingExternalPerson();
+        return getExistingNesPerson();
     }
 
     private Organization getLeadOrganization() {
-        return getExistingExternalOrganization();
+        return getExistingNesOrganization();
     }
 
     private void checkSaveWithoutSearching(final CreateLeadOrganizationDialog leadOrganizationDialog) {
@@ -216,7 +216,7 @@ public class CreateLeadOrganizationTest extends AbstractFirebirdWebDriverTest {
             final ProtocolLeadOrganization leadOrganization) {
         CreateLeadOrganizationDialog leadOrganizationDialog = createPage.clickSelectLeadOrganizationBtn();
         leadOrganizationDialog.getHelper().searchAndSelectOrganization(leadOrganization.getOrganization());
-        Person newPrincipalInvestigator = getExistingExternalPerson();
+        Person newPrincipalInvestigator = getExistingNesPerson();
         leadOrganizationDialog.getHelper().searchAndSelectPerson(newPrincipalInvestigator);
         leadOrganizationDialog.clickSave();
         ProtocolLeadOrganization newLeadOrganization = new ProtocolLeadOrganization(null,
@@ -251,11 +251,11 @@ public class CreateLeadOrganizationTest extends AbstractFirebirdWebDriverTest {
         Protocol protocol = ProtocolFactory.getInstance().create();
         protocol.setSponsor(dataSet.getSponsor().getSponsorRepresentativeOrganizations().get(0));
         ProtocolLeadOrganization leadOrganization = new ProtocolLeadOrganization(null,
-                orgFactory.createWithoutExternalData(), personFactory.createWithoutExternalData());
+                orgFactory.createWithoutNesData(), personFactory.createWithoutNesData());
         ProtocolLeadOrganization leadOrganizationExistingOrg = new ProtocolLeadOrganization(null,
-                getLeadOrganization(), personFactory.createWithoutExternalData());
+                getLeadOrganization(), personFactory.createWithoutNesData());
         ProtocolLeadOrganization leadOrganizationExistingPI = new ProtocolLeadOrganization(null,
-                orgFactory.createWithoutExternalData(), getPrincipalInvestigator());
+                orgFactory.createWithoutNesData(), getPrincipalInvestigator());
         protocol.getLeadOrganizations().clear();
         protocol.getLeadOrganizations().add(leadOrganization);
         protocol.getLeadOrganizations().add(leadOrganizationExistingOrg);

@@ -82,7 +82,9 @@
  */
 package gov.nih.nci.firebird.nes;
 
-import static gov.nih.nci.firebird.common.FirebirdConstants.*;
+import static gov.nih.nci.firebird.common.FirebirdConstants.PROXY_MAX_ATTEMPTS_KEY;
+import static gov.nih.nci.firebird.common.FirebirdConstants.PROXY_POOL_INITIAL_KEY;
+import static gov.nih.nci.firebird.common.FirebirdConstants.PROXY_POOL_MAX_IDLE_KEY;
 import gov.nih.nci.coppa.services.business.business.client.BusinessClient;
 import gov.nih.nci.coppa.services.business.business.common.BusinessI;
 import gov.nih.nci.coppa.services.entities.organization.client.OrganizationClient;
@@ -112,18 +114,16 @@ import gov.nih.nci.firebird.nes.organization.IdentifiedOrganizationIntegrationSe
 import gov.nih.nci.firebird.nes.organization.IdentifiedOrganizationIntegrationServiceBean;
 import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
 import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactoryBean;
-import gov.nih.nci.firebird.nes.organization.NesOrganizationServiceBean;
 import gov.nih.nci.firebird.nes.organization.OrganizationEntityIntegrationService;
 import gov.nih.nci.firebird.nes.organization.OrganizationEntityIntegrationServiceBean;
 import gov.nih.nci.firebird.nes.organization.OversightCommitteeIntegrationService;
 import gov.nih.nci.firebird.nes.organization.OversightCommitteeIntegrationServiceBean;
 import gov.nih.nci.firebird.nes.organization.ResearchOrganizationIntegrationService;
 import gov.nih.nci.firebird.nes.organization.ResearchOrganizationIntegrationServiceBean;
-import gov.nih.nci.firebird.nes.person.NesPersonServiceBean;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationService;
+import gov.nih.nci.firebird.nes.person.NesPersonIntegrationServiceBean;
 import gov.nih.nci.firebird.proxy.FaultTolerantProxyFactory;
 import gov.nih.nci.firebird.proxy.ProxyConfiguration;
-import gov.nih.nci.firebird.service.organization.external.ExternalOrganizationService;
-import gov.nih.nci.firebird.service.person.external.ExternalPersonService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -158,8 +158,7 @@ public class NesIntegrationModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(ExternalPersonService.class).to(NesPersonServiceBean.class).in(Scopes.SINGLETON);
-        bind(ExternalOrganizationService.class).to(NesOrganizationServiceBean.class).in(Scopes.SINGLETON);
+        bind(NesPersonIntegrationService.class).to(NesPersonIntegrationServiceBean.class).in(Scopes.SINGLETON);
         bind(NesPersonRoleIntegrationService.class).to(NesPersonRoleIntegrationServiceBean.class)
             .in(Scopes.SINGLETON);
         bind(IdentifiedOrganizationIntegrationService.class).to(IdentifiedOrganizationIntegrationServiceBean.class)

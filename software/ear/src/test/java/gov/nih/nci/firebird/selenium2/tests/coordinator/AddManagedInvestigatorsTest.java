@@ -119,7 +119,7 @@ public class AddManagedInvestigatorsTest extends AbstractFirebirdWebDriverTest {
     }
 
     @Test
-    public void testManageInvestigators() {
+    public void testDelegateContactInformation() {
         BrowseInvestigatorsPage investigatorsPage = navigateToBrowseInvestigatorsPage();
         SelectInvestigatorsDialog selectInvestigatorsDialog = investigatorsPage.clickAddInvestigator();
         InvestigatorProfile investigatorProfile = availableInvestigator.getInvestigatorRole().getProfile();

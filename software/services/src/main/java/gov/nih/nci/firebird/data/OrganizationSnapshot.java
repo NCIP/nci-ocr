@@ -82,32 +82,24 @@
  */
 package gov.nih.nci.firebird.data;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-
-import org.hibernate.validator.NotEmpty;
 
 /**
  * A snapshot copy of an organization's data.
  */
 @Entity(name = "organization_snapshot")
+@AttributeOverrides(
+        @AttributeOverride(name = "nesId", column = @Column(name = "nes_id", unique = false))
+)
 public class OrganizationSnapshot extends AbstractOrganizationData {
-
+    
     private static final long serialVersionUID = 1L;
-    private String externalId;
 
     OrganizationSnapshot() {
         super();
-    }
-
-    @NotEmpty
-    @Column(name = "external_id")
-    public String getExternalId() {
-        return externalId;
-    }
-
-    public void setExternalId(String externalId) {
-        this.externalId = externalId;
     }
 
 }

@@ -107,28 +107,24 @@ public class CertifiedSpecialtyType extends AbstractListItem {
 
     private CertifiedSpecialtyBoard board;
     private SpecialtyDesignation designation;
-
+    
     /**
      * minimal ctor.
      * @param name name
      * @param board the board overseeing this certification.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public CertifiedSpecialtyType(String name, CertifiedSpecialtyBoard board) {
         super(name);
         this.board = board;
         this.designation = SpecialtyDesignation.GENERAL;
     }
-
+    
     /**
      * minimal ctor.
      * @param name name
      * @param board the board overseeing this certification.
      * @param designation the designation of the Specialty
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public CertifiedSpecialtyType(String name, CertifiedSpecialtyBoard board, SpecialtyDesignation designation) {
         super(name);
         this.board = board;
@@ -151,7 +147,7 @@ public class CertifiedSpecialtyType extends AbstractListItem {
     private void setBoard(CertifiedSpecialtyBoard board) {
         this.board = board;
     }
-
+    
     /**
      * @return the designation
      */
@@ -167,7 +163,7 @@ public class CertifiedSpecialtyType extends AbstractListItem {
     private void setDesignation(SpecialtyDesignation designation) {
         this.designation = designation;
     }
-
+    
     /**
      * @return the Display string of the Specialty Type.
      */
@@ -175,5 +171,5 @@ public class CertifiedSpecialtyType extends AbstractListItem {
     public String getDisplay() {
         return getName() + " (" + getDesignation().getDisplay() + ")";
     }
-
+    
 }

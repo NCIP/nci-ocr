@@ -90,7 +90,7 @@ import gov.nih.nci.coppa.services.business.business.common.BusinessI;
 import gov.nih.nci.coppa.services.entities.organization.common.OrganizationI;
 import gov.nih.nci.coppa.services.structuralroles.researchorganization.common.ResearchOrganizationI;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.nes.AbstractNesData;
+import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
 import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
 import gov.nih.nci.iso21090.extensions.Id;
@@ -129,7 +129,6 @@ public class ResearchOrganizationIntegrationServiceBean extends AbstractCorrelat
         OrganizationCreator creator = new OrganizationCreator() {
             @Override
             public Id create(Organization organization) throws RemoteException {
-                getExternalData(organization).setResearchOrganizationType(type);
                 return callCreate(organization, type);
             }
         };
@@ -137,7 +136,7 @@ public class ResearchOrganizationIntegrationServiceBean extends AbstractCorrelat
     }
 
     private Id callCreate(Organization organization, ResearchOrganizationType type) throws RemoteException {
-        createPlayer(organization, translator);
+        createPlayerIfNecessary(organization, translator);
         return researchOrganizationService.create(translator.toResearchOrganization(organization, type));
     }
 
@@ -148,6 +147,11 @@ public class ResearchOrganizationIntegrationServiceBean extends AbstractCorrelat
         ResearchOrganization researchOrganization = (ResearchOrganization) correlationNode.getCorrelation()
                 .getContent().get(0);
         return translator.toFirebirdOrganization(researchOrganization, player);
+    }
+
+    @Override
+    NesIIRoot getNesIIRoot() {
+        return NesIIRoot.RESEARCH_ORGANIZATION;
     }
 
     @Override
@@ -182,12 +186,12 @@ public class ResearchOrganizationIntegrationServiceBean extends AbstractCorrelat
     }
 
     @Override
-    public List<Organization> searchByAssignedIdentifier(String assignedIdentifier, ResearchOrganizationType type) {
-        OrganizationSearcher searcher = createIdentifiedOrganizationExtensionSearch(assignedIdentifier, type);
-        return searchByAssignedIdentifier(searcher, assignedIdentifier);
+    public List<Organization> searchByAssignedIdentifier(String extension, ResearchOrganizationType type) {
+        OrganizationSearcher searcher = createIdentifiedOrganizationExtensionSearch(extension, type);
+        return performSearch(searcher);
     }
 
-    private OrganizationSearcher createIdentifiedOrganizationExtensionSearch(final String extension,
+    OrganizationSearcher createIdentifiedOrganizationExtensionSearch(final String extension,
             final ResearchOrganizationType type) {
         return new OrganizationSearcher() {
             public List<Organization> search() throws RemoteException {
@@ -233,14 +237,16 @@ public class ResearchOrganizationIntegrationServiceBean extends AbstractCorrelat
         }
         return organizations;
     }
-    
-    @Override
-    AbstractNesData createNesExternalData() {
-        return new ResearchOrganizationData();
-    }
 
     @Override
-    ResearchOrganizationData getExternalData(Organization organization) {
-        return (ResearchOrganizationData) super.getExternalData(organization);
+    public ResearchOrganizationType getType(String nesId) {
+        try {
+            ResearchOrganization researchOrganization = researchOrganizationService.getById(new NesId(nesId).toId());
+            return ResearchOrganizationType.getByCode(researchOrganization.getTypeCode().getCode());
+        } catch (RemoteException e) {
+            handleUnexpectedError(e);
+        }
+        return null;
     }
+
 }

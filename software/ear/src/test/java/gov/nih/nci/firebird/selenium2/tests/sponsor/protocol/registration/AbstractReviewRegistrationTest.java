@@ -102,7 +102,6 @@ import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.ResubmissionCommentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.SignAndSubmitRegistrationDialog;
@@ -117,10 +116,11 @@ import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewComple
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewHumanResearchCertificatesDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationOverviewTab;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab;
-import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.AdditionalAttachmentsDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab.RegistrationFormListing;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FinancialDisclosuresSupportingDocumentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FormReviewCommentDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.RegistrationClinicalLabCertificatesDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.ReviewAdditionalAttachmentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.FailingAction;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
@@ -139,8 +139,7 @@ import org.junit.Test;
 
 public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWebDriverTest {
     private static final Set<FormTypeEnum> FORMS_WITH_ADDITIONAL_DOCUMENTS = EnumSet.of(FormTypeEnum.FORM_1572,
-            FormTypeEnum.FINANCIAL_DISCLOSURE_FORM, FormTypeEnum.HUMAN_RESEARCH_CERTIFICATE,
-            FormTypeEnum.ADDITIONAL_ATTACHMENTS);
+            FormTypeEnum.FINANCIAL_DISCLOSURE_FORM);
     static final LoginAccount SPONSOR_LOGIN = SponsorLogin.fbcisponsor1;
     static final LoginAccount SPONSOR_DELEGATE_LOGIN = SponsorDelegateLogin.fbcidel1;
 
@@ -210,24 +209,25 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
                 primaryRegistration);
         reviewTab.getHelper().checkFormStatuses(primaryRegistration, FormStatus.SUBMITTED);
         addAdditionalAttachment(reviewTab);
+        checkAdditionalAttachments(reviewTab);
         checkAdditionalDocuments(reviewTab);
-        checkHumanResearchCertificates(reviewTab, primaryRegistration.getHumanResearchCertificateForm(), true);
+        checkHumanResearchCertificates(reviewTab, primaryRegistration.getHumanResearchCertificateForm());
         reviewTab.getHelper().reviewAllForms(primaryRegistration);
         reviewTab.getHelper().checkFormStatuses(primaryRegistration, FormStatus.IN_REVIEW);
-        assertFalse(reviewTab.isCompleteReviewButtonPresent());
+        assertFalse(reviewTab.isCompleteReviewButtonEnabled());
         reviewTab.getHelper().rejectAllForms(primaryRegistration);
-        assertTrue(reviewTab.isCompleteReviewButtonPresent());
+        assertTrue(reviewTab.isCompleteReviewButtonEnabled());
 
         checkAcceptingThenRejectingRetainsRejectionComments(reviewTab);
 
         reviewTab.getHelper().acceptAllForms(primaryRegistration);
         reviewTab.getHelper().clearFormDispositions(primaryRegistration);
-        assertFalse(reviewTab.isCompleteReviewButtonPresent());
+        assertFalse(reviewTab.isCompleteReviewButtonEnabled());
         reviewTab.getHelper().acceptAllForms(primaryRegistration);
 
         if (getLogin() == dataSet.getSponsorLogin()) {
             ReviewCompletionDialog reviewCompletionDialog = (ReviewCompletionDialog) reviewTab.clickCompleteReview();
-            reviewCompletionDialog.clickApproveRegistration().clickClose();
+            reviewCompletionDialog.clickApproveRegistration();
             reviewTab.getHelper().checkForRegistrationStatus(RegistrationStatus.APPROVED);
         } else {
             reviewTab = (ReviewRegistrationTab) reviewTab.clickCompleteReview();
@@ -246,13 +246,15 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
         assertNotNull(reviewTab.getHelper().getMatchingListing(primaryRegistration.getAdditionalAttachmentsForm()));
     }
 
-    private void checkAdditionalAttachments(ReviewRegistrationTab reviewTab) throws IOException {
+    private void checkAdditionalAttachments(ReviewRegistrationTab reviewTab) {
         AdditionalAttachmentsForm form = primaryRegistration.getAdditionalAttachmentsForm();
-        RegistrationListing listing = reviewTab.getHelper().getMatchingListing(form);
-        assertFalse(listing.hasDownloadButton());
-        AdditionalAttachmentsDialog additionalAttachmentsDialog = (AdditionalAttachmentsDialog) listing
-                .clickViewAttachments();
-        additionalAttachmentsDialog.getHelper().checkForAdditionalAttachments(form);
+        ReviewAdditionalAttachmentsDialog additionalAttachmentsDialog = (ReviewAdditionalAttachmentsDialog) reviewTab
+                .getHelper().getMatchingListing(form).clickFormDownload();
+        Set<FirebirdFile> attachments = form.getAdditionalAttachments();
+        assertEquals(attachments.size(), additionalAttachmentsDialog.getListings().size());
+        for (FirebirdFile attachment : attachments) {
+            assertNotNull(additionalAttachmentsDialog.getHelper().getListing(attachment));
+        }
         additionalAttachmentsDialog.clickClose();
         WaitUtils.pause(400);
     }
@@ -261,19 +263,15 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
         Set<AbstractRegistrationForm> expectedForms = primaryRegistration.getFormsForSponsorReview();
         assertEquals(expectedForms.size(), reviewTab.getFormListings().size());
         for (AbstractRegistrationForm form : expectedForms) {
-            RegistrationListing listing = reviewTab.getHelper().getMatchingListing(form);
+            RegistrationFormListing listing = reviewTab.getHelper().getMatchingListing(form);
             boolean shouldHaveAdditionalDocuments = FORMS_WITH_ADDITIONAL_DOCUMENTS.contains(form.getFormType()
                     .getFormTypeEnum()) && form.isAdditionalDocumentsUploaded();
-            assertEquals(shouldHaveAdditionalDocuments, listing.hasViewAttachmentsButton());
-            if (listing.hasViewAttachmentsButton()) {
+            assertEquals(shouldHaveAdditionalDocuments, listing.hasAdditionalDocuments());
+            if (listing.hasAdditionalDocuments()) {
                 if (form instanceof ProtocolForm1572) {
                     checkForClinicalLabCertificates(reviewTab, (ProtocolForm1572) form);
                 } else if (form instanceof ProtocolFinancialDisclosure) {
                     checkFinancialDisclosureSupportingDocuments(reviewTab, (ProtocolFinancialDisclosure) form);
-                } else if (form instanceof HumanResearchCertificateForm) {
-                    checkHumanResearchCertificates(reviewTab, (HumanResearchCertificateForm) form, false);
-                } else if (form instanceof AdditionalAttachmentsForm) {
-                    checkAdditionalAttachments(reviewTab);
                 } else {
                     fail(form.getFormType().getName() + " shouldn't have additional documents.");
                 }
@@ -284,7 +282,7 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
     private void checkForClinicalLabCertificates(ReviewRegistrationTab reviewTab, ProtocolForm1572 form)
             throws IOException {
         RegistrationClinicalLabCertificatesDialog certificatesDialog = (RegistrationClinicalLabCertificatesDialog) reviewTab
-                .getHelper().getMatchingListing(form).clickViewAttachments();
+                .getHelper().getMatchingListing(form).clickAdditionalDocuments();
         certificatesDialog.getHelper().checkForClinicalLabCertificates(form);
         certificatesDialog.clickClose();
         WaitUtils.pause(400);
@@ -293,23 +291,16 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
     private void checkFinancialDisclosureSupportingDocuments(ReviewRegistrationTab reviewTab,
             ProtocolFinancialDisclosure form) throws IOException {
         FinancialDisclosuresSupportingDocumentsDialog supportingDocumentsDialog = (FinancialDisclosuresSupportingDocumentsDialog) reviewTab
-                .getHelper().getMatchingListing(form).clickViewAttachments();
+                .getHelper().getMatchingListing(form).clickAdditionalDocuments();
         supportingDocumentsDialog.getHelper().checkForSupportingDocuments(form);
         supportingDocumentsDialog.clickClose();
         WaitUtils.pause(400);
     }
 
-    private void checkHumanResearchCertificates(ReviewRegistrationTab reviewTab, HumanResearchCertificateForm form,
-            boolean clickDownload) {
+    private void checkHumanResearchCertificates(ReviewRegistrationTab reviewTab, HumanResearchCertificateForm form) {
         Set<? extends Certificate> actualDocuments = form.getCertificates();
-        ReviewHumanResearchCertificatesDialog certificatesDialog;
-        if (clickDownload) {
-            certificatesDialog = (ReviewHumanResearchCertificatesDialog) reviewTab.getHelper().getMatchingListing(form)
-                    .clickDownload();
-        } else {
-            certificatesDialog = (ReviewHumanResearchCertificatesDialog) reviewTab.getHelper().getMatchingListing(form)
-                    .clickViewAttachments();
-        }
+        ReviewHumanResearchCertificatesDialog certificatesDialog = (ReviewHumanResearchCertificatesDialog) reviewTab
+                .getHelper().getMatchingListing(form).clickFormDownload();
         for (Certificate certificate : actualDocuments) {
             assertNotNull(certificatesDialog.getHelper().getListing(certificate));
         }
@@ -318,8 +309,7 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
 
     private void checkAcceptingThenRejectingRetainsRejectionComments(ReviewRegistrationTab reviewTab) {
         reviewTab.getHelper().acceptForm(primaryRegistration.getForm1572());
-        FormReviewCommentDialog commentsDialog = reviewTab.getHelper()
-                .getMatchingListing(primaryRegistration.getForm1572()).clickReject();
+        FormReviewCommentDialog commentsDialog = reviewTab.getHelper().getMatchingListing(primaryRegistration.getForm1572()).clickRejectRadioButton();
         assertTrue(commentsDialog.getComments().contains(primaryRegistration.getForm1572().getFormType().getName()));
         commentsDialog.clickSave();
     }
@@ -333,10 +323,10 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
                 primaryRegistration);
         reviewTab.getHelper().checkFormStatuses(primaryRegistration, FormStatus.SUBMITTED);
         reviewTab.getHelper().reviewAllForms(primaryRegistration);
-        assertFalse(reviewTab.isCompleteReviewButtonPresent());
+        assertFalse(reviewTab.isCompleteReviewButtonEnabled());
         checkFormRejectionCommentsRequired(reviewTab);
         reviewTab.getHelper().rejectAllForms(primaryRegistration);
-        assertTrue(reviewTab.isCompleteReviewButtonPresent());
+        assertTrue(reviewTab.isCompleteReviewButtonEnabled());
         RegistrationReviewCommentDialog commentDialog = (RegistrationReviewCommentDialog) reviewTab
                 .clickCompleteReview();
         commentDialog.getHelper().checkForFormComments(primaryRegistration);
@@ -351,7 +341,7 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
 
         reviewTab.getHelper().checkAllFormDispositionsDisabled(primaryRegistration);
         reviewTab.getHelper().checkForRegistrationStatus(RegistrationStatus.RETURNED);
-        assertFalse(reviewTab.isCompleteReviewButtonPresent());
+        assertFalse(reviewTab.isCompleteReviewButtonEnabled());
         reviewTab.getHelper().checkCommentsForText(reviewComments);
 
         resubmitRegistration();
@@ -360,7 +350,7 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
 
     private void checkFormRejectionCommentsRequired(ReviewRegistrationTab reviewTab) {
         final FormReviewCommentDialog commentDialog = reviewTab.getHelper()
-                .getMatchingListing(primaryRegistration.getForm1572()).clickReject();
+                .getMatchingListing(primaryRegistration.getForm1572()).clickRejectRadioButton();
         ExpectedValidationFailure expectedValidationFailure = new ExpectedValidationFailure(
                 "registration.review.form.rejection.comments.required");
         expectedValidationFailure.assertFailureOccurs(new FailingAction() {
@@ -413,8 +403,7 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
 
     private void addAdditionalRejectionComment(AbstractRegistrationForm form, String additionalComment,
             ReviewRegistrationTab reviewTab) {
-        FormReviewCommentDialog formCommentDialog = (FormReviewCommentDialog) reviewTab.getHelper()
-                .getMatchingListing(form).clickViewComments();
+        FormReviewCommentDialog formCommentDialog = reviewTab.getHelper().getMatchingListing(form).clickComments();
         assertTrue(formCommentDialog.getComments().contains(form.getFormType().getName()));
         formCommentDialog.typeComments(form.getFormType().getName() + additionalComment);
         formCommentDialog.clickSave();
@@ -485,7 +474,7 @@ public abstract class AbstractReviewRegistrationTest extends AbstractFirebirdWeb
                 primaryRegistration);
         reviewTab.getHelper().checkForRegistrationStatus(RegistrationStatus.IN_REVIEW);
         reviewTab.getHelper().checkFormStatuses(primaryRegistration, FormStatus.REJECTED);
-        assertTrue(reviewTab.isCompleteReviewButtonPresent());
+        assertTrue(reviewTab.isCompleteReviewButtonEnabled());
     }
 
     private InvestigatorRegistration setFormStatuses(FormStatus status) {

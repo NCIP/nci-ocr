@@ -136,8 +136,8 @@ public class AddSubinvestigatorToProtocolAction extends AddSubinvestigatorAction
     }
 
     @Override
-    protected boolean errorOnAssociationAlreadyExistsException() {
-        return false;
+    protected void handleAssociationAlreadyExists() {
+        // Do nothing. We don't care that the association already exists just add a subinvestigator registration.
     }
 
     /**

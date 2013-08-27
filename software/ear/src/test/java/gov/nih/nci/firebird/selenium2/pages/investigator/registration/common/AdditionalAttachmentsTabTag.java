@@ -123,8 +123,7 @@ public class AdditionalAttachmentsTabTag extends AbstractLoadableComponent<Addit
     }
 
     public boolean isReadOnly() {
-        return !isPresent(By.id(ADD_FILE_BUTTON_ID))
-                && isPresent(By.id(FILES_TABLE_ID));
+        return !isPresent(By.id(ADD_FILE_BUTTON_ID));
     }
 
     public List<FileListing> getListings() {

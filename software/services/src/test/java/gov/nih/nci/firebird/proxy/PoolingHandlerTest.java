@@ -132,10 +132,9 @@ public class PoolingHandlerTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testNormalInvocation() throws Exception {
         final ITestClient rootMock = makeBaseMockClient();
-        PoolableObjectFactory<Object> factory = mock(PoolableObjectFactory.class);
+        PoolableObjectFactory factory = mock(PoolableObjectFactory.class);
         when(factory.validateObject(any())).thenReturn(Boolean.TRUE);
         when(factory.makeObject()).thenAnswer(new Answer<ITestClient>() {
             @Override
@@ -165,8 +164,8 @@ public class PoolingHandlerTest {
 
     @Test
     public void testPoolUse() throws Exception {
-        PoolableObjectFactory<Object> factory = makeMockFactory();
-        ObjectPool<Object> pool = spy(new StackObjectPool<Object>(factory));
+        PoolableObjectFactory factory = makeMockFactory();
+        ObjectPool pool = spy(new StackObjectPool(factory));
         InvocationHandler handler = new PoolingHandler(pool);
         ITestClient proxy = (ITestClient) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[] {ITestClient.class}, handler);
         proxy.doSomethingUseful(null);
@@ -176,8 +175,8 @@ public class PoolingHandlerTest {
 
     @Test
     public void testExpectedSuperExceptionHandeling() throws Exception {
-        PoolableObjectFactory<Object> factory = makeMockFactory();
-        ObjectPool<Object> pool = spy(new StackObjectPool<Object>(factory));
+        PoolableObjectFactory factory = makeMockFactory();
+        ObjectPool pool = spy(new StackObjectPool(factory));
         PoolingHandler handler = new PoolingHandler(pool);
         handler.getValidExceptions().add(RuntimeException.class);
         assertTrue(new IllegalArgumentException() instanceof RuntimeException);
@@ -194,8 +193,8 @@ public class PoolingHandlerTest {
 
     @Test
     public void testExpectedSubExceptionHandling() throws Exception {
-        PoolableObjectFactory<Object> factory = makeMockFactory();
-        ObjectPool<Object> pool = spy(new StackObjectPool<Object>(factory));
+        PoolableObjectFactory factory = makeMockFactory();
+        ObjectPool pool = spy(new StackObjectPool(factory));
         PoolingHandler handler = new PoolingHandler(pool);
         class SubException extends IllegalArgumentException {
             private static final long serialVersionUID = 1L;
@@ -250,9 +249,8 @@ public class PoolingHandlerTest {
         assertEquals(3, handler.getPool().getNumIdle());
     }
 
-    @SuppressWarnings("unchecked")
-    private PoolableObjectFactory<Object> makeMockFactory() {
-        PoolableObjectFactory<Object> factory = mock(PoolableObjectFactory.class);
+    private PoolableObjectFactory makeMockFactory() {
+        PoolableObjectFactory factory = mock(PoolableObjectFactory.class);
         when(factory.validateObject(any())).thenReturn(Boolean.TRUE);
         try {
             when(factory.makeObject()).thenAnswer(new Answer<ITestClient>() {
@@ -267,7 +265,7 @@ public class PoolingHandlerTest {
         return factory;
     }
 
-    private ITestClient newProxy(PoolableObjectFactory<Object> factory) {
+    private ITestClient newProxy(PoolableObjectFactory factory) {
         PoolingHandler handler = new PoolingHandler(factory, 5, 1);
         handler.getValidExceptions().add(IllegalArgumentException.class);
         return (ITestClient) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[] {ITestClient.class}, handler);

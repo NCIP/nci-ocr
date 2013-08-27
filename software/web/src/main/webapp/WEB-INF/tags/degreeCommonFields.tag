@@ -12,7 +12,7 @@
 <div class="formcol_degree_select"> 
      <s:select list="degreesWithRankedOnTop" 
          name="degreeTypeId" 
-         required="true"
+         requiredLabel="true"
          label="%{getText('dropdown.degreeType')}"
          listKey="id" 
          listValue="name" 

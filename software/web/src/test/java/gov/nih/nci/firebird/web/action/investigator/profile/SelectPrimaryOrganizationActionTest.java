@@ -92,9 +92,10 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.PrimaryOrganization;
 import gov.nih.nci.firebird.data.PrimaryOrganizationType;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.organization.OrganizationAssociationService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
@@ -111,7 +112,9 @@ public class SelectPrimaryOrganizationActionTest extends AbstractWebTest {
     @Inject
     private InvestigatorProfileService mockProfileService;
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockSearchService;
+    @Inject
+    private OrganizationAssociationService mockOrganizationAssociationService;
     @Inject
     private SelectPrimaryOrganizationAction action;
     private InvestigatorProfile profile = new InvestigatorProfile();
@@ -132,14 +135,14 @@ public class SelectPrimaryOrganizationActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testSelectOrganizationAndClose() throws Exception {
-        String organizationExternalId = "NES229";
+    public void testSelectOrganizationAndClose() throws ValidationException, UnavailableEntityException {
+        String searchKey = "NES229";
         Organization searchedOrg = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(organizationExternalId)).thenReturn(searchedOrg);
+        when(mockSearchService.getOrganization(searchKey)).thenReturn(searchedOrg);
         FirebirdWebTestUtility.setupMockRequest(action);
-        when(mockOrganizationService.getPrimaryOrganizationType(searchedOrg)).thenReturn(
+        when(mockOrganizationAssociationService.getExistingPrimaryOrganizationType(searchedOrg)).thenReturn(
                 PrimaryOrganizationType.HEALTH_CARE_FACILITY);
-        action.setOrganizationExternalId(organizationExternalId);
+        action.setSearchKey(searchKey);
         action.selectOrganizationAndClose();
         ArgumentCaptor<PrimaryOrganization> captor = ArgumentCaptor.forClass(PrimaryOrganization.class);
         verify(mockProfileService).setPrimaryOrganization(eq(profile), captor.capture());
@@ -148,24 +151,26 @@ public class SelectPrimaryOrganizationActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testSelectOrganizationAndClose_NesValidationError() throws Exception {
-        String organizationExternalId = "NES229";
+    public void testSelectOrganizationAndClose_NesValidationError() throws ValidationException,
+            UnavailableEntityException {
+        String searchKey = "NES229";
         Organization searchedOrg = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getByExternalId(organizationExternalId)).thenReturn(searchedOrg);
+        when(mockSearchService.getOrganization(searchKey)).thenReturn(searchedOrg);
         doThrow(validationException).when(mockProfileService).setPrimaryOrganization(eq(profile),
                 any(PrimaryOrganization.class));
         FirebirdWebTestUtility.setupMockRequest(action);
-        action.setOrganizationExternalId(organizationExternalId);
+        action.setSearchKey(searchKey);
         assertEquals(ActionSupport.INPUT, action.selectOrganizationAndClose());
         assertEquals(ERROR_MESSAGE, action.getActionErrors().iterator().next());
     }
 
     @Test
-    public void testSelectOrganizationAndClose_NullifiedEntityException() throws Exception {
-        String organizationExternalId = "NES229";
-        when(mockOrganizationService.getByExternalId(organizationExternalId)).thenThrow(new InvalidatedOrganizationException());
+    public void testSelectOrganizationAndClose_NullifiedEntityException() throws ValidationException,
+            UnavailableEntityException {
+        String searchKey = "NES229";
+        when(mockSearchService.getOrganization(searchKey)).thenThrow(new UnavailableEntityException(null, searchKey));
         FirebirdWebTestUtility.setupMockRequest(action);
-        action.setOrganizationExternalId(organizationExternalId);
+        action.setSearchKey(searchKey);
         assertEquals(ActionSupport.INPUT, action.selectOrganizationAndClose());
         assertTrue(action.hasActionErrors());
     }

@@ -96,7 +96,7 @@ import com.opensymphony.xwork2.Preparable;
  */
 @Namespace("/sponsor/protocol/ajax")
 @InterceptorRef(value = "protocolManagementStack")
-abstract class AbstractProtocolDetailsTabAction extends FirebirdActionSupport implements Preparable {
+public abstract class AbstractProtocolDetailsTabAction extends FirebirdActionSupport implements Preparable {
     private static final long serialVersionUID = 1L;
     private Protocol protocol;
     private final ProtocolService protocolService;
@@ -104,7 +104,7 @@ abstract class AbstractProtocolDetailsTabAction extends FirebirdActionSupport im
     /**
      * @param protocolService the protocol service
      */
-    AbstractProtocolDetailsTabAction(ProtocolService protocolService) {
+    public AbstractProtocolDetailsTabAction(ProtocolService protocolService) {
         super();
         this.protocolService = protocolService;
     }

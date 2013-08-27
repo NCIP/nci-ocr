@@ -90,12 +90,13 @@ import gov.nih.nci.coppa.services.business.business.common.BusinessI;
 import gov.nih.nci.coppa.services.entities.organization.common.OrganizationI;
 import gov.nih.nci.coppa.services.structuralroles.healthcarefacility.common.HealthCareFacilityI;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.nes.AbstractNesData;
+import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
 import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
 import gov.nih.nci.iso21090.extensions.Id;
 
 import java.rmi.RemoteException;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -104,20 +105,20 @@ import com.google.inject.Inject;
 /**
  * NES Organization integration service implementation for Organization entities.
  */
-@SuppressWarnings("PMD.TooManyMethods") // private helper methods for readability
-public class HealthCareFacilityIntegrationServiceBean extends AbstractCorrelationIntegrationServiceBean implements
-        HealthCareFacilityIntegrationService {
+public class HealthCareFacilityIntegrationServiceBean extends AbstractCorrelationIntegrationServiceBean
+implements HealthCareFacilityIntegrationService {
 
     private final HealthCareFacilityI healthCareFacilityService;
     private final HealthCareFacilityTranslator translator;
 
     @Inject
-    @SuppressWarnings("PMD.ExcessiveParameterList")
-    // class requires many dependencies via Guice
+    @SuppressWarnings("PMD.ExcessiveParameterList") // class requires many dependencies via Guice
     HealthCareFacilityIntegrationServiceBean(BusinessI businessService,
             IdentifiedOrganizationIntegrationService identifiedOrganizationService,
-            ValidationErrorTranslator errorTranslator, OrganizationI organizationService,
-            HealthCareFacilityI healthCareFacilityService, HealthCareFacilityTranslator translator) {
+            ValidationErrorTranslator errorTranslator,
+            OrganizationI organizationService,
+            HealthCareFacilityI healthCareFacilityService,
+            HealthCareFacilityTranslator translator) {
         super(businessService, organizationService, identifiedOrganizationService, errorTranslator);
         this.healthCareFacilityService = healthCareFacilityService;
         this.translator = translator;
@@ -135,23 +136,28 @@ public class HealthCareFacilityIntegrationServiceBean extends AbstractCorrelatio
     }
 
     private Id callCreate(Organization organization) throws RemoteException {
-        createPlayer(organization, translator);
+        createPlayerIfNecessary(organization, translator);
         return healthCareFacilityService.create(translator.toHealthCareFacility(organization));
     }
 
     @Override
     Organization toFirebirdOrganization(CorrelationNode correlationNode) {
-        gov.nih.nci.coppa.po.Organization player = (gov.nih.nci.coppa.po.Organization) correlationNode.getPlayer()
-                .getContent().get(0);
+        gov.nih.nci.coppa.po.Organization player =
+                (gov.nih.nci.coppa.po.Organization) correlationNode.getPlayer().getContent().get(0);
         HealthCareFacility facility = (HealthCareFacility) correlationNode.getCorrelation().getContent().get(0);
         return translator.toFirebirdOrganization(facility, player);
     }
 
     @Override
+    NesIIRoot getNesIIRoot() {
+        return NesIIRoot.HEALTH_CARE_FACILITY;
+    }
+
+    @Override
     StringMap getValidationResults(Organization organization) throws RemoteException {
-        StringMap results = healthCareFacilityService.validate(translator.toHealthCareFacility(organization));
-        StringMap playerResults = getOrganizationService().validate(translator.toNesOrganization(organization));
-        return combineValidationResults(results, playerResults);
+         StringMap results = healthCareFacilityService.validate(translator.toHealthCareFacility(organization));
+         StringMap playerResults = getOrganizationService().validate(translator.toNesOrganization(organization));
+         return combineValidationResults(results, playerResults);
     }
 
     @Override
@@ -178,9 +184,9 @@ public class HealthCareFacilityIntegrationServiceBean extends AbstractCorrelatio
     }
 
     @Override
-    public List<Organization> searchByAssignedIdentifier(String assignedIdentifier) {
-        OrganizationSearcher searcher = createIdentifiedOrganizationExtensionSearch(assignedIdentifier);
-        return searchByAssignedIdentifier(searcher, assignedIdentifier);
+    public List<Organization> searchByAssignedIdentifier(final String extension) {
+        OrganizationSearcher searcher = createIdentifiedOrganizationExtensionSearch(extension);
+        return performSearch(searcher);
     }
 
     private OrganizationSearcher createIdentifiedOrganizationExtensionSearch(final String extension) {
@@ -218,8 +224,13 @@ public class HealthCareFacilityIntegrationServiceBean extends AbstractCorrelatio
     }
 
     @Override
-    AbstractNesData createNesExternalData() {
-        return new HealthCareFacilityData();
+    public List<Organization> getByIdentifiedOrganizationPlayerId(String playerNesId) {
+        try {
+            return getByIdentifiedOrganizationPlayerId(new NesId(playerNesId));
+        } catch (RemoteException e) {
+            handleUnexpectedError(e);
+        }
+        return Collections.emptyList();
     }
 
 }

@@ -85,6 +85,7 @@ package gov.nih.nci.firebird.web.action.investigator.annual.registration;
 import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.service.annual.registration.AnnualRegistrationService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 
 import java.util.ResourceBundle;
 
@@ -106,13 +107,15 @@ public class IrbSectionAction extends AbstractFda1572TabAction {
      * Creates an action instance.
      *
      * @param registrationService registration service
+     * @param organizationService organization service
      * @param profileService profile service
      * @param resources FIREBIRD resource bundle
      */
     @Inject
-    public IrbSectionAction(AnnualRegistrationService registrationService, InvestigatorProfileService profileService,
+    public IrbSectionAction(AnnualRegistrationService registrationService,
+            OrganizationService organizationService, InvestigatorProfileService profileService,
             ResourceBundle resources) {
-        super(registrationService, profileService, resources);
+        super(registrationService, organizationService, profileService, resources);
     }
 
     @Override

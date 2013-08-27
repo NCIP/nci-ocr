@@ -48,14 +48,14 @@ public class LobHolder extends AbstractByteDataSource {
 
     private static final long serialVersionUID = 1L;
     private byte[] data;
-
+    
     /**
      * Default constructor.
      */
     public LobHolder() {
         // do nothing
     }
-
+    
     /**
      * Constructor.
      * @param data the data
@@ -64,7 +64,7 @@ public class LobHolder extends AbstractByteDataSource {
     public LobHolder(byte[] data) {
         this.data = data;
     }
-
+    
     /**
      * @return the data
      */

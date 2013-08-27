@@ -149,6 +149,16 @@ public interface Form1572 {
     boolean requiresActiveCurationStatus();
 
     /**
+     * Used to ascertain whether the role provided is valid and active or not.
+     *
+     * @param role The Role to validate.
+     * @param result the Validation result.
+     * @param resources the Resources to obtain error messages from.
+     */
+    void validateCurationStatus(AbstractOrganizationRole role, ValidationResult result,
+            ResourceBundle resources);
+
+    /**
      * @return Form type
      */
     FormType getFormType();
@@ -164,10 +174,5 @@ public interface Form1572 {
      * @return the registration this form is part of
      */
     AbstractRegistration getRegistration();
-
-    /**
-     * @return All entity ids which have failed validation
-     */
-    Set<Long> getInvalidEntityIds();
-
+    
 }

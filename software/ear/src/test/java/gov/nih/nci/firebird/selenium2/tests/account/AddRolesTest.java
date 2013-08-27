@@ -1,8 +1,8 @@
 package gov.nih.nci.firebird.selenium2.tests.account;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static gov.nih.nci.firebird.data.user.UserRoleType.*;
+import static gov.nih.nci.firebird.nes.NesIdTestUtil.getNesIdExtension;
+import static org.junit.Assert.*;
 import gov.nih.nci.firebird.cagrid.GridInvocationException;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.Organization;
@@ -11,7 +11,6 @@ import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.user.MyAccountPage;
-import gov.nih.nci.firebird.selenium2.pages.user.regsitration.AbstractSponsorSelectionPage.SponsorListing;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.EditPersonPage;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.FunctionalityWarningDialog;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.InvestigatorSelectionPage;
@@ -20,6 +19,7 @@ import gov.nih.nci.firebird.selenium2.pages.user.regsitration.PersonSelectionPag
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.RoleSelectionPage;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.SponsorDelegateSelectionPage;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.SponsorRepresentativeSelectionPage;
+import gov.nih.nci.firebird.selenium2.pages.user.regsitration.AbstractSponsorSelectionPage.SponsorListing;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.VerificationPage;
 import gov.nih.nci.firebird.selenium2.pages.user.regsitration.ViewSelectedRolesPage;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
@@ -28,21 +28,18 @@ import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
 import gov.nih.nci.firebird.test.data.SponsorBuilder;
-import org.junit.Test;
 
-import javax.mail.internet.MimeMessage;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Set;
 
-import static gov.nih.nci.firebird.data.user.UserRoleType.INVESTIGATOR;
-import static gov.nih.nci.firebird.data.user.UserRoleType.REGISTRATION_COORDINATOR;
-import static gov.nih.nci.firebird.data.user.UserRoleType.SPONSOR;
-import static gov.nih.nci.firebird.data.user.UserRoleType.SPONSOR_DELEGATE;
-import static gov.nih.nci.firebird.nes.NesIdTestUtil.getNesIdExtension;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import javax.mail.internet.MimeMessage;
+
+import org.junit.Test;
+
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 public class AddRolesTest extends AbstractFirebirdWebDriverTest {
 
@@ -86,12 +83,14 @@ public class AddRolesTest extends AbstractFirebirdWebDriverTest {
     }
 
     @Test
-    public void testInvestigatorAddAllRoles() throws GridInvocationException {
-        InvestigatorProfile investigatorToCoordinate = getInvestigator();
+    public void testInvestigatorAddAllRoles() {
+        UserRoleType[] rolesToRegister = new UserRoleType[] { REGISTRATION_COORDINATOR, SPONSOR, SPONSOR_DELEGATE };
+        builder.createInvestigator();
+        InvestigatorProfile investigatorToCoordinate = builder.createInvestigator().get().getInvestigatorRole()
+                .getProfile();
+        dataSet = builder.build();
         MyAccountPage accountPage = openHomePage(dataSet.getInvestigatorLogin()).clickMyAccount();
         accountPage.getHelper().assertAddRolesButtonIsDisplayed();
-        UserRoleType[] rolesToRegister = new UserRoleType[] { REGISTRATION_COORDINATOR, SPONSOR, SPONSOR_DELEGATE };
-
         RoleSelectionPage rolePage = accountPage.clickAddRoles();
         rolePage.getHelper().checkOnlyRolesDisplayed(rolesToRegister);
         rolePage.selectRegistrationCoordinatorRole();
@@ -120,16 +119,6 @@ public class AddRolesTest extends AbstractFirebirdWebDriverTest {
         accountPage.getHelper().checkSelectedRolesDisplayed(rolesToRegister);
     }
 
-    private InvestigatorProfile getInvestigator() throws GridInvocationException {
-        registrationTestHelper.addGroupMemberships(testUserAccount.getUsername(), INVESTIGATOR.getGroupName());
-
-        builder.createInvestigator().withLogin(testUserAccount);
-        InvestigatorProfile investigatorToCoordinate = builder.createInvestigator().get().getInvestigatorRole()
-                .getProfile();
-        dataSet = builder.build();
-        return investigatorToCoordinate;
-    }
-
     @Test
     public void testSponsorAddInvestigatorRole() throws GridInvocationException {
         Organization primaryOrg = getExistingPrimaryOrganization();
@@ -150,13 +139,14 @@ public class AddRolesTest extends AbstractFirebirdWebDriverTest {
     }
 
     private RoleSelectionPage startSponsorTest(boolean performAsDelegate) throws GridInvocationException {
+        HomePage homePage = null;
         addAllRolesToTestUser();
         SponsorBuilder sponsorBuilder = builder.createSponsor().withLogin(testUserAccount);
         if (performAsDelegate) {
             sponsorBuilder.asDelegate();
         }
         dataSet = builder.build();
-        HomePage homePage = openHomePage(dataSet.getSponsorLogin());
+        homePage = openHomePage(dataSet.getSponsorLogin());
         MyAccountPage accountPage = homePage.clickMyAccount();
         accountPage.getHelper().assertAddRolesButtonIsDisplayed();
         accountPage.getHelper().checkSelectedRolesDisplayed(performAsDelegate ? SPONSOR_DELEGATE : SPONSOR);
@@ -166,12 +156,12 @@ public class AddRolesTest extends AbstractFirebirdWebDriverTest {
     private void addAllRolesToTestUser() throws GridInvocationException {
         Set<String> groupNames = Sets.newHashSet(INVESTIGATOR.getVerifiedGroupName(),
                 REGISTRATION_COORDINATOR.getGroupName());
-        for (String sponsorId : getGridResources().getSponsorWithProtocolRegistrationsExternalIds()) {
+        for (String sponsorId : getGridResources().getSponsorWithProtocolRegistrationsNesIds()) {
             groupNames.add(SPONSOR.getVerifiedGroupName() + "_" + getNesIdExtension(sponsorId));
             groupNames.add(SPONSOR_DELEGATE.getVerifiedGroupName() + "_" + getNesIdExtension(sponsorId));
         }
         registrationTestHelper.addGroupMemberships(testUserAccount.getUsername(),
-                groupNames.toArray(new String[ groupNames.size() ]));
+                groupNames.toArray(new String[groupNames.size()]));
     }
 
     @Test
@@ -212,7 +202,7 @@ public class AddRolesTest extends AbstractFirebirdWebDriverTest {
 
     @Test
     public void testAddRolesCreatesGroupMembershipAndSendsEmail() throws RemoteException, GridInvocationException {
-        Person person = getExistingExternalPerson();
+        Person person = getExistingNesPerson();
         HomePage homePage = setUpAsNewSponsor(testUserAccount, person);
         MyAccountPage myAccountPage = homePage.clickMyAccount();
         RoleSelectionPage roleSelectionPage = myAccountPage.clickAddRoles();
@@ -227,8 +217,8 @@ public class AddRolesTest extends AbstractFirebirdWebDriverTest {
         completeAndVerifyRolesAdded(verificationPage, INVESTIGATOR, SPONSOR_DELEGATE);
         checkForAddedRolesEmail(person, selectedSponsorForDelegate);
         String investigatorGroup = INVESTIGATOR.getGroupName();
-        String sponsorDelegateExternalId = getGridResources().getValidProtocolSponsorExternalId();
-        String sponsorDelegateGroup = SPONSOR_DELEGATE.getGroupName() + "_" + getNesIdExtension(sponsorDelegateExternalId);
+        String sponsorDelegateNesId = getGridResources().getValidProtocolSponsorNesId();
+        String sponsorDelegateGroup = SPONSOR_DELEGATE.getGroupName() + "_" + getNesIdExtension(sponsorDelegateNesId);
         registrationTestHelper.checkGridGrouperForGroups(testUserAccount, investigatorGroup, sponsorDelegateGroup);
     }
 
@@ -253,12 +243,12 @@ public class AddRolesTest extends AbstractFirebirdWebDriverTest {
     }
 
     private String getSponsorGroupName() {
-        return UserRoleType.SPONSOR.getGroupName() + "_" + getNesIdExtension(getGridResources().getValidProtocolSponsorExternalId());
+        return UserRoleType.SPONSOR.getGroupName() + "_" + getNesIdExtension(getGridResources().getValidProtocolSponsorNesId());
     }
 
     private void checkForAddedRolesEmail(Person person, SponsorListing selectedSponsorForDelegate) {
         getEmailChecker().assertEmailCount(1);
-        MimeMessage message = getEmailChecker().getSentEmails()[ 0 ];
+        MimeMessage message = getEmailChecker().getSentEmails()[0];
         String expectedSubject = getPropertyText("template.string.ADDED_ROLES_SUPPORT_NOTIFICATION_EMAIL_SUBJECT");
         expectedSubject = expectedSubject.replace("$FIREBIRD_USER.Person.DisplayName", person.getDisplayName());
         getEmailChecker().checkSubject(message, expectedSubject);
@@ -293,7 +283,7 @@ public class AddRolesTest extends AbstractFirebirdWebDriverTest {
         assertFalse(representativeSelectionPage.isReturnToVerificationLinkPresent());
         representativeSelectionPage.clickNext();
         delegateSelectionPage.getHelper().getAvailableSponsorListings().get(0).select();
-        delegateSelectionPage.clickNext();
+        verificationPage = (VerificationPage) delegateSelectionPage.clickNext();
     }
 
     private void checkCantSelectBothOrganizations(final SponsorRepresentativeSelectionPage sponsorPage) {

@@ -82,6 +82,7 @@
  */
 package gov.nih.nci.firebird.web.action.investigator.registration;
 
+import com.google.inject.name.Named;
 import gov.nih.nci.firebird.service.GenericDataRetrievalService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
@@ -92,7 +93,6 @@ import gov.nih.nci.firebird.web.action.investigator.profile.ManageCertificateCre
 import org.apache.struts2.convention.annotation.Namespace;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 /**
  * An action to allow for a more specified usage of managing credentials from the human
@@ -110,7 +110,7 @@ public class RegistrationCertificateTabAction extends ManageCertificateCredentia
      * @param stateLookup the stateLookupService to set
      * @param countryLookup country lookup service.
      * @param organizationService the organization Service
-     * @param nihOerOrganizationExternalId NIH OER Organization external Identifier
+     * @param nihOerOrganizationNesId NIH OER Organization NES Identifier
      */
     @Inject
     @SuppressWarnings("PMD.ExcessiveParameterList")
@@ -118,9 +118,8 @@ public class RegistrationCertificateTabAction extends ManageCertificateCredentia
     public RegistrationCertificateTabAction(InvestigatorProfileService profileService,
             GenericDataRetrievalService dataService, StateLookupService stateLookup,
             CountryLookupService countryLookup, OrganizationService organizationService,
-            @Named("nih.oer.organization.nes.id") String nihOerOrganizationExternalId) {
-        super(profileService, dataService, stateLookup, countryLookup, organizationService,
-                nihOerOrganizationExternalId);
+            @Named("nih.oer.organization.nes.id") String nihOerOrganizationNesId) {
+        super(profileService, dataService, stateLookup, countryLookup, organizationService, nihOerOrganizationNesId);
     }
 
     @Override

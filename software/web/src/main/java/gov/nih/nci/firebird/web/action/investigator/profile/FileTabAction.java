@@ -114,7 +114,7 @@ import com.opensymphony.xwork2.validator.annotations.Validations;
 public class FileTabAction extends AbstractProfileAction {
 
     private static final long serialVersionUID = 1L;
-    private static final String DOWNLOAD_RESULT = "download";
+    static final String DOWNLOAD_RESULT = "download";
 
     private final FileService fileService;
     private Struts2UploadedFileInfo dataFile;
@@ -162,7 +162,7 @@ public class FileTabAction extends AbstractProfileAction {
         if (!validateFilename(getDataFile())) {
             return INPUT;
         }
-        getProfileService().addFile(getProfile(), getDataFile().getData(),
+        fileService.addFileToProfile(getProfile(), getDataFile().getData(),
                 getDataFile().getMetadata());
         addActionMessage("File " + getDataFile().getDataFileName() + " added to profile.");
         setDataFile(null);
@@ -188,7 +188,7 @@ public class FileTabAction extends AbstractProfileAction {
     @Action("delete")
     public String delete() {
         FirebirdFile fbFile = fileService.getById(getId());
-        getProfileService().removeFile(getProfile(), fbFile);
+        fileService.deleteFileFromProfile(getProfile(), fbFile);
         addActionMessage("File " + fbFile.getName() + " has been deleted from your profile.");
         return INPUT;
     }

@@ -86,15 +86,17 @@ import static gov.nih.nci.firebird.test.ValueGenerator.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+
+import gov.nih.nci.firebird.security.UserSessionInformation;
 import gov.nih.nci.firebird.cagrid.UserSessionInformationFactory;
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.security.UserSessionInformation;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
+import gov.nih.nci.firebird.service.person.PersonSearchResult;
+import gov.nih.nci.firebird.service.person.PersonSearchService;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 import gov.nih.nci.firebird.test.PersonFactory;
 import gov.nih.nci.firebird.test.ValidationExceptionFactory;
@@ -117,6 +119,8 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
 
     @Inject
     private PersonSelectionPageFlowAction action;
+    @Inject
+    private PersonSearchService mockPersonSearch;
     @Inject
     private PersonService mockPersonService;
     @Inject
@@ -151,15 +155,16 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
     @Test
     public void testPrepare_NoExistingPerson() {
         action.prepare();
-        assertTrue(StringUtils.isEmpty(action.getSelectedPersonExternalId()));
+        assertTrue(StringUtils.isEmpty(action.getSelectedPersonKey()));
     }
 
     @Test
     public void testPrepare_ExistingPerson() {
-        Person testPerson = PersonFactory.getInstance().create();
+        Person testPerson = new Person();
+        testPerson.setNesId("12345");
         getAccountConfigurationData().setPerson(testPerson);
         action.prepare();
-        assertEquals(testPerson.getExternalId(), action.getSelectedPersonExternalId());
+        assertEquals(testPerson.getNesId(), action.getSelectedPersonKey());
     }
 
     @Test
@@ -170,7 +175,8 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
 
     @Test
     public void testEnterAction_PersonReQuery() {
-        Person testPerson = PersonFactory.getInstance().create();
+        Person testPerson = new Person();
+        testPerson.setNesId("12345");
         getAccountConfigurationData().setPerson(testPerson);
         action.prepare();
         action.setNavigationOption(PersonSelectionPageFlowAction.PERSON_SEARCH);
@@ -179,7 +185,8 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
 
     @Test
     public void testEnterAction_PersonSelected() {
-        Person testPerson = PersonFactory.getInstance().create();
+        Person testPerson = new Person();
+        testPerson.setNesId("12345");
         getAccountConfigurationData().setPerson(testPerson);
         action.prepare();
         assertEquals(ActionSupport.INPUT, action.enterAction());
@@ -194,11 +201,11 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
     }
 
     @Test
-    public void testEnterAction_InitialEntrySingleEmailMatch() throws InvalidatedPersonException {
+    public void testEnterAction_InitialEntrySingleEmailMatch() {
         action.prepare();
         Person person = PersonFactory.getInstance().create();
-        when(mockPersonService.search(anyString())).thenReturn(Lists.newArrayList(person));
-        when(mockPersonService.getByExternalId(person.getExternalId())).thenReturn(person);
+        PersonSearchResult result = new PersonSearchResult("key", person);
+        when(mockPersonSearch.search(any(Person.class))).thenReturn(Lists.newArrayList(result));
         assertEquals(PersonSelectionPageFlowAction.INPUT, action.enterAction());
         assertEquals(person, action.getAccountConfigurationData().getPerson());
     }
@@ -206,9 +213,9 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
     @Test
     public void testEnterAction_InitialEntryMultipleEmailMatches() {
         action.prepare();
-        Person person1 = PersonFactory.getInstance().create();
-        Person person2 = PersonFactory.getInstance().create();
-        when(mockPersonService.search(anyString())).thenReturn(Lists.newArrayList(person1, person2));
+        PersonSearchResult result1 = mock(PersonSearchResult.class);
+        PersonSearchResult result2 = mock(PersonSearchResult.class);
+        when(mockPersonSearch.search(any(Person.class))).thenReturn(Lists.newArrayList(result1, result2));
         assertEquals(PersonSelectionPageFlowAction.PERSON_SEARCH, action.enterAction());
         assertEquals(userSessionInformation.getAccount().getEmailAddress(), action.getPrepopulatedSearchString());
     }
@@ -216,11 +223,11 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
     @Test
     public void testEnterAction_InitialEntryWithNameMatches() {
         action.prepare();
-        Person person1 = PersonFactory.getInstance().create();
-        Person person2 = PersonFactory.getInstance().create();
-        List<Person> emptyList = Collections.emptyList();
-        when(mockPersonService.search(anyString())).thenReturn(emptyList).thenReturn(
-                Lists.newArrayList(person1, person2));
+        PersonSearchResult result1 = mock(PersonSearchResult.class);
+        PersonSearchResult result2 = mock(PersonSearchResult.class);
+        List<PersonSearchResult> emptyList = Collections.emptyList();
+        when(mockPersonSearch.search(any(Person.class))).thenReturn(emptyList).thenReturn(
+                Lists.newArrayList(result1, result2));
         assertEquals(PersonSelectionPageFlowAction.PERSON_SEARCH, action.enterAction());
         String nameSearchString = userSessionInformation.getAccount().getLastName() + ", "
                 + userSessionInformation.getAccount().getFirstName();
@@ -230,8 +237,8 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
     @Test
     public void testEnterAction_InitialEntryWithNoMatches() {
         action.prepare();
-        List<Person> emptyList = Collections.emptyList();
-        when(mockPersonService.search(anyString())).thenReturn(emptyList).thenReturn(emptyList);
+        List<PersonSearchResult> emptyList = Collections.emptyList();
+        when(mockPersonSearch.search(any(Person.class))).thenReturn(emptyList).thenReturn(emptyList);
         assertEquals(PersonSelectionPageFlowAction.PERSON_SEARCH, action.enterAction());
         assertNull(action.getPrepopulatedSearchString());
     }
@@ -241,7 +248,7 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
         action.prepare();
         action.setNavigationOption(PersonSelectionPageFlowAction.PERSON_SEARCH);
         assertEquals(PersonSelectionPageFlowAction.PERSON_SEARCH, action.performSave());
-        verifyZeroInteractions(mockPersonService);
+        verifyZeroInteractions(mockPersonSearch);
         verifyZeroInteractions(mockPersonService);
     }
 
@@ -257,28 +264,35 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
                 .getLastName());
         assertEquals(userSessionInformation.getAccount().getEmailAddress(), getAccountConfigurationData().getPerson()
                 .getEmail());
-        assertEquals(CurationStatus.UNSAVED, getAccountConfigurationData().getPerson().getCurationStatus());
+        assertEquals(CurationStatus.PRE_NES_VALIDATION, getAccountConfigurationData().getPerson().getNesStatus());
         verifyZeroInteractions(mockPersonService);
     }
 
     @Test
-    public void testPerformSave_SearchedPerson() throws Exception {
-        Person testPerson = PersonFactory.getInstance().create();
-        when(mockPersonService.getByExternalId(testPerson.getExternalId())).thenReturn(testPerson);
+    public void testPerformSave_SearchedPerson() {
+        action.setPersonSearchService(mockPersonSearch);
+        Person testPerson = new Person();
+        testPerson.setNesId("12345");
+        when(mockPersonSearch.getPerson(testPerson.getNesId())).thenReturn(testPerson);
         action.prepare();
-        action.setSelectedPersonExternalId(testPerson.getExternalId());
+        action.setSelectedPersonKey(testPerson.getNesId());
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertEquals(testPerson, getAccountConfigurationData().getPerson());
+        verifyZeroInteractions(mockPersonService);
     }
 
     @Test
-    public void testPerformSave_SearchedPersonAlreadyAssociated() throws Exception {
-        Person testPerson = PersonFactory.getInstance().create();
-        when(mockPersonService.getByExternalId(testPerson.getExternalId())).thenReturn(testPerson);
+    public void testPerformSave_SearchedPersonAlreadyAssociated() {
+        action.setPersonSearchService(mockPersonSearch);
+        Person testPerson = new Person();
+        testPerson.setId(1L);
+        testPerson.setNesId("12345");
+        when(mockPersonSearch.getPerson(testPerson.getNesId())).thenReturn(testPerson);
         when(mockUserService.checkPersonAssociated(testPerson)).thenReturn(Boolean.TRUE);
         action.prepare();
-        action.setSelectedPersonExternalId(testPerson.getExternalId());
+        action.setSelectedPersonKey(testPerson.getNesId());
         assertEquals(PersonSelectionPageFlowAction.PERSON_SEARCH, action.performSave());
+        verifyZeroInteractions(mockPersonService);
     }
 
     @Test
@@ -289,24 +303,26 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
         action.prepare();
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertEquals(testPerson, getAccountConfigurationData().getPerson());
-        verify(mockPersonService).validate(any(Person.class));
+        verify(mockPersonService).validatePerson(any(Person.class));
     }
 
     @Test
-    public void testPerformSave_SelectSamePerson() throws Exception {
-        Person testPersonOriginal = PersonFactory.getInstance().create();
+    public void testPerformSave_SelectSamePerson() {
+        action.setPersonSearchService(mockPersonSearch);
+        Person testPersonOriginal = new Person();
         testPersonOriginal.setFirstName("Kyle");
-        when(mockPersonService.getByExternalId(testPersonOriginal.getExternalId())).thenReturn(testPersonOriginal);
+        testPersonOriginal.setNesId("12345");
+        when(mockPersonSearch.getPerson(testPersonOriginal.getNesId())).thenReturn(testPersonOriginal);
 
-        Person testPersonUpdated = PersonFactory.getInstance().create();
+        Person testPersonUpdated = new Person();
         testPersonUpdated.setFirstName("Martin");
-        testPersonUpdated.setExternalData(testPersonOriginal.getExternalData());
+        testPersonUpdated.setNesId("12345");
         getAccountConfigurationData().setPerson(testPersonUpdated);
 
         action.prepare();
-        action.setSelectedPersonExternalId(testPersonUpdated.getExternalId());
+        action.setSelectedPersonKey(testPersonUpdated.getNesId());
         assertEquals(ActionSupport.SUCCESS, action.performSave());
-        verify(mockPersonService).getByExternalId(testPersonUpdated.getExternalId());
+        verify(mockPersonSearch).getPerson(testPersonUpdated.getNesId());
         assertEquals(testPersonOriginal.getFirstName(), getAccountConfigurationData().getPerson().getFirstName());
         verifyZeroInteractions(mockPersonService);
     }
@@ -317,13 +333,13 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
         getAccountConfigurationData().setPerson(testPerson);
         action.prepare();
         assertEquals(ActionSupport.SUCCESS, action.saveAndProceedNext());
-        verify(mockPersonService, times(2)).validate(eq(testPerson));
+        verify(mockPersonService, times(2)).validatePerson(eq(testPerson));
     }
 
     @Test
     public void testSaveAndProceedNext_ValidationError() throws ValidationException {
         ValidationException exception = ValidationExceptionFactory.getInstance().create();
-        doThrow(exception).when(mockPersonService).validate(any(Person.class));
+        doThrow(exception).when(mockPersonService).validatePerson(any(Person.class));
         Person testPerson = new Person();
         getAccountConfigurationData().setPerson(testPerson);
         action.prepare();
@@ -336,6 +352,6 @@ public class PersonSelectionPageFlowActionTest extends AbstractFlowActionTestBas
         getAccountConfigurationData().setPerson(person);
         action.prepare();
         assertEquals(ActionSupport.SUCCESS, action.saveAndProceedPrevious());
-        verify(mockPersonService).validate(person);
+        verify(mockPersonService).validatePerson(person);
     }
 }

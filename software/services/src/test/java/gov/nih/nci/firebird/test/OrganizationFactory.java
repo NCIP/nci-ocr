@@ -83,13 +83,9 @@
 package gov.nih.nci.firebird.test;
 
 import static gov.nih.nci.firebird.test.ValueGenerator.*;
-
-import java.util.Date;
-
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.nes.NesIIRoot;
-import gov.nih.nci.firebird.nes.organization.NesOrganizationData;
 
 public class OrganizationFactory {
 
@@ -111,16 +107,13 @@ public class OrganizationFactory {
     }
 
     public Organization create() {
-        Organization organization = createWithoutExternalData();
-        NesOrganizationData nesOrganizationData = new NesOrganizationData();
-        nesOrganizationData.setExternalId(NesIIRoot.ORGANIZATION.getRoot() + ":" + String.valueOf(getUniqueInt()));
-        nesOrganizationData.setLastNesRefresh(new Date());
-        organization.setExternalData(nesOrganizationData);
-        organization.setCurationStatus(CurationStatus.ACTIVE);
+        Organization organization = createWithoutNesData();
+        organization.setNesId(NesIIRoot.ORGANIZATION.getRoot() + ":" + String.valueOf(getUniqueInt()));
+        organization.setNesStatus(CurationStatus.ACTIVE);
         return organization;
     }
 
-    public Organization createWithoutExternalData() {
+    public Organization createWithoutNesData() {
         Organization organization = new Organization();
         if (includeId) {
             organization.setId(ValueGenerator.getUniqueLong());

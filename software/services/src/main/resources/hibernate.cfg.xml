@@ -117,13 +117,5 @@ PUBLIC "-//Hibernate/Hibernate Configuration DTD//EN"
         <mapping class="gov.nih.nci.firebird.data.ShippingDesignee" />
         <mapping class="gov.nih.nci.firebird.data.OrderingDesignee" />
         <mapping class="gov.nih.nci.firebird.data.PrimaryOrganization" />
-        <mapping class="gov.nih.nci.firebird.data.AbstractExternalData" />
-        <mapping class="gov.nih.nci.firebird.nes.AbstractNesData" />
-        <mapping class="gov.nih.nci.firebird.nes.person.NesPersonData" />
-        <mapping class="gov.nih.nci.firebird.nes.organization.AbstractNesRoleData" />
-        <mapping class="gov.nih.nci.firebird.nes.organization.HealthCareFacilityData" />
-        <mapping class="gov.nih.nci.firebird.nes.organization.NesOrganizationData" />
-        <mapping class="gov.nih.nci.firebird.nes.organization.OversightCommitteeData" />
-        <mapping class="gov.nih.nci.firebird.nes.organization.ResearchOrganizationData" />
      </session-factory>
 </hibernate-configuration>

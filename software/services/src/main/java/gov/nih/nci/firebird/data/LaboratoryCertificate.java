@@ -112,8 +112,6 @@ public class LaboratoryCertificate extends AbstractLaboratoryCertificateData imp
     /**
      * @param type the type of this certificate.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public LaboratoryCertificate(LaboratoryCertificateType type) {
         super(type);
     }
@@ -138,7 +136,7 @@ public class LaboratoryCertificate extends AbstractLaboratoryCertificateData imp
     /**
      * @return a snapshot copy of this certificate's data.
      */
-    LaboratoryCertificateSnapshot createSnapshot() {
+    public LaboratoryCertificateSnapshot createSnapshot() {
         LaboratoryCertificateSnapshot snapshot = new LaboratoryCertificateSnapshot();
         snapshot.setCertificateFile(getCertificateFile());
         snapshot.setEffectiveDate(getEffectiveDate());

@@ -100,7 +100,7 @@ import com.opensymphony.xwork2.ActionInvocation;
  * An interceptor that prevents unauthorized or unverified access by a sponsor or sponsor delegate to a given protocol
  * and its registrations.
  */
-class ProtocolManagementInterceptor extends AbstractDataAccessInterceptor {
+public class ProtocolManagementInterceptor extends AbstractDataAccessInterceptor {
 
     private static final long serialVersionUID = 1L;
 

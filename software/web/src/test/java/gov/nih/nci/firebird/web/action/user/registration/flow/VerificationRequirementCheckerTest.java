@@ -132,10 +132,10 @@ public class VerificationRequirementCheckerTest {
             groupNames.add(UserRoleType.REGISTRATION_COORDINATOR.getGroupName());
         }
         for (Organization organization : configurationData.getSponsorOrganizations()) {
-            groupNames.add(UserRoleType.SPONSOR.getGroupName() + "_" + organization.getExternalId());
+            groupNames.add(UserRoleType.SPONSOR.getGroupName() + "_" + organization.getNesId());
         }
         for (Organization organization : configurationData.getDelegateOrganizations()) {
-            groupNames.add(UserRoleType.SPONSOR_DELEGATE.getGroupName() + "_" + organization.getExternalId());
+            groupNames.add(UserRoleType.SPONSOR_DELEGATE.getGroupName() + "_" + organization.getNesId());
         }
         return groupNames;
     }

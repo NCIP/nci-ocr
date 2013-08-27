@@ -100,7 +100,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class AuthenticationCachingPreventionFilter implements Filter {
 
-    private static final String AUTHENTICATION_CACHE_FLUSHED_ATTR = "gov.nih.nci.firebird.AUTHENTICATION_CACHE_FLUSHED";
+    static final String AUTHENTICATION_CACHE_FLUSHED_ATTR = "gov.nih.nci.firebird.AUTHENTICATION_CACHE_FLUSHED";
 
     @Override
     public void init(FilterConfig arg0) {

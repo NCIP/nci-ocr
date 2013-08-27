@@ -82,19 +82,16 @@
  */
 package gov.nih.nci.firebird.web.action.user.registration.flow;
 
-import static gov.nih.nci.firebird.data.OrganizationRoleType.*;
-import static gov.nih.nci.firebird.data.PrimaryOrganizationType.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.PrimaryOrganization;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
-import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.PrimaryOrganizationFactory;
 import gov.nih.nci.firebird.test.ValidationExceptionFactory;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
@@ -112,6 +109,8 @@ public class OrganizationSelectionPageFlowActionTest extends AbstractFlowActionT
     @Inject
     private OrganizationSelectionPageFlowAction action;
     @Inject
+    private OrganizationSearchService mockOrganizationSearchService;
+    @Inject
     private OrganizationService mockOrganizationService;
 
     @Before
@@ -126,15 +125,16 @@ public class OrganizationSelectionPageFlowActionTest extends AbstractFlowActionT
     @Test
     public void testPrepare_NoExistingOrganization() {
         action.prepare();
-        assertTrue(StringUtils.isEmpty(action.getSelectedOrganizationExternalId()));
+        assertTrue(StringUtils.isEmpty(action.getSelectedOrganizationKey()));
     }
 
     @Test
     public void testPrepare_ExistingOrganization() {
         PrimaryOrganization primaryOrganization = PrimaryOrganizationFactory.getInstance().create();
+        primaryOrganization.getOrganization().setNesId("12345");
         getAccountConfigurationData().setPrimaryOrganization(primaryOrganization);
         action.prepare();
-        assertEquals(primaryOrganization.getExternalId(), action.getSelectedOrganizationExternalId());
+        assertEquals(primaryOrganization.getNesId(), action.getSelectedOrganizationKey());
     }
 
     @Test
@@ -146,6 +146,7 @@ public class OrganizationSelectionPageFlowActionTest extends AbstractFlowActionT
     @Test
     public void testEnterAction_OrganizationReQuery() {
         PrimaryOrganization primaryOrganization = PrimaryOrganizationFactory.getInstance().create();
+        primaryOrganization.getOrganization().setNesId("12345");
         getAccountConfigurationData().setPrimaryOrganization(primaryOrganization);
         action.prepare();
         action.setNavigationOption(OrganizationSelectionPageFlowAction.ORG_SEARCH);
@@ -155,6 +156,7 @@ public class OrganizationSelectionPageFlowActionTest extends AbstractFlowActionT
     @Test
     public void testEnterAction_OrganizationSelected() {
         PrimaryOrganization primaryOrganization = PrimaryOrganizationFactory.getInstance().create();
+        primaryOrganization.getOrganization().setNesId("12345");
         getAccountConfigurationData().setPrimaryOrganization(primaryOrganization);
         action.prepare();
         assertEquals(ActionSupport.INPUT, action.enterAction());
@@ -173,7 +175,7 @@ public class OrganizationSelectionPageFlowActionTest extends AbstractFlowActionT
         action.prepare();
         action.setNavigationOption(OrganizationSelectionPageFlowAction.ORG_SEARCH);
         assertEquals(OrganizationSelectionPageFlowAction.ORG_SEARCH, action.performSave());
-        verifyZeroInteractions(mockOrganizationService);
+        verifyZeroInteractions(mockOrganizationSearchService);
         verifyZeroInteractions(mockOrganizationService);
     }
 
@@ -183,71 +185,70 @@ public class OrganizationSelectionPageFlowActionTest extends AbstractFlowActionT
         action.setNavigationOption(OrganizationSelectionPageFlowAction.CREATE_NEW);
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertNull(getAccountConfigurationData().getPrimaryOrganization().getId());
-        assertEquals(CurationStatus.UNSAVED, getAccountConfigurationData().getPrimaryOrganization().getCurationStatus());
-        verify(mockOrganizationService, never()).validate(any(Organization.class), any(OrganizationRoleType.class));
+        assertEquals(CurationStatus.PRE_NES_VALIDATION, getAccountConfigurationData().getPrimaryOrganization()
+                .getNesStatus());
+        verify(mockOrganizationService, never()).validateOrganization(any(Organization.class));
     }
 
     @Test
-    public void testPerformSave_SearchedOrganization() throws Exception {
-        Organization testOrganization = OrganizationFactory.getInstance().create();
-        when(mockOrganizationService.getPrimaryOrganizationType(testOrganization)).thenReturn(CANCER_CENTER);
-        when(mockOrganizationService.getByExternalId(testOrganization.getExternalId())).thenReturn(testOrganization);
+    public void testPerformSave_SearchedOrganization() throws UnavailableEntityException, ValidationException {
+        Organization testOrganization = new Organization();
+        testOrganization.setNesId("12345");
+        when(mockOrganizationSearchService.getOrganization(testOrganization.getNesId())).thenReturn(testOrganization);
         action.prepare();
-        action.setSelectedOrganizationExternalId(testOrganization.getExternalId());
+        action.setSelectedOrganizationKey(testOrganization.getNesId());
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertEquals(testOrganization, getAccountConfigurationData().getPrimaryOrganization().getOrganization());
-        assertEquals(CANCER_CENTER, getAccountConfigurationData().getPrimaryOrganization().getType());
-        verify(mockOrganizationService, never()).validate(any(Organization.class), any(OrganizationRoleType.class));
+        verify(mockOrganizationService, never()).validateOrganization(any(Organization.class));
     }
 
     @Test
     public void testPerformSave_PreviouslyVisited() throws ValidationException {
-        PrimaryOrganization primaryOrganization = new PrimaryOrganization(new Organization(), CANCER_CENTER);
+        PrimaryOrganization primaryOrganization = new PrimaryOrganization(new Organization(), null);
         primaryOrganization.getOrganization().setName("Test Org");
         getAccountConfigurationData().setPrimaryOrganization(primaryOrganization);
         action.prepare();
         assertEquals(ActionSupport.SUCCESS, action.performSave());
         assertEquals(primaryOrganization, getAccountConfigurationData().getPrimaryOrganization());
-        verify(mockOrganizationService).validate(primaryOrganization.getOrganization(), PRIMARY_ORGANIZATION,
-                CANCER_CENTER);
+        verify(mockOrganizationService).validateOrganization(any(Organization.class));
     }
 
     @Test
-    public void testPerformSave_InvalidatedOrganizationException() throws Exception {
-        String organizationExternalId = "NES1";
-        when(mockOrganizationService.getByExternalId(organizationExternalId)).thenThrow(
-                new InvalidatedOrganizationException());
+    public void testPerformSave_SelectSameOrganization() throws UnavailableEntityException, ValidationException {
+        String searchKey = "NES1";
+        when(mockOrganizationSearchService.getOrganization(searchKey)).thenThrow(
+                new UnavailableEntityException(null, searchKey));
         action.prepare();
-        action.setSelectedOrganizationExternalId(organizationExternalId);
+        action.setSelectedOrganizationKey(searchKey);
         action.setNavigationOption(null);
         action.performSave();
         assertEquals(ActionSupport.INPUT, action.performSave());
         assertTrue(action.hasActionErrors());
-        verify(mockOrganizationService, never()).validate(any(Organization.class), any(OrganizationRoleType.class));
+        verify(mockOrganizationService, never()).validateOrganization(any(Organization.class));
     }
 
     @Test
-    public void testPerformSave_NoSelectedOrganizationExternalId() throws ValidationException {
+    public void testPerformSave_NoSelectedOrganizationKey() throws ValidationException {
         action.prepare();
         getAccountConfigurationData().setPrimaryOrganization(new PrimaryOrganization());
         action.setNavigationOption(OrganizationSelectionPageFlowAction.ORG_SEARCH);
         action.performSave();
         assertEquals(OrganizationSelectionPageFlowAction.ORG_SEARCH, action.performSave());
         assertNull(getAccountConfigurationData().getPrimaryOrganization());
-        verify(mockOrganizationService, never()).validate(any(Organization.class), any(OrganizationRoleType.class));
+        verify(mockOrganizationService, never()).validateOrganization(any(Organization.class));
     }
 
     @Test
-    public void testPerformSave_WithSelectedOrganizationExternalId() throws ValidationException {
+    public void testPerformSave_WithSelectedOrganizationKey() throws ValidationException {
         action.prepare();
-        action.setSelectedOrganizationExternalId("1234");
+        action.setSelectedOrganizationKey("1234");
         PrimaryOrganization primaryOrganization = new PrimaryOrganization();
         getAccountConfigurationData().setPrimaryOrganization(primaryOrganization);
         action.setNavigationOption(OrganizationSelectionPageFlowAction.ORG_SEARCH);
         action.performSave();
         assertEquals(OrganizationSelectionPageFlowAction.ORG_SEARCH, action.performSave());
         assertSame(primaryOrganization, getAccountConfigurationData().getPrimaryOrganization());
-        verify(mockOrganizationService, never()).validate(any(Organization.class), any(OrganizationRoleType.class));
+        verify(mockOrganizationService, never()).validateOrganization(any(Organization.class));
     }
 
     @Test
@@ -256,16 +257,16 @@ public class OrganizationSelectionPageFlowActionTest extends AbstractFlowActionT
         action.setNavigationOption(OrganizationSelectionPageFlowAction.CREATE_NEW);
         assertEquals(ActionSupport.SUCCESS, action.saveAndProceedNext());
         assertNull(getAccountConfigurationData().getPrimaryOrganization().getId());
-        assertEquals(CurationStatus.UNSAVED, getAccountConfigurationData().getPrimaryOrganization().getCurationStatus());
+        assertEquals(CurationStatus.PRE_NES_VALIDATION, getAccountConfigurationData().getPrimaryOrganization()
+                .getNesStatus());
     }
 
     @Test
     public void testSaveAndProceedNext_ValidationError() throws ValidationException {
-        PrimaryOrganization primaryOrganization = new PrimaryOrganization(new Organization(), CANCER_CENTER);
-        doThrow(ValidationExceptionFactory.getInstance().create()).when(mockOrganizationService).validate(
-                primaryOrganization.getOrganization(), PRIMARY_ORGANIZATION, CANCER_CENTER);
+        doThrow(ValidationExceptionFactory.getInstance().create()).when(mockOrganizationService).validateOrganization(
+                any(Organization.class));
         action.prepare();
-        action.getAccountConfigurationData().setPrimaryOrganization(primaryOrganization);
+        action.getAccountConfigurationData().setPrimaryOrganization(new PrimaryOrganization());
         assertEquals(ActionSupport.INPUT, action.saveAndProceedNext());
         assertEquals(1, action.getFieldErrors().size());
     }

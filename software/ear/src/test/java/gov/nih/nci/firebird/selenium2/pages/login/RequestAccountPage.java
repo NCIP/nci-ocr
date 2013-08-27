@@ -215,14 +215,14 @@ public class RequestAccountPage extends AbstractFirebirdPage<RequestAccountPage>
     }
 
     public void selectSponsorRoleRadio(Organization sponsor) {
-        WebElement radioButton = getDriver().findElement(By.id(SPONSOR_ROLE_PREFIX + sponsor.getExternalId()));
+        WebElement radioButton = getDriver().findElement(By.id(SPONSOR_ROLE_PREFIX + sponsor.getNesId()));
         if (!radioButton.isSelected()) {
             radioButton.click();
         }
     }
 
     public void selectSponsorDelegateRoleRadio(Organization sponsor) {
-        WebElement radioButton = getDriver().findElement(By.id(DELEGATE_ROLE_PREFIX + sponsor.getExternalId()));
+        WebElement radioButton = getDriver().findElement(By.id(DELEGATE_ROLE_PREFIX + sponsor.getNesId()));
         if (!radioButton.isSelected()) {
             radioButton.click();
         }

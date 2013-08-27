@@ -167,9 +167,7 @@ public class DesigneeAssociationTabAction extends AbstractProfileAction {
     /**
      * An object for providing necessary data for displaying in the designee tables.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
-    protected static final class DesigneeListing {
+    public static class DesigneeListing {
         private final Long id;
         private final Person person;
         private final Organization organization;
@@ -178,7 +176,7 @@ public class DesigneeAssociationTabAction extends AbstractProfileAction {
         /**
          * @param association The association to create this listing from.
          */
-        DesigneeListing(AbstractPersonAssociation association) {
+        public DesigneeListing(AbstractPersonAssociation association) {
             this.id = association.getId();
             this.person = association.getPerson();
             if (association instanceof ShippingDesignee) {

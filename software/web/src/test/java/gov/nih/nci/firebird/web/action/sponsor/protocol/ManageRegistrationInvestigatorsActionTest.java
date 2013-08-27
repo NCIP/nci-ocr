@@ -83,7 +83,6 @@
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.common.ValidationFailure;
 import gov.nih.nci.firebird.common.ValidationResult;
@@ -92,6 +91,7 @@ import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.service.person.PersonSearchService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
@@ -113,6 +113,8 @@ public class ManageRegistrationInvestigatorsActionTest extends AbstractWebTest {
     @Inject
     private ProtocolService protocolService;
     @Inject
+    private PersonSearchService searchService;
+    @Inject
     private ManageRegistrationInvestigatorsAction action;
     private ValidationException validationException;
     private static final String ERROR_MESSAGE = "This is an error";
@@ -121,6 +123,7 @@ public class ManageRegistrationInvestigatorsActionTest extends AbstractWebTest {
     public void setUp() throws Exception {
         super.setUp();
         action.setServletRequest(ServletActionContext.getRequest()); // closeDialog() needs a request
+        action.setPersonSearchService(searchService);
         ValidationResult result = new ValidationResult(new ValidationFailure(ERROR_MESSAGE));
         validationException = new ValidationException(result);
     }
@@ -197,7 +200,7 @@ public class ManageRegistrationInvestigatorsActionTest extends AbstractWebTest {
         action.getProtocol().addRegistration(r1);
         action.getProtocol().addRegistration(r2);
         action.getProtocol().addRegistration(r3);
-        action.setInvitedRegistrationIds(Arrays.asList(1L, 2L, 999L));
+        action.setInvitedRegistrations(Arrays.asList(1L, 2L, 999L));
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.invite());
         verify(protocolService).invite(r1);
         verify(protocolService).invite(r2);

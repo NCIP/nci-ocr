@@ -86,8 +86,9 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.PrimaryOrganization;
 import gov.nih.nci.firebird.data.PrimaryOrganizationType;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.service.organization.OrganizationAssociationService;
 
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.InterceptorRef;
@@ -102,19 +103,21 @@ import com.google.inject.Inject;
 @Namespace("/investigator/profile/contact/ajax")
 @InterceptorRef("profileManagementStack")
 public class SelectPrimaryOrganizationAction extends AbstractProfileAction {
-    
     private static final long serialVersionUID = 1L;
     private static final String PRIMARY_ORGANIZATION_RESOURCE =
             "accountConfigurationData.primaryOrganization.organization";
-
-    private String organizationExternalId;
+    private String searchKey;
+    private final OrganizationAssociationService organizationAssociationService;
 
     /**
      * @param profileService the profileService to set
+     * @param organizationAssociationService the organizationAssociationService to set
      */
     @Inject
-    public SelectPrimaryOrganizationAction(InvestigatorProfileService profileService) {
+    public SelectPrimaryOrganizationAction(InvestigatorProfileService profileService,
+            OrganizationAssociationService organizationAssociationService) {
         super(profileService);
+        this.organizationAssociationService = organizationAssociationService;
     }
 
     /**
@@ -135,14 +138,14 @@ public class SelectPrimaryOrganizationAction extends AbstractProfileAction {
     @Action(value = "selectOrganizationAndClose", results = @Result(name = INPUT, location = "organization_search.jsp"))
     public String selectOrganizationAndClose() {
         try {
-            Organization selectedOrganization = getOrganizationService().getByExternalId(
-                    getOrganizationExternalId());
-            PrimaryOrganizationType type = getOrganizationService().getPrimaryOrganizationType(selectedOrganization);
+            Organization selectedOrganization = getOrganizationSearchService().getOrganization(getSearchKey());
+            PrimaryOrganizationType type = organizationAssociationService
+                    .getExistingPrimaryOrganizationType(selectedOrganization);
             getProfileService().setPrimaryOrganization(getProfile(),
                     new PrimaryOrganization(selectedOrganization, type));
         } catch (ValidationException e) {
             return handleValidationException(e, PRIMARY_ORGANIZATION_RESOURCE);
-        } catch (InvalidatedOrganizationException e) {
+        } catch (UnavailableEntityException e) {
             addActionError(getText("organization.search.selected.organization.unavailable"));
             return INPUT;
         }
@@ -150,17 +153,17 @@ public class SelectPrimaryOrganizationAction extends AbstractProfileAction {
     }
 
     /**
-     * @return the organizationExternalId
+     * @return the searchKey
      */
-    public String getOrganizationExternalId() {
-        return organizationExternalId;
+    public String getSearchKey() {
+        return searchKey;
     }
 
     /**
-     * @param organizationExternalId the organizationExternalId to set
+     * @param searchKey the searchKey to set
      */
-    public void setOrganizationExternalId(String organizationExternalId) {
-        this.organizationExternalId = organizationExternalId;
+    public void setSearchKey(String searchKey) {
+        this.searchKey = searchKey;
     }
 
 }

@@ -83,7 +83,7 @@
 package gov.nih.nci.firebird.selenium2.scalability.tests;
 
 import static gov.nih.nci.firebird.selenium2.scalability.tests.TimedAction.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import gov.nih.nci.firebird.commons.test.TestFileUtils;
 import gov.nih.nci.firebird.data.PrimaryOrganization;
 import gov.nih.nci.firebird.data.Protocol;
@@ -149,8 +149,8 @@ public class SubmitProtocolRegistrationTest extends AbstractScalabilityTest {
     }
 
     private InvestigatorRegistrationPage openRegistration(BrowseRegistrationsPage browseRegistrationsPage) {
-        final RegistrationListing listing = browseRegistrationsPage.getHelper().getRegistrationListing(
-                dataSet.getInvestigatorRegistration());
+        final RegistrationListing listing = 
+                browseRegistrationsPage.getHelper().getRegistrationListing(dataSet.getInvestigatorRegistration());
         return new TimedAction<InvestigatorRegistrationPage>("Open Registration") {
             @Override
             public InvestigatorRegistrationPage perform() throws IOException {
@@ -226,8 +226,7 @@ public class SubmitProtocolRegistrationTest extends AbstractScalabilityTest {
         }
     }
 
-    private void answerFinancialDisclosureQuestion(final FinancialDisclosureTab financialDisclosureTab,
-            final Question question) {
+    private void answerFinancialDisclosureQuestion(final FinancialDisclosureTab financialDisclosureTab, final Question question) {
         new TimedAction<Void>("Answer Financial Disclosure Question " + question) {
             @Override
             public Void perform() {
@@ -241,8 +240,7 @@ public class SubmitProtocolRegistrationTest extends AbstractScalabilityTest {
         new TimedAction<Void>("Attach File to Financial Disclosure") {
             @Override
             public Void perform() throws IOException {
-                financialDisclosureTab.getSupportingDocumentsTag().getHelper()
-                        .uploadFile(TestFileUtils.createTemporaryFile());
+                financialDisclosureTab.getSupportingDocumentsTag().getHelper().uploadFile(TestFileUtils.createTemporaryFile());
                 return null;
             }
         }.time();
@@ -253,8 +251,7 @@ public class SubmitProtocolRegistrationTest extends AbstractScalabilityTest {
         selectCertificate(certificateTab);
     }
 
-    private HumanResearchCertificateTab openHumanResearchCertificateTab(
-            final InvestigatorRegistrationPage registrationPage) {
+    private HumanResearchCertificateTab openHumanResearchCertificateTab(final InvestigatorRegistrationPage registrationPage) {
         return new TimedAction<HumanResearchCertificateTab>("Open Human Research Certificate Tab") {
             @Override
             public HumanResearchCertificateTab perform() throws IOException {
@@ -279,8 +276,7 @@ public class SubmitProtocolRegistrationTest extends AbstractScalabilityTest {
         saveAttachment(uploadFileDialog);
     }
 
-    private ProtocolAdditionalAttachmentsTab openAdditionalAttachmentsTab(
-            final InvestigatorRegistrationPage registrationPage) {
+    private ProtocolAdditionalAttachmentsTab openAdditionalAttachmentsTab(final InvestigatorRegistrationPage registrationPage) {
         return new TimedAction<ProtocolAdditionalAttachmentsTab>("Open Additional Attachments Tab") {
             @Override
             public ProtocolAdditionalAttachmentsTab perform() throws IOException {
@@ -309,7 +305,6 @@ public class SubmitProtocolRegistrationTest extends AbstractScalabilityTest {
             }
         }.time();
     }
-
     private void submitRegistration(InvestigatorRegistrationPage registrationPage) {
         RegistrationOverviewTab overviewTab = openOverviewTab(registrationPage);
         SignAndSubmitRegistrationDialog signDialog = clickSubmitRegistration(overviewTab);
@@ -327,7 +322,7 @@ public class SubmitProtocolRegistrationTest extends AbstractScalabilityTest {
     }
 
     private SignAndSubmitRegistrationDialog clickSubmitRegistration(final RegistrationOverviewTab overviewTab) {
-        return new TimedAction<SignAndSubmitRegistrationDialog>("Click Registration Submission Button",
+        return new TimedAction<SignAndSubmitRegistrationDialog>("Click Registration Submission Button", 
                 MAX_NES_RESPONSE_TIME_SECONDS) {
             @Override
             public SignAndSubmitRegistrationDialog perform() throws IOException {
@@ -337,7 +332,7 @@ public class SubmitProtocolRegistrationTest extends AbstractScalabilityTest {
     }
 
     private void signRegistration(final SignAndSubmitRegistrationDialog signDialog) {
-        SignedDocumentsDialog signedDocumentsDialog = new TimedAction<SignedDocumentsDialog>("Sign Registration",
+        SignedDocumentsDialog signedDocumentsDialog = new TimedAction<SignedDocumentsDialog>("Sign Registration", 
                 MAX_AUTHENTICATION_RESPONSE_TIME_SECONDS) {
             @Override
             public SignedDocumentsDialog perform() throws IOException {

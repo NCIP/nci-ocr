@@ -83,17 +83,22 @@
 
 package gov.nih.nci.firebird.service.protocol;
 
-import com.fiveamsolutions.nci.commons.data.persistent.PersistentObject;
+import static com.google.common.base.Preconditions.*;
+import gov.nih.nci.firebird.common.FirebirdConstants;
+import gov.nih.nci.firebird.common.RichTextUtil;
+import gov.nih.nci.firebird.common.ValidationFailure;
+import gov.nih.nci.firebird.common.ValidationResult;
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
+import gov.nih.nci.firebird.data.FormOptionality;
 import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.FormType;
 import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.InvitationStatus;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.PersistentObjectUtil;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.Protocol;
+import gov.nih.nci.firebird.data.ProtocolAgent;
 import gov.nih.nci.firebird.data.ProtocolRegistrationConfiguration;
 import gov.nih.nci.firebird.data.ProtocolRevision;
 import gov.nih.nci.firebird.data.RegistrationStatus;
@@ -101,32 +106,89 @@ import gov.nih.nci.firebird.data.RegistrationType;
 import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.exception.ValidationException;
-import org.apache.commons.lang.StringUtils;
-import org.hibernate.Query;
+import gov.nih.nci.firebird.service.AbstractGenericServiceBean;
+import gov.nih.nci.firebird.service.messages.FirebirdMessage;
+import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
+import gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter;
+import gov.nih.nci.firebird.service.messages.TemplateService;
+import gov.nih.nci.firebird.service.messages.email.EmailService;
+import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
+import gov.nih.nci.firebird.service.sponsor.SponsorService;
 
-import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.Query;
+
+import com.fiveamsolutions.nci.commons.data.persistent.PersistentObject;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 /**
  * Service for Investigational Protocols.
  */
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
-@SuppressWarnings({ "PMD.TooManyMethods" })
+@SuppressWarnings({ "PMD.TooManyMethods", "PMD.ExcessiveClassLength" })
 // facade service expected to expose many methods
-public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> implements ProtocolService {
+public class ProtocolServiceBean extends AbstractGenericServiceBean<Protocol> implements ProtocolService {
+
+    private static final Set<FormOptionality> SUBINVESTIGATOR_REQUIRED_OPTIONALITIES = Sets.newHashSet(
+            FormOptionality.REQUIRED, FormOptionality.OPTIONAL);
+    private static final String HQL_FROM_BASE = "from ";
 
     private FormTypeService formTypeService;
-    private ProtocolValidationService protocolValidationService;
+    private ProtocolRegistrationService registrationService;
+    private EmailService emailService;
+    private TemplateService templateService;
+    private SponsorService sponsorService;
+    private ResourceBundle resources;
+
+    @Inject
+    void setRegistrationService(ProtocolRegistrationService registrationService) {
+        this.registrationService = registrationService;
+    }
+
+    @Inject
+    void setFormTypeService(FormTypeService formTypeService) {
+        this.formTypeService = formTypeService;
+    }
+
+    @Inject
+    void setEmailService(@Named("jmsEmailService")
+    EmailService emailService) {
+        this.emailService = emailService;
+    }
+
+    @Inject
+    void setTemplateService(TemplateService templateService) {
+        this.templateService = templateService;
+    }
+
+    @Inject
+    void setResources(ResourceBundle resources) {
+        this.resources = resources;
+    }
+
+    @Inject
+    void setSponsorService(SponsorService sponsorService) {
+        this.sponsorService = sponsorService;
+    }
 
     @Override
     public Protocol create() {
@@ -146,36 +208,101 @@ public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> i
     }
 
     @Override
+    @SuppressWarnings("unchecked")
+    // Hibernate list() method is untyped
+    public List<ProtocolAgent> getAgents(String startOfName) {
+        String agentQueryHql = HQL_FROM_BASE + ProtocolAgent.class.getName()
+                + " where lower(name) like :startOfName order by lower(name)";
+        Query query = getSessionProvider().get().createQuery(agentQueryHql);
+        query.setString("startOfName", startOfName.toLowerCase(Locale.getDefault()) + "%");
+        return query.list();
+    }
+
+    @Override
     protected void validate(Protocol protocol) throws ValidationException {
-        protocolValidationService.validate(protocol);
+        validateNumber(protocol);
+    }
+
+    private void validateNumber(Protocol protocol) throws ValidationException {
+        if (hasDuplicateProtocolNumber(protocol)) {
+            String message = resources.getString("sponsor.protocol.duplicate.number.error");
+            ValidationResult result = new ValidationResult(new ValidationFailure("protocol.protocolNumber", message));
+            throw new ValidationException(result);
+        }
     }
 
     @Override
     public boolean hasDuplicateProtocolNumber(Protocol protocol) {
-        if (!PersistentObjectUtil.isNew(protocol.getSponsor())) {
+        if (!isNew(protocol.getSponsor())) {
             Protocol existingProtocolWithNumber = getProtocol(protocol.getProtocolNumber(), protocol.getSponsor());
-            return existingProtocolWithNumber != null && !PersistentObjectUtil.areSame(protocol,
-                    existingProtocolWithNumber);
+            return existingProtocolWithNumber != null && !areSame(protocol, existingProtocolWithNumber);
         } else {
             return false;
         }
     }
 
+    private boolean isNew(PersistentObject persistentObject) {
+        return persistentObject.getId() == null;
+    }
+
+    private boolean areSame(Protocol protocol, Protocol compareToExistingProtocol) {
+        return compareToExistingProtocol.getId().equals(protocol.getId());
+    }
+
     @Override
     public Long save(Protocol protocol) {
-        getProtocolAgentService().handleAgents(protocol);
+        handleAgents(protocol);
         return super.save(protocol);
     }
 
+    private Protocol getProtocol(String protocolNumber, Organization sponsor) {
+        String hql = HQL_FROM_BASE + Protocol.class.getName()
+                + " where protocolNumber = :protocolNumber and sponsor = :sponsor";
+        Query query = getSessionProvider().get().createQuery(hql);
+        query.setString("protocolNumber", protocolNumber);
+        query.setEntity("sponsor", sponsor);
+        return (Protocol) query.uniqueResult();
+    }
+
+    private void handleAgents(Protocol protocol) {
+        // Set below used to avoid conflict when changes are automatically flushed for getAgentbyName() query
+        Set<ProtocolAgent> incomingAgentSet = new HashSet<ProtocolAgent>();
+        incomingAgentSet.addAll(protocol.getAgents());
+        protocol.getAgents().clear();
+        for (ProtocolAgent agent : incomingAgentSet) {
+            handleAgent(protocol, agent);
+        }
+    }
+
+    private void handleAgent(Protocol protocol, ProtocolAgent agent) {
+        if (agent.getId() != null) {
+            protocol.getAgents().add(agent);
+        } else {
+            ProtocolAgent existingAgent = getAgentByName(agent.getName());
+            if (existingAgent == null) {
+                getSessionProvider().get().save(agent);
+                protocol.getAgents().add(agent);
+            } else {
+                protocol.getAgents().add(existingAgent);
+            }
+        }
+    }
+
+    private ProtocolAgent getAgentByName(String agentName) {
+        String agentQueryHql = HQL_FROM_BASE + ProtocolAgent.class.getName() + " where lower(name) = :agentName";
+        Query query = getSessionProvider().get().createQuery(agentQueryHql);
+        query.setString("agentName", agentName.toLowerCase(Locale.getDefault()));
+        return (ProtocolAgent) query.uniqueResult();
+    }
 
     @Override
     public InvestigatorRegistration addInvestigator(Protocol protocol, Person investigator) throws ValidationException {
-        return getRegistrationService().createInvestigatorRegistration(protocol, investigator);
+        return registrationService.createInvestigatorRegistration(protocol, investigator);
     }
 
     @Override
     public void invite(InvestigatorRegistration registration) {
-        getRegistrationService().inviteToRegistration(registration);
+        registrationService.inviteToRegistration(registration);
     }
 
     @Override
@@ -189,7 +316,7 @@ public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> i
             return Collections.emptyList();
         } else {
             String protocolQueryHql = HQL_FROM_BASE + Protocol.class.getName() + " where sponsor in (:sponsors)";
-            Query query = getSession().createQuery(protocolQueryHql);
+            Query query = getSessionProvider().get().createQuery(protocolQueryHql);
             query.setParameterList("sponsors", verifiedSponsorOrganizations);
             return query.list();
         }
@@ -200,11 +327,26 @@ public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> i
         if (!registration.isApprovable()) {
             throw new IllegalArgumentException("Registration is not in an approvable state");
         }
-        ProtocolUtil.markAllApproved(registration);
-        getSponsorNotificationService().notifyInvestigatorsOfApproval(registration);
-        getRegistrationService().save(registration);
+        markAllApproved(registration);
+        notifyInvestigatorsOfApproval(registration);
+        registrationService.save(registration);
     }
 
+    private void markAllApproved(InvestigatorRegistration registration) {
+        markApproved(registration);
+        for (SubInvestigatorRegistration subInvestigatorRegistration : registration.getSubinvestigatorRegistrations()) {
+            if (!RegistrationStatus.APPROVED.equals(subInvestigatorRegistration.getStatus())) {
+                markApproved(subInvestigatorRegistration);
+            }
+        }
+    }
+
+    private void markApproved(AbstractProtocolRegistration registration) {
+        registration.setStatus(RegistrationStatus.APPROVED);
+        for (AbstractRegistrationForm form : registration.getForms()) {
+            form.setFormStatus(FormStatus.APPROVED);
+        }
+    }
 
     @Override
     public void deactivatePacket(InvestigatorRegistration registration, String comments) {
@@ -224,8 +366,8 @@ public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> i
             form.setFormStatus(FormStatus.INACTIVE);
             form.setComments(null);
         }
-        getRegistrationService().save(registration);
-        getSponsorNotificationService().notifyOfDeactivation(registration, comments);
+        registrationService.save(registration);
+        notifyOfDeactivation(registration, comments);
     }
 
     @Override
@@ -237,16 +379,6 @@ public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> i
             reactivateApprovedPacket(registration, comments);
         } else {
             reactivateUnApprovedPacket(registration, comments);
-        }
-    }
-
-    @Override
-    public void removePacket(InvestigatorRegistration registration) {
-        if (registration.getStatus() != RegistrationStatus.APPROVED) {
-            getRegistrationService().delete(registration);
-            getSponsorNotificationService().sendPacketRemovedEmail(registration);
-        } else {
-            throw new IllegalStateException("Cannot remove an investigator if the registration status is approved.");
         }
     }
 
@@ -262,19 +394,18 @@ public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> i
     }
 
     private AbstractProtocolRegistration reactivateApprovedRegistration(AbstractProtocolRegistration registration,
-                                                                        String comments) {
+            String comments) {
         AbstractProtocolRegistration reactivatedRegistration = registration.isInvestigatorRegistration()
                 ? new InvestigatorRegistration() : new SubInvestigatorRegistration();
         reactivatedRegistration.copyFrom(registration);
-        reactivatedRegistration.prepareFormsForReturn();
         registration.setCurrentRegistration(reactivatedRegistration);
         reactivatedRegistration.setStatus(RegistrationStatus.IN_PROGRESS);
         reactivatedRegistration.setFormStatuses(FormStatus.IN_PROGRESS);
         reactivatedRegistration.getInvitation().setInvitationStatus(InvitationStatus.REACTIVATED);
 
-        getRegistrationService().save(reactivatedRegistration);
-        getRegistrationService().save(registration);
-        getSponsorNotificationService().notifyOfReactivation(registration, comments);
+        registrationService.save(reactivatedRegistration);
+        registrationService.save(registration);
+        notifyOfReactivation(registration, comments);
         return reactivatedRegistration;
     }
 
@@ -298,25 +429,130 @@ public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> i
         }
         Set<PersistentObject> objectsToDelete = registration.prepareFormsForReturn();
         deleteAll(objectsToDelete);
-        getRegistrationService().save(registration);
-        getSponsorNotificationService().notifyOfReactivation(registration, comments);
+        registrationService.save(registration);
+        notifyOfReactivation(registration, comments);
+    }
+
+    @Override
+    public void removePacket(InvestigatorRegistration registration) {
+        if (registration.getStatus() != RegistrationStatus.APPROVED) {
+            registrationService.delete(registration);
+            sendPacketRemovedEmail(registration);
+        } else {
+            throw new IllegalStateException("Cannot remove an investigator if the registration status is approved.");
+        }
+    }
+
+  private void sendPacketRemovedEmail(InvestigatorRegistration registration) {
+        Map<FirebirdTemplateParameter, Object> parameterValues = new EnumMap<FirebirdTemplateParameter, Object>(
+                FirebirdTemplateParameter.class);
+        parameterValues.put(FirebirdTemplateParameter.INVESTIGATOR_REGISTRATION, registration);
+        parameterValues.put(FirebirdTemplateParameter.SPONSOR_EMAIL_ADDRESS, getSponsorEmailAddress(registration));
+        FirebirdMessage message = templateService.generateMessage(FirebirdMessageTemplate.PACKET_REMOVED_EMAIL,
+                parameterValues);
+        emailService.sendMessage(registration.getProfile().getPerson().getEmail(), null, null, message);
+    }
+
+    private void notifyInvestigatorsOfApproval(InvestigatorRegistration registration) {
+        Map<FirebirdTemplateParameter, Object> parameterValues = new EnumMap<FirebirdTemplateParameter, Object>(
+                FirebirdTemplateParameter.class);
+        parameterValues.put(FirebirdTemplateParameter.INVESTIGATOR_REGISTRATION, registration);
+        parameterValues.put(FirebirdTemplateParameter.SPONSOR_EMAIL_ADDRESS, getSponsorEmailAddress(registration));
+        FirebirdMessage message = templateService.generateMessage(
+                FirebirdMessageTemplate.REGISTRATION_PACKET_APPROVED_EMAIL, parameterValues);
+        Set<String> addresses = getAllEmailAddress(registration);
+        emailService.sendMessage(addresses, null, null, message);
+    }
+
+    private String getSponsorEmailAddress(AbstractProtocolRegistration registration) {
+        return sponsorService.getSponsorEmailAddress(registration.getProtocol().getSponsor());
+    }
+
+    private Set<String> getAllEmailAddress(InvestigatorRegistration registration) {
+        Set<String> addresses = new HashSet<String>();
+        addresses.add(registration.getProfile().getPerson().getEmail());
+        for (SubInvestigatorRegistration subInvestigatorRegistration : registration.getSubinvestigatorRegistrations()) {
+            addresses.add(subInvestigatorRegistration.getProfile().getPerson().getEmail());
+        }
+        return addresses;
+    }
+
+    private void notifyOfDeactivation(AbstractProtocolRegistration registration, String comments) {
+        Map<FirebirdTemplateParameter, Object> parameterValues = new EnumMap<FirebirdTemplateParameter, Object>(
+                FirebirdTemplateParameter.class);
+        parameterValues.put(FirebirdTemplateParameter.SPONSOR_EMAIL_ADDRESS, getSponsorEmailAddress(registration));
+        parameterValues.put(FirebirdTemplateParameter.REGISTRATION, registration);
+        parameterValues.put(FirebirdTemplateParameter.COMMENTS, RichTextUtil.convertToPlainText(comments));
+        FirebirdMessage message = templateService.generateMessage(
+                FirebirdMessageTemplate.REGISTRATION_PACKET_DEACTIVATED_EMAIL, parameterValues);
+        emailService.sendMessage(registration.getProfile().getPerson().getEmail(), null, null, message);
+    }
+
+    private void notifyOfReactivation(AbstractProtocolRegistration registration, String comments) {
+        String url = FirebirdConstants.REGISTRATION_URL_PATH_WITH_ID_PARAM + registration.getId();
+        Map<FirebirdTemplateParameter, Object> parameterValues = new EnumMap<FirebirdTemplateParameter, Object>(
+                FirebirdTemplateParameter.class);
+        parameterValues.put(FirebirdTemplateParameter.REGISTRATION, registration);
+        parameterValues.put(FirebirdTemplateParameter.FIREBIRD_LINK, url);
+        parameterValues.put(FirebirdTemplateParameter.SPONSOR_EMAIL_ADDRESS, getSponsorEmailAddress(registration));
+        parameterValues.put(FirebirdTemplateParameter.COMMENTS, RichTextUtil.convertToPlainText(comments));
+        FirebirdMessage message = templateService.generateMessage(
+                FirebirdMessageTemplate.REGISTRATION_PACKET_REACTIVATED_EMAIL, parameterValues);
+        emailService.sendMessage(registration.getProfile().getPerson().getEmail(), null, null, message);
     }
 
     @Override
     public void updateProtocol(Protocol original, Protocol revised, String comment) throws ValidationException {
-        ProtocolModificationDetector detector = new ProtocolModificationDetector(original, revised, getResources());
+        ProtocolModificationDetector detector = new ProtocolModificationDetector(original, revised, resources);
         if (!detector.isModificationDetected()) {
             return;
         }
-        protocolValidationService.validateChanges(revised, comment);
+        validateChanges(revised, comment);
         ProtocolRevision revision = new ProtocolRevision();
         revision.setDate(new Date());
         revision.setComment(comment);
         revised.addRevision(revision);
         detector.addModifications(revision);
         validateAndSave(revised);
-        getSession().flush();
+        getSessionProvider().get().flush();
         handleAffectedRegistrations(revised, revision);
+    }
+
+    private void validateChanges(Protocol revised, String comment) throws ValidationException {
+        ValidationResult validationResults = new ValidationResult();
+        checkComments(comment, validationResults);
+        checkInvestigatorOptionalities(revised, validationResults);
+        checkSubInvestigatorOptionalities(revised, validationResults);
+        if (!validationResults.isValid()) {
+            getSessionProvider().get().evict(revised);
+            throw new ValidationException(validationResults);
+        }
+    }
+
+    private void checkComments(String comment, ValidationResult validationResults) {
+        if (StringUtils.isBlank(comment)) {
+            validationResults.addFailure(new ValidationFailure("comment", resources
+                    .getString("protocol.change.comment.required")));
+        }
+    }
+
+    private void checkInvestigatorOptionalities(Protocol revised, ValidationResult validationResults) {
+        Collection<FormOptionality> optionalities = revised.getRegistrationConfiguration()
+                .getInvestigatorConfiguration().getFormOptionalities().values();
+        if (!optionalities.contains(FormOptionality.REQUIRED)) {
+            validationResults.addFailure(new ValidationFailure(resources
+                    .getString("protocol.investigator.optionalities.require.one.required.form")));
+        }
+    }
+
+    private void checkSubInvestigatorOptionalities(Protocol revised, ValidationResult validationResults) {
+        Collection<FormOptionality> optionalities = revised.getRegistrationConfiguration()
+                .getSubinvestigatorConfiguration().getFormOptionalities().values();
+        if (!CollectionUtils.containsAny(optionalities, SUBINVESTIGATOR_REQUIRED_OPTIONALITIES)) {
+            String message = resources
+                    .getString("protocol.subinvestigator.optionalities.require.one.required.or.optional.form");
+            validationResults.addFailure(new ValidationFailure(message));
+        }
     }
 
     private void handleAffectedRegistrations(Protocol protocol, ProtocolRevision revision) {
@@ -324,25 +560,41 @@ public class ProtocolServiceBean extends AbstractProtocolServiceBean<Protocol> i
             Set<AbstractRegistrationForm> removedForms = registration.configureForms();
             deleteForms(removedForms);
             if (registration.isNotificationRequiredForUpdate()) {
-                getSponsorNotificationService().sendProtocolUpdateEmail(registration, revision);
+                sendProtocolUpdateEmail(registration, revision);
             }
             if (registration.isResubmitRequiredForUpdate()) {
                 registration.setStatus(RegistrationStatus.PROTOCOL_UPDATED);
-                ProtocolUtil.setFormsToInProgress(registration);
+                setFormsToInProgress(registration);
                 Set<PersistentObject> objectsToDelete = registration.prepareFormsForReturn();
                 deleteAll(objectsToDelete);
-                getRegistrationService().save(registration);
+                registrationService.save(registration);
             }
         }
     }
 
-    @Resource(mappedName = "firebird/FormTypeServiceBean/local")
-    void setFormTypeService(FormTypeService formTypeService) {
-        this.formTypeService = formTypeService;
+    private void deleteForms(Set<AbstractRegistrationForm> removedForms) {
+        for (AbstractRegistrationForm removedForm : removedForms) {
+            getSessionProvider().get().delete(removedForm);
+        }
     }
 
-    @Resource(mappedName = "firebird/ProtocolValidationServiceBean/local")
-    public void setProtocolValidationService(ProtocolValidationService protocolValidationService) {
-        this.protocolValidationService = protocolValidationService;
+    private void setFormsToInProgress(AbstractProtocolRegistration registration) {
+        for (AbstractRegistrationForm form : registration.getFormsForSponsorReview()) {
+            form.setFormStatus(FormStatus.IN_PROGRESS);
+        }
     }
+
+    private void sendProtocolUpdateEmail(AbstractProtocolRegistration registration, ProtocolRevision revision) {
+        String url = FirebirdConstants.REGISTRATION_URL_PATH_WITH_ID_PARAM + registration.getId();
+        Map<FirebirdTemplateParameter, Object> parameterValues = new EnumMap<FirebirdTemplateParameter, Object>(
+                FirebirdTemplateParameter.class);
+        parameterValues.put(FirebirdTemplateParameter.REGISTRATION, registration);
+        parameterValues.put(FirebirdTemplateParameter.FIREBIRD_LINK, url);
+        parameterValues.put(FirebirdTemplateParameter.PROTOCOL_REVISION, revision);
+        parameterValues.put(FirebirdTemplateParameter.SPONSOR_EMAIL_ADDRESS, getSponsorEmailAddress(registration));
+        FirebirdMessage message = templateService.generateMessage(FirebirdMessageTemplate.PROTOCOL_MODIFIED_EMAIL,
+                parameterValues);
+        emailService.sendMessage(registration.getProfile().getPerson().getEmail(), null, null, message);
+    }
+
 }

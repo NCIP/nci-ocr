@@ -3,7 +3,7 @@
     <parent>
         <artifactId>firebird</artifactId>
         <groupId>gov.nih.nci.firebird</groupId>
-        <version>3.3.0.8-SNAPSHOT</version>
+        <version>3.2.0.56-SNAPSHOT</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -13,7 +13,6 @@
     <url>../../services/target/site</url>
 
     <properties>
-        <project.root.dir>${project.basedir}/..</project.root.dir>
         <cagrid.version>1.4</cagrid.version>
         <!-- Test properties -->
         <test.jdbc.url>jdbc:hsqldb:mem:firebird-test</test.jdbc.url>
@@ -76,7 +75,7 @@
                     <dependency>
                         <groupId>org.slf4j</groupId>
                         <artifactId>slf4j-log4j12</artifactId>
-                        <version>1.5.6</version>
+                        <version>1.5.5</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -153,7 +152,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Xmx768m -XX:MaxPermSize=256m</argLine>
+                    <argLine>-Xmx512m -XX:MaxPermSize=256m</argLine>
                 </configuration>
             </plugin>
         </plugins>
@@ -211,7 +210,7 @@
         <dependency>
             <groupId>net.sf.ehcache</groupId>
             <artifactId>ehcache</artifactId>
-            <version>1.2.4</version>
+            <version>1.2.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -245,96 +244,30 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity-tools</artifactId>
+            <version>2.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-email</artifactId>
             <version>1.2</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-validator</groupId>
-            <artifactId>commons-validator</artifactId>
-            <version>1.4.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.sourceforge.javacsv</groupId>
-            <artifactId>javacsv</artifactId>
-            <version>2.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.mail</groupId>
-            <artifactId>mail</artifactId>
-            <version>1.4.7</version>
-            <scope>compile</scope>
-        </dependency>
 
-        <!-- JBoss provided dependencies -->
+        <!-- CSM Dependencies -->
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>ejb3-persistence</artifactId>
-            <version>1.0.2.GA</version>
-            <scope>provided</scope>
+            <groupId>gov.nih.nci</groupId>
+            <artifactId>security</artifactId>
+            <version>4.0.1</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.jboss.ejb3</groupId>
-            <artifactId>jboss-ejb3-common</artifactId>
-            <version>1.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.3</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.ejb</groupId>
-            <artifactId>ejb-api</artifactId>
-            <version>3.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.security</groupId>
-            <artifactId>jaas</artifactId>
-            <version>1.0.01</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.security</groupId>
-            <artifactId>jacc</artifactId>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
             <version>1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.javaee</groupId>
-            <artifactId>jboss-jms-api</artifactId>
-            <version>1.1.0.GA</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.security</groupId>
-            <artifactId>jbosssx-client</artifactId>
-            <version>2.0.3.SP1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.ejb3</groupId>
-            <artifactId>jboss-ejb3-ext-api</artifactId>
-            <version>1.0.0</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
         
         <!-- ESYS Dependencies -->
@@ -362,6 +295,12 @@
             <groupId>gov.nih.nci.coppa.po-grid</groupId>
             <artifactId>core-services-stubs</artifactId>
             <version>3.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>gov.nih.nci.iso21090</groupId>
+            <artifactId>iso-datatypes</artifactId>
+            <version>2.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -422,21 +361,9 @@
         </dependency>
         <dependency>
             <groupId>gov.nih.nci.cagrid</groupId>
-            <artifactId>cagrid-dorian-common</artifactId>
-            <version>${cagrid.version}</version>
-            <scope>compile</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>addressing</artifactId>
-                    <groupId>net.sourceforge.addressing</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>gov.nih.nci.cagrid</groupId>
             <artifactId>cagrid-dorian-service</artifactId>
             <version>${cagrid.version}</version>
-            <scope>runtime</scope>
+            <scope>compile</scope>
             <exclusions>
                 <exclusion>
                     <artifactId>addressing</artifactId>
@@ -466,7 +393,7 @@
             <groupId>gov.nih.nci.cagrid</groupId>
             <artifactId>cagrid-service-security-provider-stubs</artifactId>
             <version>${cagrid.version}</version>
-            <scope>runtime</scope>
+            <scope>compile</scope>
             <exclusions>
                 <exclusion>
                     <artifactId>addressing</artifactId>
@@ -538,13 +465,13 @@
             <groupId>gov.nih.nci.cagrid</groupId>
             <artifactId>cagrid-metadata-common</artifactId>
             <version>${cagrid.version}</version>
-            <scope>runtime</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>gov.nih.nci.cagrid</groupId>
             <artifactId>cagrid-metadata-security</artifactId>
             <version>${cagrid.version}</version>
-            <scope>runtime</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>gov.nih.nci.cagrid</groupId>
@@ -586,13 +513,13 @@
             <groupId>wsdl4j</groupId>
             <artifactId>wsdl4j</artifactId>
             <version>1.5.1</version>
-            <scope>runtime</scope>
+            <scope>compile</scope>
         </dependency>
-       <dependency>
+        <dependency>
             <groupId>apache-xerces</groupId>
             <artifactId>xml-apis</artifactId>
             <version>2.9.1</version>
-            <scope>runtime</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>wss4j</groupId>
@@ -611,36 +538,6 @@
                     <groupId>globus</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>axis</groupId>
-            <artifactId>axis</artifactId>
-            <version>1.2-custom</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>globus</groupId>
-            <artifactId>puretls</artifactId>
-            <version>4.0.3</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>globus</groupId>
-            <artifactId>cryptix32</artifactId>
-            <version>4.0.3</version>
-            <scope>runtime</scope>
-        </dependency>      
-        <dependency>
-            <groupId>globus</groupId>
-            <artifactId>cryptix-asn1</artifactId>
-            <version>4.0.3</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>globus</groupId>
-            <artifactId>cog-jglobus-syncgts-patched</artifactId>
-            <version>4.0.3</version>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- iText Dependencies -->
@@ -664,6 +561,50 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>globus</groupId>
+            <artifactId>puretls</artifactId>
+            <version>4.0.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>globus</groupId>
+            <artifactId>cryptix32</artifactId>
+            <version>4.0.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>globus</groupId>
+            <artifactId>cryptix-asn1</artifactId>
+            <version>4.0.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>globus</groupId>
+            <artifactId>cog-jglobus-syncgts-patched</artifactId>
+            <version>4.0.3</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- Only a dependency because nci-commons-core requires it. -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-maven-plugin</artifactId>
+            <version>2.0.5</version>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- Test only jars -->
         <dependency>
@@ -679,29 +620,56 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <artifactId>jta</artifactId>
+            <groupId>javax.transaction</groupId>
+            <version>1.0.1B</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
+            <version>12.0</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.jvnet.mock-javamail</groupId>
             <artifactId>mock-javamail</artifactId>
-            <version>1.9</version>
+            <version>1.7</version>
             <type>jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-pool</groupId>
             <artifactId>commons-pool</artifactId>
-            <version>1.6</version>
+            <version>1.5.5</version>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.7.2</version>
+            <version>1.6.1</version>
+        </dependency>
+        <dependency>
+            <groupId>dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.nekohtml</groupId>
+            <artifactId>nekohtml</artifactId>
+            <version>1.9.14</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>xercesImpl</artifactId>
+                    <groupId>xerces</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
@@ -740,7 +708,6 @@
                     <plugin>
                         <groupId>org.liquibase</groupId>
                         <artifactId>liquibase-maven-plugin</artifactId>
-                        <version>2.0.5</version>
                         <executions>
                             <execution>
                                 <id>clean-checksums</id>
@@ -772,8 +739,7 @@
                 <plugins>
                     <plugin>
                         <groupId>org.liquibase</groupId>
-                        <artifactId>liquibase-maven-plugin</artifactId>
-                        <version>2.0.5</version>
+                          <artifactId>liquibase-maven-plugin</artifactId>
                         <executions>
                             <execution>
                                 <id>main</id>

@@ -67,57 +67,57 @@
                     {mDataProp: "name"},
                     {mDataProp: "ctepId"},
                     {mDataProp: "ohrpAssuranceNumber", fnRender: function (obj) {
-                        return createOhrpDisplay(obj.aData.ohrpAssuranceNumber, obj.aData.organizationExternalId);
+                        return createOhrpDisplay(obj.aData.ohrpAssuranceNumber, obj.aData.id);
                     }},
                     {mDataProp: "address", fnRender: function (obj) {
-                        return addressFormatter(obj.aData.address);
+                        return __addressFormatter(obj.aData.address);
                     }},
                     {mDataProp: "phoneNumber"}
                 ],
                 fnRowCallback: function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
-                    setUpEditOhrp(nRow, aData.organizationExternalId);
-                    $(nRow).attr("id", aData.organizationExternalId);
-                    $(nRow).data("organizationExternalId", aData.organizationExternalId);
+                    setUpEditOhrp(nRow, aData.id);
+                    $(nRow).attr("id", aData.id);
+                    $(nRow).data("organizationId", aData.id);
                     return nRow;
                 }
             });
             checkForNoPracticeSiteSelectionsIfIncomplete();
         });
 
-        function clickEdit(organizationExternalId) {
-            var div = $('#' + this.ohrpDivPrefix + escapeForJquery(organizationExternalId));
+        function clickEdit(associationId) {
+            var div = $('#' + this.ohrpDivPrefix + associationId);
             var ohrp = $(div).text();
             var column = $(div).parent();
             $(div).remove();
-            createEditDiv(column, ohrp, organizationExternalId);
+            createEditDiv(column, ohrp, associationId);
         }
 
-        function createEditDiv(column, ohrp, organizationExternalId) {
-            var organizationExternalId = $(column).parent().data('organizationExternalId');
-            var newDiv = $('<div class="ohrpCell" id="' + this.ohrpDivPrefix + organizationExternalId + '"></div>');
-            var form = createOhrpForm(organizationExternalId, ohrp);
-            var btnDiv = createButtonDiv(organizationExternalId, ohrp);
+        function createEditDiv(column, ohrp, associationId) {
+            var organizationId = $(column).parent().data('organizationId');
+            var newDiv = $('<div class="ohrpCell" id="' + this.ohrpDivPrefix + associationId + '"></div>');
+            var form = createOhrpForm(organizationId, ohrp);
+            var btnDiv = createButtonDiv(associationId, ohrp);
             $(form).append(btnDiv);
             $(newDiv).append(form).appendTo(column);
         }
 
-        function createButtonDiv(organizationExternalId, ohrp) {
+        function createButtonDiv(associationId, ohrp) {
             var btnDiv = $('<div class="float_right"></div>');
-            var saveBtn = $(createImageAsLink('save_' + organizationExternalId, 'Save', 'ico_checkmark.png', 'saveOhrpBtn'));
-            var cancelBtn = $(createImageAsLink('cancel_' + organizationExternalId, 'Cancel', 'ico_xmark.gif', 'cancelOhrpBtn'));
+            var saveBtn = $(createImageAsLink('save_' + associationId, 'Save', 'ico_checkmark.png', 'saveOhrpBtn'));
+            var cancelBtn = $(createImageAsLink('cancel_' + associationId, 'Cancel', 'ico_xmark.gif', 'cancelOhrpBtn'));
 
             $(saveBtn).click(function () {
-                setupSaveClick(this, organizationExternalId, this.practiceSite);
+                setupSaveClick(this, associationId, this.practiceSite);
             });
             $(cancelBtn).click(function () {
-                showOhrpDisplay(organizationExternalId, ohrp);
+                showOhrpDisplay(associationId, ohrp);
             });
 
             $(btnDiv).append(cancelBtn).append(saveBtn);
             return btnDiv;
         }
 
-        function setupSaveClick(saveBtn, organizationExternalId, associationType) {
+        function setupSaveClick(saveBtn, associationId, associationType) {
             var form = $(saveBtn).parents('form').first();
             var btnDiv = $(saveBtn).parent();
             var formData = $(form).serialize();
@@ -126,28 +126,28 @@
             switchToLoading(btnDiv);
             $.post('<s:property value="#updateOhrpUrl"/>', formData, null, 'json').success(function (data) {
                 if (_.isEmpty(data)) {
-                    showOhrpDisplay(organizationExternalId, val);
+                    showOhrpDisplay(associationId, val);
                     clearMessages();
                 } else {
                     showErrorMessage(btnDiv, data);
                 }
             }).error(function (data) {
-                showErrorMessage(btnDiv, "<fmt:message key='organization.association.error.ohrp.update'/>")
-            });
+                        showErrorMessage(btnDiv, "<fmt:message key='organization.association.error.ohrp.update'/>")
+                    });
         }
 
-        function showOhrpDisplay(organizationExternalId, ohrp) {
-            var div = $('#' + this.ohrpDivPrefix + escapeForJquery(organizationExternalId));
+        function showOhrpDisplay(associationId, ohrp) {
+            var div = $('#' + this.ohrpDivPrefix + associationId);
             var column = $(div).parent();
             $(div).remove();
-            $(column).html(createOhrpDisplay(ohrp, organizationExternalId));
-            setUpEditOhrp(column, organizationExternalId);
+            $(column).html(createOhrpDisplay(ohrp, associationId));
+            setUpEditOhrp(column, associationId);
         }
 
-        function setUpEditOhrp(row, organizationExternalId) {
-            var editOhrpLinkId = 'a#' + this.editOhrpPrefix + escapeForJquery(organizationExternalId);
+        function setUpEditOhrp(row, associationId) {
+            var editOhrpLinkId = 'a#' + this.editOhrpPrefix + associationId;
             $(row).find(editOhrpLinkId).click(function () {
-                clickEdit(organizationExternalId);
+                clickEdit(associationId);
             });
         }
 
@@ -164,18 +164,18 @@
             _fbUtil.switchObjects(_fbUtil.loadingIcon, item);
         }
 
-        function createOhrpForm(organizationExternalId, ohrp) {
+        function createOhrpForm(organizationId, ohrp) {
             var form = $('<form id="ohrpForm"></form>');
-            $('<input name="organizationExternalId" type="hidden" />').val(organizationExternalId).appendTo(form);
+            $('<input name="searchKey" type="hidden" />').val(organizationId).appendTo(form);
             $('<input name="associationType" type="hidden"/>').val(this.practiceSite).appendTo(form);
             $(createNamedElement('input', 'associationOhrp')).val(ohrp).attr('maxlength', 11).width(85).keydown(testForEnter).appendTo(form);
             return form;
         }
 
-        function createOhrpDisplay(ohrp, organizationExternalId) {
-            var editImage = createImageAsLink(this.editOhrpPrefix + organizationExternalId, 'Edit', 'ico_edit.gif', 'editOhrpBtn');
+        function createOhrpDisplay(ohrp, associationId) {
+            var editImage = createImageAsLink(this.editOhrpPrefix + associationId, 'Edit', 'ico_edit.gif', 'editOhrpBtn');
 
-            var divId = this.ohrpDivPrefix + organizationExternalId;
+            var divId = this.ohrpDivPrefix + associationId;
             return "<div class='ohrpCell' id='" + divId + "'>" + _fbUtil.blankIfNull(ohrp) + editImage + "</div>";
         }
 
@@ -193,22 +193,22 @@
 
         function createLabCheckColumn(practiceSite) {
             var checkboxHtml = "<input type='checkbox' name='selectedIds' ";
-            var checkBoxId = "practiceSite_"+ practiceSite.organizationExternalId;
+            var checkBoxId = "practiceSite_"+ practiceSite.id;
             checkboxHtml += "id='" + checkBoxId + "' ";
-            checkboxHtml += "value='" + practiceSite.organizationExternalId + "' ";
+            checkboxHtml += "value='" + practiceSite.id + "' ";
             if (practiceSite.selected) {
                 checkboxHtml += "checked='checked' ";
             }
-            checkboxHtml += "onclick=\"handlePracticeSiteClick('" + practiceSite.organizationExternalId + "');\" />";
+            checkboxHtml += "onclick=\"handlePracticeSiteClick('" + practiceSite.id + "');\" />";
             return createHiddenCheckboxLabel(checkBoxId) + checkboxHtml;
         }
 
-        function handlePracticeSiteClick(organizationExternalId) {
+        function handlePracticeSiteClick(id) {
             indicateLoading(true);
             var formData = {};
             formData["registration.id"] = ${registration.id};
-            formData["organizationExternalId"] = organizationExternalId;
-            var selecting = $('#practiceSite_' + escapeForJquery(organizationExternalId)).is(':checked');
+            formData["organization.id"] = id;
+            var selecting = $('#practiceSite_' + id).is(':checked');
             var url = selecting ? '${selectPracticeSiteUrl}' : '${deselectPracticeSiteUrl}';
             $.post(url, formData, function (errorMessages) {
                 setPageErrorMessages(errorMessages);

@@ -83,7 +83,11 @@
 
 package gov.nih.nci.firebird.service.sponsor;
 
-import static gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter.*;
+import static gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter.ANNUAL_REGISTRATION;
+import static gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter.REGISTRATION;
+import static gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter.FIREBIRD_LINK;
+import static gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter.SPONSOR_ROLE;
+import static gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter.SPONSOR_EMAIL_ADDRESS;
 import gov.nih.nci.firebird.cagrid.GridGrouperService;
 import gov.nih.nci.firebird.cagrid.GridInvocationException;
 import gov.nih.nci.firebird.common.FirebirdConstants;
@@ -95,12 +99,12 @@ import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.SponsorRole;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.messages.FirebirdMessage;
 import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
 import gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter;
 import gov.nih.nci.firebird.service.messages.TemplateService;
 import gov.nih.nci.firebird.service.messages.email.EmailService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 
@@ -109,7 +113,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -144,9 +147,9 @@ public class SponsorServiceBean implements SponsorService {
     private TemplateService templateService;
     private EmailService emailService;
     private Map<String, String> sponsorEmailMappings = Maps.newHashMap();
-    private Set<String> validSponsorExternalIds;
-    private Set<String> sponsorWithProtocolRegistrationsExternalIds;
-    private String sponsorWithAnnualRegistrationsExternalId;
+    private Set<String> validSponsorNesIds;
+    private Set<String> sponsorWithProtocolRegistrationsNesIds;
+    private String sponsorWithAnnualRegistrationsNesId;
     private Organization sponsorWithAnnualRegistrations;
     private Set<Organization> sponsorsWithProtocolRegistrations;
     private Set<Organization> sponsorOrganizations;
@@ -162,7 +165,7 @@ public class SponsorServiceBean implements SponsorService {
         this.sessionProvider = sessionProvider;
     }
 
-    @Resource(mappedName = "firebird/FirebirdUserServiceBean/local")
+    @Inject
     void setFirebirdUserService(FirebirdUserService firebirdUserService) {
         this.firebirdUserService = firebirdUserService;
     }
@@ -179,25 +182,23 @@ public class SponsorServiceBean implements SponsorService {
     }
 
     @Inject
-    void setValidSponsorExternalIds(@Named("sponsor.organization.nes.ids") Set<String> validSponsorExternalIds) {
-        this.validSponsorExternalIds = validSponsorExternalIds;
+    void setValidSponsorNesIds(@Named("sponsor.organization.nes.ids") Set<String> validSponsorNesIds) {
+        this.validSponsorNesIds = validSponsorNesIds;
     }
 
     @Inject
-    void setSponsorWithAnnualRegistrationsExternalId(
-            @Named("sponsor.organization.with.annual.registrations.nes.id")
-            String sponsorWithAnnualRegistrationsExternalId) {
-        this.sponsorWithAnnualRegistrationsExternalId = sponsorWithAnnualRegistrationsExternalId;
+    void setSponsorWithAnnualRegistrationsNesId(@Named("sponsor.organization.with.annual.registrations.nes.id")
+    String sponsorWithAnnualRegistrationsNesId) {
+        this.sponsorWithAnnualRegistrationsNesId = sponsorWithAnnualRegistrationsNesId;
     }
 
     @Inject
-    void setSponsorWithProtocolRegistrationsExternalIds(
-            @Named("sponsor.organization.with.protocol.registrations.nes.ids")
-            Set<String> sponsorWithProtocolRegistrationsExternalIds) {
-        this.sponsorWithProtocolRegistrationsExternalIds = sponsorWithProtocolRegistrationsExternalIds;
+    void setSponsorWithProtocolRegistrationsNesIds(@Named("sponsor.organization.with.protocol.registrations.nes.ids")
+    Set<String> sponsorWithProtocolRegistrationsNesIds) {
+        this.sponsorWithProtocolRegistrationsNesIds = sponsorWithProtocolRegistrationsNesIds;
     }
 
-    @Resource(mappedName = "firebird/OrganizationServiceBean/local")
+    @Inject
     void setOrganizationService(OrganizationService organizationService) {
         this.organizationService = organizationService;
     }
@@ -246,18 +247,18 @@ public class SponsorServiceBean implements SponsorService {
     @Override
     public Set<Organization> getSponsorOrganizations() {
         if (sponsorOrganizations == null) {
-            sponsorOrganizations = getSponsorsWithExternalIds(validSponsorExternalIds);
+            sponsorOrganizations = getSponsorsWithNesIds(validSponsorNesIds);
         }
         return sponsorOrganizations;
     }
 
-    private Set<Organization> getSponsorsWithExternalIds(Set<String> sponsorExternalIds) {
+    private Set<Organization> getSponsorsWithNesIds(Set<String> sponsorNesIds) {
         Set<Organization> sponsors = Sets.newTreeSet();
-        for (String sponsorExternalId : sponsorExternalIds) {
+        for (String sponsorNesId : sponsorNesIds) {
             try {
-                sponsors.add(organizationService.getByExternalId(sponsorExternalId));
-            } catch (InvalidatedOrganizationException e) {
-                LOG.warn("Sponsor with the external ID " + sponsorExternalId + " has been nullified.");
+                sponsors.add(organizationService.getByNesId(sponsorNesId));
+            } catch (UnavailableEntityException e) {
+                LOG.warn("Sponsor with the NES ID " + e.getEntityNesId() + " has been nullified.");
             }
         }
         return sponsors;
@@ -266,31 +267,30 @@ public class SponsorServiceBean implements SponsorService {
     @Override
     public Set<Organization> getSponsorsWithProtocolRegistrations() {
         if (sponsorsWithProtocolRegistrations == null) {
-            sponsorsWithProtocolRegistrations = getSponsorsWithExternalIds(sponsorWithProtocolRegistrationsExternalIds);
+            sponsorsWithProtocolRegistrations = getSponsorsWithNesIds(sponsorWithProtocolRegistrationsNesIds);
         }
         return sponsorsWithProtocolRegistrations;
     }
 
     @Override
-    public String getSponsorWithAnnualRegistrationsExternalId() {
-        return sponsorWithAnnualRegistrationsExternalId;
+    public String getSponsorWithAnnualRegistrationsNesId() {
+        return sponsorWithAnnualRegistrationsNesId;
     }
 
     @Override
     public Organization getSponsorOrganizationWithAnnualRegistrations() {
         if (sponsorWithAnnualRegistrations == null) {
-            sponsorWithAnnualRegistrations = retrieveSponsorOrganizationWithAnnualRegistrationsFromExternalService();
+            sponsorWithAnnualRegistrations = retrieveSponsorOrganizationWithAnnualRegistrationsFromNes();
         }
         return sponsorWithAnnualRegistrations;
     }
 
-    private Organization retrieveSponsorOrganizationWithAnnualRegistrationsFromExternalService() {
-        if (!StringUtils.isEmpty(sponsorWithAnnualRegistrationsExternalId)) {
+    private Organization retrieveSponsorOrganizationWithAnnualRegistrationsFromNes() {
+        if (!StringUtils.isEmpty(sponsorWithAnnualRegistrationsNesId)) {
             try {
-                return organizationService.getByExternalId(sponsorWithAnnualRegistrationsExternalId);
-            } catch (InvalidatedOrganizationException e) {
-                LOG.warn("Sponsor with the external ID " + sponsorWithAnnualRegistrationsExternalId
-                        + " has been nullified.");
+                return organizationService.getByNesId(sponsorWithAnnualRegistrationsNesId);
+            } catch (UnavailableEntityException e) {
+                LOG.warn("Sponsor with the NES ID " + e.getEntityNesId() + " has been nullified.");
             }
         }
         return null;
@@ -403,7 +403,7 @@ public class SponsorServiceBean implements SponsorService {
 
     @Override
     public String getSponsorEmailAddress(Organization sponsor) {
-        String emailAddress = sponsorEmailMappings.get(sponsor.getExternalId());
+        String emailAddress = sponsorEmailMappings.get(sponsor.getNesId());
         if (StringUtils.isNotBlank(emailAddress)) {
             return emailAddress;
         } else {

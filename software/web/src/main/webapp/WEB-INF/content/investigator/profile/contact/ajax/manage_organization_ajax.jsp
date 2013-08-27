@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/content/common/taglibs.jsp"%>
-<s:set var="externalId" value="profile.primaryOrganization.organization.externalId"/>
-<s:if test="%{#externalId == null || #externalId == ''}">
+<s:set var="nesId" value="profile.primaryOrganization.organization.nesId"/>
+<s:if test="%{#nesId == null || #nesId == ''}">
    <fmt:message var="title" key="investigator.profile.organization.create" />
 </s:if>
 <s:else>

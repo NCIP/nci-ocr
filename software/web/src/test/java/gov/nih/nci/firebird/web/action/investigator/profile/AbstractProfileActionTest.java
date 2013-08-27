@@ -90,7 +90,7 @@ import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.ManagedInvestigatorStatus;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
+import gov.nih.nci.firebird.service.investigatorprofile.ProfileNesRefreshService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
@@ -103,7 +103,7 @@ import org.junit.Test;
 
 public class AbstractProfileActionTest {
 
-    private ProfileRefreshService mockProfileRefreshService = mock(ProfileRefreshService.class);
+    private ProfileNesRefreshService mockProfileRefreshService = mock(ProfileNesRefreshService.class);
     private InvestigatorProfileService mockProfileService = mock(InvestigatorProfileService.class);
     @SuppressWarnings("serial")
     private AbstractProfileAction action = new AbstractProfileAction(mockProfileService) {};

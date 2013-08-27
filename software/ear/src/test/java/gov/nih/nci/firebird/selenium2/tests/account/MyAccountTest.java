@@ -177,17 +177,15 @@ public class MyAccountTest extends AbstractFirebirdWebDriverTest {
         addAllRolesToTestUser();
         MyAccountPage myAccountPage = navigateToMyAccountPage(dataSet.getSuperUserLogin());
 
-        testRemoval(myAccountPage, UserRoleType.SPONSOR);
-        testRemoval(myAccountPage, UserRoleType.SPONSOR_DELEGATE);
+        testRemoval(myAccountPage, dataSet.getSuperUser(), UserRoleType.SPONSOR);
+        testRemoval(myAccountPage, dataSet.getSuperUser(), UserRoleType.SPONSOR_DELEGATE);
         assertTrue(myAccountPage.isInvestigatorStatusPresent());
     }
 
     private void addAllRolesToTestUser() throws GridInvocationException {
         Set<String> groupNames = Sets.newHashSet(INVESTIGATOR.getVerifiedGroupName(),
                 REGISTRATION_COORDINATOR.getGroupName());
-        for (String sponsorId : getGridResources().getSponsorWithProtocolRegistrationsExternalIds()) {
-            groupNames.add(SPONSOR.getGroupName() + "_" + getNesIdExtension(sponsorId));
-            groupNames.add(SPONSOR_DELEGATE.getGroupName() + "_" + getNesIdExtension(sponsorId));
+        for (String sponsorId : getGridResources().getSponsorWithProtocolRegistrationsNesIds()) {
             groupNames.add(SPONSOR.getVerifiedGroupName() + "_" + getNesIdExtension(sponsorId));
             groupNames.add(SPONSOR_DELEGATE.getVerifiedGroupName() + "_" + getNesIdExtension(sponsorId));
         }
@@ -195,7 +193,7 @@ public class MyAccountTest extends AbstractFirebirdWebDriverTest {
                 groupNames.toArray(new String[groupNames.size()]));
     }
 
-    private void testRemoval(MyAccountPage myAccountPage, UserRoleType role)
+    private void testRemoval(MyAccountPage myAccountPage, FirebirdUser user, UserRoleType role)
             throws GridInvocationException {
         myAccountPage.getHelper().removeRole(role);
         assertFalse(myAccountPage.getHelper().getRoles().contains(role.getDisplay()));

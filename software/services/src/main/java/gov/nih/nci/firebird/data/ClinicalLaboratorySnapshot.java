@@ -86,8 +86,11 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
@@ -103,9 +106,26 @@ public class ClinicalLaboratorySnapshot extends AbstractOrganizationRoleSnapshot
 
     private static final long serialVersionUID = 1L;
 
-    private Map<LaboratoryCertificateType, LaboratoryCertificateSnapshot> certificateSnapshots =
+    private CapCertificateExemption capExemption;
+    private Map<LaboratoryCertificateType, LaboratoryCertificateSnapshot> certificateSnapshots = 
             new EnumMap<LaboratoryCertificateType, LaboratoryCertificateSnapshot>(LaboratoryCertificateType.class);
+    
+    /**
+     * @return cap exemption.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cap_exemption", length = CapCertificateExemption.MAX_LENGTH)
+    public CapCertificateExemption getCapExemption() {
+        return capExemption;
+    }
 
+    /**
+     * @param capExemption CAP exemption.
+     */
+    public void setCapExemption(CapCertificateExemption capExemption) {
+        this.capExemption = capExemption;
+    }
+    
     /**
      * @return the certificate snapshots
      */

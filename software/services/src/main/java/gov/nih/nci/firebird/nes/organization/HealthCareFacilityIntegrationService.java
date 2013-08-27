@@ -107,13 +107,21 @@ public interface HealthCareFacilityIntegrationService extends BaseOrganizationIn
     List<Organization> searchByName(String searchName);
 
     /**
-     * Returns the HealthCareFacilities (if any) matching the assigned identifier provided. This is used to locate
+     * Returns a list of HealthCareFacilities matching the assigned identifier provided. This is used to locate
      * organizations with additional externally assigned identifiers (e.g. CTEP codes). Note that only the extension is
      * required and not the identifier root.
      *
      * @param extension the identifier extension to search for.
-     * @return the matching organizations.
+     * @return any matching organizations.
      */
     List<Organization> searchByAssignedIdentifier(String extension);
+
+    /**
+     * Search for HealthCareFacilities by player NES ID.
+     *
+     * @param playerNesId player NES ID
+     * @return any matching organizations
+     */
+    List<Organization> getByIdentifiedOrganizationPlayerId(String playerNesId);
 
 }

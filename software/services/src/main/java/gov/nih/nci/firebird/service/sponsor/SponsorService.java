@@ -173,8 +173,8 @@ public interface SponsorService {
     Organization getSponsorOrganizationWithAnnualRegistrations();
 
     /**
-     * @return the sponsor organization's external ID which has annual registrations if one exists, otherwise null
+     * @return the sponsor organization's NES ID which has annual registrations if one exists, otherwise null
      */
-    String getSponsorWithAnnualRegistrationsExternalId();
+    String getSponsorWithAnnualRegistrationsNesId();
 
 }

@@ -96,7 +96,7 @@ import static org.junit.Assert.assertFalse;
 
 public abstract class AbstractDialog<T extends AbstractLoadableComponent<T>> extends AbstractLoadableComponent<T> {
 
-    private static final String CLOSE_DIALOG_BUTTON_CSS = "button:not([style*='display: none']).ui-dialog-titlebar-close";
+    private static final String CLOSE_DIALOG_BUTTON_CSS = "a:not([style*='display: none']).ui-dialog-titlebar-close";
     public static final String CONTENT_DIALOG_CSS = ".ui-dialog-content:not(#timeoutDialog)";
 
     private static final int NO_PAUSE_MILLISECONDS = 0;

@@ -95,7 +95,6 @@ import gov.nih.nci.firebird.data.user.InvestigatorStatus;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.BrowseAnnualRegistrationsPage;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.WithdrawSubmissionDialog;
-import gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact.ProfessionalContactInformationTab;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ConfirmWithdrawalRequestDenialDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.RegistrationWithdrawalRequestDialog;
@@ -132,7 +131,7 @@ public class WithdrawFromRegistrationsTest extends AbstractFirebirdWebDriverTest
         InvestigatorProfile profile = builder.createProfile().complete().get();
         FirebirdUser investigator = builder.createInvestigator(profile).asCtepUser().get();
         approvedRegistration = builder.createAnnualRegistration(investigator).withStatus(RegistrationStatus.APPROVED).complete().get();
-        submittedRegistration = builder.createAnnualRegistration(investigator).renewalOf(approvedRegistration).withStatus(RegistrationStatus.SUBMITTED).complete().get();
+        submittedRegistration = builder.createAnnualRegistration(investigator).withStatus(RegistrationStatus.SUBMITTED).complete().get();
         builder.createCoordinator().asCtepUser().withApprovedMangedInvestigator(investigator);
         builder.createSponsor().asCtepUser();
         dataSet = builder.build();
@@ -284,8 +283,6 @@ public class WithdrawFromRegistrationsTest extends AbstractFirebirdWebDriverTest
         registrationsPage.clickReactivate();
         assertFalse(registrationsPage.hasReactivateButton());
         checkReactivationRegistrationCreated(registrationsPage);
-        ProfessionalContactInformationTab contactInformationTab = registrationsPage.getInvestigatorMenu().clickProfile();
-        assertEquals(InvestigatorStatus.ACTIVE.getDisplay(), contactInformationTab.getInvestigatorStatus());
     }
 
     private void checkReactivationRegistrationCreated(BrowseAnnualRegistrationsPage registrationsPage) {

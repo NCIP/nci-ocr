@@ -206,7 +206,6 @@ public class ReviewRegistrationAjaxActionTest extends AbstractWebTest {
         InvestigatorRegistration registration = setUpRegistration(RegistrationStatus.SUBMITTED, FormStatus.REJECTED);
         action.prepare();
         assertEquals(RegistrationStatus.IN_REVIEW, registration.getStatus());
-        verify(mockRegistrationService).save(registration);
     }
 
     private InvestigatorRegistration setUpRegistration(RegistrationStatus regsitrationStatus, FormStatus formStatus) {
@@ -226,7 +225,6 @@ public class ReviewRegistrationAjaxActionTest extends AbstractWebTest {
         InvestigatorRegistration registration = setUpRegistration(RegistrationStatus.RETURNED, FormStatus.REJECTED);
         action.prepare();
         assertEquals(RegistrationStatus.RETURNED, registration.getStatus());
-        verify(mockRegistrationService, never()).save(registration);
     }
 
     @Test
@@ -234,6 +232,5 @@ public class ReviewRegistrationAjaxActionTest extends AbstractWebTest {
         InvestigatorRegistration registration = setUpRegistration(RegistrationStatus.SUBMITTED, FormStatus.REVISED);
         action.prepare();
         assertEquals(RegistrationStatus.SUBMITTED, registration.getStatus());
-        verify(mockRegistrationService, never()).save(registration);
     }
 }

@@ -104,9 +104,9 @@ import com.google.common.collect.Sets;
  */
 @Entity(name = "submitted_form_1572_data")
 public class SubmittedForm1572Data implements PersistentObject {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private Long id;
     private PersonSnapshot personSnapshot;
     private OrganizationSnapshot primaryOrganizationSnapshot;
@@ -138,14 +138,14 @@ public class SubmittedForm1572Data implements PersistentObject {
     public PersonSnapshot getPersonSnapshot() {
         return personSnapshot;
     }
-
+    
     /**
      * @param personSnapshot the personSnapshot to set
      */
     public void setPersonSnapshot(PersonSnapshot personSnapshot) {
         this.personSnapshot = personSnapshot;
     }
-
+    
     /**
      * @return the primaryOrganizationSnapshot
      */
@@ -156,14 +156,14 @@ public class SubmittedForm1572Data implements PersistentObject {
     public OrganizationSnapshot getPrimaryOrganizationSnapshot() {
         return primaryOrganizationSnapshot;
     }
-
+    
     /**
      * @param primaryOrganizationSnapshot the primaryOrganizationSnapshot to set
      */
     public void setPrimaryOrganizationSnapshot(OrganizationSnapshot primaryOrganizationSnapshot) {
         this.primaryOrganizationSnapshot = primaryOrganizationSnapshot;
     }
-
+    
     /**
      * @return the practiceSiteSnapshots
      */
@@ -172,17 +172,17 @@ public class SubmittedForm1572Data implements PersistentObject {
     @JoinTable(name = "submitted_form_1572_practice_site_snapshots",
         joinColumns = @JoinColumn(name = "submitted_form_1572_data_id"),
         inverseJoinColumns = @JoinColumn(name = "practice_site_snapshot_id"))
-    @ForeignKey(name = "submitted_form_1572_practice_site_snapshot_form_data_fkey",
+    @ForeignKey(name = "submitted_form_1572_practice_site_snapshot_form_data_fkey", 
         inverseName = "submitted_form_1572_practice_site_snapshot_snapshot_fkey")
     public Set<PracticeSiteSnapshot> getPracticeSiteSnapshots() {
         return practiceSiteSnapshots;
     }
-
+    
     @SuppressWarnings("unused") // required for Hibernate
     private void setPracticeSiteSnapshots(Set<PracticeSiteSnapshot> practiceSiteSnapshots) {
         this.practiceSiteSnapshots = practiceSiteSnapshots;
     }
-
+    
     /**
      * @return the labSnapshots
      */
@@ -191,17 +191,17 @@ public class SubmittedForm1572Data implements PersistentObject {
     @JoinTable(name = "submitted_form_1572_lab_snapshots",
         joinColumns = @JoinColumn(name = "submitted_form_1572_data_id"),
         inverseJoinColumns = @JoinColumn(name = "lab_snapshot_id"))
-    @ForeignKey(name = "submitted_form_1572_lab_snapshot_form_data_fkey",
+    @ForeignKey(name = "submitted_form_1572_lab_snapshot_form_data_fkey", 
         inverseName = "submitted_form_1572_lab_snapshot_snapshot_fkey")
     public Set<ClinicalLaboratorySnapshot> getLabSnapshots() {
         return labSnapshots;
     }
-
+    
     @SuppressWarnings("unused") // required for Hibernate
     private void setLabSnapshots(Set<ClinicalLaboratorySnapshot> labSnapshots) {
         this.labSnapshots = labSnapshots;
     }
-
+    
     /**
      * @return the irbSnapshots
      */
@@ -210,12 +210,12 @@ public class SubmittedForm1572Data implements PersistentObject {
     @JoinTable(name = "submitted_form_1572_irb_snapshots",
         joinColumns = @JoinColumn(name = "submitted_form_1572_data_id"),
         inverseJoinColumns = @JoinColumn(name = "irb_snapshot_id"))
-    @ForeignKey(name = "submitted_form_1572_irb_snapshot_form_data_fkey",
+    @ForeignKey(name = "submitted_form_1572_irb_snapshot_form_data_fkey", 
         inverseName = "submitted_form_1572_irb_snapshot_snapshot_fkey")
     public Set<InstitutionalReviewBoardSnapshot> getIrbSnapshots() {
         return irbSnapshots;
     }
-
+    
     @SuppressWarnings("unused") // required for Hibernate
     private void setIrbSnapshots(Set<InstitutionalReviewBoardSnapshot> irbSnapshots) {
         this.irbSnapshots = irbSnapshots;

@@ -4,11 +4,11 @@ import static org.junit.Assert.*;
 
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
 import gov.nih.nci.firebird.commons.selenium2.util.FileDownloadUtils;
+import gov.nih.nci.firebird.commons.selenium2.util.FileDownloadUtils.FileDownloadResponse;
 import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.selenium2.pages.components.CredentialsCvIdfDisplayComponent;
 import gov.nih.nci.firebird.selenium2.pages.components.PersonCvIdfDisplayComponent;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.openqa.selenium.By;
@@ -93,8 +93,8 @@ public class SupplementalInvestigatorDataFormTab extends
         return primaryOrgPhoneContent.getText();
     }
 
-    public File clickViewPdfButton() throws IOException {
-        return FileDownloadUtils.clickDownloadLink(getDriver(), viewPdfButton).getFile();
+    public FileDownloadResponse clickViewPdfButton() throws IOException {
+        return FileDownloadUtils.clickDownloadLink(getDriver(), viewPdfButton);
     }
 
     PersonCvIdfDisplayComponent getPersonDisplayComponent() {

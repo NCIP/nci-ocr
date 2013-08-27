@@ -164,8 +164,6 @@ DIV#EULA
 { display: inline-block; }
 .vertical-align-super
 { vertical-align: super; }
-.vertical-align-middle
-{ vertical-align: middle; }
 .bold
 { font-weight:bold; }
 .marginRight_5
@@ -181,15 +179,14 @@ DIV#EULA
 pre.notificationText
 { white-space: pre-line; }
 .centeredText
-{ text-align: center; height: auto; }
+{ text-align: center; }
 
 /* Primary Navigation */
 
 UL#nav
 { list-style-type:none; padding:15px 0 0 18px; float:left; width:auto; }
 UL#nav LI
-{ float:left; white-space:nowrap; z-index: 1 }
-
+{ float:left; white-space:nowrap; }
 UL#nav LI A
 { display:block; font-weight:bold; font-size:13.3px; color:#111111; padding:5px 9px 5px 9px; text-decoration:none; text-shadow: 1px 1px 0 #eee; }
 UL#nav LI A:hover
@@ -323,7 +320,7 @@ ul.sf-menu li ul
 .ico_btn
 { display:block; float:right; margin-right:5px; margin-top:5px; }
 .btn_upload
-{ float:left; margin-top: 3.5em; }
+{ float:left; margin-top: 3.5em; padding-left:1em; }
 SPAN.search_again
 { float:right; padding-top: .5em; }
 
@@ -759,7 +756,7 @@ div.richText
 { display:inline; }
 #comments
 {min-height: 300px;}
-.registrationHeader { width: 770px; }
+.registrationHeader { width: 850px; }
 .registrationFormsTable { white-space: nowrap; }
 
 /*Privacy Statement*/
@@ -784,10 +781,7 @@ p.privacy
 { border: 2px solid #f1f1f1; -moz-border-radius:6px; -webkit-border-radius:6px; margin-top: 10px; }
 
 .accordionHeader
-{ background: #f1f1f1; border: 2px solid #f1f1f1; -moz-border-radius:4px; -webkit-border-radius:4px; *display:inline; *padding-right:35px; display:block; }
-
-#revisedRegistrations .accordionHeader
-{ background: white; padding-top: 5px; padding-bottom: 5px;}
+{ background: #f1f1f1; border: 2px solid #f1f1f1; -moz-border-radius:4px; -webkit-border-radius:4px; height: 35px; *display:inline; *padding-right:35px;}
 
 .accordionToggle
 { -webkit-transform: scale(1.7); -moz-transform: scale(1.7); vertical-align: middle; *margin-right: 0px !important }
@@ -796,35 +790,12 @@ p.privacy
     display: inline-block;
     zoom: 1;
     *display:inline;
-    text-align: center;
-    vertical-align: middle;
-}
-
-#annualRegistrationsAccordionTable .accordionHeader > div {
     width: 18%;
-}
-
-#registrationsAccordionTable .accordionHeader > div {
-    width: 15%;
-}
-
-.registrationsTableHeader
-{ margin-left: 59px; }
-
-.registrationsTableHeader > div {
-    /* display: inline-block;
-    display: -moz-inline-box;
-    *display: inline; For IE7 */
-    display: inline-block;
-    zoom: 1;
-    *display:inline;
-    width: 16%;
     text-align: center;
     vertical-align: middle;
-    font-weight: bold;
 }
 
-.registrationsTableHeader
+.annualRegistrationsTableHeader
 { margin-left: 59px; }
 
 .annualRegistrationsTableHeader > div {
@@ -885,8 +856,7 @@ ul.registrationStatus li span
 }
 
 .annualRegistrationFormsTable .formDescription {
-  width: 265px;
-  height: 32px;
+  font-weight: bold;
 }
 
 .reviewAnnualRegistrationBackButton {
@@ -950,9 +920,6 @@ ul.registrationStatus li span
 #reviewRegistrationFormsTable .form .leftSection .downloadButtonContainer
 { height: 31px; }
 
-.form .additionalAttachmentsCount
-{ width: 63px; }
-
 #reviewRegistrationFormsTable .formStatus_ACCEPTED {
   background: #E8FFED;
 }
@@ -973,15 +940,6 @@ ul.registrationStatus li span
   margin-bottom: 5px;
   margin-top: 5px;
 }
-
-#reviewRegistrationFormsTable #formDescription
-{ width: 350px; }
-
-#reviewRegistrationFormsTable #formDescriptionAndStatus
-{ height:58px; position:relative; float: left; margin-left: 5px }
-
-#reviewRegistrationFormsTable .formStatus
-{ position: absolute; bottom: 2px; width: 150px; }
 
 .completeReviewButton {
   float: right;
@@ -1069,7 +1027,7 @@ ul.registrationStatus li span
 /*
  * Dialog
  */
-.ui-dialog { position: absolute; padding: .2em; width: 300px; overflow: hidden; z-index: 2; }
+.ui-dialog { position: absolute; padding: .2em; width: 300px; overflow: hidden; }
 .ui-dialog .ui-dialog-titlebar { padding: .5em 1em .3em; position: relative;  }
 .ui-dialog .ui-dialog-title { float: left; margin: .1em 16px .2em 0; }
 .ui-dialog .ui-dialog-titlebar-close { position: absolute; right: .3em; top: 50%; width: 19px; margin: -10px 0 0 0; padding: 1px; height: 18px; }
@@ -1254,7 +1212,7 @@ TR.jqgfirstrow, TR.jqgfirstrow TD
   -webkit-border-radius:10px;
   height: 18px;
   float: left;
-  width: 649px;
+  width: 650px;
 }
 
 .progressBar .ui-progressbar-value {
@@ -1308,32 +1266,10 @@ div.section_title
 div.section_wrapper_bg p
 { margin-left:3em; padding-bottom:2px; }
 
-.ui-accordion H3 A {
-  margin-top: 7px;
-  margin-bottom: 7px;
-  background: #96c7eb url("../images/bg_tabs.gif") repeat-x 0 -10px
-    !important;
-  text-decoration: none;
-  font-size: 15px !important;
-  color: #0C5387 !important;
-  text-shadow: none;
-}
-
-/* .ui-accordion H3 A {
-text-decoration: none;
-font-size: 15px !important;
-border: none !important;
-margin-left: 0 !important;
-padding: 3px 5px 2px 0px !important;
-}
-
-.ui-accordion H3 A:hover {
-  background: none !important;
-} */
-
-.ui-accordion H3.ui-state-active A {
-  font-weight: normal !important;
-}
+.ui-accordion H3 A
+{ margin-top:7px; margin-bottom:7px; background:#96c7eb url("../images/bg_tabs.gif") repeat-x 0 -10px !important; text-decoration: none; font-size: 15px !important; color: #0C5387 !important; text-shadow: none;}
+.ui-accordion H3.ui-state-active A
+{ font-weight: normal !important; }
 
 /* Accordion Form Styles */
 .search_section
@@ -1355,24 +1291,3 @@ li.ui-state-active a {
 }
 
 .cke_contents { height: 200px !important }
-
-/* Start - Dialog X button */
-.ui-button-icon-primary.ui-icon.ui-icon-closethick {
-  left: -1px;
-  top: 0px;
-}
-
-.ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-icon-only.ui-dialog-titlebar-close {
-  background: none;
-  border: none;
-}
-/* End - Dialog X button */
-
-#shippingDesigneeAccordion table {
-  width: 100% !important;
-}
-
-/* Make the dialog's modal mask cover entire page */
-.ui-widget-overlay {
-  position: fixed;
-}

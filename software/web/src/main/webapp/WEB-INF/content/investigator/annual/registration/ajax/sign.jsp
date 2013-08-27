@@ -33,8 +33,6 @@ function createTokenInput() {
   $("#additionalEmailAddresses").tokenInput(null, {
         preventDuplicates: true,
         allowFreeTagging: true,
-        hintText: null,
-        searchingText: null,
         onAdd: function (item) {
           var email = item.name;
           if (!isValidEmail(email)) {

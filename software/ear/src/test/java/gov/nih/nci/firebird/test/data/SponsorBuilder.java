@@ -111,7 +111,7 @@ public class SponsorBuilder extends AbstractFirebirdUserBuilder<SponsorBuilder> 
 
     public SponsorBuilder forSponsors(Organization... sponsorOrganizations) {
         for (final Organization sponsorOrg : sponsorOrganizations) {
-            this.sponsorOrganizations.add(retrieveSponsorOrganization(sponsorOrg.getExternalId()));
+            this.sponsorOrganizations.add(retrieveSponsorOrganization(sponsorOrg.getNesId()));
         }
         return this;
     }

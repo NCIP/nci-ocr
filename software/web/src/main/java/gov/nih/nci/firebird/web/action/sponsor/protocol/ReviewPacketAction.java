@@ -151,8 +151,6 @@ public class ReviewPacketAction extends AbstractProtocolRegistrationAction {
      * @param registration registration
      * @return tab name
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public String getTabName(AbstractProtocolRegistration registration) {
         Person person = registration.getProfile().getPerson();
         StringBuilder name = new StringBuilder();

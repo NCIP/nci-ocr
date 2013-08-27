@@ -95,7 +95,6 @@ import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.common.RichTextUtil;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.data.user.InvestigatorRole;
 import gov.nih.nci.firebird.data.user.InvestigatorStatus;
 import gov.nih.nci.firebird.data.user.InvestigatorWithdrawalRequest;
 import gov.nih.nci.firebird.service.ctep.esys.EsysIntegrationService;
@@ -111,7 +110,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -243,19 +241,15 @@ public class RegistrationWithdrawalServiceBean implements RegistrationWithdrawal
     @Override
     public void reactivateInvestigator(FirebirdUser investigator) {
         checkArgument(investigator.isInvestigator(), "Passed in user to reactivate is not an investigator");
-        InvestigatorRole investigatorRole = investigator.getInvestigatorRole();
-        annualRegistrationService.createReactivatedRegistration(investigatorRole.getProfile());
-        investigatorRole.setStatus(InvestigatorStatus.ACTIVE);
-        //remove the withdrawal request now its being reactivated
-        investigatorRole.setWithdrawalRequest(null);
+        annualRegistrationService.createReactivatedRegistration(investigator.getInvestigatorRole().getProfile());
     }
 
-    @Resource(mappedName = "firebird/FirebirdUserServiceBean/local")
+    @Inject
     void setUserService(FirebirdUserService userService) {
         this.userService = userService;
     }
 
-    @Resource(mappedName = "firebird/SponsorServiceBean/local")
+    @Inject
     void setSponsorService(SponsorService sponsorService) {
         this.sponsorService = sponsorService;
     }
@@ -270,12 +264,12 @@ public class RegistrationWithdrawalServiceBean implements RegistrationWithdrawal
         this.templateService = templateService;
     }
 
-    @Resource(mappedName = "firebird/EsysIntegrationServiceBean/local")
+    @Inject
     void setEsysIntegrationService(EsysIntegrationService esysIntegrationService) {
         this.esysIntegrationService = esysIntegrationService;
     }
 
-    @Resource(mappedName = "firebird/AnnualRegistrationServiceBean/local")
+    @Inject
     void setAnnualRegistrationService(AnnualRegistrationService annualRegistrationService) {
         this.annualRegistrationService = annualRegistrationService;
     }

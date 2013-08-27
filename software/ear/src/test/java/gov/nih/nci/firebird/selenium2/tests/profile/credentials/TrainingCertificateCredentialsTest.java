@@ -114,7 +114,7 @@ public class TrainingCertificateCredentialsTest extends AbstractCredentialsTabTe
 
     @Inject
     @Named("nih.oer.organization.nes.id")
-    String nihOerOrganizationExternalId;
+    String nihOerOrganizationNesId;
     private Organization nihOerIssuer;
     @Inject
     OrganizationEntityIntegrationService organizationService;
@@ -128,7 +128,7 @@ public class TrainingCertificateCredentialsTest extends AbstractCredentialsTabTe
         super.setUp();
         trainingCertificateSection = goToCredentialsTab().getTrainingSection();
         certificateFile = TestFileUtils.createTemporaryFile();
-        nihOerIssuer = organizationService.getById(nihOerOrganizationExternalId);
+        nihOerIssuer = organizationService.getById(nihOerOrganizationNesId);
         certificateWithNihOerIssuer = createTestCertificate(nihOerIssuer);
         certificateWithNihOerIssuer.setEffectiveDate(DateUtils.addMonths(certificateWithNihOerIssuer.getExpirationDate(), -2));
         certificateWithExistingIssuer = createTestCertificate(getExistingIssuer());

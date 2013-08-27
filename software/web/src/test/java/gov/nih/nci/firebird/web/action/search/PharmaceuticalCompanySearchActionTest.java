@@ -82,28 +82,86 @@
  */
 package gov.nih.nci.firebird.web.action.search;
 
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchResult;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
+import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.opensymphony.xwork2.ActionSupport;
 
 public class PharmaceuticalCompanySearchActionTest extends AbstractWebTest {
 
-    @Inject
-    private PharmaceuticalCompanySearchAction action;
+    private static final String PHARMACEUTICAL_ID = "pharmaceuticalId";
 
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockService;
+    @Inject
+    private PharmaceuticalCompanySearchAction action;
+    private Organization pharmaceuticalCompany = OrganizationFactory.getInstance().create();
+    private OrganizationSearchResult expectedResult = new OrganizationSearchResult(PHARMACEUTICAL_ID,
+            pharmaceuticalCompany);
+
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+        action.setOrganizationSearchService(mockService);
+        when(mockService.searchForResearchOrganizations(anyString(), eq(ResearchOrganizationType.DRUG_COMPANY)))
+                .thenReturn(Lists.newArrayList(expectedResult));
+    }
+
+    @Test
+    public void testSearchPharmaceuticalCompanies_NullTerm() {
+        action.setTerm(null);
+        assertEquals(ActionSupport.SUCCESS, action.searchPharmaceuticalCompanies());
+        assertEquals(0, action.getResults().size());
+        verify(mockService, never()).search(anyString());
+    }
+
+    @Test
+    public void testSearchPharmaceuticalCompanies_EmptyTerm() {
+        action.setTerm("");
+        assertEquals(ActionSupport.SUCCESS, action.searchPharmaceuticalCompanies());
+        assertEquals(0, action.getResults().size());
+        verify(mockService, never()).search(anyString());
+    }
+
+    @Test
+    public void testSearchPharmaceuticalCompanies_ShortTerm() {
+        action.setTerm("ab");
+        assertEquals(ActionSupport.SUCCESS, action.searchPharmaceuticalCompanies());
+        assertEquals(0, action.getResults().size());
+        verify(mockService, never()).search(anyString());
+    }
 
     @Test
     public void testSearchPharmaceuticalCompanies() {
-        action.setTerm("term");
+        String searchTerm = "abc";
+        action.setTerm(searchTerm);
+        assertEquals(ActionSupport.SUCCESS, action.searchPharmaceuticalCompanies());
+        assertEquals(1, action.getResults().size());
+        verify(mockService).searchForResearchOrganizations(searchTerm, ResearchOrganizationType.DRUG_COMPANY);
+
+        OrganizationSearchResult result = action.getResults().get(0);
+        assertEquals(PHARMACEUTICAL_ID, result.getKey());
+        assertEquals(pharmaceuticalCompany, result.getOrganization());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testSearchPharmaceuticalCompanies_Failure() {
+        when(mockService.searchForResearchOrganizations(anyString(), eq(ResearchOrganizationType.DRUG_COMPANY)))
+                .thenThrow(new IllegalStateException());
+        action.setTerm("Organization Name");
         action.searchPharmaceuticalCompanies();
-        verify(mockOrganizationService).search(action.getTerm(), OrganizationRoleType.PHARMACEUTICAL_COMPANY);
     }
 
 }

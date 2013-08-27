@@ -104,12 +104,10 @@ public class CertificationType extends AbstractListItem implements RankableListI
 
     /**
      * minimal ctor.
-     *
+     * 
      * @param name name
      * @param expires expires
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public CertificationType(String name, Boolean expires) {
         super(name);
         this.expires = expires;

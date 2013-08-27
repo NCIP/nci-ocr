@@ -90,16 +90,15 @@ import java.util.ResourceBundle;
 /**
  * Form 1572 Validator.
  */
-abstract class AbstractForm1572Validator {
+public abstract class AbstractForm1572Validator {
 
     private final Form1572 form;
 
     /**
      * Constructor.
-     *
      * @param form Form 1572
      */
-    AbstractForm1572Validator(Form1572 form) {
+    public AbstractForm1572Validator(Form1572 form) {
         this.form = form;
     }
 
@@ -125,8 +124,8 @@ abstract class AbstractForm1572Validator {
                     "validation.failure.missing.institutional.review.board"));
         }
         if (form.getLabs().isEmpty()) {
-            result.addFailure(form.createValidationFailure(resources,
-                    "validation.failure.missing.clinical.laboratory"));
+            result.addFailure(
+                    form.createValidationFailure(resources, "validation.failure.missing.clinical.laboratory"));
         }
         if (form.getPracticeSites().isEmpty()) {
             result.addFailure(form.createValidationFailure(resources, "validation.failure.missing.practice.site"));
@@ -135,52 +134,35 @@ abstract class AbstractForm1572Validator {
 
     /**
      * Concrete class need to implement this method.
-     *
-     * @param result ValidationResult
+     * @param result  ValidationResult
      * @param resources ResourceBundle
      */
     protected abstract void checkClinicalLabCertificatesPresent(ValidationResult result, ResourceBundle resources);
 
+
     private void checkIRBCurationStatus(ValidationResult result, ResourceBundle resources) {
         for (Organization irb : form.getIrbs()) {
-            validateCurationStatus((InstitutionalReviewBoard) irb.getRole(OrganizationRoleType.IRB), result, resources);
-        }
-    }
-
-    /**
-     * Used to ascertain whether the role provided is valid and active or not.
-     *
-     * @param role The Role to validate.
-     * @param result the Validation result.
-     * @param resources the Resources to obtain error messages from.
-     */
-    void validateCurationStatus(AbstractOrganizationRole role, ValidationResult result,
-            ResourceBundle resources) {
-        if (form.requiresActiveCurationStatus() && !CurationStatus.ACTIVE.equals(role.getCurationStatus())) {
-            result.addFailure(form.createValidationFailure(resources, "validation.failure.uncurated", role
-                    .getOrganization().getName() + " role as " + role.getRoleType().getDisplay(), form.getFormType()
-                    .getName(), role.getCurationStatus().getDisplay()));
-            form.getInvalidEntityIds().add(role.getOrganization().getId());
+            form.validateCurationStatus((InstitutionalReviewBoard) irb.getRole(OrganizationRoleType.IRB), result,
+                    resources);
         }
     }
 
     private void checkLabCurationStatus(ValidationResult result, ResourceBundle resources) {
         for (Organization labOrg : form.getLabs()) {
-            validateCurationStatus((ClinicalLaboratory) labOrg.getRole(OrganizationRoleType.CLINICAL_LABORATORY),
+            form.validateCurationStatus((ClinicalLaboratory) labOrg.getRole(OrganizationRoleType.CLINICAL_LABORATORY),
                     result, resources);
         }
     }
 
     private void checkPracticeSiteCurationStatus(ValidationResult result, ResourceBundle resources) {
         for (Organization practiceSite : form.getPracticeSites()) {
-            validateCurationStatus((PracticeSite) practiceSite.getRole(OrganizationRoleType.PRACTICE_SITE), result,
-                    resources);
+            form.validateCurationStatus((PracticeSite) practiceSite.getRole(OrganizationRoleType.PRACTICE_SITE),
+                    result, resources);
         }
     }
 
     /**
      * Getter for Form 1572.
-     *
      * @return Form1572
      */
     public Form1572 getForm() {

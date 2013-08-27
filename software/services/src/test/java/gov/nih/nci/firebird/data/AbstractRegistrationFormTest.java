@@ -90,7 +90,6 @@ import gov.nih.nci.firebird.common.ValidationFailure;
 import gov.nih.nci.firebird.common.ValidationResult;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.nes.person.NesPersonData;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
@@ -230,13 +229,13 @@ public class AbstractRegistrationFormTest {
     public void testValidate() throws Exception {
         ValidationResult result = new ValidationResult();
         final Person uncuratedPerson = PersonFactory.getInstanceWithId().create();
-        uncuratedPerson.setCurationStatus(CurationStatus.PENDING);
+        uncuratedPerson.setNesStatus(CurationStatus.PENDING);
         final Person curatedPerson = PersonFactory.getInstanceWithId().create();
 
         final Organization uncuratedOrg = OrganizationFactory.getInstanceWithId().create();
-        uncuratedOrg.setCurationStatus(CurationStatus.UNSAVED);
+        uncuratedOrg.setNesStatus(CurationStatus.PRE_NES_VALIDATION);
         final Organization curatedOrg = OrganizationFactory.getInstanceWithId().create();
-        curatedOrg.setCurationStatus(CurationStatus.ACTIVE);
+        curatedOrg.setNesStatus(CurationStatus.ACTIVE);
 
         AbstractRegistrationForm form = new TestForm() {
             @Override
@@ -261,20 +260,60 @@ public class AbstractRegistrationFormTest {
         hasError(
                 result,
                 getErrorMessage("validation.failure.uncurated", uncuratedPerson.getDisplayName(), form.getFormType()
-                        .getName(), uncuratedPerson.getCurationStatus().name()));
+                        .getName(), uncuratedPerson.getNesStatus().name()));
         hasError(
                 result,
                 getErrorMessage("validation.failure.uncurated", uncuratedOrg.getName(), form.getFormType().getName(),
-                        uncuratedOrg.getCurationStatus().name()));
+                        uncuratedOrg.getNesStatus().name()));
         assertEquals(2, form.getInvalidEntityIds().size());
         assertTrue(form.getInvalidEntityIds().contains(uncuratedPerson.getId()));
         assertTrue(form.getInvalidEntityIds().contains(uncuratedOrg.getId()));
     }
 
     @Test
+    public void testValidateCurationStatus_OrgRole() throws Exception {
+        ValidationResult result = new ValidationResult();
+        final InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
+
+        final Organization practiceSite = OrganizationFactory.getInstance().create();
+        final Organization lab = OrganizationFactory.getInstance().create();
+        final OrganizationAssociation uncuratedAssoc = profile.addOrganizationAssociation(practiceSite,
+                OrganizationRoleType.PRACTICE_SITE);
+        final OrganizationAssociation curatedAssoc = profile.addOrganizationAssociation(lab,
+                OrganizationRoleType.CLINICAL_LABORATORY);
+        practiceSite.setNesStatus(CurationStatus.PENDING);
+
+        AbstractRegistrationForm form = new TestForm() {
+            @Override
+            public Set<Organization> getOrganizations() {
+                return Sets.newHashSet(practiceSite, lab);
+            }
+        };
+
+        result = new ValidationResult();
+        System.setProperty("registration.validation.require.nes.status.active", "false");
+        form.validateCurationStatus(uncuratedAssoc.getOrganizationRole(), result, getResources());
+        assertTrue(result.isValid());
+        System.setProperty("registration.validation.require.nes.status.active", "true");
+
+        form.validateCurationStatus(uncuratedAssoc.getOrganizationRole(), result, resources);
+        assertEquals(1, result.getFailures().size());
+        hasError(
+                result,
+                getErrorMessage("validation.failure.uncurated", practiceSite.getName() + " role as "
+                        + uncuratedAssoc.getType().getDisplay(), form.getFormType().getName(), uncuratedAssoc
+                        .getOrganizationRole().getNesStatus().name()));
+        assertEquals(1, form.getInvalidEntityIds().size());
+        assertTrue(form.getInvalidEntityIds().contains(uncuratedAssoc.getOrganizationRole().getOrganization().getId()));
+        result = new ValidationResult();
+        form.validateCurationStatus(curatedAssoc.getOrganizationRole(), result, resources);
+        assertEquals(0, result.getFailures().size());
+    }
+
+    @Test
     public void testValidate_NullifiedOrganization() {
         final Organization organization = OrganizationFactory.getInstanceWithId().create();
-        organization.setCurationStatus(CurationStatus.NULLIFIED);
+        organization.setNesStatus(CurationStatus.NULLIFIED);
         AbstractRegistrationForm form = new TestForm() {
             @Override
             public Set<Organization> getOrganizations() {
@@ -292,7 +331,7 @@ public class AbstractRegistrationFormTest {
     @Test
     public void testValidate_NullifiedPerson() {
         final Person person = PersonFactory.getInstanceWithId().create();
-        person.setCurationStatus(CurationStatus.NULLIFIED);
+        person.setNesStatus(CurationStatus.NULLIFIED);
         AbstractRegistrationForm form = new TestForm() {
             @Override
             public Set<Person> getPersons() {
@@ -310,8 +349,8 @@ public class AbstractRegistrationFormTest {
     @Test
     public void testValidate_PersonPendingUpdates() {
         final Person person = PersonFactory.getInstanceWithId().create();
-        person.setCurationStatus(CurationStatus.ACTIVE);
-        ((NesPersonData) person.getExternalData()).requestUpdate();
+        person.setNesStatus(CurationStatus.ACTIVE);
+        person.requestUpdate();
         AbstractRegistrationForm form = new TestForm() {
             @Override
             public Set<Person> getPersons() {
@@ -557,39 +596,4 @@ public class AbstractRegistrationFormTest {
             assertEquals(expected, form.isReviewed());
         }
     }
-
-    @Test
-    public void testIsCommentsLinkToInvestigatorToBeDisplayed_NoComments() throws Exception {
-        assertFalse(form.isCommentsLinkToInvestigatorToBeDisplayed());
-    }
-
-    @Test
-    public void testIsCommentsLinkToInvestigatorToBeDisplayed_Accepted() throws Exception {
-        form.setComments("comments");
-        form.setFormStatus(FormStatus.ACCEPTED);
-        assertFalse(form.isCommentsLinkToInvestigatorToBeDisplayed());
-    }
-
-    @Test
-    public void testIsCommentsLinkToInvestigatorToBeDisplayed_InReview() throws Exception {
-        form.setComments("comments");
-        form.setFormStatus(FormStatus.IN_REVIEW);
-        assertFalse(form.isCommentsLinkToInvestigatorToBeDisplayed());
-    }
-
-    @Test
-    public void testIsCommentsLinkToInvestigatorToBeDisplayed_True() throws Exception {
-        form.setComments("comments");
-        assertTrue(form.isCommentsLinkToInvestigatorToBeDisplayed());
-    }
-
-    @Test
-    public void testIsCollectionOfDocuments() throws Exception {
-        for (FormTypeEnum formType : FormTypeEnum.values()) {
-            form.getFormType().setFormTypeEnum(formType);
-            boolean expected = AbstractRegistrationForm.FORMS_WITH_COLLECTION_OF_DOCUMENTS.contains(formType);
-            assertEquals(expected, form.isCollectionOfDocuments());
-        }
-    }
-
 }

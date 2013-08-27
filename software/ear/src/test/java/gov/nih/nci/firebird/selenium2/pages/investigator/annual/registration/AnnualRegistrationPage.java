@@ -5,16 +5,18 @@ import gov.nih.nci.firebird.selenium2.pages.base.AbstractMenuPage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.CacheLookup;
 import org.openqa.selenium.support.FindBy;
 
 /**
  * /investigator/annual/registration/view_registration.jsp
  */
 public class AnnualRegistrationPage extends AbstractMenuPage<AnnualRegistrationPage> {
-
+    
     private static final String BACK_BUTTON_ID = "backButton";
 
     @FindBy(tagName = "h1")
+    @CacheLookup
     private WebElement registrationHeader;
 
     @FindBy(id = BACK_BUTTON_ID)

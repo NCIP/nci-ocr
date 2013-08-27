@@ -84,38 +84,30 @@ package gov.nih.nci.firebird.selenium2.tests.investigator;
 
 import static org.junit.Assert.*;
 import gov.nih.nci.firebird.data.Person;
-import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.nes.person.NesPersonData;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.representative.export.PersonsTab;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
 
 import org.junit.Test;
 
-import com.google.inject.Inject;
-
 public class InvestigatorPendingCurationUpdatesTest extends AbstractFirebirdWebDriverTest {
 
-    @Inject
-    private DataSetBuilder builder;
-    private DataSet dataSet;
+    private InvestigatorRegistrationTestDataSet dataSet;
 
     @Test
     public void testInvestigatorPendingUpdates() {
-        builder.createRegistration().complete().withStatus(RegistrationStatus.IN_PROGRESS);
-        builder.createSponsor();
-        dataSet = builder.build();
+        dataSet = InvestigatorRegistrationTestDataSet.createReadyForSubmissionNoMd(getDataLoader(),
+                getGridResources());
         setInvestigatorToHavingPendingUpdates();
         checkPendingFlagNotClearedWhenNesReturnsNoUpdates();
         checkPendingFlagClearedWhenNesReturnsUpdates();
     }
 
     private void setInvestigatorToHavingPendingUpdates() {
-        Person investigator = dataSet.getInvestigator().getPerson();
-        ((NesPersonData) investigator.getExternalData()).requestUpdate();
+        Person investigator = dataSet.getInvestigatorUser().getPerson();
+        investigator.requestUpdate();
         dataSet.update(investigator);
     }
 
@@ -126,14 +118,14 @@ public class InvestigatorPendingCurationUpdatesTest extends AbstractFirebirdWebD
 
     private void forceRefreshFromNes() {
         HomePage homePage = openHomePage(dataSet.getInvestigatorLogin());
-        RegistrationOverviewTab overviewTab = homePage.getHelper().openInProgressTask(dataSet.getInvestigatorRegistration());
+        RegistrationOverviewTab overviewTab = homePage.getHelper().openInProgressTask(dataSet.getRegistration());
         overviewTab.clickSubmitRegistration();
     }
 
     private boolean isInvestigatorToBeExported() {
         HomePage homePage = openHomePage(dataSet.getSponsorLogin());
         PersonsTab exportPersonsTab = homePage.getSponsorMenu().clickExportDataToCurate();
-        return exportPersonsTab.getHelper().contains(dataSet.getInvestigator().getPerson());
+        return exportPersonsTab.getHelper().contains(dataSet.getInvestigatorUser().getPerson());
     }
 
     private void checkPendingFlagClearedWhenNesReturnsUpdates() {
@@ -143,7 +135,7 @@ public class InvestigatorPendingCurationUpdatesTest extends AbstractFirebirdWebD
     }
 
     private void changeInvestigatorName() {
-        Person investigator = dataSet.getInvestigator().getPerson();
+        Person investigator = dataSet.getInvestigatorUser().getPerson();
         investigator.setFirstName("New Name");
         dataSet.update(investigator);
     }

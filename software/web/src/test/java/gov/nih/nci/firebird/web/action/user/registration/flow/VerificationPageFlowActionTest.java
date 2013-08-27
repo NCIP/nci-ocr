@@ -40,6 +40,7 @@ public class VerificationPageFlowActionTest extends AbstractFlowActionTestBase {
         action.setServletRequest(getMockRequest());
         setAccountConfigurationDataInSession(getAccountConfigurationData());
         action.prepare();
+        action.setEulaAccepted(true);
         user.setId(1L);
         setUpGridSessionInformation();
     }
@@ -109,6 +110,12 @@ public class VerificationPageFlowActionTest extends AbstractFlowActionTestBase {
     }
 
     @Test
+    public void testGettersSetters() {
+        action.setEulaAccepted(true);
+        assertTrue(action.isEulaAccepted());
+    }
+    
+    @Test
     public void testIsVerificationRequiredForRoles_VerifiedInvestigator() {
         getAccountConfigurationData().getRoles().add(INVESTIGATOR);
         setUpGridSessionInformation(INVESTIGATOR.getGroupName(), INVESTIGATOR.getVerifiedGroupName());
@@ -133,9 +140,9 @@ public class VerificationPageFlowActionTest extends AbstractFlowActionTestBase {
         getAccountConfigurationData().getRoles().add(SPONSOR);
         Organization sponsor = OrganizationFactory.getInstance().create();
         getAccountConfigurationData().getSponsorOrganizations().add(sponsor);
-        setUpGridSessionInformation(SPONSOR.getGroupName(),
-                SPONSOR.getVerifiedGroupName(),
-                SPONSOR.getGroupName() + "_" + getNesIdExtension(sponsor),
+        setUpGridSessionInformation(SPONSOR.getGroupName(), 
+                SPONSOR.getVerifiedGroupName(), 
+                SPONSOR.getGroupName() + "_" + getNesIdExtension(sponsor), 
                 SPONSOR.getVerifiedGroupName() + "_" + getNesIdExtension(sponsor));
         assertEquals(false, action.isVerificationRequiredForRoles());
     }
@@ -145,7 +152,7 @@ public class VerificationPageFlowActionTest extends AbstractFlowActionTestBase {
         getAccountConfigurationData().getRoles().add(SPONSOR);
         Organization sponsor = OrganizationFactory.getInstance().create();
         getAccountConfigurationData().getSponsorOrganizations().add(sponsor);
-        setUpGridSessionInformation(SPONSOR.getGroupName(),
+        setUpGridSessionInformation(SPONSOR.getGroupName(), 
                 SPONSOR.getGroupName() + "_" + getNesIdExtension(sponsor));
         assertEquals(true, action.isVerificationRequiredForRoles());
     }
@@ -155,9 +162,9 @@ public class VerificationPageFlowActionTest extends AbstractFlowActionTestBase {
         getAccountConfigurationData().getRoles().add(SPONSOR_DELEGATE);
         Organization sponsor = OrganizationFactory.getInstance().create();
         getAccountConfigurationData().getDelegateOrganizations().add(sponsor);
-        setUpGridSessionInformation(SPONSOR_DELEGATE.getGroupName(),
-                SPONSOR_DELEGATE.getVerifiedGroupName(),
-                SPONSOR_DELEGATE.getGroupName() + "_" + getNesIdExtension(sponsor),
+        setUpGridSessionInformation(SPONSOR_DELEGATE.getGroupName(), 
+                SPONSOR_DELEGATE.getVerifiedGroupName(), 
+                SPONSOR_DELEGATE.getGroupName() + "_" + getNesIdExtension(sponsor), 
                 SPONSOR_DELEGATE.getVerifiedGroupName() + "_" + getNesIdExtension(sponsor));
         assertEquals(false, action.isVerificationRequiredForRoles());
     }
@@ -167,7 +174,7 @@ public class VerificationPageFlowActionTest extends AbstractFlowActionTestBase {
         getAccountConfigurationData().getRoles().add(SPONSOR_DELEGATE);
         Organization sponsor = OrganizationFactory.getInstance().create();
         getAccountConfigurationData().getDelegateOrganizations().add(sponsor);
-        setUpGridSessionInformation(SPONSOR_DELEGATE.getGroupName(),
+        setUpGridSessionInformation(SPONSOR_DELEGATE.getGroupName(), 
                 SPONSOR_DELEGATE.getGroupName() + "_" + getNesIdExtension(sponsor));
         assertTrue(action.isVerificationRequiredForRoles());
     }

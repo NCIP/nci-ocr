@@ -92,7 +92,7 @@ import com.google.inject.Inject;
 /**
  * Authenticator that supports IAM based authentication.
  */
-class IamAuthenticator extends AbstractAuthenticator {
+public class IamAuthenticator extends AbstractAuthenticator {
 
     private final IamIntegrationService iamIntegrationService;
 

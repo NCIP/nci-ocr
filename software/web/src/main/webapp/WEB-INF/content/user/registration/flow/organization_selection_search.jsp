@@ -6,7 +6,7 @@
         <div class="ui-tabs-panel">
             <firebird:messages/>
             <s:form id="selectOrganizationForm" action="nextStep" onsubmit="return false">
-                <s:hidden id="selectedOrganizationExternalId" name="selectedOrganizationExternalId" />
+                <s:hidden id="selectedOrganizationKey" name="selectedOrganizationKey" />
             </s:form>
             <firebird:organizationSearch labelKey="organization.search.label" required="true" searchAction="searchForPrimaryOrganizations" setFocus="true"/>
             <div class="btn_bar clear">
@@ -22,9 +22,9 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        organizationSearch.clickSelectButton = function(organization) {
+        organizationSearch.clickSelectButton = function(organizationId) {
             indicateLoading();
-            $('#selectedOrganizationExternalId').val(organization.externalId);
+            $('#selectedOrganizationKey').val(organizationId);
             var url = $('form').first().attr('action');
             var serializedForm = $('form').serialize();
             $.post(url, serializedForm).success(function(data) {

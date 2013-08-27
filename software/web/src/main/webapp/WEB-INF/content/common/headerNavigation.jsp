@@ -9,7 +9,7 @@
 <s:url namespace="/sponsor/representative/protocol" action="enterProtocolImport" var="importProtocolEnterUrl" />
 <s:url namespace="/sponsor/representative" action="enterBrowseSponsorDelegates" var="browseSponsorDelegatesUrl" />
 <s:url namespace="/sponsor/representative/export" action="enterDataToCurate" var="enterDataToCurateUrl" />
-<s:url namespace="/sponsor/annual/ctep/representative" action="enterRequiredForms" var="requiredFormsUrl" />
+<s:url namespace="/sponsor/annual/registration" action="enterRequiredForms" var="requiredFormsUrl" />
 <s:url namespace="/sponsor/annual/registration" action="enterBrowseAnnualRegistrations" var="enterBrowseAnnualRegistrationsUrl" />
 <s:url namespace="/sponsor/annual/investigator" action="enterBrowseCtepInvestigators" var="enterBrowseCtepInvestigatorsUrl" />
 
@@ -65,7 +65,7 @@
     </s:if>
 
     <!-- Annual Registration Menu -->
-    <s:if test="%{ctepSponsor || ctepSponsorDelegate || verifiedSponsor || verifiedSponsorDelegate}">
+    <s:if test="%{ctepSponsor || ctepSponsorDelegate}">
         <li>
             <s:a id="annualRegistrationsBtn" href="%{enterBrowseAnnualRegistrationsUrl}">
                 <span class="arrow_down"><fmt:message key="menu.heading.annual.registrations"/></span>

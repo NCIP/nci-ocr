@@ -229,7 +229,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
 
     protected void saveAndVerifyNewDegree(DegreeSection degreeSection) {
         Degree degree = CREDENTIAL_FACTORY.createDegree(dataSet.getCredentialTypesData().getDegreeType(),
-                getExistingExternalOrganization());
+                getExistingNesOrganization());
         final ManageDegreeDialog createDegreeDialog = degreeSection.clickAddDegree();
         createDegreeDialog.getHelper().enterDegreeData(degree);
         new TimedAction<Void>("Save New Degree") {
@@ -286,7 +286,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
     }
 
     protected void saveAndVerifyNewCertificate(TrainingCertificateSection trainingSection) throws IOException {
-        TrainingCertificate certificate = CREDENTIAL_FACTORY.createCertificate(getExistingExternalOrganization());
+        TrainingCertificate certificate = CREDENTIAL_FACTORY.createCertificate(getExistingNesOrganization());
         File certificateFile = TestFileUtils.createTemporaryFile();
         final EditTrainingCertificateDialog certificateDialog = trainingSection.clickAddCertificate();
         certificateDialog.getHelper().enterTrainingCertificateData(certificate, certificateFile, false);
@@ -301,7 +301,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
     }
 
     protected void saveAndVerifyNewWorkHistory(WorkHistorySection section) {
-        WorkHistory workHistory = CREDENTIAL_FACTORY.createWorkHistory(getExistingExternalOrganization());
+        WorkHistory workHistory = CREDENTIAL_FACTORY.createWorkHistory(getExistingNesOrganization());
         final EditWorkHistoryDialog createDialog = section.clickAddWorkHistory();
         createDialog.getHelper().setWorkHistory(workHistory);
         new TimedAction<Void>("Save New Work History") {
@@ -315,7 +315,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
     }
 
     protected void saveAndVerifyNewInternship(InternshipSection section) {
-        Internship internship = CREDENTIAL_FACTORY.createInternship(getExistingExternalOrganization());
+        Internship internship = CREDENTIAL_FACTORY.createInternship(getExistingNesOrganization());
         final EditSpecialtyCredentialDialog createDialog = section.clickAddCredential();
         createDialog.getHelper().setCredential(internship);
         new TimedAction<Void>("Save New Internship") {
@@ -329,7 +329,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
     }
 
     protected void saveAndVerifyNewResidency(ResidencySection section) {
-        Residency residency = CREDENTIAL_FACTORY.createResidency(getExistingExternalOrganization());
+        Residency residency = CREDENTIAL_FACTORY.createResidency(getExistingNesOrganization());
         final EditSpecialtyCredentialDialog createDialog = section.clickAddCredential();
         createDialog.getHelper().setCredential(residency);
         new TimedAction<Void>("Save New Residency") {
@@ -343,7 +343,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
     }
 
     protected void saveAndVerifyNewFellowship(FellowshipSection section) {
-        Fellowship fellowship = CREDENTIAL_FACTORY.createFellowship(getExistingExternalOrganization());
+        Fellowship fellowship = CREDENTIAL_FACTORY.createFellowship(getExistingNesOrganization());
         final EditSpecialtyCredentialDialog createDialog = section.clickAddCredential();
         createDialog.getHelper().setCredential(fellowship);
         new TimedAction<Void>("Save New Fellowship") {
@@ -367,7 +367,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
 
     private void addPracticeSite(OrganizationAssociationsTab associationsTab) {
         AddOrganizationAssociationDialog associationDialog = associationsTab.getPracticeSiteSection().clickCreateNew();
-        PracticeSite practiceSite = getTestDataSource().getPracticeSite();
+        PracticeSite practiceSite = getNesTestDataSource().getPracticeSite();
         final SearchResultListing<AbstractLoadableComponent<?>> listing = 
                 searchForAssociatedOrganization(associationDialog, practiceSite, "Search for Practice Site");
         final SetPracticeSiteFieldsDialog ohrpDialog = new TimedAction<SetPracticeSiteFieldsDialog>("Select Practice Site") {
@@ -388,7 +388,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
 
     private void addIrb(OrganizationAssociationsTab associationsTab) {
         AddOrganizationAssociationDialog associationDialog = associationsTab.getIrbSection().clickCreateNew();
-        InstitutionalReviewBoard irb = getTestDataSource().getIrb();
+        InstitutionalReviewBoard irb = getNesTestDataSource().getIrb();
         final SearchResultListing<AbstractLoadableComponent<?>> listing = 
                 searchForAssociatedOrganization(associationDialog, irb, "Search for IRB");
         new TimedAction<Void>("Select IRB") {
@@ -402,7 +402,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
 
     private void addLab(OrganizationAssociationsTab associationsTab) {
         final AddOrganizationAssociationDialog associationDialog = associationsTab.getClinicalLabSection().clickCreateNew();
-        final ClinicalLaboratory lab = getTestDataSource().getClinicalLab();
+        final ClinicalLaboratory lab = getNesTestDataSource().getClinicalLab();
         final SearchResultListing<AbstractLoadableComponent<?>> listing = 
                 searchForAssociatedOrganization(associationDialog, lab, "Search for Lab");
         new TimedAction<Void>("Select Lab") {
@@ -432,7 +432,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
 
     private void addSubinvestigator(SubInvestigatorAssociationsTab associationsTab) {
         final SubInvestigatorAssociationFormDialog associationDialog = associationsTab.clickAddNew();
-        final Person newSubinvestigator = getExistingExternalPerson();
+        final Person newSubinvestigator = getExistingNesPerson();
         final SearchResultListing<AbstractLoadableComponent<?>> result = 
                 new TimedAction<SearchResultListing<AbstractLoadableComponent<?>>>("Search for New Subinvestigator") {
             @Override
@@ -459,8 +459,8 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
 
     private void setShippingDesignee(DesigneeAssociationsTab associationsTab) {
         final SelectShippingDesigneeDialog designeeDialog = associationsTab.clickSelectShippingDesignee();
-        Person shippingDesignee = getExistingExternalPerson();
-        final Organization organization = getExistingExternalOrganization();
+        Person shippingDesignee = getExistingNesPerson();
+        final Organization organization = getExistingNesOrganization();
         Address shippingAddress = ValueGenerator.getUniqueAddress();
         selectShippingDesigneeOrganization(designeeDialog, organization);
         selectShippingDesigneePerson(designeeDialog, shippingDesignee);
@@ -514,7 +514,7 @@ public class InvestigatorProfileTest extends AbstractScalabilityTest {
 
     private void addOrderingDesignee(DesigneeAssociationsTab associationsTab) {
         final SelectOrderingDesigneeDialog designeeDialog = associationsTab.clickAddOrderingDesignee();
-        final Person orderingDesignee = getExistingExternalPerson();
+        final Person orderingDesignee = getExistingNesPerson();
         final SearchResultListing<AbstractLoadableComponent<?>> result = 
                 new TimedAction<SearchResultListing<AbstractLoadableComponent<?>>>("Search for Ordering Designee") {
             @Override

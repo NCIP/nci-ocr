@@ -85,14 +85,13 @@ package gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration;
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
 import gov.nih.nci.firebird.commons.selenium2.util.FileDownloadUtils;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.SupportingDocumentsTag;
-
-import java.io.File;
-import java.io.IOException;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * /investigator/registration/ajax/financialdisclosure/financial_disclosure_tab.jsp
@@ -115,8 +114,7 @@ public class FinancialDisclosureTab extends AbstractFormTab<FinancialDisclosureT
         }
     }
 
-    private static final String TAB_UNIQUE_LOCATOR_CLASS = "dcpFinancialDisclosure";
-    private static final String TAB_ID = "form_fdf_tab";
+    private static final String TAB_ID = "form_FDFTab";
     private static final String COMMENT_DIV_ID = "commentsDiv";
     private static final String VIEW_PDF_BUTTON_ID = "viewFinancialDisclosurePdfButtonTop";
     private static final String VIEW_PDF_BOTTOM_BUTTON_ID = "viewFinancialDisclosurePdfButtonBottom";
@@ -220,7 +218,6 @@ public class FinancialDisclosureTab extends AbstractFormTab<FinancialDisclosureT
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
-        assertPresent(By.className(TAB_UNIQUE_LOCATOR_CLASS));
     }
 
     @Override

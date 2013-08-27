@@ -7,7 +7,7 @@
  * This plugin exists to make it trivial to notify your users that
  * things are in progress.  The typical case is waiting for an
  * AJAX call to finish loading.  Just call:
- *
+ * 
  *   $.loading();
  *
  * to toggle a page-wide message on and off, or you can call:
@@ -78,7 +78,7 @@
  *  }
  *
  * then use it by doing something like:
- *
+ * 
  *  $.loading({ pulse: 'moveLeft', align:{top:0,left:0} });
  *
  * If you add an 'end' function to that same object, then the end function
@@ -124,8 +124,7 @@
     };
 
     // position CSS for page opts //TODO: better support test...
-    //var fixed = { position: $.browser.msie ? 'absolute' : 'fixed' };
-    var fixed = { position: 'fixed' };
+    var fixed = { position: $.browser.msie ? 'absolute' : 'fixed' };
 
     // all that's extensible and configurable...
     $.extend(L, {

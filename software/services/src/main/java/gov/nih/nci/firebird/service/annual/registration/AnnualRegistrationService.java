@@ -96,6 +96,23 @@ import javax.ejb.Local;
 public interface AnnualRegistrationService extends BaseRegistrationService<AnnualRegistration> {
 
     /**
+     * Creates the initial annual registration for an investigator.
+     *
+     * @param profile the investigator's profile.
+     * @return the new registration.
+     */
+    AnnualRegistration createInitial(InvestigatorProfile profile);
+
+    /**
+     * Signs and submits a registration for review by the sponsor.
+     *
+     * @param registration the registration to be submitted for review.
+     * @param user the user signing the registration forms
+     * @param password the user's password
+     */
+    void signAndSubmit(AnnualRegistration registration, FirebirdUser user, String password);
+
+    /**
      * Sends out reminders to investigators and their registration coordinators that their annual registration is ready
      * for renewal.
      */
@@ -131,21 +148,5 @@ public interface AnnualRegistrationService extends BaseRegistrationService<Annua
      * @param investigator investigator to remove registrations from
      */
     void removeUnFinalizedRegistrations(FirebirdUser investigator);
-
-    /**
-     * Deletes an annual registration.
-     *
-     * @param registration registration to delete
-     * @param currentUser user requesting registration deletion
-     */
-    void delete(AnnualRegistration registration, FirebirdUser currentUser);
-
-    /**
-     * Creates either an initial or renewal annual registration.
-     *
-     * @param profile the investigator's profile.
-     * @return the new registration.
-     */
-    AnnualRegistration createRegistration(InvestigatorProfile profile);
 
 }

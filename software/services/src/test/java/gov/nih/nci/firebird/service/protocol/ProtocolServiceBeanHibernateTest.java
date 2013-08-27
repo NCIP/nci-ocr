@@ -82,8 +82,8 @@
  */
 package gov.nih.nci.firebird.service.protocol;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.FormOptionality;
 import gov.nih.nci.firebird.data.FormType;
@@ -100,8 +100,7 @@ import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.SponsorRole;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
-import gov.nih.nci.firebird.service.sponsor.SponsorNotificationService;
+import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.test.AbstractHibernateTestCase;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
@@ -111,37 +110,22 @@ import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.PersonFactory;
 import gov.nih.nci.firebird.test.ProtocolFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
-import org.apache.commons.io.FileUtils;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
-import javax.ejb.SessionContext;
-import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
+import javax.ejb.SessionContext;
+
+import org.junit.Test;
+
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 
 public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase {
 
     @Inject
     private ProtocolServiceBean bean;
-    @Inject
-    private FormTypeService formTypeService;
-    @Inject
-    private ProtocolRegistrationService registrationService;
-    @Inject
-    private ProtocolValidationService protocolValidationService;
-    @Inject
-    private ProtocolAgentService protocolAgentService;
-
     private Organization sponsor = OrganizationFactory.getInstance().create();
     private Organization leadOrganization = OrganizationFactory.getInstance().create();
     private Person principalInvestigator = PersonFactory.getInstance().create();
@@ -150,24 +134,23 @@ public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase 
             FormTypeEnum.FINANCIAL_DISCLOSURE_FORM);
     private FormType additionalAttachmentsType = FormTypeFactory.getInstance().create(
             FormTypeEnum.ADDITIONAL_ATTACHMENTS);
-    private static File dataFile;
 
-    @BeforeClass
-    public static void setupFile() throws IOException {
-        byte[] data = "123".getBytes();
-        dataFile = File.createTempFile("test", ".blob");
-        FileUtils.writeByteArrayToFile(dataFile, data);
+    @Test
+    public void testGetAgents() {
+        ProtocolAgent agent1 = new ProtocolAgent("Aspirin");
+        ProtocolAgent agent2 = new ProtocolAgent("Asp");
+        ProtocolAgent agent3 = new ProtocolAgent("aspartame");
+        ProtocolAgent agent4 = new ProtocolAgent("laetrile");
+        saveAndFlush(agent1, agent2, agent3, agent4);
+        List<ProtocolAgent> agents = bean.getAgents("asp");
+        assertEquals(3, agents.size());
+        assertEquals(agent2, agents.get(0));
+        assertEquals(agent3, agents.get(1));
+        assertEquals(agent1, agents.get(2));
+        assertTrue(bean.getAgents("xyz").isEmpty());
+        assertEquals(3, bean.getAgents("a").size());
+        assertEquals(3, bean.getAgents("A").size());
     }
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        bean.setFormTypeService(formTypeService);
-        bean.setRegistrationService(registrationService);
-        bean.setProtocolValidationService(protocolValidationService);
-        bean.setProtocolAgentService(protocolAgentService);
-    }
-
 
     @Test
     public void testValidateAndSave() throws ValidationException {
@@ -272,7 +255,7 @@ public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase 
 
     @Test
     public void testUpdateProtocol() throws ValidationException {
-        bean.setSponsorNotificationService(mock(SponsorNotificationService.class));
+        bean.setSponsorService(mock(SponsorService.class));
         InvestigatorProfile profile1 = InvestigatorProfileFactory.getInstance().create();
         InvestigatorProfile profile2 = InvestigatorProfileFactory.getInstance().create();
         save(sponsor, form1572Type, financialDisclosureType, profile1, profile2);
@@ -287,7 +270,7 @@ public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase 
         registrationNotStarted.setStatus(RegistrationStatus.NOT_STARTED);
         protocol.addRegistration(registrationNotStarted);
         save(protocol);
-        Protocol snapshot = protocol.createCopy();
+        Protocol snapshot = protocol.clone();
 
         protocol.getRegistrationConfiguration().setInvestigatorOptionality(form1572Type, FormOptionality.OPTIONAL);
         protocol.getRegistrationConfiguration().setInvestigatorOptionality(financialDisclosureType,
@@ -330,7 +313,7 @@ public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase 
         registrationNotStarted.setStatus(RegistrationStatus.NOT_STARTED);
         protocol.addRegistration(registrationNotStarted);
         save(protocol);
-        Protocol snapshot = protocol.createCopy();
+        Protocol snapshot = protocol.clone();
         assertNull(registrationNotStarted.getForm1572());
 
         protocol.getRegistrationConfiguration().setInvestigatorOptionality(form1572Type, FormOptionality.REQUIRED);
@@ -351,7 +334,7 @@ public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase 
         registrationNotStarted.setStatus(RegistrationStatus.NOT_STARTED);
         protocol.addRegistration(registrationNotStarted);
         save(protocol);
-        Protocol snapshot = protocol.createCopy();
+        Protocol snapshot = protocol.clone();
         ProtocolForm1572 savedProtocolForm = registrationNotStarted.getForm1572();
         assertNotNull(savedProtocolForm);
 
@@ -367,7 +350,7 @@ public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase 
         save(sponsor, form1572Type, financialDisclosureType);
         Protocol protocol = makeProtocol();
         save(protocol);
-        Protocol snapshot = protocol.createCopy();
+        Protocol snapshot = protocol.clone();
         bean.updateProtocol(snapshot, protocol, "i will never change!");
         assertTrue(protocol.getRevisionHistory().isEmpty());
     }
@@ -377,7 +360,7 @@ public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase 
         save(sponsor, form1572Type, financialDisclosureType);
         Protocol protocol = makeProtocol();
         save(protocol);
-        Protocol snapshot = protocol.createCopy();
+        Protocol snapshot = protocol.clone();
         protocol.setProtocolNumber("new number");
         bean.updateProtocol(snapshot, protocol, null);
     }
@@ -395,5 +378,4 @@ public class ProtocolServiceBeanHibernateTest extends AbstractHibernateTestCase 
         protocol.getRegistrationConfiguration().setSubinvestigatorOptionality(form1572Type, FormOptionality.OPTIONAL);
         return protocol;
     }
-
 }

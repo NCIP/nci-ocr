@@ -107,12 +107,12 @@ abstract class AbstractOrganizationTranslator {
     
     gov.nih.nci.coppa.po.Organization toNesOrganization(Organization firebirdOrganization) {
         gov.nih.nci.coppa.po.Organization nesOrganization = new gov.nih.nci.coppa.po.Organization();
-        nesOrganization.setIdentifier(getTranslatorHelper().toIi(firebirdOrganization.getExternalId()));
+        nesOrganization.setIdentifier(getTranslatorHelper().toIi(firebirdOrganization.getNesId()));
         nesOrganization.setName(toNesName(firebirdOrganization.getName()));
         nesOrganization.setPostalAddress(getTranslatorHelper().toAd(firebirdOrganization.getPostalAddress()));
         DSETTEL telecomAddress = buildTelecomAddress(firebirdOrganization);
         nesOrganization.setTelecomAddress(telecomAddress);
-        nesOrganization.setStatusCode(getTranslatorHelper().toStatusCode(firebirdOrganization.getCurationStatus()));
+        nesOrganization.setStatusCode(getTranslatorHelper().toStatusCode(firebirdOrganization.getNesStatus()));
         return nesOrganization;
     }
 

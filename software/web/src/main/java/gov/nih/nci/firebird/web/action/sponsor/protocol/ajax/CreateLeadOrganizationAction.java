@@ -82,25 +82,6 @@
  */
 package gov.nih.nci.firebird.web.action.sponsor.protocol.ajax;
 
-import gov.nih.nci.firebird.data.Country;
-import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
-import gov.nih.nci.firebird.data.Person;
-import gov.nih.nci.firebird.data.State;
-import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.lookup.CountryLookupService;
-import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
-import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.web.action.FirebirdActionSupport;
-
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.struts2.convention.annotation.Action;
-import org.apache.struts2.convention.annotation.Namespace;
-import org.apache.struts2.convention.annotation.Result;
-
 import com.google.inject.Inject;
 import com.opensymphony.xwork2.ActionSupport;
 import com.opensymphony.xwork2.Preparable;
@@ -108,6 +89,23 @@ import com.opensymphony.xwork2.validator.annotations.CustomValidator;
 import com.opensymphony.xwork2.validator.annotations.FieldExpressionValidator;
 import com.opensymphony.xwork2.validator.annotations.ValidationParameter;
 import com.opensymphony.xwork2.validator.annotations.Validations;
+import gov.nih.nci.firebird.data.Country;
+import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.data.Person;
+import gov.nih.nci.firebird.data.State;
+import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.service.lookup.CountryLookupService;
+import gov.nih.nci.firebird.service.lookup.StateLookupService;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.person.PersonService;
+import gov.nih.nci.firebird.web.action.FirebirdActionSupport;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.struts2.convention.annotation.Action;
+import org.apache.struts2.convention.annotation.Namespace;
+import org.apache.struts2.convention.annotation.Result;
+
+import java.util.List;
 
 /**
  * Action class which will validate information or create new Persons / Organizations for Lead
@@ -121,10 +119,11 @@ public class CreateLeadOrganizationAction extends FirebirdActionSupport implemen
 
     private final StateLookupService stateLookup;
     private final CountryLookupService countryLookup;
+    private final OrganizationService organizationService;
     private final PersonService personService;
 
-    private String selectedPersonExternalId;
-    private String selectedOrganizationExternalId;
+    private String selectedPersonKey;
+    private String selectedOrganizationKey;
     private List<Country> countries;
     private List<State> states;
     private boolean createNewPerson;
@@ -135,13 +134,15 @@ public class CreateLeadOrganizationAction extends FirebirdActionSupport implemen
     /**
      * Constructor.
      *
+     * @param organizationService .
      * @param personService .
      * @param stateLookup .
      * @param countryLookup .
      */
     @Inject
-    public CreateLeadOrganizationAction(PersonService personService,
+    public CreateLeadOrganizationAction(OrganizationService organizationService, PersonService personService,
                                         StateLookupService stateLookup, CountryLookupService countryLookup) {
+        this.organizationService = organizationService;
         this.personService = personService;
         this.stateLookup = stateLookup;
         this.countryLookup = countryLookup;
@@ -149,13 +150,13 @@ public class CreateLeadOrganizationAction extends FirebirdActionSupport implemen
 
     @Override
     public void prepare() {
-        if (StringUtils.isNotEmpty(getSelectedPersonExternalId())) {
-            setPrincipalInvestigator(getPerson(getSelectedPersonExternalId()));
+        if (StringUtils.isNotEmpty(getSelectedPersonKey())) {
+            setPrincipalInvestigator(getPersonSearchService().getPerson(getSelectedPersonKey()));
         }
-        if (StringUtils.isNotEmpty(getSelectedOrganizationExternalId())) {
+        if (StringUtils.isNotEmpty(getSelectedOrganizationKey())) {
             try {
-                setOrganization(getOrganizationService().getByExternalId(getSelectedOrganizationExternalId()));
-            } catch (InvalidatedOrganizationException e) {
+                setOrganization(getOrganizationSearchService().getOrganization(getSelectedOrganizationKey()));
+            } catch (UnavailableEntityException e) {
                 addActionError(getText("profile.organization.nullified"));
             }
         }
@@ -183,18 +184,18 @@ public class CreateLeadOrganizationAction extends FirebirdActionSupport implemen
     @Validations(customValidators = {
             @CustomValidator(type = "hibernate", fieldName = "principalInvestigator", parameters = {
                     @ValidationParameter(name = "resourceKeyBase", value = "person"),
-                    @ValidationParameter(name = "excludes", value = "externalId") }),
+                    @ValidationParameter(name = "excludes", value = "nesId") }),
             @CustomValidator(type = "hibernate", fieldName = "organization", parameters = {
                     @ValidationParameter(name = "resourceKeyBase", value = "organization"),
-                    @ValidationParameter(name = "excludes", value = "externalId") }) },
+                    @ValidationParameter(name = "excludes", value = "nesId") }) },
                  fieldExpressions = {
                          @FieldExpressionValidator(
                                  fieldName = "personSearch",
-                                 expression = "createNewPerson || selectedPersonExternalId != null",
+                                 expression = "createNewPerson || selectedPersonKey != null",
                                  key = "person.search.no.selection.error"),
                          @FieldExpressionValidator(
                                  fieldName = "organizationSearch",
-                                 expression = "createNewOrganization || selectedOrganizationExternalId != null",
+                                 expression = "createNewOrganization || selectedOrganizationKey != null",
                                  key = "organization.search.no.selection.error"),
                          @FieldExpressionValidator(
                                  fieldName = "organization.postalAddress.stateOrProvince",
@@ -216,32 +217,46 @@ public class CreateLeadOrganizationAction extends FirebirdActionSupport implemen
 
     private void createPrincipalInvestigator() throws ValidationException {
         if (isCreateNewPerson()) {
-            personService.save(getPrincipalInvestigator());
-            selectedPersonExternalId = getPrincipalInvestigator().getExternalId();
+            Person savedPerson = personService.createNesPerson(getPrincipalInvestigator());
+            selectedPersonKey = savedPerson.getId().toString();
+            setPrincipalInvestigator(savedPerson);
         }
     }
 
     private void createLeadOrganization() throws ValidationException {
         if (isCreateNewOrganization()) {
-            getOrganizationService().create(getOrganization(), OrganizationRoleType.GENERIC_ORGANIZATION);
-            selectedOrganizationExternalId = getOrganization().getExternalId();
+            organizationService.create(getOrganization());
+            selectedOrganizationKey = getOrganization().getId().toString();
         }
     }
 
-    public String getSelectedPersonExternalId() {
-        return selectedPersonExternalId;
+
+    /**
+     * @return the selectedPersonKey
+     */
+    public String getSelectedPersonKey() {
+        return selectedPersonKey;
     }
 
-    public void setSelectedPersonExternalId(String selectedPersonExternalId) {
-        this.selectedPersonExternalId = selectedPersonExternalId;
+    /**
+     * @param selectedPersonKey the selectedPersonKey to set
+     */
+    public void setSelectedPersonKey(String selectedPersonKey) {
+        this.selectedPersonKey = selectedPersonKey;
     }
 
-    public String getSelectedOrganizationExternalId() {
-        return selectedOrganizationExternalId;
+    /**
+     * @return the selectedOrganizationKey
+     */
+    public String getSelectedOrganizationKey() {
+        return selectedOrganizationKey;
     }
 
-    public void setSelectedOrganizationExternalId(String selectedOrganizationExternalId) {
-        this.selectedOrganizationExternalId = selectedOrganizationExternalId;
+    /**
+     * @param selectedOrganizationKey the selectedOrganizationKey to set
+     */
+    public void setSelectedOrganizationKey(String selectedOrganizationKey) {
+        this.selectedOrganizationKey = selectedOrganizationKey;
     }
 
     /**
@@ -261,8 +276,6 @@ public class CreateLeadOrganizationAction extends FirebirdActionSupport implemen
     /**
      * @return the createNewOrganization
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public Boolean isCreateNewOrganization() {
         return createNewOrganization;
     }
@@ -277,8 +290,6 @@ public class CreateLeadOrganizationAction extends FirebirdActionSupport implemen
     /**
      * @return the createNewPerson
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public Boolean isCreateNewPerson() {
         return createNewPerson;
     }

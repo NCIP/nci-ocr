@@ -82,6 +82,9 @@
  */
 package gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax;
 
+import gov.nih.nci.firebird.data.AbstractRegistrationForm;
+import gov.nih.nci.firebird.data.FormOptionality;
+import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.service.annual.registration.AnnualRegistrationService;
@@ -89,11 +92,16 @@ import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileServi
 import gov.nih.nci.firebird.web.action.AbstractAnnualRegistrationAction;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
 
+import java.util.List;
+
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.InterceptorRef;
 import org.apache.struts2.convention.annotation.Namespace;
 import org.apache.struts2.convention.annotation.Result;
+import org.apache.struts2.json.JSONException;
+import org.apache.struts2.json.JSONUtil;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 /**
@@ -123,7 +131,7 @@ public class ViewOverviewAction extends AbstractAnnualRegistrationAction {
     @Action(value = "enterViewOverview", results = @Result(location = "view_overview.jsp"))
     @SuppressWarnings("PMD.EmptyCatchBlock")
     public String enter() {
-        if (isRegistrationDeleted()) {
+        if (getId(getRegistration()) == null) {
             return FirebirdUIConstants.RETURN_ACCESS_DENIED_ENTER;
         }
         if (!getRegistration().isLockedForInvestigator()
@@ -138,29 +146,42 @@ public class ViewOverviewAction extends AbstractAnnualRegistrationAction {
     }
 
     /**
-     * @return true if current user can submit this registration
+     * @return the registration forms
+     * @throws JSONException if problem occurs during JSON serialization
      */
-    public boolean isSubmittable() {
-        return getRegistration().isSubmittable() && !isReadOnlyUser();
-    }
-
-    private boolean isReadOnlyUser() {
-        return !getCurrentUser().isCtepUser();
+    public String getFormListings() throws JSONException {
+        List<FormListing> listings = Lists.newArrayList();
+        for (AbstractRegistrationForm form : getRegistration().getForms()) {
+            listings.add(new FormListing(form));
+        }
+        return JSONUtil.serialize(listings, null, null, false, true, false);
     }
 
     /**
-     * @return whether or not the current user can delete this registration
+     * Form object for serialization.
      */
-    public boolean isDeleteRegistrationAllowed() {
-        return getRegistration().getLastSubmissionDate() == null && isCurrentUsersRegistration();
-    }
+    public final class FormListing {
 
-    /**
-     * @return whether or not this registration belongs to the current user
-     */
-    private boolean isCurrentUsersRegistration() {
-        return getCurrentUser().isInvestigator()
-                && getCurrentUser().getInvestigatorRole().getProfile().equals(getRegistration().getProfile());
-    }
+        private final FormStatus status;
+        private final FormOptionality optionality;
 
+        FormListing(AbstractRegistrationForm form) {
+            status = form.getFormStatus();
+            optionality = form.getFormOptionality();
+        }
+
+        /**
+         * @return the status
+         */
+        public FormStatus getStatus() {
+            return status;
+        }
+
+        /**
+         * @return the optionality
+         */
+        public FormOptionality getOptionality() {
+            return optionality;
+        }
+    }
 }

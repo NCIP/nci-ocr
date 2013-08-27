@@ -179,7 +179,7 @@ public class CreateProtocolTest extends AbstractScalabilityTest {
     }
 
     private InvestigatorInfo selectInvestigator(AddInvestigatorsDialog addInvestigatorsDialog) {
-        Person investigator = getExistingExternalPerson();
+        Person investigator = getExistingNesPerson();
         addInvestigatorsDialog.getHelper().searchForPerson(investigator);
         final SearchResultListing<InvestigatorInfo> matchingResult = 
                 addInvestigatorsDialog.getHelper().getMatchingResult(investigator);

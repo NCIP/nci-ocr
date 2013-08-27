@@ -82,10 +82,12 @@
  */
 package gov.nih.nci.firebird.service.registration;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
+import gov.nih.nci.firebird.data.FirebirdFile;
 import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
@@ -100,10 +102,10 @@ import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.ManagedInvestigator;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.messages.FirebirdMessage;
 import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
 import gov.nih.nci.firebird.service.messages.FirebirdTemplateParameter;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 
 import java.util.Collections;
 import java.util.Date;
@@ -124,6 +126,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.inject.Inject;
 
 /**
  * Provides persistence functionality and other services for registrations.
@@ -141,6 +144,13 @@ public class ProtocolRegistrationServiceBean extends AbstractBaseRegistrationSer
     private static final String FIND_SUBINVESTIGATORS_HQL = "from " + SubInvestigatorRegistration.class.getName()
             + " where profile.person = :" + SUBINVESTIGATOR_PERSON_PARAM + " and primaryRegistration in ( from "
             + InvestigatorRegistration.class.getName() + " where profile = :" + INVESTIGATOR_PROFILE_PARAM + " )";
+
+    private InvestigatorProfileService profileService;
+
+    @Inject
+    void setProfileService(InvestigatorProfileService profileService) {
+        this.profileService = profileService;
+    }
 
     @Override
     public InvestigatorRegistration createInvestigatorRegistration(Protocol protocol, Person investigator)
@@ -161,22 +171,18 @@ public class ProtocolRegistrationServiceBean extends AbstractBaseRegistrationSer
     }
 
     private void addPersonToNesIfNecessary(Person investigator) throws ValidationException {
-        if (!investigator.hasExternalRecord()) {
-            getPersonService().save(investigator);
+        if (!investigator.hasNesRecord()) {
+            getPersonService().createNesPerson(investigator);
         }
     }
 
     private InvestigatorProfile getOrCreateProfile(Person investigator) {
-        InvestigatorProfile profile = getProfileService().getByPerson(investigator);
+        InvestigatorProfile profile = profileService.getByPerson(investigator);
         if (profile == null) {
             profile = new InvestigatorProfile();
-            try {
-                getPersonService().save(investigator);
-            } catch (ValidationException e) {
-                throw new IllegalArgumentException("Investigator person is invalid", e);
-            }
+            getPersonService().save(investigator);
             profile.setPerson(investigator);
-            getProfileService().save(profile);
+            profileService.save(profile);
         }
         return profile;
     }
@@ -208,14 +214,9 @@ public class ProtocolRegistrationServiceBean extends AbstractBaseRegistrationSer
     }
 
     @Override
-    public void createSubinvestigatorRegistrations(InvestigatorRegistration registration,
-            List<String> personExternalIds) {
-        try {
-            for (String externalId : personExternalIds) {
-                createSubinvestigatorRegistration(registration, getPersonService().getByExternalId(externalId));
-            }
-        } catch (InvalidatedPersonException e) {
-            throw new IllegalStateException(e);
+    public void createSubinvestigatorRegistrations(InvestigatorRegistration registration, List<Long> personIds) {
+        for (Long id : personIds) {
+            createSubinvestigatorRegistration(registration, getPersonService().getById(id));
         }
         save(registration);
     }
@@ -388,12 +389,24 @@ public class ProtocolRegistrationServiceBean extends AbstractBaseRegistrationSer
         return profile.getCurrentProtocolRegistrations();
     }
 
+    @Override
+    public void attachFile(AbstractProtocolRegistration registration, FirebirdFile file) {
+        registration.getAdditionalAttachmentsForm().getAdditionalAttachments().add(file);
+        save(registration);
+    }
+
+    @Override
+    public void unattachFile(AbstractProtocolRegistration registration, FirebirdFile file) {
+        registration.getAdditionalAttachmentsForm().getAdditionalAttachments().remove(file);
+        save(registration);
+    }
+
     @SuppressWarnings("unchecked")
     // Hibernate does not provide typed returns
     @Override
     public List<SubInvestigatorRegistration> getSubinvestigatorRegistrations(InvestigatorProfile profile,
             Person subInvestigator) {
-        return (List<SubInvestigatorRegistration>) getSession().createQuery(FIND_SUBINVESTIGATORS_HQL)
+        return (List<SubInvestigatorRegistration>) getSessionProvider().get().createQuery(FIND_SUBINVESTIGATORS_HQL)
                 .setEntity(SUBINVESTIGATOR_PERSON_PARAM, subInvestigator)
                 .setEntity(INVESTIGATOR_PROFILE_PARAM, profile).list();
     }
@@ -525,12 +538,11 @@ public class ProtocolRegistrationServiceBean extends AbstractBaseRegistrationSer
     protected Class<AbstractProtocolRegistration> getRegistrationClass() {
         return AbstractProtocolRegistration.class;
     }
-
-    @SuppressWarnings("unchecked")
-    // Hibernate's list() method is untyped
+    
+    @SuppressWarnings("unchecked")  // Hibernate's list() method is untyped
     @Override
     public List<AbstractProtocolRegistration> getByStatusForUser(RegistrationStatus status, FirebirdUser user,
-            Set<String> groupNames) {
+            Set<String> groupNames) {        
         checkNotNull(status);
         checkNotNull(user);
         checkNotNull(groupNames);
@@ -538,13 +550,13 @@ public class ProtocolRegistrationServiceBean extends AbstractBaseRegistrationSer
         if (verifiedSponsorOrganizations.isEmpty()) {
             return Collections.emptyList();
         } else {
-            String registrationQueryHql = "from " + AbstractProtocolRegistration.class.getName()
+            String registrationQueryHql = "from " + AbstractProtocolRegistration.class.getName() 
                     + " where status = :status and protocol.sponsor in (:sponsors)";
-            Query query = getSession().createQuery(registrationQueryHql);
+            Query query = getSessionProvider().get().createQuery(registrationQueryHql);
             query.setParameter("status", status);
             query.setParameterList("sponsors", verifiedSponsorOrganizations);
             return query.list();
         }
     }
-
+    
 }

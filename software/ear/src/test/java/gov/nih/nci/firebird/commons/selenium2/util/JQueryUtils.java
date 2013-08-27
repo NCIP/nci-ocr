@@ -350,9 +350,6 @@ public final class JQueryUtils {
      */
     private static void triggerBlur(WebDriver driver, String elementId) {
         String escapedElementId = escapeForJquery(elementId);
-        // No clue why, but the masks weren't being updated unless blur() is called twice after the
-        // struts2-jquery-plugin to 3.6.0. Try to remove when there is a newer version
-        JavascriptUtils.execute(driver, "$('#" + escapedElementId + "').blur()");
         JavascriptUtils.execute(driver, "$('#" + escapedElementId + "').blur()");
     }
 

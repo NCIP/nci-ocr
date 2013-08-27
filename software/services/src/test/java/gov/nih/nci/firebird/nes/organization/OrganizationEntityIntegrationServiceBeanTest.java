@@ -84,19 +84,20 @@ package gov.nih.nci.firebird.nes.organization;
 
 import static gov.nih.nci.firebird.nes.NesIdTestUtil.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
+
+import java.rmi.RemoteException;
+import java.util.List;
+
 import gov.nih.nci.coppa.common.LimitOffset;
 import gov.nih.nci.coppa.po.IdentifiedOrganization;
+import gov.nih.nci.coppa.po.faults.NullifiedEntityFault;
 import gov.nih.nci.coppa.services.entities.organization.common.OrganizationI;
 import gov.nih.nci.firebird.data.CurationStatus;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.iso21090.extensions.Id;
-
-import java.rmi.RemoteException;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -124,22 +125,21 @@ public class OrganizationEntityIntegrationServiceBeanTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        bean = new OrganizationEntityIntegrationServiceBean(mockIdentifiedOrganizationService, mockErrorTranslator,
-                mockOrganizationService, mockTranslator);
-        when(mockTranslator.toFirebirdOrganization(any(gov.nih.nci.coppa.po.Organization.class))).thenReturn(
-                mockOrganization);
+        bean = new OrganizationEntityIntegrationServiceBean(mockIdentifiedOrganizationService,
+                mockErrorTranslator, mockOrganizationService, mockTranslator);
+        when(mockTranslator.toFirebirdOrganization(any(gov.nih.nci.coppa.po.Organization.class))).thenReturn(mockOrganization);
         when(mockTranslator.toNesOrganization(any(Organization.class))).thenReturn(mockNesOrganization);
     }
 
     @Test
     public void testCreate() throws Exception {
         when(mockOrganizationService.create(mockNesOrganization)).thenReturn(TEST_NES_ID.toId());
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
 
         bean.create(organization);
 
-        assertEquals(TEST_NES_ID.toString(), organization.getExternalId());
-        assertEquals(CurationStatus.PENDING, organization.getCurationStatus());
+        assertEquals(TEST_NES_ID.toString(), organization.getNesId());
+        assertEquals(CurationStatus.PENDING, organization.getNesStatus());
         verify(mockOrganizationService).create(mockNesOrganization);
     }
 
@@ -170,17 +170,17 @@ public class OrganizationEntityIntegrationServiceBeanTest {
     }
 
     @Test
-    public void testSearchByAssignedIdentifier() throws Exception {
+    public void testSearchByAssignedIdentifier() throws NullifiedEntityFault, RemoteException {
         when(mockOrganizationService.getById(any(Id.class))).thenReturn(mockNesOrganization);
 
         IdentifiedOrganization identifiedOrganization = new IdentifiedOrganization();
         identifiedOrganization.setPlayerIdentifier(TEST_NES_ID.toIi());
         List<IdentifiedOrganization> identifiedOrganizations = Lists.newArrayList(identifiedOrganization);
-        when(mockIdentifiedOrganizationService.getIdentifiedOrganizations(TEST_EXTENSION)).thenReturn(
-                identifiedOrganizations);
+        when(mockIdentifiedOrganizationService.getIdentifiedOrganizations(TEST_EXTENSION)).thenReturn(identifiedOrganizations);
 
         List<Organization> organizations = bean.searchByAssignedIdentifier(TEST_EXTENSION);
-        assertEquals(Lists.newArrayList(mockOrganization), organizations);
+        assertEquals(1, organizations.size());
+        assertEquals(mockOrganization, organizations.get(0));
         verify(mockIdentifiedOrganizationService).getIdentifiedOrganizations(TEST_EXTENSION);
     }
 

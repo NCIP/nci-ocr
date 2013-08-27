@@ -85,6 +85,7 @@ package gov.nih.nci.firebird.service.organization;
 import static gov.nih.nci.firebird.data.LaboratoryCertificateType.*;
 import static gov.nih.nci.firebird.data.OrganizationRoleType.*;
 import static gov.nih.nci.firebird.nes.NesIdTestUtil.*;
+import static gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactoryTestUtil.*;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -102,11 +103,15 @@ import gov.nih.nci.firebird.data.PrimaryOrganization;
 import gov.nih.nci.firebird.data.PrimaryOrganizationType;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.nes.organization.HealthCareFacilityData;
+import gov.nih.nci.firebird.nes.NesIIRoot;
+import gov.nih.nci.firebird.nes.organization.HealthCareFacilityIntegrationService;
+import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
+import gov.nih.nci.firebird.nes.organization.OversightCommitteeIntegrationService;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationIntegrationService;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
 import gov.nih.nci.firebird.service.file.FileMetadata;
 import gov.nih.nci.firebird.service.file.FileService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
-import gov.nih.nci.firebird.test.GuiceTestRunnerWithMocks;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
@@ -119,46 +124,38 @@ import java.util.Set;
 import org.hibernate.Session;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 @SuppressWarnings("unchecked")
-@RunWith(GuiceTestRunnerWithMocks.class)
 public class OrganizationAssociationServiceBeanTest {
 
-    @Inject
-    private OrganizationAssociationServiceBean bean;
-    @Inject
-    private FileService mockFileService;
-    @Inject
-    private OrganizationService mockOrganizationService;
-    @Inject
-    private ProtocolRegistrationService mockRegistrationService;
+    private OrganizationAssociationServiceBean bean = new OrganizationAssociationServiceBean();
+    private FileService mockFileService = mock(FileService.class);
+    private InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
+    private Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
     private Provider<Session> mockSessionProvider = mock(Provider.class);
     private Session mockSession = mock(Session.class);
-    private InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
-    private Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+    private ProtocolRegistrationService mockRegistrationService = mock(ProtocolRegistrationService.class);
+    private NesOrganizationIntegrationServiceFactory nesServiceFactory = createFactoryWithMocks();
 
     @Before
     public void setUp() {
+        bean.setNesServiceFactory(nesServiceFactory);
         bean.setSessionProvider(mockSessionProvider);
-        bean.setRegistrationService(mockRegistrationService);
-        bean.setOrganizationService(mockOrganizationService);
         bean.setFileService(mockFileService);
+        bean.setRegistrationService(mockRegistrationService);
         when(mockSessionProvider.get()).thenReturn(mockSession);
     }
 
     @Test
     public void testHandleNew_ExistingOrganization() throws AssociationAlreadyExistsException, ValidationException {
-        HealthCareFacilityData healthCareFacilityData = new HealthCareFacilityData();
-        healthCareFacilityData.setExternalId(TEST_NES_ID_STRING);
-        organization.setExternalData(healthCareFacilityData);
+        organization.setNesId(TEST_NES_ID_STRING);
         OrganizationAssociation association = createAssociation(CLINICAL_LABORATORY);
         bean.handleNew(association);
-        verifyZeroInteractions(mockOrganizationService);
+        verifyZeroInteractions(getHealthCareFacilityService(), getOversightCommitteeService(),
+                getResearchOrganizationService());
     }
 
     private OrganizationAssociation createAssociation(OrganizationRoleType type)
@@ -166,12 +163,24 @@ public class OrganizationAssociationServiceBeanTest {
         return profile.addOrganizationAssociation(organization, type);
     }
 
+    private HealthCareFacilityIntegrationService getHealthCareFacilityService() {
+        return nesServiceFactory.getHealthCareFacilityService();
+    }
+
+    private OversightCommitteeIntegrationService getOversightCommitteeService() {
+        return nesServiceFactory.getOversightCommitteeService();
+    }
+
+    private ResearchOrganizationIntegrationService getResearchOrganizationService() {
+        return nesServiceFactory.getResearchOrganizationService();
+    }
+
     @Test
     public void testHandleNew_NewPracticeSite_CancerCenter() throws AssociationAlreadyExistsException,
             ValidationException {
         OrganizationAssociation association = createPracticeSiteAssocation(PracticeSiteType.CANCER_CENTER);
         bean.handleNew(association);
-        verify(mockOrganizationService).create(organization, PRACTICE_SITE, PracticeSiteType.CANCER_CENTER);
+        verify(getResearchOrganizationService()).create(organization, ResearchOrganizationType.CANCER_CENTER);
     }
 
     @Test
@@ -179,7 +188,7 @@ public class OrganizationAssociationServiceBeanTest {
             ValidationException {
         OrganizationAssociation association = createPracticeSiteAssocation(PracticeSiteType.CLINICAL_CENTER);
         bean.handleNew(association);
-        verify(mockOrganizationService).create(organization, PRACTICE_SITE, PracticeSiteType.CLINICAL_CENTER);
+        verify(getResearchOrganizationService()).create(organization, ResearchOrganizationType.CLINICAL_CENTER);
     }
 
     @Test
@@ -187,20 +196,51 @@ public class OrganizationAssociationServiceBeanTest {
             ValidationException {
         OrganizationAssociation association = createPracticeSiteAssocation(PracticeSiteType.HEALTH_CARE_FACILITY);
         bean.handleNew(association);
-        verify(mockOrganizationService).create(organization, PRACTICE_SITE, PracticeSiteType.HEALTH_CARE_FACILITY);
+        verify(getHealthCareFacilityService()).create(organization);
     }
 
     @Test
-    public void testHandleNew_ExistingPracticeSite() throws AssociationAlreadyExistsException,
+    public void testHandleNew_ExistingPracticeSite_HealthCareFacility() throws AssociationAlreadyExistsException,
             ValidationException {
         OrganizationAssociation association = createPracticeSiteAssocation(PracticeSiteType.HEALTH_CARE_FACILITY);
         PracticeSite practiceSite = (PracticeSite) association.getOrganizationRole();
-        HealthCareFacilityData healthCareFacilityData = new HealthCareFacilityData();
-        practiceSite.getOrganization().setExternalData(healthCareFacilityData);
         practiceSite.setType(null);
-        when(mockOrganizationService.getPracticeSiteType(practiceSite.getOrganization())).thenReturn(PracticeSiteType.HEALTH_CARE_FACILITY);
+        practiceSite.getOrganization().setNesId(NesIIRoot.HEALTH_CARE_FACILITY.getRoot() + ":xxx");
         bean.handleNew(association);
+        verifyZeroInteractions(getHealthCareFacilityService(), getResearchOrganizationService());
         assertEquals(PracticeSiteType.HEALTH_CARE_FACILITY, practiceSite.getType());
+    }
+
+    @Test
+    public void testHandleNew_ExistingPracticeSite_ClinicalCenter() throws AssociationAlreadyExistsException,
+            ValidationException {
+        OrganizationAssociation association = createPracticeSiteAssocation(PracticeSiteType.CLINICAL_CENTER);
+        PracticeSite practiceSite = (PracticeSite) association.getOrganizationRole();
+        practiceSite.setType(null);
+        practiceSite.getOrganization().setNesId(NesIIRoot.RESEARCH_ORGANIZATION.getRoot() + ":xxx");
+        when(getResearchOrganizationService().getType(practiceSite.getNesId())).thenReturn(
+                ResearchOrganizationType.CLINICAL_CENTER);
+        bean.handleNew(association);
+        verifyZeroInteractions(getHealthCareFacilityService());
+        verify(getResearchOrganizationService(), never()).create(any(Organization.class),
+                any(ResearchOrganizationType.class));
+        assertEquals(PracticeSiteType.CLINICAL_CENTER, practiceSite.getType());
+    }
+
+    @Test
+    public void testHandleNew_ExistingPracticeSite_CancerCenter() throws AssociationAlreadyExistsException,
+            ValidationException {
+        OrganizationAssociation association = createPracticeSiteAssocation(PracticeSiteType.CANCER_CENTER);
+        PracticeSite practiceSite = (PracticeSite) association.getOrganizationRole();
+        practiceSite.setType(null);
+        practiceSite.getOrganization().setNesId(NesIIRoot.RESEARCH_ORGANIZATION.getRoot() + ":xxx");
+        when(getResearchOrganizationService().getType(practiceSite.getNesId())).thenReturn(
+                ResearchOrganizationType.CANCER_CENTER);
+        bean.handleNew(association);
+        verifyZeroInteractions(getHealthCareFacilityService());
+        verify(getResearchOrganizationService(), never()).create(any(Organization.class),
+                any(ResearchOrganizationType.class));
+        assertEquals(PracticeSiteType.CANCER_CENTER, practiceSite.getType());
     }
 
     private OrganizationAssociation createPracticeSiteAssocation(PracticeSiteType type)
@@ -304,8 +344,7 @@ public class OrganizationAssociationServiceBeanTest {
         PrimaryOrganization primaryOrganization = new PrimaryOrganization(organization,
                 PrimaryOrganizationType.CANCER_CENTER);
         bean.createNewPrimaryOrganization(primaryOrganization);
-        verify(mockOrganizationService).create(organization, PRIMARY_ORGANIZATION,
-                PrimaryOrganizationType.CANCER_CENTER);
+        verify(getResearchOrganizationService()).create(organization, ResearchOrganizationType.CANCER_CENTER);
     }
 
     @Test
@@ -313,8 +352,7 @@ public class OrganizationAssociationServiceBeanTest {
         PrimaryOrganization primaryOrganization = new PrimaryOrganization(organization,
                 PrimaryOrganizationType.CLINICAL_CENTER);
         bean.createNewPrimaryOrganization(primaryOrganization);
-        verify(mockOrganizationService).create(organization, PRIMARY_ORGANIZATION,
-                PrimaryOrganizationType.CLINICAL_CENTER);
+        verify(getResearchOrganizationService()).create(organization, ResearchOrganizationType.CLINICAL_CENTER);
     }
 
     @Test
@@ -322,8 +360,36 @@ public class OrganizationAssociationServiceBeanTest {
         PrimaryOrganization primaryOrganization = new PrimaryOrganization(organization,
                 PrimaryOrganizationType.HEALTH_CARE_FACILITY);
         bean.createNewPrimaryOrganization(primaryOrganization);
-        verify(mockOrganizationService).create(organization, PRIMARY_ORGANIZATION,
-                PrimaryOrganizationType.HEALTH_CARE_FACILITY);
+        verify(getHealthCareFacilityService()).create(organization);
+    }
+
+    @Test
+    public void testGetExistingPrimaryOrganizationType_HealthCareFacility() throws Exception {
+        organization.setNesId(NesIIRoot.HEALTH_CARE_FACILITY.getRoot() + ":1");
+        assertEquals(PrimaryOrganizationType.HEALTH_CARE_FACILITY,
+                bean.getExistingPrimaryOrganizationType(organization));
+    }
+
+    @Test
+    public void testGetExistingPrimaryOrganizationType_ResearchOrganization_CancerCenter() throws Exception {
+        organization.setNesId(NesIIRoot.RESEARCH_ORGANIZATION.getRoot() + ":1");
+        when(nesServiceFactory.getResearchOrganizationService().getType(organization.getNesId())).thenReturn(
+                ResearchOrganizationType.CANCER_CENTER);
+        assertEquals(PrimaryOrganizationType.CANCER_CENTER, bean.getExistingPrimaryOrganizationType(organization));
+    }
+
+    @Test
+    public void testGetExistingPrimaryOrganizationType_ResearchOrganization_ClinicalCenter() throws Exception {
+        organization.setNesId(NesIIRoot.RESEARCH_ORGANIZATION.getRoot() + ":1");
+        when(nesServiceFactory.getResearchOrganizationService().getType(organization.getNesId())).thenReturn(
+                ResearchOrganizationType.CLINICAL_CENTER);
+        assertEquals(PrimaryOrganizationType.CLINICAL_CENTER, bean.getExistingPrimaryOrganizationType(organization));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetExistingPrimaryOrganizationType_InvalidType() throws Exception {
+        organization.setNesId(NesIIRoot.PERSON.getRoot() + ":1");
+        bean.getExistingPrimaryOrganizationType(organization);
     }
 
 }

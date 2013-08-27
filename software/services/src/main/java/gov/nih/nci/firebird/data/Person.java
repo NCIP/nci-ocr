@@ -84,14 +84,10 @@ package gov.nih.nci.firebird.data;
 
 import java.util.Comparator;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.hibernate.annotations.ForeignKey;
 
 import com.fiveamsolutions.nci.commons.audit.Auditable;
 
@@ -108,21 +104,20 @@ public class Person extends AbstractPersonData implements Auditable {
      */
     public static final Comparator<Person> NAME_COMPARATOR = new NameComparator();
 
+
     /**
      * comparator for a person by last name, then first name.
      */
-    private static final class NameComparator implements Comparator<Person> {
+    public static final class NameComparator implements Comparator<Person> {
         @Override
         public int compare(Person person1, Person person2) {
             return person1.getSortableName().compareTo(person2.getSortableName());
         }
     }
 
-    private AbstractExternalData externalData;
-
     /**
-     * @param other Compares the basic information of a Person (Name, Address, Phone and Email) to determine if the
-     *            provided Person is equivalent to this one.
+     * @param other Compares the basic information of a Person (Name, Address, Phone and Email) to determine
+     * if the provided Person is equivalent to this one.
      * @return if they are equivalent.
      */
     @Transient
@@ -132,45 +127,26 @@ public class Person extends AbstractPersonData implements Auditable {
                 .append(getProviderNumber(), other.getProviderNumber())
                 .append(getPostalAddress(), other.getPostalAddress()).isEquals();
     }
-
-    @Transient
-    public String getExternalId() {
-        return externalData != null ? getExternalData().getExternalId() : null;
-    }
-
-    @Transient
-    public boolean isUpdatePending() {
-        return getExternalData().isUpdatePending();
-    }
-
-    public void setExternalData(AbstractExternalData externalData) {
-        this.externalData = externalData;
-    }
-
-    /**
-     * @return whether the person has an external record.
-     */
-    public boolean hasExternalRecord() {
-        return getExternalData() != null;
-    }
-
+    
     /**
      * @return a snapshot copy of this Person's data.
      */
-    PersonSnapshot createSnapshot() {
+    public PersonSnapshot createSnapshot() {
         PersonSnapshot snapshot = new PersonSnapshot();
-        snapshot.copyContactInformation(this);
         snapshot.setCtepId(getCtepId());
-        snapshot.setExternalId(getExternalId());
-        snapshot.setCurationStatus(getCurationStatus());
+        snapshot.setEmail(getEmail());
+        snapshot.setFirstName(getFirstName());
+        snapshot.setLastName(getLastName());
+        snapshot.setLastNesRefresh(getLastNesRefresh());
+        snapshot.setMiddleName(getMiddleName());
+        snapshot.setNesId(getNesId());
+        snapshot.setNesStatus(getNesStatus());
+        snapshot.setPhoneNumber(getPhoneNumber());
+        snapshot.setPostalAddress(getPostalAddress());
+        snapshot.setPrefix(getPrefix());
+        snapshot.setProviderNumber(getProviderNumber());
+        snapshot.setSuffix(getSuffix());
         return snapshot;
     }
-
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "external_data_id")
-    @ForeignKey(name = "person_external_data_fkey")
-    public AbstractExternalData getExternalData() {
-        return externalData;
-    }
-
+    
 }

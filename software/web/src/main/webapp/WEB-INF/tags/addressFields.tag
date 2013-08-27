@@ -13,7 +13,7 @@
     <s:textfield
         id="%{#attr.beanPrefix}.streetAddress"
         name="%{#attr.beanPrefix}.streetAddress"
-        maxlength="254" size="50" cssStyle="width: 19em;" required="true"
+        maxlength="254" size="50" cssStyle="width: 19em;" requiredLabel="true"
         label="%{getText('textfield.line1Address')}" labelposition="left" />
     <br>
     <div class="addressLine2">
@@ -27,13 +27,13 @@
     <s:textfield
         id="%{#attr.beanPrefix}.city"
         name="%{#attr.beanPrefix}.city"
-        maxlength="50" size="30" cssStyle="width: 19em;" required="true"
+        maxlength="50" size="30" cssStyle="width: 19em;" requiredLabel="true"
         label="%{getText('textfield.city')}" labelposition="left" />
     <br>
     <s:select id="%{#attr.beanPrefix}.country" list="countries" listKey="alpha3"
         listValue="name" label="%{getText('dropdown.country')}"
         name="%{#attr.beanPrefix}.country"
-        labelposition="left" required="true" onchange="%{#prefix}_addressForm.showFieldsForSelectedCountry()"/>
+        labelposition="left" requiredLabel="true" onchange="%{#prefix}_addressForm.showFieldsForSelectedCountry()"/>
     <br>
     <div class="stateOrProvinceDiv">
         <div class="usStateDiv">
@@ -42,7 +42,7 @@
                 headerKey="" headerValue="--- Select ---" list="states"
                 listKey="code" listValue="name"
                 name="%{#attr.beanPrefix}.stateOrProvince"
-                required="true" label="%{getText('dropdown.state')}"
+                requiredLabel="true" label="%{getText('dropdown.state')}"
                 labelposition="left" />
                 <s:if test="%{#attr.fieldsDisabled}">
                     <s:hidden name="%{#attr.beanPrefix}.stateOrProvince" />
@@ -53,7 +53,7 @@
             <s:textfield
                 id="%{#attr.beanPrefix}.stateOrProvince.international"
                 name="%{#attr.beanPrefix}.stateOrProvince"
-                maxlength="50" size="30" cssStyle="width: 19em;" required="false"
+                maxlength="50" size="30" cssStyle="width: 19em;" requiredLabel="false"
                 label="%{getText('textfield.stateOrProvince')}" labelposition="left" />
             <br>
         </div>

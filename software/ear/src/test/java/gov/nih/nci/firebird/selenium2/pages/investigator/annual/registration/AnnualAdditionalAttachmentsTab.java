@@ -94,7 +94,6 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.Upl
 
 import java.util.List;
 
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 
 /**
@@ -148,7 +147,6 @@ public class AnnualAdditionalAttachmentsTab extends AbstractAnnualRegistrationTa
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
-        assertPresent(By.id(SupplementalInvestigatorDataFormTab.TAB_ID));
         assertFalse(JQueryUtils.isDialogDisplayed(getDriver()));
     }
 

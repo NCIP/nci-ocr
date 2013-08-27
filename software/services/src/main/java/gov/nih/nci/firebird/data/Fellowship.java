@@ -113,8 +113,6 @@ public class Fellowship extends AbstractCredential<Fellowship> implements Specia
      * @param issuer issuer organization
      * @param specialty medical specialty
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public Fellowship(InvestigatorProfile profile, Date effectiveDate, Date expirationDate, Organization issuer,
             MedicalSubSpecialty specialty) {
         super(profile, effectiveDate, expirationDate, issuer);

@@ -100,7 +100,7 @@ public class ManageDegreeDialogHelper {
     public void enterDegreeData(Degree degree) {
         selectDegreeType(degree.getDegreeType());
         page.getDateSelectTag().getHelper().setDate(degree.getEffectiveDate());
-        if (degree.getIssuer().getId() != null || degree.getIssuer().getExternalId() != null) {
+        if (degree.getIssuer().getId() != null || degree.getIssuer().getNesId() != null) {
             searchAndSelectInstitution(degree.getIssuer());
         } else {
             createInstitution(degree.getIssuer());
@@ -124,7 +124,7 @@ public class ManageDegreeDialogHelper {
 
     public ViewOrganizationTag selectInstitution(Organization institution) {
         for (SearchResultListing<ViewOrganizationTag> listing : page.getSearchResults()) {
-            if (institution.getExternalId().equals(listing.getExternalId())) {
+            if (institution.getNesId().equals(listing.getNesId())) {
                 return listing.clickSelect();
             }
         }

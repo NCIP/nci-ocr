@@ -14,8 +14,8 @@ public class PersonCvIdfDisplayComponentHelper {
     }
 
     public void assertPersonDisplayed(Person person) {
-        if (component.isExternalIdPresent()) {
-            assertEquals(person.getExternalId(), component.getExternalId());
+        if (component.isNesIdPresent()) {
+            assertEquals(person.getNesId(), component.getNesId());
         }
         assertEquals(person.getDisplayName(), component.getName());
         assertEquals(person.getProviderNumber(), trimToNull(component.getProvider()));

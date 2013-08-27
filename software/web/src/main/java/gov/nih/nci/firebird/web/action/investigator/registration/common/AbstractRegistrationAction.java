@@ -171,9 +171,4 @@ public abstract class AbstractRegistrationAction<T extends AbstractRegistration>
      * @return true if the current user is a verified investigator able to sign the current registration.
      */
     protected abstract boolean isVerifiedForRegistrationSigning();
-
-    protected boolean isRegistrationDeleted() {
-        return getRegistration().getStatus() == null;
-    }
-
 }

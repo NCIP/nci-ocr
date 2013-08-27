@@ -1,7 +1,4 @@
 <%@ include file="/WEB-INF/content/common/taglibs.jsp"%>
-
-<div id="ctepForm1572"><!-- Marker that this is the CTEP Form 1572 Tab --></div>
-
 <firebird:form1572Tab instructionsKey="annual.registration.fda1572.help.text" introKey="annual.registration.fda1572.intro">
     <br/>
     <h2>
@@ -21,6 +18,10 @@
     </div>
     <br/>
 </firebird:form1572Tab>
+
+<s:if test="!registration.lockedForInvestigator">
+    <firebird:nextTabButton form="${form}" />
+</s:if>
 
 <script>
 var incomplete = '<s:property value="@gov.nih.nci.firebird.data.RegistrationStatus@INCOMPLETE"/>';

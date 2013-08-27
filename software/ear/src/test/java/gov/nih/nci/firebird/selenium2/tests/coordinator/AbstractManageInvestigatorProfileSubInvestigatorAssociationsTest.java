@@ -121,7 +121,7 @@ public abstract class AbstractManageInvestigatorProfileSubInvestigatorAssociatio
     @Test
     public void testDelegateSubInvestigatorAssociations() throws Exception {
         updateStatuses(IN_PROGRESS, NO_RESPONSE);
-        Person person = getExistingExternalPerson();
+        Person person = getExistingNesPerson();
         ProfessionalContactInformationTab contactInfoPage = navigateToInvestigatorProfileInformation();
         SubInvestigatorAssociationsTab subInvestigatorsTab = contactInfoPage.getPage().clickSubInvestigatorAssociationsTab();
 
@@ -217,7 +217,7 @@ public abstract class AbstractManageInvestigatorProfileSubInvestigatorAssociatio
 
     private Person addSubInvestigator(SubInvestigatorAssociationsTab associationTab) {
         SubInvestigatorAssociationFormDialog addNewAssociationDialog = associationTab.clickAddNew();
-        Person subinvestigator = getExistingExternalPerson();
+        Person subinvestigator = getExistingNesPerson();
         addNewAssociationDialog.getHelper().searchAndSelectPerson(subinvestigator);
         return subinvestigator;
     }

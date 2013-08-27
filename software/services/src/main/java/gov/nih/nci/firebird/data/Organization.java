@@ -88,16 +88,12 @@ import java.util.Map;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Transient;
 
 import org.apache.commons.lang.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hibernate.annotations.ForeignKey;
 
 import com.fiveamsolutions.nci.commons.audit.Auditable;
 
@@ -112,7 +108,6 @@ public class Organization extends AbstractOrganizationData implements Auditable,
 
     private Map<OrganizationRoleType, AbstractOrganizationRole> roles =
         new EnumMap<OrganizationRoleType, AbstractOrganizationRole>(OrganizationRoleType.class);
-    private AbstractExternalData externalData;
 
     /**
      * Returns the map of roles for this organization.
@@ -202,41 +197,21 @@ public class Organization extends AbstractOrganizationData implements Auditable,
                 .append(getPostalAddress()).toHashCode();
     }
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "external_data_id")
-    @ForeignKey(name = "organization_external_data_fkey")
-    public AbstractExternalData getExternalData() {
-        return externalData;
-    }
-
-    public void setExternalData(AbstractExternalData externalData) {
-        this.externalData = externalData;
-    }
-
-    @Transient
-    public String getExternalId() {
-        return getExternalData() != null ? getExternalData().getExternalId() : null;
-    }
-
-    /**
-     * @return whether the organization has a record in the external service.
-     */
-    public boolean hasExternalRecord() {
-        return getExternalData() != null;
-    }
     /**
      * @return a snapshot copy of the Organization's data.
      */
-    OrganizationSnapshot createSnapshot() {
+    public OrganizationSnapshot createSnapshot() {
         OrganizationSnapshot snapshot = new OrganizationSnapshot();
         snapshot.setCtepId(getCtepId());
         snapshot.setEmail(getEmail());
         snapshot.setName(getName());
-        snapshot.setExternalId(getExternalId());
+        snapshot.setNesId(getNesId());
         snapshot.setPhoneNumber(getPhoneNumber());
-        snapshot.setCurationStatus(getCurationStatus());
+        snapshot.setPlayerIdentifier(getPlayerIdentifier());
+        snapshot.setLastNesRefresh(getLastNesRefresh());
+        snapshot.setNesStatus(getNesStatus());
         snapshot.setPostalAddress(getPostalAddress());
         return snapshot;
     }
-
+    
 }

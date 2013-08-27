@@ -116,23 +116,7 @@
         <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it74.sql"/>
     </changeSet>
     <changeSet id="update-3.2.0-it76" author="firebird-team">
-        <comment>Update to 3.2.0, iteration 76</comment>
+        <comment>Update to 3.2.0, iteration 74</comment>
         <sqlFile path="${db.src.dir}/update-3.2.x/update-3.2.0-it76.sql"/>
-    </changeSet>
-    <changeSet id="update-3.3.0-it78" author="firebird-team">
-        <comment>Update to 3.3.0, iteration 78</comment>
-        <sqlFile path="${db.src.dir}/update-3.3.x/update-3.3.0-it78.sql"/>
-    </changeSet>
-    <changeSet id="update-3.3.0-it79" author="firebird-team">
-        <comment>Update to 3.3.0, iteration 79</comment>
-        <sqlFile path="${db.src.dir}/update-3.3.x/update-3.3.0-it79.sql"/>
-    </changeSet>
-    <changeSet id="update-3.3.0-it80" author="firebird-team">
-        <comment>Update to 3.3.0, iteration 80</comment>
-        <sqlFile path="${db.src.dir}/update-3.3.x/update-3.3.0-it80.sql"/>
-    </changeSet>
-    <changeSet id="update-3.3.0-it81" author="firebird-team">
-        <comment>Update to 3.3.0, iteration 81</comment>
-        <sqlFile path="${db.src.dir}/update-3.3.x/update-3.3.0-it81.sql"/>
     </changeSet>
 </databaseChangeLog>

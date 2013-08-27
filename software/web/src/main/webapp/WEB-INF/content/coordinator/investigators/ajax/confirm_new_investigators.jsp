@@ -18,7 +18,7 @@
 
             <s:form id="selectedInvestigatorForm" namespace="/coordinator/investigators/ajax" action="confirmSelection">
                 <s:iterator value="selectedInvestigatorProfiles" var="investigatorProfile">
-                    <s:hidden name="selectedInvestigatorsProfileIds" value="%{#investigatorProfile.id}"/>
+                    <s:hidden name="selectedInvestigators" value="%{#investigatorProfile.id}"/>
                 </s:iterator>
             </s:form>
 

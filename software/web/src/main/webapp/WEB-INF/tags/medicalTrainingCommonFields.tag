@@ -18,7 +18,7 @@
      <s:select list="certifyingBoards"
          id="certifyingBoard"
          name="certifyingBoardId"
-         required="true"
+         requiredLabel="true"
          listKey="id"
          listValue="name"
          headerKey=""
@@ -32,7 +32,7 @@
     <sj:select
       id="specialty"
         name="specialtyId"
-        required="true"
+        requiredLabel="true"
         href="%{specialtyTypesUrl}"
         formIds="credentialForm"
         reloadTopics="reloadSpecialtiesSelectBox"

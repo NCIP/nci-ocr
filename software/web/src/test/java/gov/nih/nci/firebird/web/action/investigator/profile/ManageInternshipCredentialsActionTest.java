@@ -94,7 +94,7 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.service.GenericDataRetrievalService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
@@ -120,7 +120,7 @@ public class ManageInternshipCredentialsActionTest extends AbstractWebTest {
     @Inject
     private GenericDataRetrievalService mockDataService;
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockSearchService;
     @Inject
     private ManageInternshipCredentialsAction action;
     private InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
@@ -134,7 +134,7 @@ public class ManageInternshipCredentialsActionTest extends AbstractWebTest {
         action.setProfile(profile);
         action.setServletRequest(getMockRequest());
         action.setPage(INTERNSHIP.name());
-        when(mockOrganizationService.getByExternalId(issuer.getExternalId())).thenReturn(issuer);
+        when(mockSearchService.getOrganization(issuer.getNesId())).thenReturn(issuer);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class ManageInternshipCredentialsActionTest extends AbstractWebTest {
         action.setInternship(internship);
         action.setPage(FirebirdUIConstants.RETURN_SEARCH_PAGE);
         assertEquals(FirebirdUIConstants.RETURN_SEARCH_PAGE, action.manageCredentialsAjaxEnter());
-        assertNull(action.getIssuingOrganizationExternalId());
+        assertNull(action.getIssuerSearchKey());
     }
 
     @Test
@@ -183,7 +183,7 @@ public class ManageInternshipCredentialsActionTest extends AbstractWebTest {
         action.setInternship(internship);
         action.setPage(FirebirdUIConstants.RETURN_FIELDS_PAGE);
         assertEquals(FirebirdUIConstants.RETURN_FIELDS_PAGE, action.manageCredentialsAjaxEnter());
-        assertNull(action.getIssuingOrganizationExternalId());
+        assertNull(action.getIssuerSearchKey());
     }
 
     @Test
@@ -191,7 +191,7 @@ public class ManageInternshipCredentialsActionTest extends AbstractWebTest {
         action.setInternship(internship);
         action.setPage(FirebirdUIConstants.RETURN_CLOSE_DIALOG);
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.manageCredentialsAjaxEnter());
-        assertNull(action.getIssuingOrganizationExternalId());
+        assertNull(action.getIssuerSearchKey());
     }
 
     @Test

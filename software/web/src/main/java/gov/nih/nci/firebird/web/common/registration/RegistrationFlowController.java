@@ -248,8 +248,6 @@ public final class RegistrationFlowController implements Serializable {
     /**
      * @return whether there is a next step in the flow or not. Useful for display of button.
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public boolean hasNextStep() {
         return !currentStep.equals(flowSteps.get(flowSteps.size() - 1));
     }
@@ -257,8 +255,6 @@ public final class RegistrationFlowController implements Serializable {
     /**
      * @return whether there is a previous step in the flow or not. Useful for display of button.
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public boolean hasPreviousStep() {
         return !currentStep.equals(flowSteps.get(0));
     }

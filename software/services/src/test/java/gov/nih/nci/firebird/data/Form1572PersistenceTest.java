@@ -99,7 +99,6 @@ import static org.junit.Assert.*;
 public class Form1572PersistenceTest extends AbstractHibernateTestCase {
 
     @Test
-    @SuppressWarnings("unchecked")
     public void testPersistence() {
         InvestigatorProfile inv = InvestigatorProfileFactory.getInstance().create();
         Organization irb1 = OrganizationFactory.getInstance().create();
@@ -109,8 +108,8 @@ public class Form1572PersistenceTest extends AbstractHibernateTestCase {
         Organization site1 = OrganizationFactory.getInstance().create();
         Organization site2 = OrganizationFactory.getInstance().create();
         Protocol protocol = ProtocolFactory.getInstance().createWithFormsDocuments();
-        saveAll(protocol.getRegistrationConfiguration().getAssociatedFormTypes());
-        save(protocol, inv, irb1, irb2, lab1, lab2, site1, site2, protocol);
+        save(inv, irb1, irb2, lab1, lab2, site1, site2, protocol);
+        @SuppressWarnings("unchecked")
         List<Organization> allOrgs = getCurrentSession().createCriteria(Organization.class).list();
         int orgCount = allOrgs.size();
         int profileCount = getCurrentSession().createCriteria(InvestigatorProfile.class).list().size();

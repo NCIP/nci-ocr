@@ -456,34 +456,4 @@ public class AbstractRegistrationTest {
         assertTrue(isEmpty(registration.getForm(HUMAN_RESEARCH_CERTIFICATE).getComments()));
     }
 
-    @Test
-    public void testIsCommentsEntered_SponsorComments() throws Exception {
-        registration.setSponsorComments("comments");
-        assertTrue(registration.isCommentsEntered());
-    }
-
-    @Test
-    public void testIsCommentsEntered_FormComments() throws Exception {
-        registration.getForm1572().setFormStatus(FormStatus.REJECTED);
-        registration.getForm1572().setComments("comments");
-        assertTrue(registration.isCommentsEntered());
-    }
-
-    @Test
-    public void testIsCommentsEntered_InvestigatorComments() throws Exception {
-        registration.setInvestigatorComments("comments");
-        assertTrue(registration.isCommentsEntered());
-    }
-
-    @Test
-    public void testIsCommentsEntered_CoordinatorComments() throws Exception {
-        registration.setCoordinatorComments("comments");
-        assertTrue(registration.isCommentsEntered());
-    }
-
-    @Test
-    public void testIsCommentsEntered_NoComments() throws Exception {
-        assertFalse(registration.isCommentsEntered());
-    }
-
 }

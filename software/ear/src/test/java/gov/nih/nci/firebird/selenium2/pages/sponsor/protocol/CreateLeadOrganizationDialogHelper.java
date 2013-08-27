@@ -137,12 +137,12 @@ public class CreateLeadOrganizationDialogHelper {
     }
 
     public void enterDataAndSave(ProtocolLeadOrganization leadOrganization) {
-        if (leadOrganization.getOrganization().hasExternalRecord()) {
+        if (leadOrganization.getOrganization().hasNesRecord()) {
             searchAndSelectOrganization(leadOrganization.getOrganization());
         } else {
             enterNewOrganizationData(leadOrganization.getOrganization());
         }
-        if (leadOrganization.getPrincipalInvestigator().hasExternalRecord()) {
+        if (leadOrganization.getPrincipalInvestigator().hasNesRecord()) {
             searchAndSelectPerson(leadOrganization.getPrincipalInvestigator());
         } else {
             enterNewPersonData(leadOrganization.getPrincipalInvestigator());

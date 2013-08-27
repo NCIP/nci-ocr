@@ -116,8 +116,6 @@ public class WorkHistory extends AbstractCredential<WorkHistory> {
      * @param issuer issuer organization
      * @param position position
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public WorkHistory(InvestigatorProfile profile, Date effectiveDate, Date expirationDate, Organization issuer,
             String position) {
         super(profile, effectiveDate, expirationDate, issuer);

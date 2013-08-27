@@ -44,7 +44,7 @@
                     <div class="clear"></div>
 
                     <script>
-                    function taskPopUp(actionUrl) {
+                    function taskPopUp(actionUrl, actionId) {
                         $('#taskDialog').load('${pageContext.request.contextPath}' + actionUrl).dialog('open');
                     }
 
@@ -72,7 +72,7 @@
                                       id: aData.taskActionTargetId,
                                       href: '#',
                                       click: function() {
-                                          taskPopUp(aData.taskActionUrl);
+                                          taskPopUp(aData.taskActionUrl, aData.taskActionTargetId);
                                       }
                                   }).appendTo(td);
                               } else {

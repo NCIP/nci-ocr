@@ -104,8 +104,6 @@ public class Internship extends AbstractSpecialtyCredential<Internship> {
      * @param issuer issuer organization
      * @param specialty medical specialty
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public Internship(InvestigatorProfile profile, Date effectiveDate, Date expirationDate, Organization issuer,
             MedicalSpecialty specialty) {
         super(profile, effectiveDate, expirationDate, issuer, specialty);

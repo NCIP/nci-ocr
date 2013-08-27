@@ -85,17 +85,13 @@ package gov.nih.nci.firebird.web.action;
 import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.common.RichTextUtil;
 import gov.nih.nci.firebird.common.ValidationFailure;
-import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.security.UserSessionInformation;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
-import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
+import gov.nih.nci.firebird.service.investigatorprofile.ProfileNesRefreshService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
+import gov.nih.nci.firebird.service.person.PersonSearchService;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 import gov.nih.nci.firebird.web.common.FirebirdUIConstants;
@@ -122,8 +118,8 @@ import com.google.inject.name.Named;
 import com.opensymphony.xwork2.ActionSupport;
 
 /**
- * Provides base functionality for all FIREBIRD Struts 2 actions. Guice setter injection used (as opposed to
- * constructor) for ease of integration with subclasses.
+ * Provides base functionality for all FIREBIRD Struts 2 actions. Guice setter injection used
+ * (as opposed to constructor) for ease of integration with subclasses.
  */
 @SuppressWarnings({ "PMD.AbstractNaming", "PMD.TooManyMethods" })
 // following Struts 2 base class naming convention of _Support.
@@ -136,11 +132,14 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
      * Session attribute name for retrieving whether or not the current user's refrences have been refreshed from NES.
      */
     private static final String NES_REFERENCES_REFRESHED = "nesReferencesRefreshed";
+    static final String PERSON_SEARCH_SERVICE_ATTRIBUTE_NAME = PersonSearchService.class.getName();
 
     private FirebirdUserService userService;
-    private Provider<PersonService> personServiceProvider;
-    private Provider<OrganizationService> organizationServiceProvider;
-    private ProfileRefreshService profileRefreshService;
+    private Provider<PersonSearchService> personSearchServiceProvider;
+    private Provider<OrganizationSearchService> organizationSearchServiceProvider;
+    private PersonSearchService personSearchService;
+    private OrganizationSearchService organizationSearchService;
+    private ProfileNesRefreshService profileRefreshService;
     private SponsorService sponsorService;
     private HttpServletRequest request;
     private ServletContext context;
@@ -168,8 +167,7 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
      * @param minPaginationResults the minPaginationResults to set
      */
     @Inject
-    public void setMinPaginationResults(@Named("firebird.paginate.results.min")
-    int minPaginationResults) {
+    public void setMinPaginationResults(@Named("firebird.paginate.results.min") int minPaginationResults) {
         this.minPaginationResults = minPaginationResults;
     }
 
@@ -180,26 +178,84 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
         return minPaginationResults;
     }
 
+    /**
+     * @param personSearchServiceProvider the personSearchServiceProvider to set
+     */
     @Inject
-    public void setPersonServiceProvider(Provider<PersonService> personServiceProvider) {
-        this.personServiceProvider = personServiceProvider;
+    public void setPersonSearchServiceProvider(Provider<PersonSearchService> personSearchServiceProvider) {
+        this.personSearchServiceProvider = personSearchServiceProvider;
     }
 
-    protected PersonService getPersonService() {
-        return personServiceProvider.get();
+    /**
+     * Returns a <code>PersonSearchService</code> that is bound to the current web session.
+     *
+     * @return the search service
+     */
+    protected PersonSearchService getPersonSearchService() {
+        if (personSearchService == null) {
+            setPersonSearchService(retrievePersonSearchService());
+        }
+        return personSearchService;
+    }
+
+    private PersonSearchService retrievePersonSearchService() {
+        PersonSearchService service = (PersonSearchService)
+                getSessionAttribute(PERSON_SEARCH_SERVICE_ATTRIBUTE_NAME);
+        if (service == null) {
+            service = personSearchServiceProvider.get();
+            getSession(true).setAttribute(PERSON_SEARCH_SERVICE_ATTRIBUTE_NAME, service);
+        }
+        return service;
+    }
+
+    /**
+     * For rare circumstances where bean may have been invalidated, replaces the 
+     * search service with a new instance.
+     * 
+     * @return the refreshed service
+     */
+    public PersonSearchService refreshPersonSearchService() {
+        getSession(true).setAttribute(PERSON_SEARCH_SERVICE_ATTRIBUTE_NAME, null);
+        return getPersonSearchService();
+    }
+
+    /**
+     * @param personSearchService the personSearchService to set
+     */
+    public void setPersonSearchService(PersonSearchService personSearchService) {
+        this.personSearchService = personSearchService;
+    }
+
+    /**
+     * @param organizationSearchServiceProvider the personSearchServiceProvider to set
+     */
+    @Inject
+    public void setOrganizationSearchServiceProvider(
+            Provider<OrganizationSearchService> organizationSearchServiceProvider) {
+        this.organizationSearchServiceProvider = organizationSearchServiceProvider;
+    }
+
+    /**
+     * Returns a <code>PersonSearchService</code> that is bound to the current web session.
+     *
+     * @return the search service
+     */
+    protected OrganizationSearchService getOrganizationSearchService() {
+        if (organizationSearchService == null) {
+            setOrganizationSearchService(organizationSearchServiceProvider.get());
+        }
+        return organizationSearchService;
+    }
+
+    /**
+     * @param organizationSearchService the organizationSearchService to set
+     */
+    public void setOrganizationSearchService(OrganizationSearchService organizationSearchService) {
+        this.organizationSearchService = organizationSearchService;
     }
 
     @Inject
-    public void setOrganizationServiceProvider(Provider<OrganizationService> organizationServiceProvider) {
-        this.organizationServiceProvider = organizationServiceProvider;
-    }
-
-    protected OrganizationService getOrganizationService() {
-        return organizationServiceProvider.get();
-    }
-
-    @Inject
-    public void setProfileRefreshService(ProfileRefreshService profileRefreshService) {
+    public void setProfileRefreshService(ProfileNesRefreshService profileRefreshService) {
         this.profileRefreshService = profileRefreshService;
     }
 
@@ -266,20 +322,11 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
         if (currentUser == null && getCurrentGridSessionInformation() != null) {
             currentUser = getUserService().getUserInfo(getCurrentGridSessionInformation());
         }
-        if (shouldRefreshProfile()) {
-            refreshProfile();
+        if (currentUser != null && getSessionAttribute(NES_REFERENCES_REFRESHED) == null) {
+            AsyncUtils.mixinAsync(profileRefreshService).refreshNesReferences(currentUser.getActiveProfiles());
+            getSession(true).setAttribute(NES_REFERENCES_REFRESHED, true);
         }
         return currentUser;
-    }
-
-    private boolean shouldRefreshProfile() {
-        return currentUser != null && !currentUser.getActiveProfiles().isEmpty()
-                && getSessionAttribute(NES_REFERENCES_REFRESHED) == null;
-    }
-
-    private void refreshProfile() {
-        AsyncUtils.mixinAsync(profileRefreshService).refreshExternalReferences(currentUser.getActiveProfiles());
-        getSession(true).setAttribute(NES_REFERENCES_REFRESHED, true);
     }
 
     @Override
@@ -292,6 +339,13 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
      */
     public HttpServletRequest getRequest() {
         return request;
+    }
+
+    /**
+     * @return the current request.
+     */
+    protected ServletContext getContext() {
+        return context;
     }
 
     @Override
@@ -335,7 +389,6 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
 
     /**
      * Add messages to the action.
-     *
      * @param failure error to add.
      * @param prefix The Prefix to be appended to field keys.
      */
@@ -400,7 +453,6 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
 
     /**
      * Types to replace the client's content type with a more reliable one.
-     *
      * @param fileInfo uploaded file
      */
     public void resolveContentType(Struts2UploadedFileInfo fileInfo) {
@@ -419,7 +471,7 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
     public boolean validateRichTextSize(String text, int maxCharCount) {
         int textSize = RichTextUtil.getRichTextSize(text);
         if (textSize > maxCharCount) {
-            String[] args = {String.valueOf(maxCharCount), Integer.toString(textSize)};
+            String[] args = {String.valueOf(maxCharCount), Integer.toString(textSize) };
             addActionError(getText("error.rich.text.size", args));
             return false;
         }
@@ -442,8 +494,7 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
     }
 
     /**
-     * adds error text from an error key.
-     *
+     *  adds error text from an error key.
      * @param errorKey property key value
      * @return ActionSupport.INPUT
      */
@@ -463,7 +514,8 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
      * @return true if the user is an investigator
      */
     public boolean isInvestigator() {
-        return getCurrentUser().isInvestigator() && isInGroup(UserRoleType.INVESTIGATOR);
+        return getCurrentUser().isInvestigator()
+                && isInGroup(UserRoleType.INVESTIGATOR);
     }
 
     private boolean isInGroup(UserRoleType roleType) {
@@ -474,28 +526,32 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
      * @return true if the user is an investigator for CTEP
      */
     public boolean isCtepInvestigator() {
-        return getCurrentUser().isInvestigator() && isInGroup(UserRoleType.CTEP_INVESTIGATOR);
+        return getCurrentUser().isInvestigator()
+                && isInGroup(UserRoleType.CTEP_INVESTIGATOR);
     }
 
     /**
      * @return true if the user is an investigator for CTEP
      */
     public boolean isVerifiedCtepInvestigator() {
-        return getCurrentUser().isInvestigator() && isInGroup(UserRoleType.CTEP_VERIFIED_INVESTIGATOR);
+        return getCurrentUser().isInvestigator()
+                && isInGroup(UserRoleType.CTEP_VERIFIED_INVESTIGATOR);
     }
 
     /**
      * @return true if the user is a registration coordinator
      */
     public boolean isRegistrationCoordinator() {
-        return getCurrentUser().isRegistrationCoordinator() && isInGroup(UserRoleType.REGISTRATION_COORDINATOR);
+        return getCurrentUser().isRegistrationCoordinator()
+                && isInGroup(UserRoleType.REGISTRATION_COORDINATOR);
     }
 
     /**
      * @return true if the user is a registration coordinator for CTEP
      */
     public boolean isCtepRegistrationCoordinator() {
-        return getCurrentUser().isRegistrationCoordinator() && isInGroup(UserRoleType.CTEP_REGISTRATION_COORDINATOR);
+        return getCurrentUser().isRegistrationCoordinator()
+                && isInGroup(UserRoleType.CTEP_REGISTRATION_COORDINATOR);
     }
 
     /**
@@ -536,38 +592,8 @@ public abstract class FirebirdActionSupport extends ActionSupport implements Ser
         return object == null ? null : object.getId();
     }
 
-    @SuppressWarnings("ucd")
-    // used to set current user from tests
     void setCurrentUser(FirebirdUser user) {
         this.currentUser = user;
-    }
-
-    /**
-     * Retrieves a person by external ID from the person service.
-     *
-     * @param externalId External ID of the person
-     * @return Person with given external ID
-     */
-    protected Person getPerson(String externalId) {
-        try {
-            return getPersonService().getByExternalId(externalId);
-        } catch (InvalidatedPersonException e) {
-            throw new IllegalStateException("Unexpected failure for person external id: " + externalId, e);
-        }
-    }
-
-    /**
-     * Retrieves an organization by external ID from the organization service.
-     *
-     * @param externalId External ID of the organization
-     * @return Organization with given external ID
-     */
-    protected Organization getOrganization(String externalId) {
-        try {
-            return getOrganizationService().getByExternalId(externalId);
-        } catch (InvalidatedOrganizationException e) {
-            throw new IllegalStateException("Unexpected failure for organization external id: " + externalId, e);
-        }
     }
 
 }

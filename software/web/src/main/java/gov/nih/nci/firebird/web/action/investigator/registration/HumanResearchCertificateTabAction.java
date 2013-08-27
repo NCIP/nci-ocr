@@ -214,10 +214,12 @@ public class HumanResearchCertificateTabAction extends AbstractRegistrationTabAc
         Set<CertificateListing> certificateListings = Sets.newHashSet();
         Set<? extends Certificate> certificates = getCertificateList();
 
-        for (Certificate certificate : certificates) {
-            if (CertificateType.HUMAN_RESEARCH_CERTIFICATE == certificate.getCertificateType()
-                    && !certificate.isExpired()) {
-                certificateListings.add(new CertificateListing(certificate));
+        for (Certificate cert : certificates) {
+            if (CertificateType.HUMAN_RESEARCH_CERTIFICATE == cert.getCertificateType()) {
+                CertificateListing listing = new CertificateListing(this, cert.getId(), cert.getFile(),
+                        cert.getCertificateType(), cert.getEffectiveDate(), cert.getExpirationDate(), cert.getIssuer()
+                                .getName());
+                certificateListings.add(listing);
             }
         }
         return certificateListings;
@@ -253,9 +255,7 @@ public class HumanResearchCertificateTabAction extends AbstractRegistrationTabAc
     /**
      * Class for portraying Certificates in a table with just necessary data.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
-    protected final class CertificateListing {
+    public static final class CertificateListing {
         private final Long id;
         private final FirebirdFile file;
         private final Date effectiveDate;
@@ -263,13 +263,24 @@ public class HumanResearchCertificateTabAction extends AbstractRegistrationTabAc
         private final String certificateType;
         private final String issuerName;
 
-        CertificateListing(Certificate certificate) {
-            this.id = certificate.getId();
-            this.file = certificate.getFile();
-            this.certificateType = getText(certificate.getCertificateType().getNameProperty());
-            this.effectiveDate = certificate.getEffectiveDate();
-            this.expirationDate = certificate.getExpirationDate();
-            this.issuerName = certificate.getIssuer().getName();
+        /**
+         * @param action .
+         * @param id .
+         * @param file .
+         * @param type .
+         * @param effectiveDate .
+         * @param expirationDate .
+         * @param issuerName .
+         */
+        @SuppressWarnings("PMD.ExcessiveParameterList")
+        public CertificateListing(HumanResearchCertificateTabAction action, Long id, FirebirdFile file,
+                CertificateType type, Date effectiveDate, Date expirationDate, String issuerName) {
+            this.id = id;
+            this.file = file;
+            this.certificateType = action.getText(type.getNameProperty());
+            this.effectiveDate = effectiveDate;
+            this.expirationDate = expirationDate;
+            this.issuerName = issuerName;
         }
 
         /**

@@ -90,7 +90,7 @@ import gov.nih.nci.firebird.common.FirebirdConstants;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.security.UserSessionInformation;
-import gov.nih.nci.firebird.service.person.local.LocalPersonDataService;
+import gov.nih.nci.firebird.service.person.PersonService;
 
 import java.rmi.RemoteException;
 import java.util.Set;
@@ -118,7 +118,7 @@ public class IamIntegrationServiceStub implements IamIntegrationService {
 
     private String usernamePrefix;
     private IdentifiedPersonI identifiedPersonClient;
-    private LocalPersonDataService localPersonService;
+    private PersonService personService;
 
     @Override
     public UserSessionInformation authenticateUser(String username, String password) {
@@ -156,14 +156,17 @@ public class IamIntegrationServiceStub implements IamIntegrationService {
     }
 
     private String findValidUnusedCtepIdentifier() {
-        IdentifiedPerson identifiedPerson;
+        Person ctepPerson;
+        String ctepId;
         do {
-            identifiedPerson = getCtepIdentifiedPerson();
-        } while (!hasAvailableCtepId(identifiedPerson));
-        return identifiedPerson.getAssignedId().getExtension();
+            ctepId = getCtepIdentifiedPersons().getAssignedId().getExtension();
+            ctepPerson = personService.getByCtepId(ctepId);
+        } while (ctepPerson != null && ctepPerson.getId() != null);
+
+        return ctepId;
     }
 
-    private IdentifiedPerson getCtepIdentifiedPerson() {
+    private IdentifiedPerson getCtepIdentifiedPersons() {
         IdentifiedPerson searchIdentifiedPerson = new IdentifiedPerson();
         II ii = new II();
         ii.setRoot(CTEP_ROOT);
@@ -181,12 +184,6 @@ public class IamIntegrationServiceStub implements IamIntegrationService {
         limitOffset.setOffset(RandomUtils.nextInt(RANDOM_PERSON_OFFSET_RANGE));
         limitOffset.setLimit(1);
         return limitOffset;
-    }
-
-    private boolean hasAvailableCtepId(IdentifiedPerson identifiedPerson) {
-        String nesId = identifiedPerson.getPlayerIdentifier().getExtension();
-        Person localPerson = localPersonService.getByExternalId(nesId);
-        return localPerson == null;
     }
 
     @Override
@@ -213,8 +210,7 @@ public class IamIntegrationServiceStub implements IamIntegrationService {
     }
 
     @Inject
-    void setUsernamePrefix(@Named(FirebirdConstants.LOGIN_CTEP_IAM_USERNAME_PREFIX)
-    String usernamePrefix) {
+    void setUsernamePrefix(@Named(FirebirdConstants.LOGIN_CTEP_IAM_USERNAME_PREFIX) String usernamePrefix) {
         this.usernamePrefix = usernamePrefix;
     }
 
@@ -224,8 +220,7 @@ public class IamIntegrationServiceStub implements IamIntegrationService {
     }
 
     @Inject
-    void setLocalPersonService(LocalPersonDataService localPersonService) {
-        this.localPersonService = localPersonService;
+    void setPersonService(PersonService personService) {
+        this.personService = personService;
     }
-
 }

@@ -125,7 +125,7 @@ public class SponsorOrganizationsPageFlowAction extends AbstractSponsorSelection
         leaveEditModeIfNoSponsorSelected();
         if (!checkPreventsDelegateSelection()) {
             clearSponsorRepresentativeRoles();
-            for (Organization sponsor : findSelectedSponsorsByExternalId()) {
+            for (Organization sponsor : findSelectedSponsorsById()) {
                 getAccountConfigurationData().getSponsorOrganizations().add(sponsor);
             }
             return SUCCESS;

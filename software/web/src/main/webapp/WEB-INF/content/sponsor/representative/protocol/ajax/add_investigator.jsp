@@ -7,7 +7,7 @@
 
             <firebird:messages/>
 
-            <s:form id="selectInvestigatorForm" action="selectInvestigator" onsubmit="return !isBlank(selectedPersonExternalId.value)">
+            <s:form id="selectInvestigatorForm" action="selectInvestigator" onsubmit="return !isBlank(selectedPersonKey.value)">
                 <firebird:personSearch labelKey="person.search.label" setFocus="true">
                     <s:url namespace="/sponsor/representative/protocol/ajax" action="enterCreateInvestigator" var="createNewInvestigatorUrl" >
                         <s:param name="protocol.id">${protocol.id}</s:param>
@@ -17,7 +17,7 @@
                           onErrorTopics="ajaxError"><fmt:message key="button.create.new"/></sj:a>
                     <s:a id="doneButton" href="#" cssClass="button"><fmt:message key="button.done"/></s:a>
                 </firebird:personSearch>
-                <s:hidden id="selectedPersonExternalId" name="selectedPersonExternalId" />
+                <s:hidden id="selectedPersonKey" name="selectedPersonKey" />
                 <s:hidden id="protocolId" name="protocol.id" />
             </s:form>
             <div class="clear"></div>
@@ -42,8 +42,8 @@
                 closeDialogAndReload();
             });
 
-            personSearch.clickSelectButton = function(person) {
-                $('#selectedPersonExternalId').val(person.externalId);
+            personSearch.clickSelectButton = function(personId) {
+                $('#selectedPersonKey').val(personId);
                 var url = "${selectInvestigatorUrl}";
                 var serializedForm = $('#selectInvestigatorForm').serialize();
                 var target = "#investigatorInfoContent";

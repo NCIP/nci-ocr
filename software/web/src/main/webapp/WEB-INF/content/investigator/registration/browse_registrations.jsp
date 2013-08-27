@@ -4,7 +4,6 @@
 <link href="<c:url value='/styles/jquery.treeTable.css'/>" rel="stylesheet" type="text/css" />
 <link href="<c:url value='/styles/jquery.treetable.theme.default.css'/>" rel="stylesheet" type="text/css" />
 
-<s:url var="registrationIconUrl" value='/images/ico_document.png' />
 <s:url var="regUrl" action="enterRegistrations" namespace="/investigator/registration">
     <s:param name="profile.id" value="profile.id" />
 </s:url>
@@ -14,90 +13,93 @@
 <div id="tabwrapper">
     <div class="ui-tabs">
         <div class="ui-tabs-panel">
-
-            <div class="registrationsTableHeader">
-                <div><fmt:message key="registration.browse.protocol.title.column.header" /></div>
-                <div><fmt:message key="registration.browse.protocol.id.column.header" /></div>
-                <div><fmt:message key="registration.browse.protocol.sponsor.column.header" /></div>
-                <div><fmt:message key="label.type" /></div>
-                <div><fmt:message key="registration.browse.protocol.status.column.header" /></div>
-            </div>
-
-            <div id="registrationsAccordionTable">
-                <s:if test="registrationListings.empty">
-                    <br>
-                    <div class="centeredText"><fmt:message key="label.no.registrations"/></div>
-                </s:if> <s:else>
-                    <s:iterator value="registrationListings" var="registration">
-                        <div class="accordion">
-                            <div id="<s:property value='%{#registration.id}'/>" class="accordionHeader">
-                                <s:if test="#registration.revisedRegistrations.empty">
-                                    <span style="margin-right: 17px;">&nbsp</span>
-                                </s:if><s:else>
-                                    <span class="accordionToggle ui-icon ui-icon-triangle-1-e"></span>
-                                </s:else>
-                                <img alt="Registration" src="${registrationIconUrl}"/>
-                                <div><s:property value='%{#registration.title}'/></div>
-                                <div><s:property value='%{#registration.protocolNumber}'/></div>
-                                <div><s:property value='%{#registration.sponsor}'/></div>
-                                <div><s:property value='%{#registration.type}'/></div>
-                                <div>
-                                    <span class="statusBullet statusBullet_inv_<s:property value='%{#registration.status.name()}'/>">&bull;</span>
-                                    <span id="registrationStatus"><s:property value='%{#registration.status.display}'/></span>
-                                </div>
-                                <s:if test="#registration.submittable">
-                                    <div><s:a cssClass="button" href="#" onclick="viewRegistration(%{#registration.id})"><fmt:message key="button.edit"/></s:a></div>
-                                </s:if><s:else>
-                                    <div><s:a cssClass="button" href="#" onclick="viewRegistration(%{#registration.id})"><fmt:message key="button.view"/></s:a></div>
-                                </s:else>
+            <table id="registrationsTable" class="ui-jqgrid-htable ui-jqgrid-btable"
+                    summary="This table displays all of the registrations which the investigator has been invited to. It
+                            displays the title of the protocol, the protocol ID, the organization sponsoring the protocol,
+                            if it is an investigator or subinvestigator registration, and the current status.">
+                <thead>
+                    <tr>
+                        <th scope="col" width="250px">
+                            <div>
+                                <fmt:message key="registration.browse.protocol.title.column.header" />
                             </div>
-
-                            <!-- Collapsed Revised Registrations -->
-                            <div id="revisedRegistrations" class="hide">
-                               <s:iterator value="#registration.revisedRegistrations" var="revisedRegistration">
-                                   <div id="<s:property value='%{#revisedRegistration.id}'/>" class="accordionHeader">
-                                        <span style="margin-right: 17px;">&nbsp</span>
-                                        <img alt="Registration" src="${registrationIconUrl}"/>
-                                        <div><s:property value='%{#revisedRegistration.title}'/></div>
-                                        <div><s:property value='%{#revisedRegistration.protocolNumber}'/></div>
-                                        <div><s:property value='%{#revisedRegistration.sponsor}'/></div>
-                                        <div><s:property value='%{#revisedRegistration.type}'/></div>
-                                        <div>
-                                            <span class="statusBullet statusBullet_inv_<s:property value='%{#revisedRegistration.status.name()}'/>">&bull;</span>
-                                            <span id="registrationStatus"><s:property value='%{#revisedRegistration.status.display}'/></span>
-                                        </div>
-                                        <div><s:a cssClass="button" href="#" onclick="viewRegistration(%{#revisedRegistration.id})"><fmt:message key="button.view"/></s:a></div>
-                                    </div>
-                               </s:iterator>
+                        </th>
+                        <th scope="col" width="150px">
+                            <div>
+                                <fmt:message key="registration.browse.protocol.id.column.header" />
                             </div>
-
-                        </div>
-                    </s:iterator>
-                </s:else>
-            </div>
+                        </th>
+                        <th scope="col" width="150px">
+                            <div>
+                                <fmt:message key="registration.browse.protocol.sponsor.column.header" />
+                            </div>
+                        </th>
+                        <th scope="col" width="75px">
+                            <div>
+                                <fmt:message key="label.type" />
+                            </div>
+                        </th>
+                        <th scope="col" width="75px">
+                            <div>
+                                <fmt:message key="registration.browse.protocol.status.column.header" />
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+            </table>
         </div>
     </div>
 </div>
 <script type="text/javascript">
     $(document).ready(function() {
-        setUpAccordion();
+        createRegistrationsTable();
     });
 
-    function setUpAccordion() {
-        $('.accordionToggle').click(function () {
-            toggleAccordionArrow(this);
-            $(this).parent().next().slideToggle('fast');
-        }).parent().next().hide();
+    function createRegistrationsTable() {
+        var dataRows = ${registrations};
+        $('#registrationsTable').dataTable( {
+            aaData : dataRows,
+            bInfo : false,
+            bLengthChange: false,
+            bPaginate: false,
+            bFilter: false,
+            aaSorting: [[3, 'asc'],[0, 'asc']],
+            aoColumns: [
+                {mDataProp : 'title', fnRender : function(obj) {
+                    return buildTitleColumn(obj.aData);
+                }},
+                {mDataProp: "protocolNumber"},
+                {mDataProp: "sponsor"},
+                {mDataProp : null, fnRender : function(obj) {
+                    if (obj.aData.investigatorRegistration) {
+                        return '<fmt:message key="label.investigator"/>';
+                    } else {
+                        return '<fmt:message key="label.subinvestigator"/>';
+                    }
+                }},
+                {mDataProp: "status"}
+            ],
+            fnRowCallback: function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                $(nRow).attr("id", aData.id);
+                if (aData.currentRegistrationId != null) {
+                   $(nRow).addClass("child-of-" + aData.currentRegistrationId);
+                }
+                return nRow;
+            },
+            fnInitComplete: function() {
+                indicateLoading(false);
+            }
+        });
+
+        $('#registrationsTable').treeTable({indent: 15});
     }
 
-    function toggleAccordionArrow(arrow) {
-        $(arrow).toggleClass("ui-icon-triangle-1-s");
-        $(arrow).toggleClass("ui-icon-triangle-1-e");
+    function buildTitleColumn(registration) {
+        return linkFormatter(registration.title,{
+            paramName:'id',
+            paramValue: 'id',
+            action : 'enterRegistrations',
+            url : '${regUrl}'
+        }, registration);
     }
-
-    function viewRegistration(id) {
-        var url = "${regUrl}" + "&registration.id=" + id;
-        window.location.href = url;
-    }
-
 </script>

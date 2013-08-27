@@ -28,7 +28,7 @@
             </firebird:dialogHeader>
             <firebird:messages/>
             <s:form id="selectAssociatedOrgForm" action="selectAssociatedOrganization" namespace="/investigator/profile/associations/org/ajax" onsubmit="return false">
-                <s:hidden id="organizationExternalId" name="organizationExternalId" />
+                <s:hidden id="searchKey" name="searchKey" />
                 <s:hidden name="associationType" />
                 <s:hidden name="profile.id" value="%{profile.id}" />
                 <s:hidden name="ohrpRequired" value="%{ohrpRequired}" />
@@ -45,8 +45,8 @@
        $(document).ready(function() {
            setFocusToFirstControl();
 
-           organizationSearch.clickSelectButton = function(organization) {
-               $('#organizationExternalId').val(organization.externalId);
+           organizationSearch.clickSelectButton = function(organizationId) {
+               $('#searchKey').val(organizationId);
                var url = $('#selectAssociatedOrgForm').attr('action');
                var serializedForm = $('#selectAssociatedOrgForm').serialize();
                var target = getCurrentDialog();

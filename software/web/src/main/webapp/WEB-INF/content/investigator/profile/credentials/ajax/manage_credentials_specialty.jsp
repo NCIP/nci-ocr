@@ -28,7 +28,7 @@
             <div class="formcol">
                             <s:url var="specialtyTypesUrl" namespace="/investigator/profile/credentials/ajax" action="specialtyTypes"/>
                             <sj:select
-                                requiredLabel="true"
+                                    requiredLabel="true"
                                 label="%{getText('dropdown.specialtyType')}"
                                 href="%{specialtyTypesUrl}"
                                 id="credentialsSpecialtyType"

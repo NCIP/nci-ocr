@@ -93,4 +93,11 @@ import javax.ejb.Local;
 @Local
 public interface StateLookupService extends GenericService<State> {
 
+    /**
+     * Looks up a state by the provided State Code.
+     * @param code the state code
+     * @return the State found.
+     */
+    State getStateByCode(String code);
+
 }

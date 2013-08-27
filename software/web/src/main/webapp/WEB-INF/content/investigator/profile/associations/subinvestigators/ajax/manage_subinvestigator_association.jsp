@@ -7,7 +7,7 @@
     <firebird:messages/>
     <s:form action="select" id="selectSubinvestigatorForm" onsubmit="return false">
         <s:hidden name="profile.id" value="%{profile.id}"/>
-        <s:hidden id="selectedPersonExternalId" name="selectedPersonExternalId" />
+        <s:hidden id="selectedPersonKey" name="selectedPersonKey" />
 
         <s:if test="%{registration.id != null}">
             <s:hidden name="registration.id"/>
@@ -22,8 +22,8 @@
 
     <s:url var="createNewUrl" action="enterFields" />
     $(document).ready(function() {
-      personSearch.clickSelectButton = function(person) {
-            $('#selectedPersonExternalId').val(person.externalId);
+      personSearch.clickSelectButton = function(personId) {
+            $('#selectedPersonKey').val(personId);
             var url = $('#selectSubinvestigatorForm').attr('action');
             performClick(url);
         };
@@ -35,7 +35,7 @@
         }
 
         $("#createNewButton").click(function() {
-          $('#selectedPersonExternalId').val("");
+          $('#selectedPersonKey').val("");
             var url = '${createNewUrl}';
             performClick(url);
         });

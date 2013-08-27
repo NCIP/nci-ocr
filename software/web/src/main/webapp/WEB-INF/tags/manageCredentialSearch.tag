@@ -14,7 +14,7 @@
 
                 <jsp:doBody/>
 
-                <s:hidden id="issuingOrganizationExternalId" name="issuingOrganizationExternalId" />
+                <s:hidden id="issuerSearchKey" name="issuerSearchKey" />
                 <s:hidden name="page" value="%{@gov.nih.nci.firebird.web.common.FirebirdUIConstants@RETURN_FIELDS_PAGE}"/>
                 <s:hidden name="profile.id" value="%{profile.id}"/>
             </s:form>
@@ -22,9 +22,9 @@
             <firebird:organizationSearch labelKey="${organizationSearchLabel}" required="true"/>
             <script type="text/javascript">
                 $(document).ready(function() {
-                    organizationSearch.clickSelectButton = function(organization) {
+                    organizationSearch.clickSelectButton = function(searchKey) {
                         disableDialog();
-                        $('#issuingOrganizationExternalId').val(organization.externalId);
+                        $('#issuerSearchKey').val(searchKey);
 
                         var href = $('#credentialForm').attr('action');
                         var serializedForm = $('#credentialForm').serialize();

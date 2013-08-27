@@ -378,9 +378,7 @@ public class ClinicalLabCertificateAction extends AbstractProfileAction {
     /**
      * Table listing for a LaboratoryCertificate object.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
-    protected final class CertificateListing {
+    public class CertificateListing {
 
         private Long id;
         private final String type;
@@ -390,7 +388,7 @@ public class ClinicalLabCertificateAction extends AbstractProfileAction {
         /**
          * @param certificate certificate
          */
-        CertificateListing(LaboratoryCertificate certificate) {
+        public CertificateListing(LaboratoryCertificate certificate) {
             if (certificate.getCertificateFile() != null) {
                 this.id = certificate.getCertificateFile().getId();
             }

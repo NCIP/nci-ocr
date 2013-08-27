@@ -117,7 +117,7 @@ function getCurrentSelectedTabIndex(tabset) {
   if (!(tabset) || isBlank(tabset)) {
         tabset = "tabwrapper";
     }
-    var curTab = $("#" + tabset + " .ui-state-active[role='tab']");
+    var curTab = $("#" + tabset + " .ui-state-active");
     return curTab.index();
   }
 
@@ -126,12 +126,8 @@ function selectTab(tabId, tabset) {
         tabset = "tabwrapper";
     }
 
-    var tabIndex = getTabIndex(tabId, tabset);
-    $("#" + tabset).tabs("option", "active", tabIndex);
-}
-
-function getTabIndex(tabId, tabset) {
-    return $("#" + tabset).parent().find("#" + tabId).index();
+    tabId = $('#' + tabId + " a").attr('href');
+    $("#" + tabset).tabs('select', tabId);
 }
 
 function disableDialog(dialogId) {
@@ -171,13 +167,28 @@ function setFocusToDialog() {
     $(".ui-dialog-content[id!='timeoutDialog']:visible").parent().focus();
 }
 
-function personFormatter(cellvalue) {
-    var tooltip = cellvalue.displayNameForList + " | " + addressFormatter(cellvalue.postalAddress, " | ");
+//A Formatter for the js Grid to format an Address for display
+//TODO DEPRECATED
+function addressFormatter(cellvalue, options, rowObject) {
+    if (options.colModel.formatoptions) {
+        return __addressFormatter(cellvalue, options.colModel.formatoptions.delim);
+    } else {
+        return __addressFormatter(cellvalue);
+    }
+}
+
+//TODO DEPRECATED
+function personFormatter(cellvalue, options, rowObject) {
+    if (!cellvalue) {
+        cellvalue = rowObject;
+    }
+    var tooltip = cellvalue.displayNameForList + " | " + __addressFormatter(cellvalue.postalAddress, " | ");
     return "<span title='" + tooltip + "'>" + cellvalue.displayNameForList + "</span>";
 }
 
-function addressFormatter(address, delimiter) {
-    var delim = delimiter ? delimiter : "<br>";
+//TODO rename
+function __addressFormatter(address, delimitor) {
+    var delim = delimitor ? delimitor : "<br>";
     var formattedValue = address.streetAddress + delim;
     if (!isBlank(address.deliveryAddress)) {
         formattedValue += address.deliveryAddress + delim;
@@ -196,24 +207,26 @@ function organizationFormatter(org, delim) {
     if(!delim) {
         delim = "<br>";
     }
-    var address = addressFormatter(org.postalAddress, delim);
+    var address = __addressFormatter(org.postalAddress, delim);
     var formattedValue = org.name + delim + address;
 
     return formattedValue;
 }
 
 //a link formatter that ties to base paramValue on the cell value.
+//TODO DEPRECATED
 function linkedImageFormatter(cellvalue, options, rowObject) {
     if (!cellvalue) {
         return "";
     }
-    options = simplifyOptions(options, rowObject);
+    options = simplifyOptions(cellvalue, options, rowObject);
     var imageTag = createLinkImage(cellvalue, options);
     options.text = imageTag;
     return linkFormatter(imageTag, options, rowObject);
 }
 
 // a link formatter that ties to base paramValue on the cell value.
+//TODO DEPRECATED
 function linkFormatter(cellvalue, options, rowObject) {
     if (!cellvalue) {
         return "";
@@ -221,7 +234,7 @@ function linkFormatter(cellvalue, options, rowObject) {
     if(!rowObject) {
         rowObject = options;
     }
-    options = simplifyOptions(options, rowObject);
+    options = simplifyOptions(cellvalue, options, rowObject);
 
     var href = "href=\"" + options.url + "\"" ;
     var id = (!isBlank(options.action)) ? ("id=\"" + options.action + "." + rowObject.id) +"\"" : "";
@@ -288,8 +301,8 @@ function createOrgAssociationDeleteLink(association, url, associationType, dialo
     return ajaxLinkFormatter(createImage('ico_delete.gif', 'Delete'),
         {
             'url': url,
-            'paramName':'organizationExternalId',
-            'paramValue': 'externalId',
+            'paramName':'searchKey',
+            'paramValue': 'organizationId',
             'action': 'delete',
             'target': dialog,
             'addParam':'associationType=' + associationType
@@ -299,19 +312,21 @@ function createOrgAssociationDeleteLink(association, url, associationType, dialo
 
 
 //a link formatter that ties to base paramValue on the cell value.
+//TODO DEPRECATED
 function ajaxImageFormatter(cellvalue, options, rowObject) {
-    options = simplifyOptions(options, rowObject);
+    options = simplifyOptions(cellvalue, options, rowObject);
 
     imageTag = createLinkImage(cellvalue, options);
     return ajaxLinkFormatter(imageTag, options, rowObject);
 }
 
 // a link formatter that ties to base paramValue on the cell value.
+//TODO DEPRECATED
 function ajaxLinkFormatter(cellvalue, options, rowObject) {
     if(!rowObject) {
         rowObject = options;
     }
-    options = simplifyOptions(options, rowObject);
+    options = simplifyOptions(cellvalue, options, rowObject);
     var text = (options.text) ? options.text : cellvalue;
     var id = (!isBlank(options.action)) ? ("id=\"" + options.action + "." + rowObject.id) +"\"" : "";
     var loading = (!isBlank(options.showLoading)) ? "indicateLoading();" : "";
@@ -331,12 +346,46 @@ function clickAjaxLink(target, url) {
     }
 }
 
-function simplifyOptions(options, rowObject) {
+//a formatter for setting up a link that when clicked will go to the specified tab.
+//TODO DEPRECATED
+function tabLinkFormatter(cellvalue, options, rowObject) {
+    if (!cellvalue) {
+        return "";
+    }
+    return "<a id='" + rowObject.name + "Link' href='#' onclick=\"selectTab('form_"+ rowObject[options.tab]+"Tab')\">" + cellvalue + "</a>";
+}
+
+//TODO DEPRECATED
+function setupGridLinkOp(cellvalue, options, rowObject) {
+    var op = {
+        url: options.colModel.formatoptions.url,
+        paramName: 'see linkFormatter.paramName',
+        paramValue:'"cellvalue.param"'
+    };
+    if (options.colModel.formatoptions) {
+        op = $.extend({},op,options.colModel.formatoptions);
+    }
+
+    op.id = options.rowId;
+    op.imageTitle = options.colModel.formatoptions.imageTitle;
+    op.imageTitlePrefix = options.colModel.formatoptions.imageTitlePrefix;
+    op.imageUrl = options.colModel.formatoptions.imageUrl;
+
+    return op;
+}
+
+//TODO DEPRECATED
+function simplifyOptions(cellvalue, options, rowObject) {
 
     if(options.configured) {
         return options;
     }
-    var op = options;
+    var op;
+    if (!options.colModel) {
+        op = options;
+    } else {
+        op = setupGridLinkOp(cellvalue, options, rowObject);
+    }
 
     var paramValue;
     if (rowObject) {
@@ -355,6 +404,7 @@ function simplifyOptions(options, rowObject) {
     return op;
 }
 
+//TODO DEPRECATED
 function createLinkImage(cellvalue, options) {
     var imageTitle;
     if (!options.imageTitle) {
@@ -447,6 +497,26 @@ function refreshPage(timeoutMilli, isTab) {
     } else {
         setTimeout('window.location.reload();', timeoutMilli);
     }
+}
+
+function commentDisplayFormatter(cellvalue, options, rowObject) {
+    if(!rowObject) {
+        rowObject = options;
+    }
+
+    if(!isBlank(cellvalue)) {
+        return ajaxLinkFormatter(
+            createImage('ico_comments_present.gif', 'View / Edit Comments'),
+            {
+                url: options.url,
+                paramName:'formType.id',
+                paramValue: 'formTypeId',
+                action: 'comments',
+                target: options.dialog
+            },
+            rowObject);
+    }
+    return "";
 }
 
 /**

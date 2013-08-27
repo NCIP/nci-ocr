@@ -131,8 +131,7 @@ public class MedicalLicense extends AbstractCredential<MedicalLicense> {
      * @param country country
      * @param type the type of the license
      */
-    @SuppressWarnings({ "PMD.ExcessiveParameterList", "ucd" })
-    // convenience constructor used in tests
+    @SuppressWarnings("PMD.ExcessiveParameterList")
     public MedicalLicense(InvestigatorProfile profile, Date expirationDate, String licenseId, String state,
             String country, MedicalLicenseType type) {
 
@@ -281,5 +280,5 @@ public class MedicalLicense extends AbstractCredential<MedicalLicense> {
         snapshot.setState(getState());
         return snapshot;
     }
-
+    
 }

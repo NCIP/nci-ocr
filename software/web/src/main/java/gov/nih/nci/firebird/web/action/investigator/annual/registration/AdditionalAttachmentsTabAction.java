@@ -224,8 +224,6 @@ public class AdditionalAttachmentsTabAction extends AbstractAnnualRegistrationTa
         this.dataFile = uploadedFileInfo;
     }
 
-    @SuppressWarnings("ucd")
-    // used to inject processor from tests
     void setProcessor(AdditionalAttachmentsTabActionProcessor<AnnualRegistration> processor) {
         this.processor = processor;
     }

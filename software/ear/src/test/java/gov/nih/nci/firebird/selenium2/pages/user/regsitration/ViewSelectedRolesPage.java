@@ -103,8 +103,6 @@ public class ViewSelectedRolesPage extends AbstractAccountRegistrationPage<ViewS
 
     private static final String TITLE_KEY = "user.registration.view.roles.title";
 
-    private ViewSelectedRolesPageHelper helper = new ViewSelectedRolesPageHelper(this);
-
     public ViewSelectedRolesPage(WebDriver webDriver) {
         super(webDriver);
     }
@@ -126,10 +124,6 @@ public class ViewSelectedRolesPage extends AbstractAccountRegistrationPage<ViewS
         assertPresent(headerLocator);
         assertTrue(findElement(headerLocator).getText().contains(getPropertyText(TITLE_KEY)));
         assertNextButtonIsPresent();
-    }
-
-    public ViewSelectedRolesPageHelper getHelper() {
-        return helper;
     }
 
 }

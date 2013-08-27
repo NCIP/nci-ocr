@@ -97,7 +97,6 @@ import gov.nih.nci.firebird.web.common.Struts2UploadedFileInfo;
 import org.apache.struts2.json.JSONException;
 import org.apache.struts2.json.JSONUtil;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -225,9 +224,9 @@ public abstract class AbstractProfileAction extends FirebirdActionSupport implem
      */
     protected String getCredentialJsonString(CredentialType credentialType) throws JSONException {
         Set<AbstractCredential<?>> credentials = getProfile().getCredentials(credentialType);
-        ArrayList<Pattern> excludes = Lists.newArrayList(Pattern.compile(".*\\.byteDataSource"),
-                Pattern.compile(".*\\.profile"), Pattern.compile(".*\\.roles"));
-        return lookupProperties(JSONUtil.serialize(credentials, excludes, null, false, true, false));
+        return lookupProperties(JSONUtil.serialize(credentials,
+                Lists.newArrayList(Pattern.compile(".*\\.byteDataSource"), Pattern.compile(".*\\.profile")), null,
+                false, true, false));
     }
 
     /**

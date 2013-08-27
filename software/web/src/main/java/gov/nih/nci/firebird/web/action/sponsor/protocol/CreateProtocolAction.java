@@ -83,6 +83,7 @@
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 
 import org.apache.struts2.convention.annotation.Action;
@@ -107,10 +108,11 @@ public class CreateProtocolAction extends AbstractModifyProtocolAction {
 
     /**
      * @param protocolService the protocol service
+     * @param organizationService the organization service
      */
     @Inject
-    public CreateProtocolAction(ProtocolService protocolService) {
-        super(protocolService);
+    public CreateProtocolAction(ProtocolService protocolService, OrganizationService organizationService) {
+        super(protocolService, organizationService);
     }
 
     /**

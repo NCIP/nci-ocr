@@ -10,9 +10,7 @@ import java.util.regex.Pattern;
 /**
  * Utility class which provides assistance methods to properly display Protocol Information.
  */
-@SuppressWarnings("ucd")
-// called from JSP pages
-final class ProtocolUiUtils {
+public final class ProtocolUiUtils {
     private ProtocolUiUtils() {
     }
 

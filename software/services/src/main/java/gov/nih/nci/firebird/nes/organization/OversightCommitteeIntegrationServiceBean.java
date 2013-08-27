@@ -91,7 +91,7 @@ import gov.nih.nci.coppa.services.business.business.common.BusinessI;
 import gov.nih.nci.coppa.services.entities.organization.common.OrganizationI;
 import gov.nih.nci.coppa.services.structuralroles.oversightcommittee.common.OversightCommitteeI;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.nes.AbstractNesData;
+import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
 import gov.nih.nci.firebird.nes.common.ValidationErrorTranslator;
 import gov.nih.nci.iso21090.extensions.Id;
@@ -130,7 +130,6 @@ public class OversightCommitteeIntegrationServiceBean extends AbstractCorrelatio
         OrganizationCreator creator = new OrganizationCreator() {
             @Override
             public Id create(Organization organization) throws RemoteException {
-                getExternalData(organization).setOversightCommitteeType(type);
                 return callCreate(organization, type);
             }
         };
@@ -138,7 +137,7 @@ public class OversightCommitteeIntegrationServiceBean extends AbstractCorrelatio
     }
 
     private Id callCreate(Organization organization, OversightCommitteeType type) throws RemoteException {
-        createPlayer(organization, translator);
+        createPlayerIfNecessary(organization, translator);
         return oversightCommitteeService.create(translator.toOversightCommittee(organization, type));
     }
 
@@ -149,6 +148,11 @@ public class OversightCommitteeIntegrationServiceBean extends AbstractCorrelatio
         OversightCommittee oversightCommittee = (OversightCommittee) correlationNode.getCorrelation().getContent()
                 .get(0);
         return translator.toFirebirdOrganization(oversightCommittee, player);
+    }
+
+    @Override
+    NesIIRoot getNesIIRoot() {
+        return NesIIRoot.OVERSIGHT_COMMITTEE;
     }
 
     @Override
@@ -192,12 +196,12 @@ public class OversightCommitteeIntegrationServiceBean extends AbstractCorrelatio
     }
 
     @Override
-    public List<Organization> searchByAssignedIdentifier(String assignedIdentifier, OversightCommitteeType type) {
-        OrganizationSearcher searcher = createIdentifiedOrganizationExtensionSearch(assignedIdentifier, type);
-        return searchByAssignedIdentifier(searcher, assignedIdentifier);
+    public List<Organization> searchByAssignedIdentifier(String extension, OversightCommitteeType type) {
+        OrganizationSearcher search = createIdentifiedOrganizationExtensionSearch(extension, type);
+        return performSearch(search);
     }
 
-    private OrganizationSearcher createIdentifiedOrganizationExtensionSearch(final String extension,
+    OrganizationSearcher createIdentifiedOrganizationExtensionSearch(final String extension,
             final OversightCommitteeType type) {
         return new OrganizationSearcher() {
             public List<Organization> search() throws RemoteException {
@@ -235,16 +239,6 @@ public class OversightCommitteeIntegrationServiceBean extends AbstractCorrelatio
             }
         }
         return organizations;
-    }
-
-    @Override
-    AbstractNesData createNesExternalData() {
-        return new OversightCommitteeData();
-    }
-    
-    @Override
-    OversightCommitteeData getExternalData(Organization organization) {
-        return (OversightCommitteeData) super.getExternalData(organization);
     }
 
 }

@@ -87,15 +87,15 @@ import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
 import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.TableUtils;
+import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
 import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.RegistrationCommentsTag.CommentType;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable.RegistrationListing;
 import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.RegistrationReviewCommentDialog;
-import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.AdditionalAttachmentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FinancialDisclosuresSupportingDocumentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FormReviewCommentDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.ReviewAdditionalAttachmentsDialog;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.util.List;
 
@@ -115,28 +115,26 @@ public class ReviewRegistrationTab extends AbstractLoadableComponent<ReviewRegis
 
     public static final IdentifiableComponentFactory<ReviewRegistrationTab> FACTORY = new Factory();
 
-    private static final String TITLE_ID = "reviewProtocolRegistrationTitle";
-    private static final String REGISTRATION_STATUS_ID = "registrationStatus";
     private static final String COMPLETE_SUCCESS_MESSAGE_CLASS = "validMessage";
+    private static final String REGISTRATON_FORM_TABLE_CSS_SELECTOR = "table.registrationFormsTable";
     private static final String COMPLETE_REVIEW_BUTTON_ID = "completeReviewButton";
+    private static final String DISABLED_BUTTON_CSS_CLASS = "disabledButton";
     private static final String COMPLETE_REVIEW_BUTTON_INSTRUCTIONS_CLASS = "instructions";
 
     private ReviewRegistrationTabHelper helper = new ReviewRegistrationTabHelper(this);
 
-    @FindBy(id = TITLE_ID)
+    @FindBy(tagName = "h2")
     @CacheLookup
     private WebElement headerElement;
 
-    @FindBy(id = REGISTRATION_STATUS_ID)
+    @FindBy(tagName = "h3")
     private WebElement statusHeader;
 
-    private final SponsorReviewRegistrationFormsTable table;
     private final RegistrationCommentsTag commentsTag;
     private final RegistrationPacketPage page;
 
     public ReviewRegistrationTab(WebDriver driver, RegistrationPacketPage page) {
         super(driver);
-        table = new SponsorReviewRegistrationFormsTable(getDriver(), this);
         this.page = page;
         commentsTag = new RegistrationCommentsTag(getDriver());
     }
@@ -153,8 +151,8 @@ public class ReviewRegistrationTab extends AbstractLoadableComponent<ReviewRegis
         return statusHeader.getText();
     }
 
-    public boolean isCompleteReviewButtonPresent() {
-        return isPresent(By.id(COMPLETE_REVIEW_BUTTON_ID));
+    public boolean isCompleteReviewButtonEnabled() {
+        return !WebElementUtils.getClasses(getCompleteReviewButton()).contains(DISABLED_BUTTON_CSS_CLASS);
     }
 
     private WebElement getCompleteReviewButton() {
@@ -181,12 +179,18 @@ public class ReviewRegistrationTab extends AbstractLoadableComponent<ReviewRegis
         return page.waitUntilReady();
     }
 
-    public List<RegistrationListing> getFormListings() {
-        return getTable().getListings();
+    public List<RegistrationFormListing> getFormListings() {
+        return FirebirdTableUtils.transformDataTableRows(this, getTable(), RegistrationFormListing.class);
     }
 
-    private SponsorReviewRegistrationFormsTable getTable() {
-        return table.waitUntilReady();
+    private WebElement getTable() {
+        return Iterables.find(getDriver().findElements(By.cssSelector(REGISTRATON_FORM_TABLE_CSS_SELECTOR)),
+                              new Predicate<WebElement>() {
+                                  @Override
+                                  public boolean apply(WebElement table) {
+                                      return WebElementUtils.isVisible(table);
+                                  }
+                              }, null);
     }
 
     public void waitForCompleteSuccessMessageDisplayed() {
@@ -207,12 +211,12 @@ public class ReviewRegistrationTab extends AbstractLoadableComponent<ReviewRegis
 
     @Override
     protected void assertLoaded() {
-        table.assertLoaded();
-        assertFindBysPresent();
+        assertPresent(By.cssSelector(REGISTRATON_FORM_TABLE_CSS_SELECTOR));
         assertFalse(JQueryUtils.isTabLoading(getDriver()));
         assertFalse(JQueryUtils.isAjaxCallExecuting(getDriver()));
         assertFalse(JQueryUtils.isDialogDisplayed(getDriver()));
         assertFalse(JQueryUtils.isPageMasked(getDriver()));
+        assertNotNull(getTable());
     }
 
     public class RegistrationFormListing implements TableListing {
@@ -302,7 +306,7 @@ public class ReviewRegistrationTab extends AbstractLoadableComponent<ReviewRegis
         public AbstractLoadableComponent<?> clickFormDownload() {
             formDownloadLink.click();
             pause(400);
-            return identifyDisplayedComponent(AdditionalAttachmentsDialog.getFactory(ReviewRegistrationTab.this),
+            return identifyDisplayedComponent(ReviewAdditionalAttachmentsDialog.getFactory(ReviewRegistrationTab.this),
                                               ReviewHumanResearchCertificatesDialog.getFactory(
                                                       ReviewRegistrationTab.this),
                                               FACTORY);

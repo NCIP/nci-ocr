@@ -6,7 +6,8 @@
                 <fmt:message key="user.registration.investigator.selection.title"/>
             </firebird:dialogHeader>
             <firebird:messages/>
-            <s:form id="selectedInvestigatorForm" namespace="/coordinator/investigators/ajax" action="continueSelection" />
+            <s:form id="selectedInvestigatorForm" namespace="/coordinator/investigators/ajax" action="continueSelection">
+            </s:form>
             <firebird:investigatorSearchSelect />
             <div class="btn_bar clear">
                 <s:a id="nextStepBtn" cssClass="button" href="javascript:void(0)"><fmt:message key="button.next"/></s:a>
@@ -19,7 +20,7 @@
 <script type="text/javascript">
 
     _investigatorSelectionPage.saveAddition = function(profileId) {
-        var input = createNamedElement("input type='hidden'", "selectedInvestigatorsProfileIds").attr("id", this.getElementId(profileId)).val(profileId);
+        var input = createNamedElement("input type='hidden'", "selectedInvestigators").attr("id", this.getElementId(profileId)).val(profileId);
         $('#selectedInvestigatorForm').append(input);
         return true;
     };

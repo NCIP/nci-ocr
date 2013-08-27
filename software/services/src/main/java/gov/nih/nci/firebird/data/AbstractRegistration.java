@@ -415,6 +415,12 @@ public abstract class AbstractRegistration implements PersistentObject {
     @Transient
     public abstract Set<AbstractRegistrationForm> getForms();
 
+    void addIfNotNull(Set<AbstractRegistrationForm> forms, AbstractRegistrationForm form) {
+        if (form != null) {
+            forms.add(form);
+        }
+    }
+
     /**
      * Convenience method to allow the subtypes of registration to grab the correct form configuration from the protocol
      * instead of needing to determine what type you are looking at first.
@@ -760,14 +766,6 @@ public abstract class AbstractRegistration implements PersistentObject {
                 form.setComments(null);
             }
         }
-    }
-
-    @Transient
-    public boolean isCommentsEntered() {
-        return !StringUtils.isBlank(getSponsorComments())
-                || !StringUtils.isBlank(getInvestigatorComments())
-                || !StringUtils.isBlank(getCoordinatorComments())
-                || !StringUtils.isBlank(getFormComments());
     }
 
 }

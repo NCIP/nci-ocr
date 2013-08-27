@@ -16,14 +16,14 @@
 }
 
 #accordion.ui-accordion .ui-accordion-header.ui-state-hover {
-  background: rgb(240,249,255); Old browsers
-  background: -moz-linear-gradient(top,  rgba(240,249,255,1) 0%, rgba(203,235,255,1) 82%, rgba(161,219,255,1) 100%); FF3.6+
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(240,249,255,1)), color-stop(82%,rgba(203,235,255,1)), color-stop(100%,rgba(161,219,255,1))); Chrome,Safari4+
-  background: -webkit-linear-gradient(top,  rgba(240,249,255,1) 0%,rgba(203,235,255,1) 82%,rgba(161,219,255,1) 100%); Chrome10+,Safari5.1+
-  background: -o-linear-gradient(top,  rgba(240,249,255,1) 0%,rgba(203,235,255,1) 82%,rgba(161,219,255,1) 100%); Opera 11.10+
-  background: -ms-linear-gradient(top,  rgba(240,249,255,1) 0%,rgba(203,235,255,1) 82%,rgba(161,219,255,1) 100%); IE10+
-  background: linear-gradient(to bottom,  rgba(240,249,255,1) 0%,rgba(203,235,255,1) 82%,rgba(161,219,255,1) 100%); W3C
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f0f9ff', endColorstr='#a1dbff',GradientType=0 ); IE6-9
+  background: rgb(240,249,255); /* Old browsers */
+  background: -moz-linear-gradient(top,  rgba(240,249,255,1) 0%, rgba(203,235,255,1) 82%, rgba(161,219,255,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(240,249,255,1)), color-stop(82%,rgba(203,235,255,1)), color-stop(100%,rgba(161,219,255,1))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  rgba(240,249,255,1) 0%,rgba(203,235,255,1) 82%,rgba(161,219,255,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  rgba(240,249,255,1) 0%,rgba(203,235,255,1) 82%,rgba(161,219,255,1) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  rgba(240,249,255,1) 0%,rgba(203,235,255,1) 82%,rgba(161,219,255,1) 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  rgba(240,249,255,1) 0%,rgba(203,235,255,1) 82%,rgba(161,219,255,1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f0f9ff', endColorstr='#a1dbff',GradientType=0 ); /* IE6-9 */
 }
 
 #accordion.ui-accordion .ui-accordion-header.ui-tabs-active {
@@ -34,18 +34,4 @@
   border: 1px solid #dddddd;
   background: #f2f5f7;
   margin-top: -12px;
-}
-
-#accordion.ui-accordion H3 A {
-  text-decoration: none;
-  border: none;
-  margin-left: 0;
-  padding: 3px 5px 2px 0px;
-  -webkit-box-shadow: none;
-  background: none !important;
-  margin-bottom: 0px;
-}
-
-#accordion.ui-accordion H3 A:hover {
-  background: none !important;
 }

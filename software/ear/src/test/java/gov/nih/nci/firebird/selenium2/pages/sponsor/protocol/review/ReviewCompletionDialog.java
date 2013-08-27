@@ -82,13 +82,12 @@
  */
 package gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review;
 
-import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
-import gov.nih.nci.firebird.selenium2.pages.base.AbstractDialog;
-import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.ApproveRegistrationValidationDialog;
-
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
+
+import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
+import gov.nih.nci.firebird.selenium2.pages.base.AbstractDialog;
 
 /**
  * /sponsor/protocol/review/ajax/packet_complete.jsp
@@ -108,10 +107,9 @@ public class ReviewCompletionDialog extends AbstractDialog<ReviewCompletionDialo
         super(driver, reviewRegistrationTab);
     }
 
-    public ApproveRegistrationValidationDialog clickApproveRegistration() {
-        approveRegistrationButton.click();
-        return new ApproveRegistrationValidationDialog(getDriver(), (ReviewRegistrationTab) getParent())
-                .waitUntilReady();
+    public void clickApproveRegistration() {
+        closeDialog(approveRegistrationButton);
+        pause(200);
     }
 
     public void clickReturnToOverview() {

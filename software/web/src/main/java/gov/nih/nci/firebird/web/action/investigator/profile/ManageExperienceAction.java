@@ -108,8 +108,6 @@ public class ManageExperienceAction extends AbstractProfileAction {
     /**
      * Maximum character count for comments.
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public static final int MAX_CHAR_COUNT = 500;
 
     /**

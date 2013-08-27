@@ -83,9 +83,7 @@
 package gov.nih.nci.firebird.data;
 
 import static org.junit.Assert.*;
-import gov.nih.nci.firebird.data.user.InvestigatorStatus;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
-import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
@@ -97,8 +95,7 @@ import org.junit.Test;
 public class InvestigatorProfileTest {
 
     private InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
-    private InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
-            profile);
+    private InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(profile);
     FirebirdFile file = FirebirdFileFactory.getInstance().create();
 
     @Test
@@ -147,7 +144,7 @@ public class InvestigatorProfileTest {
         registration.getAdditionalAttachmentsForm().getAdditionalAttachments().remove(file);
         assertFalse(profile.isOrphan(file));
     }
-
+    
     @Test
     public void testContainsAssociation() throws AssociationAlreadyExistsException {
         assertFalse(profile.containsAssociation(null, null));
@@ -157,57 +154,5 @@ public class InvestigatorProfileTest {
         assertFalse(profile.containsAssociation(organization, OrganizationRoleType.CLINICAL_LABORATORY));
         assertTrue(profile.containsAssociation(organization, OrganizationRoleType.PRACTICE_SITE));
     }
-
-    @Test
-    public void testCanCreateAnnualRegistration_WithdrawnInvestigator() throws Exception {
-        profile.getUser().setCtepUser(true);
-        profile.getUser().getInvestigatorRole().setStatus(InvestigatorStatus.WITHDRAWN);
-        assertFalse(profile.canCreateAnnualRegistration());
-    }
-
-    @Test
-    public void testCanCreateAnnualRegistration_NonCtepUser() throws Exception {
-        profile.getUser().setCtepUser(false);
-        assertFalse(profile.canCreateAnnualRegistration());
-    }
-
-    @Test
-    public void testCanCreateAnnualRegistration_WithRenewal() throws Exception {
-        profile.getUser().setCtepUser(true);
-        AnnualRegistration parent = AnnualRegistrationFactory.getInstanceWithId().create();
-        AnnualRegistration renewal = AnnualRegistrationFactory.getInstanceWithId().create();
-        renewal.setParent(parent);
-        profile.addRegistration(parent);
-        profile.addRegistration(renewal);
-        assertFalse(profile.canCreateAnnualRegistration());
-    }
-
-    @Test
-    public void testCanCreateAnnualRegistration_NoRenewalYet() throws Exception {
-        profile.getUser().setCtepUser(true);
-        AnnualRegistration parent = AnnualRegistrationFactory.getInstanceWithId().create();
-        profile.addRegistration(parent);
-        assertFalse(profile.canCreateAnnualRegistration());
-    }
-
-    @Test
-    public void testCanCreateAnnualRegistration_WithDeletedRenewal() throws Exception {
-        profile.getUser().setCtepUser(true);
-        AnnualRegistration parent = AnnualRegistrationFactory.getInstanceWithId().create();
-        AnnualRegistration renewal = AnnualRegistrationFactory.getInstanceWithId().create();
-        renewal.setParent(parent);
-        profile.addRegistration(parent);
-        profile.addRegistration(renewal);
-        profile.removeRegistration(renewal);
-        parent.setRenewal(null);
-        assertTrue(profile.canCreateAnnualRegistration());
-    }
-
-    @Test
-    public void testCanCreateAnnualRegistration_EmptyAnnualRegistrations() throws Exception {
-        profile.getUser().setCtepUser(true);
-        assertTrue(profile.canCreateAnnualRegistration());
-    }
-
 
 }

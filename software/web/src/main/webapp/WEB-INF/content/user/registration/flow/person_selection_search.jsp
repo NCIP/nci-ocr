@@ -6,7 +6,7 @@
         <div class="ui-tabs-panel">
             <firebird:messages/>
             <s:form id="selectPersonForm" action="currentStep" onsubmit="return false">
-                <s:hidden id="selectedPersonExternalId" name="selectedPersonExternalId" />
+                <s:hidden id="selectedPersonKey" name="selectedPersonKey" />
             </s:form>
             <firebird:personSearch labelKey="person.search.label" instructionsKey="person.search.instructions.current.user" setFocus="true"/>
             <div class="btn_bar">
@@ -22,8 +22,8 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
-        personSearch.clickSelectButton = function(person) {
-            $('#selectedPersonExternalId').val(person.externalId);
+        personSearch.clickSelectButton = function(personId) {
+            $('#selectedPersonKey').val(personId);
             var url = $('form').first().attr('action');
             var serializedForm = $('form').serialize();
             var target = '#registrationContent';

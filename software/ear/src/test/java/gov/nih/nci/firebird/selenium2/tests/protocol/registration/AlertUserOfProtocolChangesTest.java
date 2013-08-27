@@ -109,7 +109,7 @@ public class AlertUserOfProtocolChangesTest extends AbstractFirebirdWebDriverTes
 
     @Inject
     private DataSetBuilder builder;
-
+    
     @Test
     public void testProtocolChangedWhileViewingRegistration() {
         DataSet dataSet = buildRegistrationDataSet();
@@ -131,7 +131,8 @@ public class AlertUserOfProtocolChangesTest extends AbstractFirebirdWebDriverTes
         return RegistrationOverviewTabHelper.openRegistration(homePage, registration);
     }
 
-    private void checkProtocolUpdateCheckedAfterAutoRefresh(DataSet dataSet, RegistrationOverviewTab overviewTab) {
+    private void checkProtocolUpdateCheckedAfterAutoRefresh(DataSet dataSet,
+            RegistrationOverviewTab overviewTab) {
         reduceRegistrationViewTimers(overviewTab);
         updateProtocolRevisions(dataSet);
         String expectedUpdateWarning = getUpdateWarning(EXPECTED_SECONDS_IN_UPDATE_WARNING);
@@ -144,8 +145,10 @@ public class AlertUserOfProtocolChangesTest extends AbstractFirebirdWebDriverTes
     }
 
     private String getUpdateWarning(int secondsRemaining) {
-        return getPropertyText("registration.protocol.updated.page.alert.warning") + " " + secondsRemaining + " "
-                + getPropertyText("label.seconds") + ".";
+        return getPropertyText("registration.protocol.updated.page.alert.warning")
+                + " " + secondsRemaining + " "
+                + getPropertyText("label.seconds")
+                + ".";
     }
 
     private void waitForPageRefresh(RegistrationOverviewTab overviewTab) {
@@ -168,18 +171,16 @@ public class AlertUserOfProtocolChangesTest extends AbstractFirebirdWebDriverTes
         dataSet.update(dataSet.getProtocol());
     }
 
-    private void checkPageRefreshAfterUserStatusChange(DataSet dataSet, RegistrationOverviewTab overviewTab,
-            boolean deactivate) {
-        HumanResearchCertificateTab humanResearchCertificateTab = overviewTab.getPage()
-                .clickHumanResearchCertificateTab();
+    private void checkPageRefreshAfterUserStatusChange(DataSet dataSet,
+            RegistrationOverviewTab overviewTab, boolean deactivate) {
+        HumanResearchCertificateTab humanResearchCertificateTab = overviewTab.getPage().clickHumanResearchCertificateTab();
         reduceRegistrationViewTimers(humanResearchCertificateTab);
         if (deactivate) {
             updateRegistrationStatus(dataSet, RegistrationStatus.INACTIVE);
         } else {
             updateRegistrationStatus(dataSet, RegistrationStatus.IN_PROGRESS);
         }
-        humanResearchCertificateTab.getHelper().assertTextAppears(getUpdateWarning(EXPECTED_SECONDS_IN_UPDATE_WARNING),
-                30);
+        humanResearchCertificateTab.getHelper().assertTextAppears(getUpdateWarning(EXPECTED_SECONDS_IN_UPDATE_WARNING), 30);
         overviewTab = humanResearchCertificateTab.refresh();
         assertEquals(deactivate, overviewTab.getHelper().isLockedForInvestigator());
     }
@@ -189,7 +190,8 @@ public class AlertUserOfProtocolChangesTest extends AbstractFirebirdWebDriverTes
         dataSet.update(dataSet.getInvestigatorRegistration());
     }
 
-    private void checkPageRefreshAfterRegistrationRemoved(DataSet dataSet, RegistrationOverviewTab overviewTab) {
+    private void checkPageRefreshAfterRegistrationRemoved(DataSet dataSet,
+            RegistrationOverviewTab overviewTab) {
         ProtocolForm1572Tab form1572Tab = overviewTab.getPage().clickForm1572Tab();
         reduceRegistrationViewTimers(form1572Tab);
 
@@ -227,25 +229,21 @@ public class AlertUserOfProtocolChangesTest extends AbstractFirebirdWebDriverTes
     private void checkProtocolModifiedBeforeSubmittingRegistration(DataSet dataSet, RegistrationOverviewTab overviewTab) {
         ProtocolFactory.getInstance().clearForms(dataSet.getProtocol());
         updateProtocolRevisions(dataSet);
-        checkSubmitAttemptGivesWarning(overviewTab, true);
-        overviewTab.waitUntilReady();
+        checkSubmitAttemptGivesWarning(overviewTab);
         assertFalse(overviewTab.getPage().isForm1572TabPresent());
     }
 
-    private void checkSubmitAttemptGivesWarning(RegistrationOverviewTab overviewTab, boolean overviewTabExpected) {
+    private void checkSubmitAttemptGivesWarning(RegistrationOverviewTab overviewTab) {
         ValidationMessageDialog dialog = (ValidationMessageDialog) overviewTab.clickSubmitRegistration();
         dialog.getHelper().closeAndIgnoreParent();
-        WaitUtils.pause(500); // need to let underlying page start to refresh after dialog closes
-        if (overviewTabExpected) {
-            overviewTab.waitUntilReady();
-        }
+        WaitUtils.pause(500);   // need to let underlying page refresh after dialog closes
     }
 
     private void checkInvestigatorRemovedBeforeSubmittingRegistration(DataSet dataSet,
             RegistrationOverviewTab overviewTab) {
         assertFalse(overviewTab.getHelper().isLockedForInvestigator());
         dataSet.delete(dataSet.getInvestigatorRegistration());
-        checkSubmitAttemptGivesWarning(overviewTab, false);
+        checkSubmitAttemptGivesWarning(overviewTab);
         new BrowseRegistrationsPage(getDriver()).waitUntilReady();
     }
 
@@ -269,7 +267,7 @@ public class AlertUserOfProtocolChangesTest extends AbstractFirebirdWebDriverTes
     private void checkInvestigatorDisabledBeforeSubmittingRegistration(DataSet dataSet,
             RegistrationOverviewTab overviewTab) {
         updateRegistrationStatus(dataSet, RegistrationStatus.INACTIVE);
-        checkSubmitAttemptGivesWarning(overviewTab, true);
+        checkSubmitAttemptGivesWarning(overviewTab);
         assertTrue(overviewTab.getHelper().isLockedForInvestigator());
     }
 

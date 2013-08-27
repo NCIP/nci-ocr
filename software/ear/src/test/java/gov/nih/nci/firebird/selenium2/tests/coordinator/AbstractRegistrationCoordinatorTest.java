@@ -89,14 +89,14 @@ import gov.nih.nci.firebird.selenium2.pages.coordinator.investigators.BrowseInve
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact.ProfessionalContactInformationTab;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.BrowseCtepInvestigatorsPage;
-import gov.nih.nci.firebird.selenium2.tests.profile.credentials.AbstractCredentialsTest;
+import gov.nih.nci.firebird.selenium2.tests.profile.credentials.AbstractCredentialsTabTest;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.LoginAccount.SponsorDelegateLogin;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
 
 import java.util.List;
 
-public abstract class AbstractRegistrationCoordinatorTest extends AbstractCredentialsTest {
+public abstract class AbstractRegistrationCoordinatorTest extends AbstractCredentialsTabTest {
 
     @Override
     protected void configureDataSet(DataSetBuilder builder) {

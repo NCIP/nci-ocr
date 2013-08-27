@@ -120,7 +120,6 @@ import gov.nih.nci.firebird.service.messages.TemplateService;
 import gov.nih.nci.firebird.service.messages.email.EmailService;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.service.user.CertificateAuthorityManager;
 import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
@@ -134,6 +133,7 @@ import gov.nih.nci.firebird.test.ProtocolFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -273,17 +273,18 @@ public class ProtocolRegistrationServiceBeanTest {
     }
 
     @Test
-    public void testCreateSubInvestigatorRegistrations() throws InvalidatedPersonException {
+    public void testCreateSubInvestigatorRegistrations() {
         Person subInvestigator = PersonFactory.getInstance().create();
         subInvestigator.setId(1L);
         Person subInvestigator2 = PersonFactory.getInstance().create();
         subInvestigator2.setId(2L);
         InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration();
 
-        when(mockPersonService.getByExternalId(subInvestigator.getExternalId())).thenReturn(subInvestigator);
-        when(mockPersonService.getByExternalId(subInvestigator2.getExternalId())).thenReturn(subInvestigator2);
+        when(mockPersonService.getById(subInvestigator.getId())).thenReturn(subInvestigator);
+        when(mockPersonService.getById(subInvestigator2.getId())).thenReturn(subInvestigator2);
 
-        List<String> ids = Lists.newArrayList(subInvestigator.getExternalId(), subInvestigator2.getExternalId());
+        List<Long> ids = new ArrayList<Long>();
+        Collections.addAll(ids, subInvestigator.getId(), subInvestigator2.getId());
 
         bean.createSubinvestigatorRegistrations(registration, ids);
         verify(bean, times(2))
@@ -403,7 +404,7 @@ public class ProtocolRegistrationServiceBeanTest {
         registration.getProfile().addCredential(
                 CredentialFactory.getInstance().createCertificate(CertificateType.HUMAN_RESEARCH_CERTIFICATE));
         registration.getProfile().addCredential(CredentialFactory.getInstance().createLicense());
-        registration.getProfile().getPerson().setCurationStatus(CurationStatus.INACTIVE);
+        registration.getProfile().getPerson().setNesStatus(CurationStatus.INACTIVE);
         RegistrationFactory.getInstance().setupInProgress(registration);
 
         try {
@@ -424,7 +425,7 @@ public class ProtocolRegistrationServiceBeanTest {
         registration.getProfile().addCredential(
                 CredentialFactory.getInstance().createCertificate(CertificateType.HUMAN_RESEARCH_CERTIFICATE));
         registration.getProfile().addCredential(CredentialFactory.getInstance().createLicense());
-        registration.getProfile().getPerson().setCurationStatus(CurationStatus.UNSAVED);
+        registration.getProfile().getPerson().setNesStatus(CurationStatus.PRE_NES_VALIDATION);
         RegistrationFactory.getInstance().setupInProgress(registration);
 
         try {
@@ -446,7 +447,7 @@ public class ProtocolRegistrationServiceBeanTest {
                 CredentialFactory.getInstance().createCertificate(CertificateType.HUMAN_RESEARCH_CERTIFICATE));
         registration.getProfile().addCredential(CredentialFactory.getInstance().createLicense());
         registration.getProfile().getPrimaryOrganization().getOrganization()
-                .setCurationStatus(CurationStatus.UNSAVED);
+                .setNesStatus(CurationStatus.PRE_NES_VALIDATION);
         RegistrationFactory.getInstance().setupInProgress(registration);
 
         try {
@@ -727,14 +728,13 @@ public class ProtocolRegistrationServiceBeanTest {
         SponsorRole unverifiedRole = user.addSponsorRepresentativeRole(unverifiedSponsor);
         Set<String> groupNames = Sets.newHashSet(verifiedRole.getSponsorOrganizationGroupName(),
                 verifiedRole.getVerifiedSponsorGroupName(), unverifiedRole.getSponsorOrganizationGroupName());
-
+        
         InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration();
         Query mockQuery = mock(Query.class);
         when(mockSession.createQuery(anyString())).thenReturn(mockQuery);
         when(mockQuery.list()).thenReturn(Lists.newArrayList(registration));
 
-        List<AbstractProtocolRegistration> registrations = bean.getByStatusForUser(RegistrationStatus.IN_PROGRESS,
-                user, groupNames);
+        List<AbstractProtocolRegistration> registrations = bean.getByStatusForUser(RegistrationStatus.IN_PROGRESS, user, groupNames);
         ArgumentCaptor<Collection> sponsorListCaptor = ArgumentCaptor.forClass(Collection.class);
         verify(mockQuery).setParameter("status", RegistrationStatus.IN_PROGRESS);
         verify(mockQuery).setParameterList(eq("sponsors"), sponsorListCaptor.capture());
@@ -747,8 +747,7 @@ public class ProtocolRegistrationServiceBeanTest {
     public void testGetByStatusForUser_NoVerifiedSponsorRoles() {
         FirebirdUser user = FirebirdUserFactory.getInstance().create();
         Set<String> emptyGroupNames = Collections.emptySet();
-        List<AbstractProtocolRegistration> protocols = bean.getByStatusForUser(RegistrationStatus.IN_PROGRESS, user,
-                emptyGroupNames);
+        List<AbstractProtocolRegistration> protocols = bean.getByStatusForUser(RegistrationStatus.IN_PROGRESS, user, emptyGroupNames);
         assertTrue(protocols.isEmpty());
     }
 

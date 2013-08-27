@@ -27,7 +27,7 @@
 
 <firebird:instructionBubble messageKey="registration.attachments.text" id="additionalAttachmentsInstructions"/>
 
-<s:if test="%{!readOnly}">
+<s:if test="%{!registration.lockedForInvestigator}">
     <sj:a openDialog="registrationDialog" href="%{uploadDialogEnter}" cssClass="button" id="addFileButton"><fmt:message key="button.add"/></sj:a>
 </s:if>
 <table id="filesTable" class="ui-jqgrid-htable ui-jqgrid-btable"
@@ -46,7 +46,7 @@
 <script type="text/javascript">
     var _attachmentsPage = (function(){
         var page = {
-            isLocked : <s:property value="readOnly"/>,
+            isLocked : <s:property value="registration.lockedForInvestigator"/>,
 
             createCheckColumn : function(file) {
                 var checkboxHtml = "";

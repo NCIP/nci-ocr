@@ -82,8 +82,7 @@
  */
 package gov.nih.nci.firebird.data;
 
-import gov.nih.nci.firebird.common.FirebirdCollectionUtils;
-
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -129,6 +128,12 @@ public abstract class AbstractProtocolRegistration extends AbstractRegistration 
     static final EnumSet<RegistrationStatus> REVISABLE_STATUSES = EnumSet.of(RegistrationStatus.ACCEPTED,
             RegistrationStatus.APPROVED, RegistrationStatus.IN_REVIEW, RegistrationStatus.SUBMITTED);
 
+    /**
+     * compare by protocol's number.
+     */
+    public static final Comparator<AbstractProtocolRegistration> PROTOCOL_NUMBER_COMPARATOR =
+            new ProtocolNumberComparator();
+
     private Protocol protocol;
     private Invitation invitation = new Invitation(this);
     private ProtocolForm1572 form1572;
@@ -168,9 +173,7 @@ public abstract class AbstractProtocolRegistration extends AbstractRegistration 
         return invitation;
     }
 
-    @SuppressWarnings("unused")
-    // setter required by hibernate
-    private void setInvitation(Invitation invitation) {
+    void setInvitation(Invitation invitation) {
         this.invitation = invitation;
     }
 
@@ -283,12 +286,22 @@ public abstract class AbstractProtocolRegistration extends AbstractRegistration 
     @Override
     public Set<AbstractRegistrationForm> getForms() {
         Set<AbstractRegistrationForm> forms = Sets.newLinkedHashSet();
-        FirebirdCollectionUtils.addIgnoreNull(forms, getForm1572());
-        FirebirdCollectionUtils.addIgnoreNull(forms, getFinancialDisclosure());
-        FirebirdCollectionUtils.addIgnoreNull(forms, getCurriculumVitaeForm());
-        FirebirdCollectionUtils.addIgnoreNull(forms, getHumanResearchCertificateForm());
-        FirebirdCollectionUtils.addIgnoreNull(forms, getAdditionalAttachmentsForm());
+        addIfNotNull(forms, getForm1572());
+        addIfNotNull(forms, getFinancialDisclosure());
+        addIfNotNull(forms, getCurriculumVitaeForm());
+        addIfNotNull(forms, getHumanResearchCertificateForm());
+        addIfNotNull(forms, getAdditionalAttachmentsForm());
         return forms;
+    }
+
+    /**
+     * comparator for a protocol.protocolNumber.
+     */
+    private static final class ProtocolNumberComparator implements Comparator<AbstractProtocolRegistration> {
+        @Override
+        public int compare(AbstractProtocolRegistration r1, AbstractProtocolRegistration r2) {
+            return Protocol.PROTOCOL_NUMBER_COMPARATOR.compare(r1.getProtocol(), r2.getProtocol());
+        }
     }
 
     @Override
@@ -340,9 +353,9 @@ public abstract class AbstractProtocolRegistration extends AbstractRegistration 
     }
 
     /**
-     * Returns the <code>InvestigatorRegistration</code> for the packet this registration belongs to. This may be the
-     * current object or, if a <code>SubinvestigatorRegistration</code> the parent <code>InvestigatorRegistration</code>
-     * .
+     * Returns the <code>InvestigatorRegistration</code> for the packet this registration belongs to.
+     * This may be the current object or, if a <code>SubinvestigatorRegistration</code> the parent
+     * <code>InvestigatorRegistration</code>.
      *
      * @return the investigator registration.
      */

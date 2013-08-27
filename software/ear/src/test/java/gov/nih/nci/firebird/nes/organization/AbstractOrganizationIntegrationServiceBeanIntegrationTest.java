@@ -83,6 +83,15 @@
 package gov.nih.nci.firebird.nes.organization;
 
 import static org.junit.Assert.*;
+
+import java.rmi.RemoteException;
+import java.util.List;
+
+import org.iso._21090.II;
+import org.junit.Test;
+
+import com.google.inject.Inject;
+
 import gov.nih.nci.coppa.common.LimitOffset;
 import gov.nih.nci.coppa.common.faults.TooManyResultsFault;
 import gov.nih.nci.coppa.po.IdentifiedOrganization;
@@ -92,18 +101,11 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.test.AbstractIntegrationTest;
 import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.iso21090.extensions.Id;
-
-import java.rmi.RemoteException;
-import java.util.List;
-
-import org.iso._21090.II;
-import org.junit.Test;
-
-import com.google.inject.Inject;
 
 public abstract class AbstractOrganizationIntegrationServiceBeanIntegrationTest extends AbstractIntegrationTest {
 
@@ -124,36 +126,36 @@ public abstract class AbstractOrganizationIntegrationServiceBeanIntegrationTest 
     }
 
     final Organization createOrganization() {
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         callCreate(organization);
         return organization;
     }
 
     void checkCreatedOrganization(Organization organization) {
-        assertNotNull(organization.getExternalId());
-        assertEquals(getExpectedRoot().getRoot(), new NesId(organization.getExternalId()).getRoot());
-        assertEquals(CurationStatus.PENDING, organization.getCurationStatus());
+        assertNotNull(organization.getNesId());
+        assertEquals(getExpectedRoot().getRoot(), new NesId(organization.getNesId()).getRoot());
+        assertEquals(CurationStatus.PENDING, organization.getNesStatus());
     }
 
     abstract void callCreate(Organization organization);
 
     @Test
-    public final void testGetById() throws Exception {
+    public final void testGetById() throws UnavailableEntityException, ReplacedEntityException {
         Organization organization = createOrganization();
-        Organization retrievedOrganization = getService().getById(organization.getExternalId());
+        Organization retrievedOrganization = getService().getById(organization.getNesId());
         assertEquals(organization, retrievedOrganization);
     }
 
     @Test
-    public final void testGetById_WithCtepId() throws Exception {
+    public final void testGetById_WithCtepId() throws UnavailableEntityException, ReplacedEntityException, RemoteException {
         IdentifiedOrganization identifiedOrganization = getCtepIdentifiedOrganization();
         Id playerIdentifier = new NesId(identifiedOrganization.getPlayerIdentifier()).toId();
-        Organization retrievedOrganization = getOrganizationForPlayerId(playerIdentifier);
+        Organization retrievedOrganization = getOrCreateOrganizationForPlayerId(playerIdentifier);
         assertEquals(identifiedOrganization.getAssignedId().getExtension(), retrievedOrganization.getCtepId());
     }
 
-    abstract Organization getOrganizationForPlayerId(Id playerId) throws RemoteException,
-            InvalidatedOrganizationException;
+    abstract Organization getOrCreateOrganizationForPlayerId(Id playerId) throws UnavailableEntityException,
+    ReplacedEntityException, RemoteException;
 
     final IdentifiedOrganization getCtepIdentifiedOrganization() throws TooManyResultsFault, RemoteException {
         LimitOffset limitOffset = new LimitOffset();
@@ -175,10 +177,10 @@ public abstract class AbstractOrganizationIntegrationServiceBeanIntegrationTest 
     abstract List<Organization> callSearchByName(String name);
 
     @Test
-    public final void testSearchByAssignedIdentifier() throws Exception {
+    public final void testSearchByAssignedIdentifier() throws RemoteException, UnavailableEntityException, ReplacedEntityException {
         IdentifiedOrganization identifiedOrganization = getCtepIdentifiedOrganization();
         Id playerIdentifier = new NesId(identifiedOrganization.getPlayerIdentifier()).toId();
-        Organization expectedOrganization = getOrganizationForPlayerId(playerIdentifier);
+        Organization expectedOrganization = getOrCreateOrganizationForPlayerId(playerIdentifier);
         String extension = identifiedOrganization.getAssignedId().getExtension();
         List<Organization> retrievedOrganizations = callSearchByAssignedIdentifier(extension);
         assertFalse(retrievedOrganizations.isEmpty());
@@ -189,22 +191,22 @@ public abstract class AbstractOrganizationIntegrationServiceBeanIntegrationTest 
 
     @Test
     public final void testValidate() throws ValidationException {
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         getService().validate(organization);
     }
 
     @Test(expected = ValidationException.class)
     public final void testValidate_Invalid() throws ValidationException {
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         organization.setPhoneNumber("bad phone format");
         getService().validate(organization);
     }
 
     @Test
-    public final void testRefresh() throws Exception {
+    public final void testRefresh() {
         Organization organizationInNes = createOrganization();
         Organization organizationToRefresh = new Organization();
-        organizationToRefresh.setExternalData(organizationInNes.getExternalData());
+        organizationToRefresh.setNesId(organizationInNes.getNesId());
         getService().refresh(organizationToRefresh);
         assertEquals(organizationInNes, organizationToRefresh);
     }

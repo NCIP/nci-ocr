@@ -93,13 +93,13 @@ import com.google.inject.name.Named;
 
 public final class DataCleanUpStatementSource {
 
-    private final Set<String> noCleanupExternalIds = new HashSet<String>();
+    private final Set<String> noCleanupNesIds = new HashSet<String>();
 
     @Inject
-    DataCleanUpStatementSource(@Named("sponsor.organization.nes.ids") Set<String> sponsorExternalIds,
-                               @Named("nih.oer.organization.nes.id") String nihOerOrganizationExternalId) {
-        this.noCleanupExternalIds.addAll(sponsorExternalIds);
-        this.noCleanupExternalIds.add(nihOerOrganizationExternalId);
+    DataCleanUpStatementSource(@Named("sponsor.organization.nes.ids") Set<String> sponsorNesIds,
+                               @Named("nih.oer.organization.nes.id") String nihOerOrganizationNesId) {
+        this.noCleanupNesIds.addAll(sponsorNesIds);
+        this.noCleanupNesIds.add(nihOerOrganizationNesId);
     }
 
     public List<String> getDataRemovalStatements() {
@@ -166,9 +166,8 @@ public final class DataCleanUpStatementSource {
                 "delete from protocol_subinvestigator_form_optionality",
                 "delete from protocol_lead_organization",
                 "delete from protocol",
-                "delete from organization where external_data_id not in ('" + Joiner.on("', '").join(noCleanupExternalIds)  + "')",
+                "delete from organization where nes_id not in ('" + Joiner.on("', '").join(noCleanupNesIds)  + "')",
                 "delete from person",
-                "delete from external_data where external_id not in ('" + Joiner.on("', '").join(noCleanupExternalIds)  + "')",
                 "delete from form_type where form_type_enum is null",
                 "delete from AuditLogDetail",
                 "delete from AuditLogRecord",

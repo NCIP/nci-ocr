@@ -227,14 +227,14 @@ public class ProtocolTest {
     }
 
     @Test
-    public void testCreateCopy() {
+    public void testClone() {
         String[] ignoreFields = new String[] { "revisionHistory", "registrations", "registrationConfiguration",
                 "leadOrganizations" };
         Protocol protocol = ProtocolFactory.getInstanceWithId().create();
-        Protocol copy = protocol.createCopy();
-        assertTrue(EqualsBuilder.reflectionEquals(protocol, copy, ignoreFields));
-        checkConfigurationClone(protocol.getRegistrationConfiguration(), copy.getRegistrationConfiguration());
-        checkLeadOrganizations(protocol.getLeadOrganizations(), copy.getLeadOrganizations());
+        Protocol clone = protocol.clone();
+        assertTrue(EqualsBuilder.reflectionEquals(protocol, clone, ignoreFields));
+        checkConfigurationClone(protocol.getRegistrationConfiguration(), clone.getRegistrationConfiguration());
+        checkLeadOrganizations(protocol.getLeadOrganizations(), clone.getLeadOrganizations());
     }
 
     private void checkConfigurationClone(ProtocolRegistrationConfiguration original,

@@ -25,7 +25,7 @@ import static gov.nih.nci.firebird.service.registration.FinancialDisclosureField
  * and returns the resulting PDF.
  */
 @SuppressWarnings("PMD.TooManyStaticImports")   // imports are enum values
-class CtepFinancialDisclosurePdfGenerator extends AbstractPdfFormGenerator {
+public class CtepFinancialDisclosurePdfGenerator extends AbstractPdfFormGenerator {
 
     /**
      * Constructor.

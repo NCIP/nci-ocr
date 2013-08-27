@@ -141,8 +141,6 @@ public class CompletionActionProcessor<T extends AbstractRegistration> {
     /**
      * Maximum character count for comments.
      */
-    @SuppressWarnings("ucd")
-    // called from JSP pages
     public static final int MAX_CHAR_COUNT = 500;
     private final BaseRegistrationService<T> registrationService;
     private final boolean requireHttpsToSign;
@@ -344,9 +342,7 @@ public class CompletionActionProcessor<T extends AbstractRegistration> {
     /**
      * Exposes only data necessary on client side for registration document listings.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
-    protected final class JsonModelDocument implements Comparable<JsonModelDocument> {
+    public final class JsonModelDocument implements Comparable<JsonModelDocument> {
 
         private static final String GROUP_NAME_PREFIX = "form.group.name.";
         private final Long id;

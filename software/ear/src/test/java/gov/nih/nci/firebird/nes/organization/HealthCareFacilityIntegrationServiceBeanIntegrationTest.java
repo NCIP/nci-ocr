@@ -83,27 +83,50 @@
 package gov.nih.nci.firebird.nes.organization;
 
 import static org.junit.Assert.*;
+
+import java.rmi.RemoteException;
+import java.util.List;
+
+import org.junit.Test;
+
+import com.google.inject.Inject;
+
 import gov.nih.nci.coppa.po.HealthCareFacility;
 import gov.nih.nci.coppa.services.structuralroles.healthcarefacility.common.HealthCareFacilityI;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.nes.NesIIRoot;
 import gov.nih.nci.firebird.nes.NesId;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.iso21090.extensions.Id;
 
-import java.rmi.RemoteException;
-import java.util.List;
-
-import com.google.inject.Inject;
-
-public class HealthCareFacilityIntegrationServiceBeanIntegrationTest extends
-        AbstractOrganizationIntegrationServiceBeanIntegrationTest {
+public class HealthCareFacilityIntegrationServiceBeanIntegrationTest extends AbstractOrganizationIntegrationServiceBeanIntegrationTest {
 
     @Inject
     private HealthCareFacilityIntegrationService service;
 
     @Inject
     private HealthCareFacilityI healthCareFacilityClient;
+
+    @Test
+    public final void testCreateWithExistingPlayer() {
+        Organization player = OrganizationFactory.getInstance().createWithoutNesData();
+        getOrganizationEntityService().create(player);
+        Organization facility = OrganizationFactory.getInstance().createWithoutNesData();
+        facility.setPlayerIdentifier(player.getNesId());
+        callCreate(facility);
+        checkCreatedOrganization(facility);
+    }
+
+    @Test
+    public void testGetByIdentifiedOrganizationPlayerId() {
+        Organization organization = createOrganization();
+        List<Organization> retrievedOrganizations = service.getByIdentifiedOrganizationPlayerId(organization
+                .getPlayerIdentifier());
+        assertEquals(1, retrievedOrganizations.size());
+        assertEquals(organization, retrievedOrganizations.get(0));
+    }
 
     @Override
     void callCreate(Organization organization) {
@@ -113,17 +136,23 @@ public class HealthCareFacilityIntegrationServiceBeanIntegrationTest extends
     @Override
     void checkCreatedOrganization(Organization organization) {
         super.checkCreatedOrganization(organization);
-        assertNotNull(getExternalData(organization).getPlayerId());
+        assertNotNull(organization.getPlayerIdentifier());
     }
 
-    private HealthCareFacilityData getExternalData(Organization organization) {
-        return (HealthCareFacilityData) organization.getExternalData();
+    @Override
+    Organization getOrCreateOrganizationForPlayerId(Id playerId) throws UnavailableEntityException,
+            ReplacedEntityException, RemoteException {
+        Organization organization = getExistingOrganizationForPlayerId(playerId);
+        if (organization == null) {
+            organization = OrganizationFactory.getInstance().createWithoutNesData();
+            organization.setPlayerIdentifier(new NesId(playerId).toString());
+            getService().create(organization);
+        }
+        return organization;
     }
 
- @Override
-    Organization getOrganizationForPlayerId(Id playerId) throws RemoteException,
-            InvalidatedOrganizationException {
-        HealthCareFacility[] facilities = healthCareFacilityClient.getByPlayerIds(new Id[] { playerId });
+    private Organization getExistingOrganizationForPlayerId(Id playerId) throws RemoteException, UnavailableEntityException, ReplacedEntityException {
+        HealthCareFacility[] facilities = healthCareFacilityClient.getByPlayerIds(new Id[] {playerId});
         if (facilities != null) {
             String nesId = new NesId(facilities[0].getIdentifier().getItem().get(0)).toString();
             return getService().getById(nesId);

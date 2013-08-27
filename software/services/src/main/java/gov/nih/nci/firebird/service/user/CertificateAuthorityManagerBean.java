@@ -108,7 +108,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -146,17 +145,17 @@ public class CertificateAuthorityManagerBean extends AbstractGenericServiceBean<
     /**
      * Key-store file name.
      */
-    static final String KEYSTORE_FILE_NAME_SUFFIX = "-firebird.p12";
+    public static final String KEYSTORE_FILE_NAME_SUFFIX = "-firebird.p12";
 
     /**
      * Key-store mine type.
      */
-    static final String KEYSTORE_MIME_TYPE = "application/x-pkcs12";
+    public static final String KEYSTORE_MIME_TYPE = "application/x-pkcs12";
 
     /**
      * Key-store description.
      */
-    static final String KEYSTORE_DESCRIPTION = "PKCS12 key store";
+    public static final String KEYSTORE_DESCRIPTION = "PKCS12 key store";
 
     private FirebirdUserService userService;
     private String rootKeystorePassword;
@@ -230,7 +229,7 @@ public class CertificateAuthorityManagerBean extends AbstractGenericServiceBean<
         this.rootKeystorePassword = rootKeystorePassword;
     }
 
-    @Resource(mappedName = "firebird/FileServiceBean/local")
+    @Inject
     void setFileService(FileService fileService) {
         this.fileService = fileService;
     }
@@ -240,7 +239,7 @@ public class CertificateAuthorityManagerBean extends AbstractGenericServiceBean<
         this.signingService = digitalSigningService;
     }
 
-    @Resource(mappedName = "firebird/FirebirdUserServiceBean/local")
+    @Inject
     void setUserService(FirebirdUserService userService) {
         this.userService = userService;
     }
@@ -329,11 +328,11 @@ public class CertificateAuthorityManagerBean extends AbstractGenericServiceBean<
     @SuppressWarnings("unchecked")
     // IDs will be Longs
     private List<Long> getExistingUserKeystoreIds() {
-        return getSession().createQuery(GET_USER_KEYSTORE_IDS_HQL).list();
+        return getSessionProvider().get().createQuery(GET_USER_KEYSTORE_IDS_HQL).list();
     }
 
     private void unlinkUsersFromKeystores() {
-        getSession().createQuery(UNLINK_ALL_USER_KEYSTORES_HQL).executeUpdate();
+        getSessionProvider().get().createQuery(UNLINK_ALL_USER_KEYSTORES_HQL).executeUpdate();
     }
 
     InputStream getOrCreateCurrentRootKeystore() throws IOException, DigitalSigningException, GeneralSecurityException {
@@ -344,7 +343,7 @@ public class CertificateAuthorityManagerBean extends AbstractGenericServiceBean<
     @SuppressWarnings("unchecked")
     // Will be a list of Keystores
     InputStream getCurrentRootKeystore() throws IOException {
-        List<RootKeystore> list = getSession().createQuery(CURRENT_ROOT_KEYSTORE_HQL).list();
+        List<RootKeystore> list = getSessionProvider().get().createQuery(CURRENT_ROOT_KEYSTORE_HQL).list();
         if (list.isEmpty()) {
             throw new IllegalStateException("root key-store not initialized");
         }

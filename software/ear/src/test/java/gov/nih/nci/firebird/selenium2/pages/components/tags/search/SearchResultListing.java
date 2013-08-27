@@ -100,7 +100,7 @@ public class SearchResultListing<RETURN_PAGE_TYPE extends AbstractLoadableCompon
     private static final int ADDRESS_COLUMN_INDEX = 2;
     private static final int EMAIL_COLUMN_INDEX = 3;
 
-    private final String externalId;
+    private final String nesId;
     private final WebElement selectButton;
     private final String name;
     private final String address;
@@ -109,7 +109,7 @@ public class SearchResultListing<RETURN_PAGE_TYPE extends AbstractLoadableCompon
 
     SearchResultListing(WebDriver driver, WebElement row, ClickHandler<RETURN_PAGE_TYPE> clickHandler) {
         this.clickHandler = clickHandler;
-        this.externalId = getId(row);
+        this.nesId = getId(row);
         List<WebElement> cells = getCells(row);
         this.selectButton = cells.get(SELECT_BUTTON_COLUMN_INDEX).findElement(By.tagName("a"));
         this.name = cells.get(NAME_COLUMN_INDEX).getText();
@@ -117,8 +117,8 @@ public class SearchResultListing<RETURN_PAGE_TYPE extends AbstractLoadableCompon
         this.emailAddress = cells.get(EMAIL_COLUMN_INDEX).getText();
     }
 
-    public String getExternalId() {
-        return externalId;
+    public String getNesId() {
+        return nesId;
     }
 
     public String getName() {

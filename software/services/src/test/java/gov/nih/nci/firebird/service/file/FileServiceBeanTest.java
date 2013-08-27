@@ -83,9 +83,20 @@
 package gov.nih.nci.firebird.service.file;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.FirebirdFile;
+import gov.nih.nci.firebird.data.InvestigatorProfile;
+import gov.nih.nci.firebird.data.InvestigatorRegistration;
+import gov.nih.nci.firebird.data.Protocol;
+import gov.nih.nci.firebird.data.RegistrationStatus;
+import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
+import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileServiceBean;
+import gov.nih.nci.firebird.service.protocol.ProtocolServiceBean;
 import gov.nih.nci.firebird.test.AbstractHibernateTestCase;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
+import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
+import gov.nih.nci.firebird.test.ProtocolFactory;
+import gov.nih.nci.firebird.test.RegistrationFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -96,19 +107,33 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.hibernate.Session;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 public class FileServiceBeanTest extends AbstractHibernateTestCase {
     private FileServiceBean bean;
+    private InvestigatorProfileServiceBean profileService;
+    private ProtocolServiceBean protocolService;
     private static File dataFile;
 
     @Inject
     public void setBean(FileServiceBean bean) {
         this.bean = bean;
+    }
+
+    @Inject
+    void setProfieService(InvestigatorProfileServiceBean bean) {
+        this.profileService = bean;
+    }
+
+    @Inject
+    void setProtocolService(ProtocolServiceBean bean) {
+        this.protocolService = bean;
     }
 
     @BeforeClass
@@ -121,6 +146,135 @@ public class FileServiceBeanTest extends AbstractHibernateTestCase {
     @AfterClass
     public static void deleteFile() throws IOException {
         FileUtils.forceDelete(dataFile);
+    }
+
+    @Test
+    public void testAddFileToProfile() throws IOException {
+        InvestigatorProfileFactory pf = InvestigatorProfileFactory.getInstance();
+        InvestigatorProfile p1 = pf.create();
+        assertTrue(p1.getUploadedFiles().isEmpty());
+        assertEquals(3L, dataFile.length());
+        FileMetadata info = new FileMetadata("name", "text/plain", "desc");
+        bean.addFileToProfile(p1, dataFile, info);
+        flushAndClearSession();
+        p1 = profileService.getById(p1.getId());
+        assertEquals(1, p1.getUploadedFiles().size());
+        FirebirdFile fbFile = p1.getUploadedFiles().iterator().next();
+
+        assertEquals(info.getFilename(), fbFile.getName());
+        assertEquals(info.getContentType(), fbFile.getContentType());
+        assertEquals(info.getDescription(), fbFile.getDescription());
+        assertEquals(3, fbFile.getLength());
+        InputStream in = new ByteArrayInputStream(fbFile.getByteDataSource().getData());
+        GZIPInputStream zin = new GZIPInputStream(in);
+        byte[] data = IOUtils.toByteArray(zin);
+        assertEquals("123", new String(data));
+    }
+
+    @Test
+    public void testAddFileToProtocol() throws IOException {
+        Protocol p1 = ProtocolFactory.getInstance().createWithFormsDocuments();
+        saveAll(p1.getRegistrationConfiguration().getAssociatedFormTypes());
+        p1.getDocuments().clear();
+        assertEquals(3L, dataFile.length());
+        FileMetadata info = new FileMetadata("name", "text/plain", "desc");
+        bean.addFileToProtocol(p1, dataFile, info);
+        flushAndClearSession();
+        p1 = protocolService.getById(p1.getId());
+        assertEquals(1, p1.getDocuments().size());
+        FirebirdFile fbFile = p1.getDocuments().iterator().next();
+
+        assertEquals(info.getFilename(), fbFile.getName());
+        assertEquals(info.getContentType(), fbFile.getContentType());
+        assertEquals(info.getDescription(), fbFile.getDescription());
+        assertEquals(3, fbFile.getLength());
+        InputStream in = new ByteArrayInputStream(fbFile.getByteDataSource().getData());
+        GZIPInputStream zin = new GZIPInputStream(in);
+        byte[] data = IOUtils.toByteArray(zin);
+        assertEquals("123", new String(data));
+    }
+
+    @Test
+    public void testWriteFile() throws IOException {
+        InvestigatorProfileFactory pf = InvestigatorProfileFactory.getInstance();
+        InvestigatorProfile p1 = pf.create();
+        assertTrue(p1.getUploadedFiles().isEmpty());
+        FileMetadata info = new FileMetadata("name", "text/plain", "desc");
+        FirebirdFile fbFile = bean.addFileToProfile(p1, dataFile, info);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        bean.writeFile(fbFile, out);
+        byte[] data = out.toByteArray();
+        assertEquals("123", new String(data));
+    }
+
+    @Test
+    public void testWriteCompressedFile() throws IOException {
+        InvestigatorProfileFactory pf = InvestigatorProfileFactory.getInstance();
+        InvestigatorProfile p1 = pf.create();
+        assertTrue(p1.getUploadedFiles().isEmpty());
+        FileMetadata info = new FileMetadata("name", "text/plain", "desc");
+        FirebirdFile fbFile = bean.addFileToProfile(p1, dataFile, info);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        bean.writeCompressedFile(fbFile, out);
+        byte[] data = out.toByteArray();
+        ByteArrayInputStream in = new ByteArrayInputStream(data);
+        GZIPInputStream zin = new GZIPInputStream(in);
+        String inflated = IOUtils.toString(zin);
+        assertEquals("123", inflated);
+    }
+
+    @Test
+    public void testDeleteFileFromProfile() throws IOException {
+        InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
+        profile.getUploadedFiles().add(FirebirdFileFactory.getInstance().create());
+        FirebirdFile file = profile.getUploadedFiles().iterator().next();
+        assertEquals(1, profile.getUploadedFiles().size());
+        save(profile);
+        flushAndClearSession();
+
+        file = bean.getById(file.getId());
+        profile = profileService.getById(profile.getId());
+        bean.deleteFileFromProfile(profile, file);
+        profile = profileService.getById(profile.getId());
+        assertTrue(profile.getUploadedFiles().isEmpty());
+        assertTrue(bean.getAll().isEmpty());
+    }
+
+    @Test
+    public void testDeleteFileFromProfile_InUnlockedRegistration() throws IOException {
+        InvestigatorRegistration registration = deleteFileFromProfile(RegistrationStatus.IN_PROGRESS);
+        assertTrue(registration.getAdditionalAttachmentsForm().getAdditionalAttachments().isEmpty());
+    }
+
+    @SuppressWarnings("unchecked")
+    // For Session Provider
+    private InvestigatorRegistration deleteFileFromProfile(RegistrationStatus status) {
+        Provider<Session> mockSessionProvider = mock(Provider.class);
+        Session mockSession = mock(Session.class);
+        InvestigatorProfileService mockProfileService = mock(InvestigatorProfileService.class);
+        bean.setSessionProvider(mockSessionProvider);
+        bean.setProfileService(mockProfileService);
+        when(mockSessionProvider.get()).thenReturn(mockSession);
+        InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
+        profile.setId(1L);
+        when(mockProfileService.getById(1L)).thenReturn(profile);
+        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
+                profile);
+        registration.setStatus(status);
+        profile.addRegistration(registration);
+        FirebirdFile file = FirebirdFileFactory.getInstance().create();
+        file.setId(2L);
+        when(mockSession.get(FirebirdFile.class, 2L)).thenReturn(file);
+        registration.getAdditionalAttachmentsForm().getAdditionalAttachments().add(file);
+        bean.deleteFileFromProfile(profile, file);
+        assertTrue(profile.getUploadedFiles().isEmpty());
+        return registration;
+    }
+
+    @Test
+    public void testDeleteFileFromProfile_InLockedRegistration() throws IOException {
+        InvestigatorRegistration registration = deleteFileFromProfile(RegistrationStatus.SUBMITTED);
+        assertEquals(1, registration.getAdditionalAttachmentsForm().getAdditionalAttachments().size());
     }
 
     @Test

@@ -189,7 +189,7 @@ public class RegistrationCoordinatorWorkflowTest extends AbstractFirebirdWebDriv
 
     private void setUpPracticeSite() {
         practiceSite = new PracticeSite();
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         String ohrpNumber = getUniqueOhrpNumber();
         practiceSite.setDataField(ohrpNumber);
         practiceSite.setType(PracticeSiteType.CANCER_CENTER);
@@ -197,7 +197,7 @@ public class RegistrationCoordinatorWorkflowTest extends AbstractFirebirdWebDriv
     }
 
     private void setUpClinicalLaboratory() {
-        laboratory = getTestDataSource().getClinicalLab();
+        laboratory = getNesTestDataSource().getClinicalLab();
     }
 
     private void setUpLabCertificate() {
@@ -209,7 +209,7 @@ public class RegistrationCoordinatorWorkflowTest extends AbstractFirebirdWebDriv
 
     private void setUpIrb() {
         irb = new InstitutionalReviewBoard();
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         irb.setOrganization(organization);
     }
 
@@ -265,7 +265,7 @@ public class RegistrationCoordinatorWorkflowTest extends AbstractFirebirdWebDriv
     private void addDegree(CredentialsTab credentialsTab) {
         DegreeType degreeType = getMdEquivalentDegreeType();
         Degree degree = CredentialFactory.getInstance().createDegree(degreeType);
-        degree.setIssuer(getExistingExternalOrganization());
+        degree.setIssuer(getExistingNesOrganization());
         ManageDegreeDialog dialog = credentialsTab.getDegreeSection().clickAddDegree();
         dialog.getHelper().enterDegreeData(degree);
         dialog.clickSave();
@@ -311,7 +311,7 @@ public class RegistrationCoordinatorWorkflowTest extends AbstractFirebirdWebDriv
         EditTrainingCertificateDialog certificateDialog = credentialsTab.getTrainingSection().clickAddCertificate();
         File certificateFile = createTemporaryFile();
         TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate(certificateFile,
-                getExistingExternalOrganization());
+                getExistingNesOrganization());
         certificateDialog.getHelper().enterTrainingCertificateData(certificate, certificateFile, false);
         certificateDialog.clickSave();
         credentialsTab.getTrainingSection().getHelper().verifyCertificateListed(certificate);
@@ -333,7 +333,7 @@ public class RegistrationCoordinatorWorkflowTest extends AbstractFirebirdWebDriv
 
     private void addAssociationToExistingPerson(SubInvestigatorAssociationsTab associationsTab) throws Exception {
         SubInvestigatorAssociationFormDialog associationDialog = associationsTab.clickAddNew();
-        Person person = getExistingExternalPerson();
+        Person person = getExistingNesPerson();
         associationDialog.getHelper().searchAndSelectPerson(person);
         associationsTab.getHelper().assertListed(person);
     }

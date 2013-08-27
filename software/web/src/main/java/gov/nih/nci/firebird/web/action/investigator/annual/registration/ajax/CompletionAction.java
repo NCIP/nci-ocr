@@ -289,8 +289,6 @@ public class CompletionAction extends AbstractAnnualRegistrationAction {
         return RichTextUtil.cleanRichText(getRegistration().getCoordinatorComments());
     }
 
-    @SuppressWarnings("ucd")
-    // used to inject mock processor from tests
     void setProcessor(CompletionActionProcessor<AnnualRegistration> processor) {
         this.processor = processor;
     }

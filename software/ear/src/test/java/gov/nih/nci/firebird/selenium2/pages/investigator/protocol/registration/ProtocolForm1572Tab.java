@@ -87,25 +87,22 @@ import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFacto
 import gov.nih.nci.firebird.commons.selenium2.util.FileDownloadUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
-
-import java.io.File;
-import java.io.IOException;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
  * /investigator/registration/ajax/fda1572/form.jsp
  */
 public class ProtocolForm1572Tab extends AbstractFormTab<ProtocolForm1572Tab> implements Form1572Tab {
-
-    private static final String TAB_UNIQUE_LOCATOR_ID = "dcpForm1572";
     private static final String PRACTICE_SITE_ASTERISK_ID = "practiceSiteAsterisk";
     private static final String IRB_ASTERISK_ID = "irbAsterisk";
     private static final String LAB_ASTERISK_ID = "labAsterisk";
-    private static final String TAB_ID = "form_form_fda_1572_tab";
+    private static final String TAB_ID = "form_Form_FDA_1572Tab";
     private static final String PRACTICE_SITES_DIV_ID = "fda1572_practiceSites";
     private static final String LABS_DIV_ID = "fda1572_labs";
     private static final String IRBS_DIV_ID = "fda1572_irb";
@@ -190,7 +187,7 @@ public class ProtocolForm1572Tab extends AbstractFormTab<ProtocolForm1572Tab> im
     public boolean isLabAsteriskVisible() {
         return clinicalLabAsterisk.isDisplayed();
     }
-
+    
     public String getInstructions() {
         return instructionBubble.getText();
     }
@@ -198,7 +195,6 @@ public class ProtocolForm1572Tab extends AbstractFormTab<ProtocolForm1572Tab> im
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
-        assertElementWithIdPresent(TAB_UNIQUE_LOCATOR_ID);;
         assertFalse(JQueryUtils.isDialogDisplayed(getDriver()));
         assertElementWithIdPresent(VIEW_GENERATED_1572_BUTTON_ID);
     }

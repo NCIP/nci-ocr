@@ -13,7 +13,7 @@
                 </a>
             </span>
             <s:form id="pharmaceuticalCompanyForm" action="savePharmaceuticalCompany">
-                <s:if test="pharmaceuticalCompany.externalId in {null, ''}">
+                <s:if test="pharmaceuticalCompany.nesId in {null, ''}">
                     <div class="formcol">
                        <s:textfield id="pharmaceuticalCompany.name" name="pharmaceuticalCompany.name" maxlength="160" size="30" requiredLabel="true"
                            cssStyle="width: 19em;" label="%{getText('textfield.organization.name')}" />
@@ -37,6 +37,8 @@
                 <s:else>
                     <firebird:organizationDisplay organization="${pharmaceuticalCompany}"/>
                 </s:else>
+
+                <s:hidden name="searchKey"/>
 
                 <div class="btn_bar clear">
                     <a id="saveButton" href="javascript:void(0);" class="button"><fmt:message key="button.save"/></a>

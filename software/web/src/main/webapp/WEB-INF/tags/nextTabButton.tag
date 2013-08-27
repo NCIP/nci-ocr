@@ -1,7 +1,7 @@
 <%@ tag language="java" pageEncoding="ISO-8859-1"%>
 <%@ taglib uri="/struts-tags" prefix="s"%>
 
-<%@ attribute name="form" rtexprvalue="true" type="gov.nih.nci.firebird.data.AbstractRegistrationForm"%>
+<%@ attribute name="form" rtexprvalue="true" required="true" type="gov.nih.nci.firebird.data.AbstractRegistrationForm"%>
 
 <s:a id="nextFormButton_%{form.formType.formTypeEnum.name()}" href="#" onclick="selectNextTab()" cssClass="button nextFormButton float_right" />
 <div class="clear"></div>
@@ -27,7 +27,7 @@
 
   function selectNextTab() {
     var nextTabIndex = getCurrentSelectedTabIndex() + 1;
-    $("#tabwrapper").tabs("option", "active", nextTabIndex);
+    $("#tabwrapper").tabs("option", "selected", nextTabIndex);
   }
 
 </script>

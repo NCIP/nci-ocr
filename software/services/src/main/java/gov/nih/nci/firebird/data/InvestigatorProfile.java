@@ -83,7 +83,6 @@
 package gov.nih.nci.firebird.data;
 
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.data.user.InvestigatorStatus;
 import gov.nih.nci.firebird.data.user.ManagedInvestigator;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
@@ -348,7 +347,7 @@ public class InvestigatorProfile implements Auditable {
         return registrationCoordinatorMappings;
     }
 
-    private void setRegistrationCoordinatorMappings(Set<ManagedInvestigator> registrationCoordinatorMappings) {
+    void setRegistrationCoordinatorMappings(Set<ManagedInvestigator> registrationCoordinatorMappings) {
         this.registrationCoordinatorMappings = registrationCoordinatorMappings;
     }
 
@@ -544,7 +543,7 @@ public class InvestigatorProfile implements Auditable {
      * @param registration the registration to add to this profile.
      * @return true if the registration was found and removed.
      */
-    boolean removeRegistration(AbstractRegistration registration) {
+    public boolean removeRegistration(AbstractRegistration registration) {
         registration.setProfile(null);
         return getRegistrationsInternal().remove(registration);
     }
@@ -663,7 +662,7 @@ public class InvestigatorProfile implements Auditable {
     /**
      * comparator for a profile.investigator by last name, then first name.
      */
-    private static final class InvestigatorNameComparator implements Comparator<InvestigatorProfile> {
+    public static final class InvestigatorNameComparator implements Comparator<InvestigatorProfile> {
         @Override
         public int compare(InvestigatorProfile p1, InvestigatorProfile p2) {
             return Person.NAME_COMPARATOR.compare(p1.getPerson(), p2.getPerson());
@@ -766,7 +765,7 @@ public class InvestigatorProfile implements Auditable {
 
     /**
      * Indicates if a file has no references in this profile.
-     *
+     * 
      * @param file the FirebirdFile to check
      * @return true if no references exist, false otherwise
      */
@@ -785,10 +784,10 @@ public class InvestigatorProfile implements Auditable {
     private boolean isFileInProfile(FirebirdFile file) {
         return getUploadedFiles().contains(file);
     }
-
+    
     /**
      * Checks if this profile contains an organization association of a specific type.
-     *
+     * 
      * @param organization check for this organization
      * @param type the type of association role to check for
      * @return true if referenced
@@ -801,23 +800,6 @@ public class InvestigatorProfile implements Auditable {
                 return association.getOrganizationRole().getOrganization().equals(organization);
             }
         });
-    }
-
-    /**
-     * @return whether or not this profile can create an annual registration
-     */
-    public boolean canCreateAnnualRegistration() {
-        return getUser().isCtepUser() && !isInvestigatorsStatusWithdrawn()
-                && (getAnnualRegistrations().isEmpty() || hasRenewalRegistrationBeenDeleted());
-    }
-
-    @Transient
-    private boolean isInvestigatorsStatusWithdrawn() {
-        return getUser().getInvestigatorRole().getStatus() == InvestigatorStatus.WITHDRAWN;
-    }
-
-    private boolean hasRenewalRegistrationBeenDeleted() {
-        return getCurrentAnnualRegistration().isRenewed() && getCurrentAnnualRegistration().getRenewal() == null;
     }
 
 }

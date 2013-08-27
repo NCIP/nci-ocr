@@ -82,8 +82,13 @@
  */
 package gov.nih.nci.firebird.service.file;
 
+import gov.nih.nci.firebird.data.AbstractRegistration;
 import gov.nih.nci.firebird.data.FirebirdFile;
+import gov.nih.nci.firebird.data.InvestigatorProfile;
+import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.service.AbstractGenericServiceBean;
+import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
+import gov.nih.nci.firebird.service.protocol.ProtocolService;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -101,6 +106,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 
+import com.google.inject.Inject;
+
 /**
  * Manage the presistence of {@link FirebirdFile} and data compression.
  */
@@ -109,6 +116,37 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class FileServiceBean extends AbstractGenericServiceBean<FirebirdFile> implements FileService {
+
+    private InvestigatorProfileService profileService;
+    private ProtocolService protocolService;
+
+    @Inject
+    void setProfileService(InvestigatorProfileService profileService) {
+        this.profileService = profileService;
+    }
+
+    @Inject
+    void setProtocolService(ProtocolService protocolService) {
+        this.protocolService = protocolService;
+    }
+
+    @Override
+    public FirebirdFile addFileToProfile(InvestigatorProfile profile, File contents, FileMetadata fileMetadata)
+            throws IOException {
+        FirebirdFile file = createFile(contents, fileMetadata);
+        profile.getUploadedFiles().add(file);
+        profileService.save(profile);
+        return file;
+    }
+
+    @Override
+    public FirebirdFile addFileToProtocol(Protocol protocol, File contents, FileMetadata fileMetadata)
+            throws IOException {
+        FirebirdFile file = createFile(contents, fileMetadata);
+        protocol.getDocuments().add(file);
+        protocolService.save(protocol);
+        return file;
+    }
 
     @Override
     public FirebirdFile createFile(File file, FileMetadata fileMetadata) throws IOException {
@@ -160,6 +198,27 @@ public class FileServiceBean extends AbstractGenericServiceBean<FirebirdFile> im
     @Override
     public void writeCompressedFile(FirebirdFile file, OutputStream out) throws IOException {
         IOUtils.write(file.getByteDataSource().getData(), out);
+    }
+
+    @Override
+    public void deleteFileFromProfile(InvestigatorProfile aProfile, FirebirdFile aFile) {
+        FirebirdFile file = getById(aFile.getId());
+        InvestigatorProfile profile = profileService.getById(aProfile.getId());
+        profile.getUploadedFiles().remove(file);
+        removeFileFromUnLockedRegistrations(profile, file);
+        profileService.save(profile);
+        if (profile.isOrphan(file)) {
+            delete(file);
+        }
+    }
+
+    private void removeFileFromUnLockedRegistrations(InvestigatorProfile profile, FirebirdFile file) {
+        for (AbstractRegistration registration : profile.getRegistrations()) {
+            if (!registration.isLockedForInvestigator() && registration.getAdditionalAttachmentsForm() != null) {
+                registration.getAdditionalAttachmentsForm().getAdditionalAttachments().remove(file);
+                getSessionProvider().get().saveOrUpdate(registration);
+            }
+        }
     }
 
     @Override

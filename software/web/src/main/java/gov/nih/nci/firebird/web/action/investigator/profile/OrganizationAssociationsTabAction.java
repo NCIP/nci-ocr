@@ -176,13 +176,11 @@ public class OrganizationAssociationsTabAction extends AbstractProfileAction {
     /**
      * Table listing object for Organization Associations.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
     protected final class OrganizationAssociationListing {
 
         private final Long id;
         private final Long organizationId;
-        private final String externalId;
+        private final String nesId;
         private final String name;
         private final String ctepId;
         private final String email;
@@ -194,10 +192,10 @@ public class OrganizationAssociationsTabAction extends AbstractProfileAction {
         /**
          * @param organizationAssociation Organization Association
          */
-        OrganizationAssociationListing(OrganizationAssociation organizationAssociation) {
+        protected OrganizationAssociationListing(OrganizationAssociation organizationAssociation) {
             this.id = organizationAssociation.getId();
             this.organizationId = organizationAssociation.getOrganizationRole().getOrganization().getId();
-            this.externalId = organizationAssociation.getOrganizationRole().getExternalId();
+            this.nesId = organizationAssociation.getOrganizationRole().getNesId();
             this.name = organizationAssociation.getOrganizationRole().getOrganization().getName();
             this.ctepId = organizationAssociation.getOrganizationRole().getOrganization().getCtepId();
             this.email = organizationAssociation.getOrganizationRole().getOrganization().getEmail();
@@ -227,8 +225,11 @@ public class OrganizationAssociationsTabAction extends AbstractProfileAction {
             return organizationId;
         }
 
-        public String getExternalId() {
-            return externalId;
+        /**
+         * @return the nesId
+         */
+        public String getNesId() {
+            return nesId;
         }
 
         /**

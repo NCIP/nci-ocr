@@ -134,7 +134,6 @@ public class DataTable<T extends TableListing> extends AbstractLoadableComponent
     @Override
     public void assertLoaded() {
         assertElementWithIdPresent(tableId);
-        assertFalse(JQueryUtils.isLoadingIconDisplayed(getDriver()));
         assertTrue(JQueryUtils.isDataTableLoaded(getDriver(), tableId));
     }
 

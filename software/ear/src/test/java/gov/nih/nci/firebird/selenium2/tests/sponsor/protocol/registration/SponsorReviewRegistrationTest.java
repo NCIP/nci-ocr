@@ -83,11 +83,8 @@
 package gov.nih.nci.firebird.selenium2.tests.sponsor.protocol.registration;
 
 import static org.junit.Assert.*;
-import gov.nih.nci.firebird.data.AbstractRegistrationForm;
-import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.RegistrationReviewCommentDialog;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.util.FirebirdPropertyUtils;
@@ -121,19 +118,19 @@ public class SponsorReviewRegistrationTest extends AbstractReviewRegistrationTes
         setRegistrationStatusAndReload(registration, reviewTab, RegistrationStatus.IN_REVIEW);
         reviewTab.getHelper().reviewAllForms(registration);
 
-        assertFalse(reviewTab.isCompleteReviewButtonPresent());
+        assertFalse(reviewTab.isCompleteReviewButtonEnabled());
         assertTrue(reviewTab.isCompleteReviewButtonInstructionsPresent());
 
         reviewTab.getHelper().acceptAllForms(registration);
 
-        assertTrue(reviewTab.isCompleteReviewButtonPresent());
+        assertTrue(reviewTab.isCompleteReviewButtonEnabled());
         assertFalse(reviewTab.isCompleteReviewButtonInstructionsPresent());
     }
 
     private void checkForCompleteReviewButtonInstructions(InvestigatorRegistration registration,
             ReviewRegistrationTab reviewTab, RegistrationStatus status) {
         setRegistrationStatusAndReload(registration, reviewTab, status);
-        assertFalse(reviewTab.isCompleteReviewButtonPresent());
+        assertFalse(reviewTab.isCompleteReviewButtonEnabled());
         assertTrue(reviewTab.isCompleteReviewButtonInstructionsPresent());
         assertEquals(FirebirdPropertyUtils.getPropertyText("complete.review.button.instructions." + status),
                 reviewTab.getCompleteReviewButtonInstructions());
@@ -167,23 +164,6 @@ public class SponsorReviewRegistrationTest extends AbstractReviewRegistrationTes
 
     private ReviewRegistrationTab reloadReviewTab(InvestigatorRegistration registration, ReviewRegistrationTab reviewTab) {
         return reviewTab.getPage().clickOverviewTab().getHelper().getListing(registration).clickInvestigatorLink();
-    }
-
-    @Test
-    public void testCompleteReturnedRegistrationWithNoChanges() {
-        for (AbstractRegistrationForm form : getDataSet().getInvestigatorRegistration().getForms()) {
-            if (form.isReviewRequired()) {
-                form.setFormStatus(FormStatus.REJECTED);
-                form.setComments("rejection comments");
-            }
-        }
-        getDataSet().update(getDataSet().getInvestigatorRegistration());
-        ReviewRegistrationTab reviewTab = openHomePage(getLogin()).getHelper().openSubmittedProtocolRegistrationTask(
-                getDataSet().getInvestigatorRegistration());
-        reviewTab.getHelper().checkForRegistrationStatus(RegistrationStatus.IN_REVIEW);
-        RegistrationReviewCommentDialog commentsDialog = (RegistrationReviewCommentDialog) reviewTab.clickCompleteReview();
-        commentsDialog.clickSave().clickConfirm().clickClose();
-        reviewTab.getHelper().checkForRegistrationStatus(RegistrationStatus.RETURNED);
     }
 
 }

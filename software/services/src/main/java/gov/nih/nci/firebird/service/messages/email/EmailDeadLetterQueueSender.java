@@ -99,8 +99,6 @@ import org.jboss.ejb3.annotation.Depends;
         @ActivationConfigProperty(propertyName = "destination",
             propertyValue = EmailDeadLetterQueueSender.EMAIL_DLQ_QUEUE_JNDI) })
 @Depends("jboss.messaging.destination:service=Queue,name=firebird.email.dlq")
-@SuppressWarnings("ucd")
-//used in jboss-service.xml
 public class EmailDeadLetterQueueSender extends AbstractEmailSender {
     static final String EMAIL_DLQ_QUEUE_JNDI = "queue/firebird.email.dlq";
     private static final long WAIT_TIME = TimeUnit.SECONDS.toMillis(10);

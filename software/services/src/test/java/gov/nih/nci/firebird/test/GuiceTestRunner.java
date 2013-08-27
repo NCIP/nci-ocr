@@ -85,13 +85,9 @@ package gov.nih.nci.firebird.test;
 import gov.nih.nci.firebird.service.ctep.CtepIntegrationModule;
 import gov.nih.nci.firebird.service.signing.DigitalSigningServiceModule;
 
-import java.util.ArrayList;
-
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 
-import com.google.common.collect.Lists;
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -110,11 +106,7 @@ public class GuiceTestRunner extends BlockJUnit4ClassRunner {
      */
     public GuiceTestRunner(final Class<?> classToRun) throws InitializationError {
         super(classToRun);
-        this.injector = Guice.createInjector(getModules());
-    }
-
-    ArrayList<AbstractModule> getModules() {
-        return Lists.newArrayList(new FirebirdTestModule(), new FirebirdServicesAsSpysTestModule(),
+        this.injector = Guice.createInjector(new FirebirdTestModule(), new FirebirdServicesTestModule(),
                 new CtepIntegrationModule(), new MockContainerProvidedServicesModule(),
                 new DigitalSigningServiceModule());
     }

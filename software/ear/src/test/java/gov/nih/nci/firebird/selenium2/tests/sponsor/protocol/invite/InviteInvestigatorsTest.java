@@ -119,7 +119,7 @@ public class InviteInvestigatorsTest extends AbstractFirebirdWebDriverTest {
         builder.createProtocol();
         investigator = builder.createInvestigator().get().getPerson();
         dataSet = builder.build();
-        investigator2 = getTestDataSource().getPerson();
+        investigator2 = getNesTestDataSource().getPerson();
         newInvestigator = PersonFactory.getInstance().create();
     }
 
@@ -156,7 +156,6 @@ public class InviteInvestigatorsTest extends AbstractFirebirdWebDriverTest {
         navigateToInvestigatorsTab(dataSet.getSponsorLogin(), dataSet.getProtocol());
         inviteInvestigators(investigator, investigator2, investigatorsTab);
         checkInvestigatorHasInvitation(dataSet.getInvestigatorLogin());
-        getEmailChecker().assertEmailCount(4);
     }
 
     private void addInvestigator(Person person, AddInvestigatorsDialog addInvestigatorsDialog) {

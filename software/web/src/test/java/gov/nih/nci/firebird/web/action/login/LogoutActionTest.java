@@ -82,34 +82,48 @@
  */
 package gov.nih.nci.firebird.web.action.login;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.web.common.LogoutHelper;
+import org.jboss.security.plugins.JaasSecurityManagerService;
+import org.springframework.mock.web.MockHttpServletRequest;
 
+import gov.nih.nci.firebird.web.common.LogoutHelper;
+import gov.nih.nci.firebird.web.test.AbstractWebTest;
+import com.opensymphony.xwork2.ActionSupport;
+import java.security.Principal;
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
+import javax.servlet.http.HttpSession;
+import org.apache.struts2.ServletActionContext;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
-import com.opensymphony.xwork2.ActionSupport;
-
-public class LogoutActionTest {
+public class LogoutActionTest extends AbstractWebTest {
     
     private LogoutAction action;
-
-    @Mock
-    private LogoutHelper mockLogoutHelper;
     
     @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        action = new LogoutAction(mockLogoutHelper);
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        action = new LogoutAction(new LogoutHelper());
     }
     
     @Test
     public void testLogout() throws Exception {
+        JaasSecurityManagerService securityManager = mock(JaasSecurityManagerService.class);
+        MBeanServer server = MBeanServerFactory.createMBeanServer();
+        server.registerMBean(securityManager, new ObjectName("jboss.security:service=JaasSecurityManager"));
+        
+        Principal principal = mock(Principal.class);
+        MockHttpServletRequest request = (MockHttpServletRequest) ServletActionContext.getRequest();
+        request.setUserPrincipal(principal);
+        HttpSession session = mock(HttpSession.class);
+        request.setSession(session);
         assertEquals(ActionSupport.SUCCESS, action.logout());
-        verify(mockLogoutHelper).logoutCurrentUser();
+        verify(securityManager, times(1)).flushAuthenticationCache(eq("firebird"), eq(principal));
+        verify(session, times(1)).invalidate();
     }
     
     

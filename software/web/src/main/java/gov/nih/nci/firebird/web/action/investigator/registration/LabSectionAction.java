@@ -84,6 +84,7 @@ package gov.nih.nci.firebird.web.action.investigator.registration;
 
 import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 
 import java.util.ResourceBundle;
@@ -106,13 +107,15 @@ public class LabSectionAction extends AbstractFda1572TabAction {
      * Creates an action instance.
      *
      * @param registrationService registration service
+     * @param organizationService organization service
      * @param profileService profile service
      * @param resources FIREBIRD resource bundle
      */
     @Inject
-    public LabSectionAction(ProtocolRegistrationService registrationService, InvestigatorProfileService profileService,
+    public LabSectionAction(ProtocolRegistrationService registrationService,
+            OrganizationService organizationService, InvestigatorProfileService profileService,
             ResourceBundle resources) {
-        super(registrationService, profileService, resources);
+        super(registrationService, organizationService, profileService, resources);
     }
 
     @Override

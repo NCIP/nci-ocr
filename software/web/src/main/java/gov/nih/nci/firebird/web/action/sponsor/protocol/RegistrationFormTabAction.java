@@ -159,8 +159,6 @@ public class RegistrationFormTabAction extends AbstractProtocolDetailsTabAction 
     /**
      * simple bean to display a forms row.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
     public final class Row implements Serializable {
         private static final long serialVersionUID = 1L;
 

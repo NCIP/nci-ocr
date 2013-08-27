@@ -89,7 +89,6 @@ import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
 import gov.nih.nci.firebird.exception.AssociationAlreadyExistsException;
-import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 import gov.nih.nci.firebird.test.PersonFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
@@ -106,8 +105,6 @@ public class AddSubinvestigatorToProtocolActionTest extends AbstractWebTest {
 
     @Inject
     private ProtocolRegistrationService registrationService;
-    @Inject
-    private InvestigatorProfileService mockProfileService;
     @Inject
     private AddSubinvestigatorToProtocolAction action;
 
@@ -160,26 +157,6 @@ public class AddSubinvestigatorToProtocolActionTest extends AbstractWebTest {
         assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveSubinvestigatorAjax());
         assertFalse(action.hasActionErrors());
         verify(registrationService).createSubinvestigatorRegistration(investigatorRegistration, subinvestigator);
-    }
-
-    @Test
-    public void testSaveAction_AssociationAlreadyExists() throws Exception {
-        InvestigatorRegistration investigatorRegistration = RegistrationFactory.getInstanceWithId()
-                .createInvestigatorRegistration();
-        Person subinvestigator = PersonFactory.getInstanceWithId().create();
-        when(registrationService.getById(investigatorRegistration.getId())).thenReturn(investigatorRegistration);
-        action.setSubinvestigator(subinvestigator);
-        action.setRegistration(investigatorRegistration);
-        when(mockProfileService.addSubInvestigator(investigatorRegistration.getProfile(), subinvestigator)).thenThrow(
-                new AssociationAlreadyExistsException());
-        assertEquals(FirebirdUIConstants.RETURN_CLOSE_DIALOG, action.saveSubinvestigatorAjax());
-        assertFalse(action.hasActionErrors());
-        verify(registrationService).createSubinvestigatorRegistration(investigatorRegistration, subinvestigator);
-    }
-
-    @Test
-    public void testErrorOnAssociationAlreadyExistsException() throws Exception {
-        assertFalse(action.errorOnAssociationAlreadyExistsException());
     }
 
 }

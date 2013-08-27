@@ -101,7 +101,7 @@ import com.google.inject.Inject;
 /**
  * Base class for all NES organization integration service implementations.
  */
-abstract class AbstractCorrelationIntegrationServiceBean extends AbstractOrganizationIntegrationServiceBean {
+public abstract class AbstractCorrelationIntegrationServiceBean extends AbstractOrganizationIntegrationServiceBean {
 
     private final BusinessI businessService;
 
@@ -114,7 +114,7 @@ abstract class AbstractCorrelationIntegrationServiceBean extends AbstractOrganiz
         this.businessService = businessService;
     }
 
-    private BusinessI getBusinessService() {
+    BusinessI getBusinessService() {
         return businessService;
     }
 
@@ -124,7 +124,7 @@ abstract class AbstractCorrelationIntegrationServiceBean extends AbstractOrganiz
         return toList(correlationNodes);
     }
 
-    private CorrelationNode getCorrelationNode(Id id) throws RemoteException {
+    CorrelationNode getCorrelationNode(Id id) throws RemoteException {
         return getBusinessService().getCorrelationByIdWithEntities(id, createBl(true), createBl(false));
     }
 
@@ -133,7 +133,7 @@ abstract class AbstractCorrelationIntegrationServiceBean extends AbstractOrganiz
         Id id = nesId.toId();
         CorrelationNode correlationNode = getCorrelationNode(id);
         Organization firebirdOrganization = toFirebirdOrganization(correlationNode);
-        NesId playerNesId = new NesId(getExternalData(firebirdOrganization).getPlayerId());
+        NesId playerNesId = new NesId(firebirdOrganization.getPlayerIdentifier());
         firebirdOrganization.setCtepId(getIdentifiedOrganizationService().getCtepId(playerNesId.toString()));
         return firebirdOrganization;
     }
@@ -154,16 +154,12 @@ abstract class AbstractCorrelationIntegrationServiceBean extends AbstractOrganiz
         return organizations;
     }
 
-    void createPlayer(Organization organization, AbstractOrganizationTranslator translator)
+    void createPlayerIfNecessary(Organization organization, AbstractOrganizationTranslator translator)
             throws RemoteException {
-        Id playerId = getOrganizationService().create(translator.toNesOrganization(organization));
-        AbstractNesRoleData nesRoleData = getExternalData(organization);
-        nesRoleData.setPlayerId(new NesId(playerId).toString());
-    }
-
-    @Override
-    AbstractNesRoleData getExternalData(Organization organization) {
-        return (AbstractNesRoleData) super.getExternalData(organization);    
+        if (organization.getPlayerIdentifier() == null) {
+            Id playerId = getOrganizationService().create(translator.toNesOrganization(organization));
+            organization.setPlayerIdentifier(new NesId(playerId).toString());
+        }
     }
 
     StringMap combineValidationResults(StringMap... results) {

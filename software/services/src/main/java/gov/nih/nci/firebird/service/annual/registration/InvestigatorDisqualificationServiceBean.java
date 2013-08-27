@@ -101,7 +101,6 @@ import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import java.util.EnumMap;
 import java.util.Map;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -172,7 +171,7 @@ public class InvestigatorDisqualificationServiceBean implements InvestigatorDisq
                 registrationNotificationMailbox);
     }
 
-    @Resource(mappedName = "firebird/SponsorServiceBean/local")
+    @Inject
     void setSponsorService(SponsorService sponsorService) {
         this.sponsorService = sponsorService;
     }

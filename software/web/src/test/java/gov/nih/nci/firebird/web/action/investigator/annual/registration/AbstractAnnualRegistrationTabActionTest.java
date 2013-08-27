@@ -82,17 +82,10 @@
  */
 package gov.nih.nci.firebird.web.action.investigator.annual.registration;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.data.AbstractAnnualRegistrationForm;
 import gov.nih.nci.firebird.data.AnnualRegistration;
-import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
 import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
-import gov.nih.nci.firebird.test.FirebirdUserFactory;
-import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 import gov.nih.nci.firebird.web.action.investigator.registration.common.RegistrationTabActionValidationHandler;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
@@ -111,13 +104,11 @@ public class AbstractAnnualRegistrationTabActionTest extends AbstractWebTest {
     private ResourceBundle resources;
     @Mock
     private RegistrationTabActionValidationHandler<AnnualRegistration> mockValidationHandler;
-    @Mock
-    private ProfileRefreshService mockProfileRefreshService;
-    private AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
+        final AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
         action = new AbstractAnnualRegistrationTabAction(null, null, resources) {
             private static final long serialVersionUID = 1L;
 
@@ -128,38 +119,12 @@ public class AbstractAnnualRegistrationTabActionTest extends AbstractWebTest {
         };
         action.setRegistration(registration);
         action.setValidationHandler(mockValidationHandler);
-        action.setProfileRefreshService(mockProfileRefreshService);
     }
 
     @Test
     public void testShowValidationFailures_True() {
         action.addValidationFailuresIfNecessary();
         verify(mockValidationHandler).addValidationFailuresIfNecessary(action.getRegistration(), action.getForm());
-    }
-
-    @Test
-    public void testIsReadOnly_False() {
-        FirebirdUser user = FirebirdUserFactory.getInstance().create();
-        user.setCtepUser(true);
-        FirebirdWebTestUtility.setCurrentUser(action, user);
-        assertFalse(action.isReadOnly());
-    }
-    
-    @Test
-    public void testIsReadOnly_LockedRegistration() {
-        FirebirdUser user = FirebirdUserFactory.getInstance().create();
-        user.setCtepUser(true);
-        FirebirdWebTestUtility.setCurrentUser(action, user);
-        registration.setStatus(RegistrationStatus.APPROVED);
-        assertTrue(action.isReadOnly());
-    }
-    
-    @Test
-    public void testIsReadOnly_NonCtepUser() {
-        FirebirdUser user = FirebirdUserFactory.getInstance().create();
-        user.setCtepUser(false);
-        FirebirdWebTestUtility.setCurrentUser(action, user);
-        assertTrue(action.isReadOnly());
     }
 
 }

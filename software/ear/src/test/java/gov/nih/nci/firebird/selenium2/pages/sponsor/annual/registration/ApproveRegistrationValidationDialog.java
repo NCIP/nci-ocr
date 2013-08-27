@@ -83,7 +83,6 @@
 
 package gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration;
 
-import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
 import gov.nih.nci.firebird.selenium2.pages.base.AbstractDialog;
 import org.openqa.selenium.WebDriver;
@@ -97,31 +96,31 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 public class ApproveRegistrationValidationDialog extends AbstractDialog<ApproveRegistrationValidationDialog> {
 
     private static final String CLOSE_BUTTON_ID = "closeBtn";
-    private static final String SPINNER_DIV_ID = "spinner";
+    private static final String VALIDATING_DIV_ID = "validating";
     private static final String APPROVED_DIV_ID = "approved";
 
     @FindBy(id = CLOSE_BUTTON_ID)
     private WebElement closeButton;
 
-    @FindBy(id = SPINNER_DIV_ID)
-    private WebElement spinnerDiv;
+    @FindBy(id = VALIDATING_DIV_ID)
+    private WebElement validatingDiv;
 
     @FindBy(id = APPROVED_DIV_ID)
     private WebElement approvedDiv;
 
-    public ApproveRegistrationValidationDialog(WebDriver driver, AbstractLoadableComponent<?> parent) {
-        super(driver, parent);
+    public ApproveRegistrationValidationDialog(WebDriver driver, ReviewAnnualRegistrationPage reviewAnnualRegistrationPage) {
+        super(driver, reviewAnnualRegistrationPage);
     }
 
     public boolean isValidatingDisplayed() {
-        return spinnerDiv.isDisplayed();
+        return validatingDiv.isDisplayed();
     }
 
     public boolean isApprovedDisplayed() {
         return approvedDiv.isDisplayed();
     }
 
-    public void clickClose() {
+    public ReviewAnnualRegistrationPage clickClose() {
         waitFor(new ExpectedCondition<Boolean>() {
             @Override
             public Boolean apply(WebDriver input) {
@@ -129,6 +128,7 @@ public class ApproveRegistrationValidationDialog extends AbstractDialog<ApproveR
             }
         });
         closeDialog(closeButton);
+        return (ReviewAnnualRegistrationPage) getParent().waitUntilReady();
     }
 
     @Override

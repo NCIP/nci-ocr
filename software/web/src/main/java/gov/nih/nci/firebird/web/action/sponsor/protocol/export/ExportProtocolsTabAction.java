@@ -183,9 +183,9 @@ public class ExportProtocolsTabAction extends AbstractProtocolAction implements 
                 List<String> record = Lists.newArrayList();
                 record.add(protocol.getProtocolNumber());
                 record.add(registration.getProfile().getPerson().getDisplayNameForList());
-                String externalId = registration.getProfile().getPerson().getExternalId();
+                String nesId = registration.getProfile().getPerson().getNesId();
                 record.add(registration.getProfile().getPerson().getCtepId());
-                record.add(externalId);
+                record.add(nesId);
                 record.add(registration.getStatus().getDisplay());
                 Date statusDate = registration.getStatusDate();
                 if (statusDate != null) {
@@ -251,9 +251,7 @@ public class ExportProtocolsTabAction extends AbstractProtocolAction implements 
     /**
      * Protocol Listing object.
      */
-    @SuppressWarnings("ucd")
-    // needs to be protected for JSONUtil.serialize()
-    protected final class ProtocolListing {
+    public class ProtocolListing {
 
         private final Long id;
         private final String title;
@@ -265,7 +263,7 @@ public class ExportProtocolsTabAction extends AbstractProtocolAction implements 
         /**
          * @param protocol Protocol
          */
-        ProtocolListing(Protocol protocol) {
+        public ProtocolListing(Protocol protocol) {
             id = protocol.getId();
             title = protocol.getProtocolTitle();
             protocolId = protocol.getProtocolNumber();

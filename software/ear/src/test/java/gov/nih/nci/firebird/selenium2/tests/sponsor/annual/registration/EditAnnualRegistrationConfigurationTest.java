@@ -89,7 +89,6 @@ import gov.nih.nci.firebird.data.AnnualRegistrationConfiguration;
 import gov.nih.nci.firebird.data.FormOptionality;
 import gov.nih.nci.firebird.data.FormType;
 import gov.nih.nci.firebird.data.FormTypeEnum;
-import gov.nih.nci.firebird.data.RegistrationType;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.base.ValidationException;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
@@ -99,8 +98,7 @@ import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.EditAnnu
 import gov.nih.nci.firebird.selenium2.pages.sponsor.annual.registration.EditAnnualRegistrationConfigurationPageHelper;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.ValueGenerator;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.AnnualRegistrationConfigurationTestDataSet;
 
 import java.io.IOException;
 import java.util.List;
@@ -111,25 +109,20 @@ import org.junit.Test;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 public class EditAnnualRegistrationConfigurationTest extends AbstractFirebirdWebDriverTest {
 
-    @Inject
-    private DataSetBuilder builder;
     private LoginAccount sponsorRepresentativeLogin = LoginAccount.SponsorLogin.fbcisponsor1;
     private LoginAccount sponsorDelegateLogin = LoginAccount.SponsorDelegateLogin.fbcidel1;
-    private DataSet dataSet;
+    private AnnualRegistrationConfigurationTestDataSet dataSet;
     private List<FormType> standardConfigureableForms;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        builder.createSponsor().asCtepUser();
-        builder.createSponsor().asCtepUser().asDelegate();
-        builder.createAnnualRegistrationConfiguration().withNoForms().get();
-        dataSet = builder.build();
-        standardConfigureableForms = dataSet.getFormTypesData().getStandardConfigureableForms(RegistrationType.ANNUAL);
+        dataSet = AnnualRegistrationConfigurationTestDataSet.createWithSponsorDelegate(getDataLoader(),
+                getGridResources(), sponsorRepresentativeLogin, sponsorDelegateLogin);
+        standardConfigureableForms = dataSet.getStandardConfigureableForms();
     }
 
     @Test
@@ -147,11 +140,11 @@ public class EditAnnualRegistrationConfigurationTest extends AbstractFirebirdWeb
         checkAddAllForms(annualRegistrationConfigurationPage);
         checkEditFormOptionalities(annualRegistrationConfigurationPage);
         checkRemoveAllForms(annualRegistrationConfigurationPage);
-        AnnualRegistrationConfiguration updatedConfiguration = dataSet
-                .getLastCreatedObject(AnnualRegistrationConfiguration.class);
+        dataSet.reload();
+        AnnualRegistrationConfiguration updatedConfiguration = dataSet.getAnnualRegistrationConfiguration();
         assertFalse(originalConfiguration.getId().equals(updatedConfiguration.getId()));
     }
-
+    
     @Test
     public void testDownloadFormSamples() throws GridInvocationException, IOException {
         HomePage homePage = openHomePage(sponsorRepresentativeLogin, getCtepProvider());
@@ -161,6 +154,7 @@ public class EditAnnualRegistrationConfigurationTest extends AbstractFirebirdWeb
         for (RegistrationFormListing listing : annualRegistrationConfigurationPage.getListings()) {
             assertTrue(listing.clickDownloadSample().length() > 0);
         }
+
     }
 
     @Test
@@ -171,37 +165,38 @@ public class EditAnnualRegistrationConfigurationTest extends AbstractFirebirdWeb
                 .getAnnualRegistrationsMenu().clickRequiredForms();
 
         FormType form1572 = getFormType(FormTypeEnum.CTEP_FORM_1572);
-        String sampleProtocolText = ValueGenerator
-                .getUniqueString(AnnualRegistrationConfiguration.MAX_PROTOCOL_TEXT_FIELD_LENGTH);
-        String subinvestigatorText = ValueGenerator
-                .getUniqueString(AnnualRegistrationConfiguration.MAX_SUB_INVESTIGATOR_TEXT_FIELD_LENGTH);
+        String sampleProtocolText = ValueGenerator.getUniqueString(
+                                AnnualRegistrationConfiguration.MAX_PROTOCOL_TEXT_FIELD_LENGTH);
+        String subinvestigatorText =  ValueGenerator.getUniqueString(
+                                        AnnualRegistrationConfiguration.MAX_SUB_INVESTIGATOR_TEXT_FIELD_LENGTH);
         annualRegistrationConfigurationPage.getHelper().addForm(form1572, OPTIONAL);
         annualRegistrationConfigurationPage.clickSaveButton();
 
-        EditAnnual1572FormDialog editAnnual1572FormDialog = annualRegistrationConfigurationPage.getHelper()
-                .getListing(form1572).clickEditButton();
+        EditAnnual1572FormDialog editAnnual1572FormDialog = annualRegistrationConfigurationPage.
+                getHelper().getListing(form1572).clickEditButton();
         editAnnual1572FormDialog.typeProtocolText(sampleProtocolText);
         editAnnual1572FormDialog.typeSubInvestigatorText(subinvestigatorText);
         editAnnual1572FormDialog.clickSaveButton();
 
         annualRegistrationConfigurationPage.clickSaveButton();
 
-        AnnualRegistrationConfiguration updatedConfiguration = dataSet
-                .getLastCreatedObject(AnnualRegistrationConfiguration.class);
+        dataSet.reload();
+        AnnualRegistrationConfiguration updatedConfiguration = dataSet.getAnnualRegistrationConfiguration();
         assertFalse(originalConfiguration.getId().equals(updatedConfiguration.getId()));
-        editAnnual1572FormDialog = annualRegistrationConfigurationPage.getHelper().getListing(form1572)
-                .clickEditButton();
-        assertEquals(sampleProtocolText, editAnnual1572FormDialog.getProtocolTextInput());
-        assertEquals(subinvestigatorText, editAnnual1572FormDialog.getSubInvestigatorTextInput());
+        editAnnual1572FormDialog = annualRegistrationConfigurationPage.getHelper().getListing(form1572).clickEditButton();
+        assertEquals(sampleProtocolText,editAnnual1572FormDialog.getProtocolTextInput());
+        assertEquals(subinvestigatorText,editAnnual1572FormDialog.getSubInvestigatorTextInput());
     }
 
     private FormType getFormType(final FormTypeEnum formTypeEnum) {
-        return Iterables.getOnlyElement(Collections2.filter(standardConfigureableForms, new Predicate<FormType>() {
-            @Override
-            public boolean apply(FormType formType) {
-                return formTypeEnum.equals(formType.getFormTypeEnum());
-            }
-        }));
+        return Iterables.getOnlyElement(
+            Collections2.filter(standardConfigureableForms, new Predicate<FormType>() {
+                @Override
+                public boolean apply(FormType formType) {
+                    return formTypeEnum.equals(formType.getFormTypeEnum());
+                }
+            })
+        );
     }
 
     @Test(expected = ValidationException.class)
@@ -215,18 +210,17 @@ public class EditAnnualRegistrationConfigurationTest extends AbstractFirebirdWeb
         annualRegistrationConfigurationPage.getHelper().addForm(form1572, OPTIONAL);
         annualRegistrationConfigurationPage.clickSaveButton();
 
-        EditAnnual1572FormDialog editAnnual1572FormDialog = annualRegistrationConfigurationPage.getHelper()
-                .getListing(form1572).clickEditButton();
-        editAnnual1572FormDialog.typeProtocolText(ValueGenerator
-                .getUniqueString(AnnualRegistrationConfiguration.MAX_PROTOCOL_TEXT_FIELD_LENGTH + 1));
-        editAnnual1572FormDialog.typeSubInvestigatorText(ValueGenerator
-                .getUniqueString(AnnualRegistrationConfiguration.MAX_SUB_INVESTIGATOR_TEXT_FIELD_LENGTH + 1));
+        EditAnnual1572FormDialog editAnnual1572FormDialog = annualRegistrationConfigurationPage.
+                getHelper().getListing(form1572).clickEditButton();
+        editAnnual1572FormDialog.typeProtocolText(ValueGenerator.getUniqueString(
+                        AnnualRegistrationConfiguration.MAX_PROTOCOL_TEXT_FIELD_LENGTH + 1));
+        editAnnual1572FormDialog.typeSubInvestigatorText(ValueGenerator.getUniqueString(
+                        AnnualRegistrationConfiguration.MAX_SUB_INVESTIGATOR_TEXT_FIELD_LENGTH + 1));
         editAnnual1572FormDialog.clickSaveButton();
 
     }
 
-    private HomePage checkAnnualRegistrationsAccess(LoginAccount loginAccount, boolean shouldHaveAccess)
-            throws GridInvocationException {
+    private HomePage checkAnnualRegistrationsAccess(LoginAccount loginAccount, boolean shouldHaveAccess) throws GridInvocationException {
         HomePage homePage = openLoginPage().getHelper().goToHomePage(loginAccount, getCtepProvider());
         assertEquals(shouldHaveAccess, homePage.getAnnualRegistrationsMenu().isRequiredFormsMenuItemPresent());
         return homePage;

@@ -109,7 +109,7 @@ public class RetryHandler implements InvocationHandler {
      * @param clientProvider prover of target objects to relay invocations to.
      * @param maxAttempts how many time to try an invocation that fails.
      */
-    RetryHandler(Provider<?> clientProvider, int maxAttempts) {
+    public RetryHandler(Provider<?> clientProvider, int maxAttempts) {
         this.clientProvider = clientProvider;
         this.maxAttempts = maxAttempts;
     }

@@ -85,7 +85,6 @@ package gov.nih.nci.firebird.selenium2.tests.investigator.annual.registration;
 import static org.apache.commons.lang3.StringUtils.*;
 import static org.junit.Assert.*;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
-import gov.nih.nci.firebird.data.AnnualRegistration;
 import gov.nih.nci.firebird.data.ClinicalLaboratory;
 import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.FormTypeEnum;
@@ -94,7 +93,6 @@ import gov.nih.nci.firebird.data.LaboratoryCertificateType;
 import gov.nih.nci.firebird.data.OrganizationAssociation;
 import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.base.ValidationMessageDialog;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.AbstractAnnualRegistrationTab;
@@ -103,8 +101,8 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.Ann
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.BrowseAnnualRegistrationsPage;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.FinancialDisclosureTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.FinancialDisclosureTab.Question;
-import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.OverviewTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.SignAndSubmitRegistrationDialog;
+import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.OverviewTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.SupplementalInvestigatorDataFormTab;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.SignedDocumentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
@@ -112,8 +110,7 @@ import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.Faili
 import gov.nih.nci.firebird.selenium2.pages.util.FirebirdEmailUtils;
 import gov.nih.nci.firebird.service.messages.FirebirdMessageTemplate;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.AnnualRegistrationTestDataSet;
 
 import java.io.IOException;
 import java.util.Calendar;
@@ -125,31 +122,23 @@ import org.junit.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 
 public class SubmitAnnualRegistrationForReviewTest extends AbstractFirebirdWebDriverTest {
 
-    @Inject
-    private DataSetBuilder builder;
-    private DataSet dataSet;
+    private AnnualRegistrationTestDataSet dataSet;
     private String validEmail1 = "valid1@email.com";
     private String validEmail2 = "valid2@email.com";
     private String invalidEmail = "invalid@email@com";
     private String comments = "comments";
 
-    private AnnualRegistration renewal;
-    private AnnualRegistration parent;
-
     @Test
     public void testSubmission_WithinRenewalWindow() throws IOException {
-        setUpDataSet(false);
-        renewal.setDueDate(DateUtils.addDays(new Date(), 2));
-        dataSet.update(renewal);
-
+        dataSet = AnnualRegistrationTestDataSet.createWithDefaultFormOptionalitiesAndCompleteProfile(getDataLoader(),
+                getGridResources());
         OverviewTab overviewTab = navigateToOverviewTab();
         assertEquals(RegistrationStatus.IN_PROGRESS.getDisplay(), overviewTab.getRegistrationStatus());
         checkFormStatuses(overviewTab, FormStatus.NOT_STARTED, getNonIdfForms());
-        checkFormStatus(overviewTab, FormStatus.COMPLETED, renewal.getSupplementalInvestigatorDataForm());
+        checkFormStatus(overviewTab, FormStatus.COMPLETED, dataSet.getRenewalRegistration().getSupplementalInvestigatorDataForm());
         overviewTab = checkFormTransitionToInProgress(overviewTab);
         checkIncompleSubmissionAttempt(overviewTab);
         overviewTab = completeForms(overviewTab);
@@ -159,20 +148,8 @@ public class SubmitAnnualRegistrationForReviewTest extends AbstractFirebirdWebDr
         verifyRegistrationIsReadOnly(overviewTab);
     }
 
-    private void setUpDataSet(boolean completeRegistration) {
-        FirebirdUser investigator = builder.createInvestigatorWithCompleteProfile().asCtepUser().get();
-        builder.createCoordinator().asCtepUser().withApprovedMangedInvestigator(investigator);
-        parent = builder.createAnnualRegistration(investigator).withStatus(RegistrationStatus.APPROVED).get();
-        if (completeRegistration) {
-            renewal = builder.createAnnualRegistration(investigator).renewalOf(parent).complete().get();
-        } else {
-            renewal = builder.createAnnualRegistration(investigator).renewalOf(parent).get();
-        }
-        dataSet = builder.build();
-    }
-
     private Iterable<AbstractRegistrationForm> getNonIdfForms() {
-        return Iterables.filter(renewal.getForms(), new Predicate<AbstractRegistrationForm>() {
+        return Iterables.filter(dataSet.getRenewalRegistration().getForms(), new Predicate<AbstractRegistrationForm>() {
             @Override
             public boolean apply(AbstractRegistrationForm form) {
                 return form.getFormType().getFormTypeEnum() != FormTypeEnum.SUPPLEMENTAL_INVESTIGATOR_DATA_FORM;
@@ -183,11 +160,12 @@ public class SubmitAnnualRegistrationForReviewTest extends AbstractFirebirdWebDr
     private OverviewTab navigateToOverviewTab() {
         BrowseAnnualRegistrationsPage browseRegistrationsPage = openHomePage(dataSet.getInvestigatorLogin(),
                 getCtepProvider()).getInvestigatorMenu().clickAnnualRegistrations();
-        return browseRegistrationsPage.getHelper().getRegistrationListing(renewal).clickEditButton();
+        return browseRegistrationsPage.getHelper().getRegistrationListing(dataSet.getRenewalRegistration())
+                .clickEditButton();
     }
 
     private void checkFormStatuses(OverviewTab overviewTab, FormStatus status) {
-        checkFormStatuses(overviewTab, status, renewal.getForms());
+        checkFormStatuses(overviewTab, status, dataSet.getRenewalRegistration().getForms());
     }
 
     private void checkFormStatuses(OverviewTab overviewTab, FormStatus status, Iterable<AbstractRegistrationForm> forms) {
@@ -313,20 +291,20 @@ public class SubmitAnnualRegistrationForReviewTest extends AbstractFirebirdWebDr
     }
 
     private void addIrb(AnnualForm1572Tab form1572Tab) {
-        OrganizationAssociation irb = Iterables.getFirst(
-                renewal.getProfile().getOrganizationAssociations(OrganizationRoleType.IRB), null);
+        OrganizationAssociation irb = Iterables.getFirst(dataSet.getRenewalRegistration().getProfile()
+                .getOrganizationAssociations(OrganizationRoleType.IRB), null);
         form1572Tab.getIrbSection().getHelper().getListing(irb.getOrganizationRole()).select();
     }
 
     private void addPracticeSite(AnnualForm1572Tab form1572Tab) {
-        OrganizationAssociation practiceSite = Iterables.getFirst(
-                renewal.getProfile().getOrganizationAssociations(OrganizationRoleType.PRACTICE_SITE), null);
+        OrganizationAssociation practiceSite = Iterables.getFirst(dataSet.getRenewalRegistration().getProfile()
+                .getOrganizationAssociations(OrganizationRoleType.PRACTICE_SITE), null);
         form1572Tab.getPracticeSiteSection().getHelper().getListing(practiceSite.getOrganizationRole()).select();
     }
 
     private AnnualForm1572Tab addClinicalLab(AnnualForm1572Tab form1572Tab) {
-        OrganizationAssociation clinicalLab = Iterables.getFirst(
-                renewal.getProfile().getOrganizationAssociations(OrganizationRoleType.CLINICAL_LABORATORY), null);
+        OrganizationAssociation clinicalLab = Iterables.getFirst(dataSet.getRenewalRegistration().getProfile()
+                .getOrganizationAssociations(OrganizationRoleType.CLINICAL_LABORATORY), null);
         form1572Tab.getClinicalLabSection().getHelper().getListing(clinicalLab.getOrganizationRole()).select();
         form1572Tab = form1572Tab.getPage().clickOverviewTab().getPage().clickForm1572Tab();
         return addLaboratorCertificate(form1572Tab, clinicalLab);
@@ -348,8 +326,8 @@ public class SubmitAnnualRegistrationForReviewTest extends AbstractFirebirdWebDr
         checkInvalidSubmissionRetainsCommentsAndEmailAddresses(signingDialog);
         SignedDocumentsDialog signedDocumentsDialog = signingDialog.getHelper().signAndSubmit(
                 dataSet.getInvestigatorLogin());
-        renewal = dataSet.reloadObject(renewal);
-        signedDocumentsDialog.getHelper().checkForSignedDocuments(renewal);
+        dataSet.reload();
+        signedDocumentsDialog.getHelper().checkForSignedDocuments(dataSet.getRenewalRegistration());
         overviewTab = (OverviewTab) signedDocumentsDialog.clickClose();
         assertEquals(RegistrationStatus.SUBMITTED.getDisplay(), overviewTab.getRegistrationStatus());
         checkFormStatuses(overviewTab, FormStatus.SUBMITTED);
@@ -389,21 +367,23 @@ public class SubmitAnnualRegistrationForReviewTest extends AbstractFirebirdWebDr
     }
 
     private void checkForRenewalDate(boolean withinRenewalWindow) {
-        renewal = dataSet.reloadObject(renewal);
         Date expectedRenewalDate;
         if (withinRenewalWindow) {
-            expectedRenewalDate = DateUtils.addYears(renewal.getDueDate(), 1);
+            expectedRenewalDate = DateUtils.addYears(dataSet.getRenewalRegistration().getDueDate(), 1);
         } else {
             expectedRenewalDate = DateUtils.addYears(new Date(), 1);
         }
-        assertEquals(DateUtils.truncate(expectedRenewalDate, Calendar.DATE), renewal.getRenewalDate());
+        dataSet.reload();
+        assertEquals(DateUtils.truncate(expectedRenewalDate, Calendar.DATE), dataSet.getRenewalRegistration()
+                .getRenewalDate());
     }
 
     private void checkForExpectedEmails() {
         getEmailChecker().assertEmailCount(4);
         String expectedSubject = FirebirdEmailUtils.getExpectedSubject(
-                FirebirdMessageTemplate.COORDINATOR_ANNUAL_REGISTRATION_SUBMISSION_NOTIFICATION_EMAIL, renewal);
-        String coordinatorEmail = dataSet.getCoordinator().getPerson().getEmail();
+                FirebirdMessageTemplate.COORDINATOR_ANNUAL_REGISTRATION_SUBMISSION_NOTIFICATION_EMAIL,
+                dataSet.getRenewalRegistration());
+        String coordinatorEmail = dataSet.getRegistrationCoordinatorUser().getPerson().getEmail();
         getEmailChecker().getSentEmail(coordinatorEmail, expectedSubject);
         getEmailChecker().getSentEmail(validEmail1, expectedSubject);
         getEmailChecker().getSentEmail(validEmail2, expectedSubject);
@@ -419,9 +399,9 @@ public class SubmitAnnualRegistrationForReviewTest extends AbstractFirebirdWebDr
 
     @Test
     public void testSubmission_AfterRenewalWindow() throws IOException {
-        setUpDataSet(true);
-        renewal.setDueDate(DateUtils.addDays(new Date(), -50));
-        dataSet.update(renewal);
+        dataSet = AnnualRegistrationTestDataSet.createReadyForSubmission(getDataLoader(), getGridResources());
+        dataSet.getRenewalRegistration().setDueDate(DateUtils.addDays(new Date(), -50));
+        dataSet.update(dataSet.getRenewalRegistration());
         submitRegistration(navigateToOverviewTab());
         checkForRenewalDate(false);
     }

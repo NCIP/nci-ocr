@@ -52,12 +52,12 @@
                               }},
                               {mDataProp: "name"},
                               {mDataProp: "address", fnRender : function(obj) {
-                                  return addressFormatter(obj.aData.address);
+                                  return __addressFormatter(obj.aData.address);
                               }},
                               {mDataProp: "phoneNumber"}
                           ],
                fnRowCallback: function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-                   $(nRow).attr("id", aData.organizationExternalId);
+                   $(nRow).attr("id", aData.id);
                    return nRow;
                }
             });
@@ -73,22 +73,22 @@
 
         function createIrbCheckColumn(irb) {
             var checkboxHtml = "<input type='checkbox' name='selectedIds' ";
-            var checkBoxId = "irb_"+ irb.organizationExternalId;
+            var checkBoxId = "irb_"+ irb.id;
             checkboxHtml += "id='"+ checkBoxId + "' ";
-            checkboxHtml += "value='" + irb.organizationExternalId + "' ";
+            checkboxHtml += "value='" + irb.id + "' ";
             if (irb.selected) {
                 checkboxHtml += "checked='checked' ";
             }
-            checkboxHtml += "onclick=\"handleIrbClick('" + irb.organizationExternalId + "');\" />";
+            checkboxHtml += "onclick=\"handleIrbClick('" + irb.id + "');\" />";
             return createHiddenCheckboxLabel(checkBoxId) + checkboxHtml;
         }
 
-        function handleIrbClick(organizationExternalId) {
+        function handleIrbClick(id) {
           indicateLoading(true);
             var formData = {};
             formData["registration.id"] = ${registration.id};
-            formData["organizationExternalId"] = organizationExternalId;
-            var selecting = $('#irb_' + escapeForJquery(organizationExternalId)).is(':checked');
+            formData["organization.id"] = id;
+            var selecting = $('#irb_' + id).is(':checked');
             var url = selecting ? '${selectIrbUrl}' : '${deselectIrbUrl}';
             $.post(url, formData, function(errorMessages) {
                 setPageErrorMessages(errorMessages);

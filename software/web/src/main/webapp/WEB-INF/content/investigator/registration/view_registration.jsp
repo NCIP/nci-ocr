@@ -1,10 +1,7 @@
 <%@ include file="/WEB-INF/content/common/taglibs.jsp"%>
-<div>
-    <firebird:InvestigatorRegistrationPageBackButton/>
-    <h1 class="registrationHeader inline-block">
-        <s:property value="%{headerTitle}" />
-    </h1>
-</div>
+<h1 class="registrationHeader">
+    <s:property value="%{headerTitle}" />
+</h1>
 <s:url namespace="/investigator/registration/ajax" action="viewOverview" var="overviewUrl" escapeAmp="false" >
     <s:param name="registration.id" value="registration.id"/>
     <s:param name="profile.id" value="profile.id"/>
@@ -33,17 +30,13 @@
             <s:param name="profile.id" value="profile.id"/>
         </s:url>
 
-        <sj:tab id="form_%{#formType.name.toLowerCase().replaceAll(' ','_')}_tab" label="%{#formType.name}" href="%{tabURL}" />
+        <sj:tab id="form_%{#formType.name.replaceAll(' ','_')}Tab" label="%{#formType.name}" href="%{tabURL}" />
     </s:iterator>
 
 </sj:tabbedpanel>
 
 <s:url var="protocolLastUpdatedUrl" action="lastProtocolUpdateAction" namespace="/investigator/registration" escapeAmp="false" />
 <script>
-
-$(function() {
-    initiateBackButton();
-});
 
 var _viewReg = (function() {
     var page = {};

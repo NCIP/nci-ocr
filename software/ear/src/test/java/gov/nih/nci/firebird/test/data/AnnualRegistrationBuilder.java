@@ -100,7 +100,7 @@ import gov.nih.nci.firebird.test.nes.TargetGridResources;
 import java.util.Date;
 import java.util.EnumSet;
 
-import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.hibernate.Hibernate;
 
 import com.google.common.collect.Iterables;
@@ -108,8 +108,11 @@ import com.google.common.collect.Iterables;
 public class AnnualRegistrationBuilder extends AbstractDataComponentBuilder<AnnualRegistration> {
 
     private static final EnumSet<RegistrationStatus> SUBMITTED_STATUSES = EnumSet.of(RegistrationStatus.SUBMITTED,
-            RegistrationStatus.ACCEPTED, RegistrationStatus.APPROVED, RegistrationStatus.IN_REVIEW,
-            RegistrationStatus.RETURNED, RegistrationStatus.REVIEW_ON_HOLD);
+            RegistrationStatus.ACCEPTED,
+            RegistrationStatus.APPROVED,
+            RegistrationStatus.IN_REVIEW,
+            RegistrationStatus.RETURNED,
+            RegistrationStatus.REVIEW_ON_HOLD);
 
     private AnnualRegistration registration = new AnnualRegistration();
     private final InvestigatorProfile profile;
@@ -132,11 +135,10 @@ public class AnnualRegistrationBuilder extends AbstractDataComponentBuilder<Annu
     }
 
     public AnnualRegistrationBuilder withStatus(RegistrationStatus status) {
+        registration.setStatus(status);
         if (SUBMITTED_STATUSES.contains(status)) {
-            registration.setStatus(RegistrationStatus.SUBMITTED); // populate lastSubmittedDate
             withRenewalDate(DateUtils.addYears(new Date(), 1));
         }
-        registration.setStatus(status);
         return this;
     }
 
@@ -175,7 +177,6 @@ public class AnnualRegistrationBuilder extends AbstractDataComponentBuilder<Annu
         withStatus(RegistrationStatus.IN_PROGRESS);
         withType(AnnualRegistrationType.RENEWAL);
         renewedRegistration.setRenewal(registration);
-        withDueDate(renewedRegistration.getRenewalDate());
         return this;
     }
 
@@ -197,8 +198,6 @@ public class AnnualRegistrationBuilder extends AbstractDataComponentBuilder<Annu
         registration.getFinancialDisclosure().setFinancialInterest(false);
         registration.getFinancialDisclosure().setMonetaryGain(false);
         registration.getFinancialDisclosure().setOtherSponsorPayments(false);
-        registration.getAdditionalAttachmentsForm().getAdditionalAttachments()
-                .add(FirebirdFileFactory.getInstance().create());
         return this;
     }
 
@@ -236,17 +235,6 @@ public class AnnualRegistrationBuilder extends AbstractDataComponentBuilder<Annu
         super.build();
         if (SUBMITTED_STATUSES.contains(registration.getStatus())) {
             addPdfFilesToForms();
-            setRenewalDateIfEmpty();
-        }
-    }
-
-    private void setRenewalDateIfEmpty() {
-        if (registration.getRenewalDate() == null) {
-            if (registration.getDueDate() != null) {
-                withRenewalDate(DateUtils.addYears(registration.getDueDate(), 1));
-            } else {
-                withRenewalDate(DateUtils.addYears(new Date(), 1));
-            }
         }
     }
 
@@ -257,5 +245,6 @@ public class AnnualRegistrationBuilder extends AbstractDataComponentBuilder<Annu
             form.setSignedPdf(FirebirdFileFactory.getInstance().create());
         }
     }
+
 
 }

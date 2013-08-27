@@ -103,12 +103,12 @@ import com.fiveamsolutions.nci.commons.data.persistent.PersistentObject;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "discriminator", discriminatorType = DiscriminatorType.STRING)
 abstract class AbstractPropertyHolder implements PersistentObject {
-
+    
     private static final long serialVersionUID = 1L;
-
+    
     private Long id;
     private String name;
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Override
@@ -116,19 +116,15 @@ abstract class AbstractPropertyHolder implements PersistentObject {
         return id;
     }
 
-    @SuppressWarnings("unused")
-    // setter required by hibernate
-    private void setId(long id) {
+    void setId(long id) {
         this.id = id;
     }
 
     @Column(unique = true, nullable = false)
-    @SuppressWarnings("unused")
-    // not used but required by hibernate to create column
-    private String getName() {
+    String getName() {
         return name;
     }
-
+    
     void setName(String name) {
         this.name = name;
     }

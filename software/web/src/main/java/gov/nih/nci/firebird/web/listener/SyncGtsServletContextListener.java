@@ -113,9 +113,7 @@ public class SyncGtsServletContextListener implements ServletContextListener {
     @SuppressWarnings("PMD.AvoidCatchingGenericException")  // synchronizer throws Exception
     public void contextInitialized(ServletContextEvent servletContext) {
         try {
-            LOG.info("Synchronizing with trust fabric");
             getSynchronizer().syncWithTrustFabric();
-            LOG.info("Synchronization with trust fabric successful");
         } catch (Exception e) {
             LOG.error("An Error occurred while trying to sync with the trust fabric.", e);
         }

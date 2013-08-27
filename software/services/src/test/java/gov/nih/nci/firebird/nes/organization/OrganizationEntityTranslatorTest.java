@@ -127,7 +127,7 @@ public class OrganizationEntityTranslatorTest {
         assertNotNull(nesOrganization);
         verify(mockNameTranslator).toNesName(firebirdOrganization.getName());
         Address postalAddress = firebirdOrganization.getPostalAddress();
-        verify(mockHelper).toIi(firebirdOrganization.getExternalId());
+        verify(mockHelper).toIi(firebirdOrganization.getNesId());
         verify(mockHelper).toAd(postalAddress);
         verify(mockHelper).toTelecomAddress(firebirdOrganization.getEmail(), firebirdOrganization.getPhoneNumber(), 
                 postalAddress.getCountry());

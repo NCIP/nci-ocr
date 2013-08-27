@@ -214,7 +214,7 @@ class DigitalSigningHelper {
 
         X509V1CertificateGenerator v1CertGen = new X509V1CertificateGenerator();
 
-        // Calculate Expiration Date
+        // Calculate Expiration Date;
         Calendar notBeforeCal = Calendar.getInstance();
         Date notBeforeDate = notBeforeCal.getTime();
         Calendar notAfterCal = Calendar.getInstance();
@@ -275,7 +275,7 @@ class DigitalSigningHelper {
 
         X509V3CertificateGenerator v3CertGen = new X509V3CertificateGenerator();
 
-        // Calculate Expiration Date
+        // Calculate Expiration Date;
         Calendar notBeforeCal = Calendar.getInstance();
         Date notBeforeDate = notBeforeCal.getTime();
         Calendar notAfterCal = Calendar.getInstance();

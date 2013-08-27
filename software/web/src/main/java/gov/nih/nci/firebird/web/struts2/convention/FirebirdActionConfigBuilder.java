@@ -95,9 +95,7 @@ import gov.nih.nci.firebird.web.action.investigator.annual.registration.ManagePh
 import gov.nih.nci.firebird.web.action.investigator.annual.registration.SaveFda1572Action;
 import gov.nih.nci.firebird.web.action.investigator.annual.registration.SupplementalInvestigatorDataFormTabAction;
 import gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax.AnnualRegistrationFormDownloadAction;
-import gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax.DeleteAnnualRegistrationAction;
 import gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax.ReactivateInvestigatorAction;
-import gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax.ViewFormCommentsAction;
 import gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax.ViewRegistrationApprovedNotificationAction;
 import gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax.ViewOverviewAction;
 import gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax.WithdrawSubmissionAction;
@@ -160,16 +158,15 @@ import gov.nih.nci.firebird.web.action.search.PracticeSiteSearchAction;
 import gov.nih.nci.firebird.web.action.search.PrimaryOrganizationSearchAction;
 import gov.nih.nci.firebird.web.action.sponsor.BrowseSponsorDelegatesAction;
 import gov.nih.nci.firebird.web.action.sponsor.ajax.RemoveSponsorDelegateAction;
-import gov.nih.nci.firebird.web.action.sponsor.annual.ctep.investigator.ViewRegistrationWithdrawalRequestAction;
-import gov.nih.nci.firebird.web.action.sponsor.annual.ctep.registration.ApproveRegistrationAction;
-import gov.nih.nci.firebird.web.action.sponsor.annual.ctep.registration.ajax.DisqualifyInvestigatorAction;
-import gov.nih.nci.firebird.web.action.sponsor.annual.ctep.registration.ajax.ToggleReviewOnHoldAction;
 import gov.nih.nci.firebird.web.action.sponsor.annual.investigator.BrowseCtepInvestigatorsAction;
+import gov.nih.nci.firebird.web.action.sponsor.annual.investigator.ViewRegistrationWithdrawalRequestAction;
+import gov.nih.nci.firebird.web.action.sponsor.annual.registration.ApproveRegistrationAction;
 import gov.nih.nci.firebird.web.action.sponsor.annual.registration.BrowseRegistrationsAction;
+import gov.nih.nci.firebird.web.action.sponsor.annual.registration.RequiredFormsAction;
 import gov.nih.nci.firebird.web.action.sponsor.annual.registration.ReviewRegistrationAction;
-import gov.nih.nci.firebird.web.action.sponsor.annual.registration.ViewRegistrationFormAction;
-import gov.nih.nci.firebird.web.action.sponsor.annual.representative.RequiredFormsAction;
-import gov.nih.nci.firebird.web.action.sponsor.annual.representative.ajax.EditAnnualRegistrationFormAction;
+import gov.nih.nci.firebird.web.action.sponsor.annual.registration.ajax.DisqualifyInvestigatorAction;
+import gov.nih.nci.firebird.web.action.sponsor.annual.registration.ajax.EditAnnualRegistrationFormAction;
+import gov.nih.nci.firebird.web.action.sponsor.annual.registration.ajax.ToggleReviewOnHoldAction;
 import gov.nih.nci.firebird.web.action.sponsor.protocol.AgentSearchAction;
 import gov.nih.nci.firebird.web.action.sponsor.protocol.CreateProtocolAction;
 import gov.nih.nci.firebird.web.action.sponsor.protocol.EditRegistrationFormsAction;
@@ -353,9 +350,7 @@ public class FirebirdActionConfigBuilder extends PackageBasedActionConfigBuilder
         classes.add(gov.nih.nci.firebird.web.action.investigator.annual.registration.ajax.CompletionAction.class);
         classes.add(ReviewRegistrationAction.class);
         classes.add(EditAnnualRegistrationFormAction.class);
-        classes.add(ViewRegistrationFormAction.class);
-        classes.add(
-                gov.nih.nci.firebird.web.action.sponsor.annual.ctep.registration.ReviewRegistrationFormAction.class);
+        classes.add(gov.nih.nci.firebird.web.action.sponsor.annual.registration.ReviewRegistrationFormAction.class);
         classes.add(ApproveRegistrationAction.class);
         classes.add(ToggleReviewOnHoldAction.class);
         classes.add(ViewRegistrationApprovedNotificationAction.class);
@@ -374,8 +369,6 @@ public class FirebirdActionConfigBuilder extends PackageBasedActionConfigBuilder
         classes.add(RemoveShippingDesigneeAction.class);
         classes.add(DisqualifyInvestigatorAction.class);
         classes.add(PrimaryOrganizationSearchAction.class);
-        classes.add(DeleteAnnualRegistrationAction.class);
-        classes.add(ViewFormCommentsAction.class);
         return classes;
     }
 }

@@ -283,7 +283,7 @@ abstract class AbstractPdfWriterGenerator extends AbstractPdfGenerator {
         return new Chunk(StringUtils.defaultString(value), VALUE_FONT);
     }
 
-    private PdfPCell createCell(Phrase contents) {
+    PdfPCell createCell(Phrase contents) {
         PdfPCell cell = createCell();
         cell.setPhrase(contents);
         return cell;
@@ -296,7 +296,7 @@ abstract class AbstractPdfWriterGenerator extends AbstractPdfGenerator {
         return cell;
     }
 
-    private PdfPCell createTableCell(String value) {
+    PdfPCell createTableCell(String value) {
         Paragraph contents = new Paragraph();
         contents.add(getValueChunk(value));
         PdfPCell cell = createTableCell(contents);
@@ -337,7 +337,7 @@ abstract class AbstractPdfWriterGenerator extends AbstractPdfGenerator {
         addToTable(table, headerCell);
     }
 
-    private Chunk getHeadingChunk(int index, String headingKey) {
+    Chunk getHeadingChunk(int index, String headingKey) {
         return new Chunk(index + ". " + getFromResources(headingKey), TABLE_HEADER_FONT);
     }
 
@@ -352,7 +352,7 @@ abstract class AbstractPdfWriterGenerator extends AbstractPdfGenerator {
         addToTable(table, cell);
     }
 
-    private Chunk getColumnHeaderChunk(String key) {
+    Chunk getColumnHeaderChunk(String key) {
         return new Chunk(getFromResources(key), COLUMN_HEADER_FONT);
     }
 
@@ -380,13 +380,13 @@ abstract class AbstractPdfWriterGenerator extends AbstractPdfGenerator {
         }
     }
 
-    private void addToTable(PdfPTable table, Phrase contents) {
+    void addToTable(PdfPTable table, Phrase contents) {
         PdfPCell cell = createCell(contents);
         cell.setBackgroundColor(TABLE_CELL_COLOR);
         addToTable(table, cell);
     }
 
-    private void addToTable(PdfPTable table, PdfPCell cell) {
+    void addToTable(PdfPTable table, PdfPCell cell) {
         table.addCell(cell);
     }
 
@@ -414,7 +414,7 @@ abstract class AbstractPdfWriterGenerator extends AbstractPdfGenerator {
         return FirebirdDateUtils.getAsMonthAndYearOrEmptyString(date);
     }
 
-    private String formatFullDate(Date date) {
+    String formatFullDate(Date date) {
         return FirebirdDateUtils.getAsMonthDateAndYearOrEmptyString(date);
     }
 

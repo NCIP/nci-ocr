@@ -83,16 +83,14 @@
 package gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration;
 
 import gov.nih.nci.firebird.commons.selenium2.support.AbstractLoadableComponent;
-import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
 import gov.nih.nci.firebird.selenium2.pages.investigator.profile.AddOrganizationAssociationDialog;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.util.List;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-
-import com.google.common.base.Function;
 
 /**
  * investigator/registration/ajax/fda1572/irb.jsp
@@ -127,13 +125,7 @@ public class Form1572IrbSection extends AbstractLoadableComponent<Form1572IrbSec
     }
 
     public List<Form1572OrganizationAssociationListing> getListings() {
-        Function<WebElement, Form1572OrganizationAssociationListing> transformation = new Function<WebElement, Form1572OrganizationAssociationListing>() {
-            @Override
-            public Form1572OrganizationAssociationListing apply(WebElement row) {
-                return new Form1572OrganizationAssociationListing(row);
-            }
-        };
-        return JQueryUtils.transformDataTableRows(table, transformation);
+        return FirebirdTableUtils.transformDataTableRows(this, table, Form1572OrganizationAssociationListing.class);
     }
 
     @Override

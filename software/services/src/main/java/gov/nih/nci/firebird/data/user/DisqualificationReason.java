@@ -82,8 +82,6 @@
  */
 package gov.nih.nci.firebird.data.user;
 
-import java.io.Serializable;
-
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -95,9 +93,7 @@ import javax.persistence.Lob;
  * acknowledged the disqualification.
  */
 @Embeddable
-public class DisqualificationReason implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class DisqualificationReason {
 
     private String reason;
     private boolean acknowledgedByInvestigator;
@@ -106,7 +102,7 @@ public class DisqualificationReason implements Serializable {
     /**
      * @param reason reason for disqualification
      */
-    DisqualificationReason(String reason) {
+    public DisqualificationReason(String reason) {
         this.reason = reason;
     }
 

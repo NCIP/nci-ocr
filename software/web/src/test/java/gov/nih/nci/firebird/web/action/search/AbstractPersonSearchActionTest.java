@@ -84,8 +84,11 @@ package gov.nih.nci.firebird.web.action.search;
 
 import static org.junit.Assert.*;
 
+import gov.nih.nci.firebird.data.Person;
+import gov.nih.nci.firebird.test.ValueGenerator;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 public class AbstractPersonSearchActionTest extends AbstractWebTest {
@@ -96,6 +99,67 @@ public class AbstractPersonSearchActionTest extends AbstractWebTest {
         public String execute() {
             return null;
         }};
+
+    @Test
+    public void testGetTermAsPerson_FirstLastNames() {
+        String firstName = "Test";
+        String lastName = "User";
+        
+        action.setTerm(getNameAsSearchTerm(firstName, lastName));
+        Person result = action.getTermAsPerson();
+        assertEquals(firstName, result.getFirstName());
+        assertEquals(lastName, result.getLastName());
+    }
+    
+    private String getNameAsSearchTerm(String firstName, String lastName) {
+        if(StringUtils.isEmpty(firstName)) {
+            return lastName;
+        } else {
+            return lastName + ", " + firstName;
+        }
+    }
+    
+    @Test
+    public void testGetTermAsPerson_LastNameOnly() {
+        String firstName = "";
+        String lastName = "User";
+        
+        action.setTerm(getNameAsSearchTerm(firstName, lastName));
+        Person result = action.getTermAsPerson();
+        assertTrue(StringUtils.isBlank(firstName));
+        assertEquals(lastName, result.getLastName());
+    }
+
+    @Test
+    public void testGetTermAsPerson_LastNameOnlyWithComma() {
+        String firstName = " ";
+        String lastName = "User";
+        
+        action.setTerm(getNameAsSearchTerm(firstName, lastName));
+        Person result = action.getTermAsPerson();
+        assertTrue(StringUtils.isBlank(firstName));
+        assertEquals(lastName, result.getLastName());
+    }
+
+    @Test
+    public void testGetTermAsPerson_EmailAddress() {
+        String emailAddress = ValueGenerator.getUniqueEmailAddress();
+        action.setTerm(emailAddress);
+        Person result = action.getTermAsPerson();
+        assertEquals(emailAddress, result.getEmail());
+    }
+    
+    @Test
+    public void testGetTermAsPerson_NullTerm() {
+        action.setTerm(null);
+        assertNull(action.getTermAsPerson());
+    }
+    
+    @Test
+    public void testGetTermAsPerson_EmptyTerm() {
+        action.setTerm(StringUtils.EMPTY);
+        assertNull(action.getTermAsPerson());
+    }
     
     @Test
     public void testFilterSearchTerm_WithoutNonNameCharNoValidChar() {

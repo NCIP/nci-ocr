@@ -90,7 +90,6 @@ import gov.nih.nci.firebird.data.FirebirdFile;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.service.file.FileMetadata;
 import gov.nih.nci.firebird.service.file.FileService;
-import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
 import gov.nih.nci.firebird.web.common.Struts2UploadedFileInfo;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
@@ -98,10 +97,10 @@ import gov.nih.nci.firebird.web.test.AbstractWebTest;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.struts.mock.MockServletContext;
 import org.apache.struts2.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.mock.web.MockServletContext;
 
 import com.google.inject.Inject;
 import com.opensymphony.xwork2.ActionSupport;
@@ -110,8 +109,6 @@ public class FileTabActionTest extends AbstractWebTest {
 
     @Inject
     private FileService mockFileService;
-    @Inject
-    private InvestigatorProfileService mockProfileService;
     @Inject
     private FileTabAction action;
     private InvestigatorProfile profile = new InvestigatorProfile();
@@ -134,7 +131,7 @@ public class FileTabActionTest extends AbstractWebTest {
     }
 
     @Test
-    public void testAddFile() throws IOException {
+    public void testUpload() throws IOException {
         File testFile = new File(getClass().getProtectionDomain().getCodeSource().getLocation().getFile());
         testFile = new File(testFile, getClass().getName().replace('.', '/') + ".class");
         Struts2UploadedFileInfo info = new Struts2UploadedFileInfo(testFile, "some name", "some type", "desc");
@@ -147,17 +144,17 @@ public class FileTabActionTest extends AbstractWebTest {
 
         String result = action.upload();
         assertEquals(ActionSupport.INPUT, result);
-        verify(mockProfileService).addFile(eq(action.getProfile()), any(File.class), any(FileMetadata.class));
+        verify(mockFileService).addFileToProfile(eq(action.getProfile()), any(File.class), any(FileMetadata.class));
     }
 
     @Test
-    public void testRemoveFile() {
+    public void testDeleteFiles() {
         FirebirdFile f = new FirebirdFile("123".getBytes(), 3, "name", "type", null);
         when(mockFileService.getById(anyLong())).thenReturn(f);
 
         action.setId(1L);
         assertEquals(ActionSupport.INPUT, action.delete());
-        verify(mockProfileService).removeFile(profile, f);
+        verify(mockFileService).deleteFileFromProfile(profile, f);
     }
 
     @Test

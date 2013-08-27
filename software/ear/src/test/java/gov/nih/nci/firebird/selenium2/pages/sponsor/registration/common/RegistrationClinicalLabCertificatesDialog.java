@@ -110,7 +110,7 @@ public class RegistrationClinicalLabCertificatesDialog extends
         AbstractDialog<RegistrationClinicalLabCertificatesDialog> {
 
     private static final String TABLE_ID = "labCertificatesGrid";
-    private static final String CLOSE_BUTTON_ID = "closeBtn";
+    private static final String CLOSE_BUTTON_ID = "closeCertificates";
 
     @FindBy(id = TABLE_ID)
     private WebElement table;

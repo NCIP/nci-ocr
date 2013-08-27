@@ -89,7 +89,6 @@ import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.InvitationStatus;
 import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.BrowseRegistrationsPage;
 import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.HumanResearchCertificateTab;
@@ -106,8 +105,7 @@ import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.FailingAction;
 import gov.nih.nci.firebird.test.LoginAccount;
 import gov.nih.nci.firebird.test.ValueGenerator;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
 
 import java.io.IOException;
 import java.util.List;
@@ -119,7 +117,7 @@ import com.google.common.collect.Iterables;
 
 public class InvestigatorStatusChangeTest extends AbstractFirebirdWebDriverTest {
 
-    private DataSet dataSet;
+    private InvestigatorRegistrationTestDataSet dataSet;
 
     @Before
     @Override
@@ -129,12 +127,13 @@ public class InvestigatorStatusChangeTest extends AbstractFirebirdWebDriverTest 
 
     @Test
     public void testSponsorDelegateCantDeactivateInvestigator() throws IOException {
-        createDataSet(IN_PROGRESS, true);
-        ProtocolInvestigatorsTab investigatorsTab = navigateToInvestigatorsTab(dataSet.getSponsorLogin());
+        dataSet = InvestigatorRegistrationTestDataSet
+                .createWithStatus(getDataLoader(), getGridResources(), IN_PROGRESS);
+        ProtocolInvestigatorsTab investigatorsTab = navigateToInvestigatorsTab(dataSet.getSponsorDelegateLogin());
         List<InvestigatorRegistrationListing> investigators = investigatorsTab.getListings();
         assertEquals(1, investigators.size());
         String expectedRegistrationStatus = getRegistrationStatusWithTimeStamp(RegistrationStatus.IN_PROGRESS,
-                dataSet.getInvestigatorRegistration());
+                dataSet.getRegistration());
         assertEquals(expectedRegistrationStatus, investigators.get(0).getRegistrationStatus());
         assertFalse("Sponsor Delegate should not be able to deactivate investigators", investigators.get(0)
                 .hasDeactivateButton());
@@ -142,36 +141,25 @@ public class InvestigatorStatusChangeTest extends AbstractFirebirdWebDriverTest 
                 .hasReactivateButton());
     }
 
-    private void createDataSet(RegistrationStatus status, boolean asDelegate) {
-        DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
-        if (asDelegate) {
-            builder.createSponsor().asDelegate();
-        } else {
-            builder.createSponsor();
-        }
-        FirebirdUser investigator = builder.createInvestigatorWithCompleteProfile().get();
-        builder.createRegistration(investigator).complete().withStatus(status);
-        dataSet = builder.build();
-    }
-
     private ProtocolInvestigatorsTab navigateToInvestigatorsTab(LoginAccount loginAccount) {
-        Protocol protocol = dataSet.getInvestigatorRegistration().getProtocol();
+        Protocol protocol = dataSet.getRegistration().getProtocol();
         ProtocolInformationTab informationTab = openHomePage(loginAccount).getHelper().goToSponsorProtocol(protocol);
         return informationTab.getPage().clickInvestigatorsTab();
     }
 
     @Test
     public void testDeactivateInvestigator_Sponsor() throws IOException {
-        createDataSet(RETURNED, false);
+        dataSet = InvestigatorRegistrationTestDataSet.createWithStatus(getDataLoader(), getGridResources(),
+                RegistrationStatus.RETURNED);
         String rejectionComments = ValueGenerator.getUniqueString();
-        dataSet.getInvestigatorRegistration().setSponsorComments(rejectionComments);
-        dataSet.update(dataSet.getInvestigatorRegistration());
+        dataSet.getRegistration().setSponsorComments(rejectionComments);
+        dataSet.update(dataSet.getRegistration());
         final String comments = "These are comments for the deactivation";
         ProtocolInvestigatorsTab investigatorsTab = navigateToInvestigatorsTab(dataSet.getSponsorLogin());
         List<InvestigatorRegistrationListing> investigators = investigatorsTab.getListings();
         assertEquals(1, investigators.size());
         String expectedRegistrationStatus = getRegistrationStatusWithTimeStamp(RegistrationStatus.RETURNED,
-                dataSet.getInvestigatorRegistration());
+                dataSet.getRegistration());
         assertEquals(expectedRegistrationStatus, investigators.get(0).getRegistrationStatus());
         assertTrue(investigators.get(0).hasDeactivateButton());
 
@@ -192,33 +180,31 @@ public class InvestigatorStatusChangeTest extends AbstractFirebirdWebDriverTest 
         assertEquals(1, investigators.size());
         dataSet.reload();
         expectedRegistrationStatus = getRegistrationStatusWithTimeStamp(RegistrationStatus.INACTIVE,
-                dataSet.getInvestigatorRegistration());
+                dataSet.getRegistration());
         assertEquals(expectedRegistrationStatus, investigators.get(0).getRegistrationStatus());
         assertFalse(investigators.get(0).hasDeactivateButton());
 
-        ReviewRegistrationTab reviewTab = investigatorsTab.getHelper().clickInvestigator(
-                dataSet.getInvestigatorRegistration());
-        reviewTab.getHelper().clickFormDownload(dataSet.getInvestigatorRegistration().getForm1572());
+        ReviewRegistrationTab reviewTab = investigatorsTab.getHelper().clickInvestigator(dataSet.getRegistration());
+        reviewTab.getHelper().clickFormDownload(dataSet.getRegistration().getForm1572());
 
         // Check the Investigator's Registration
         reviewTab.getPage().clickSignOut();
         HomePage homePage = openHomePage(dataSet.getInvestigatorLogin());
         BrowseRegistrationsPage browsePage = homePage.getInvestigatorMenu().clickProtocolRegistrations();
-        RegistrationOverviewTab overviewTab = browsePage.getHelper().clickRegistrationLink(
-                dataSet.getInvestigatorRegistration());
+        RegistrationOverviewTab overviewTab = browsePage.getHelper().clickRegistrationLink(dataSet.getRegistration());
         overviewTab.getHelper().checkCommentsForText(rejectionComments);
         assertTrue(overviewTab.getHelper().isLockedForInvestigator());
-        overviewTab.getHelper().validateFormsLocked(FormStatus.INACTIVE, dataSet.getInvestigatorRegistration());
+        overviewTab.getHelper().validateFormsLocked(FormStatus.INACTIVE, dataSet.getRegistration());
     }
 
     @Test
     public void testSponsorDelegateCantReactivateInvestigator() {
-        createDataSet(INACTIVE, true);
-        ProtocolInvestigatorsTab investigatorsTab = navigateToInvestigatorsTab(dataSet.getSponsorLogin());
+        dataSet = InvestigatorRegistrationTestDataSet.createInactive(getDataLoader(), getGridResources());
+        ProtocolInvestigatorsTab investigatorsTab = navigateToInvestigatorsTab(dataSet.getSponsorDelegateLogin());
         List<InvestigatorRegistrationListing> investigators = investigatorsTab.getListings();
         assertEquals(1, investigators.size());
         String expectedRegistrationStatus = getRegistrationStatusWithTimeStamp(RegistrationStatus.INACTIVE,
-                dataSet.getInvestigatorRegistration());
+                dataSet.getRegistration());
         assertEquals(expectedRegistrationStatus, investigators.get(0).getRegistrationStatus());
         assertFalse("Sponsor Delegate should not be able to deactivate investigators", investigators.get(0)
                 .hasDeactivateButton());
@@ -228,13 +214,13 @@ public class InvestigatorStatusChangeTest extends AbstractFirebirdWebDriverTest 
 
     @Test
     public void testReactivateInvestigator_Sponsor() {
-        createDataSet(INACTIVE, false);
+        dataSet = InvestigatorRegistrationTestDataSet.createInactive(getDataLoader(), getGridResources());
         final String comments = "These are comments";
         ProtocolInvestigatorsTab investigatorsTab = navigateToInvestigatorsTab(dataSet.getSponsorLogin());
         List<InvestigatorRegistrationListing> investigators = investigatorsTab.getListings();
         assertEquals(1, investigators.size());
         String expectedRegistrationStatus = getRegistrationStatusWithTimeStamp(RegistrationStatus.INACTIVE,
-                dataSet.getInvestigatorRegistration());
+                dataSet.getRegistration());
         assertEquals(expectedRegistrationStatus, investigators.get(0).getRegistrationStatus());
         assertFalse(investigators.get(0).hasDeactivateButton());
 
@@ -245,7 +231,7 @@ public class InvestigatorStatusChangeTest extends AbstractFirebirdWebDriverTest 
         assertEquals(1, investigators.size());
         dataSet.reload();
         expectedRegistrationStatus = getRegistrationStatusWithTimeStamp(RegistrationStatus.IN_PROGRESS,
-                dataSet.getInvestigatorRegistration());
+                dataSet.getRegistration());
         assertEquals(expectedRegistrationStatus, investigators.get(0).getRegistrationStatus());
         assertTrue(investigators.get(0).hasDeactivateButton());
         assertTrue(investigators.get(0).getInvitationStatus()
@@ -271,11 +257,12 @@ public class InvestigatorStatusChangeTest extends AbstractFirebirdWebDriverTest 
     }
 
     private ProtocolInvestigatorsTab deactivateAndReactivateInvestigator(RegistrationStatus startingRegistrationStatus) {
-        createDataSet(startingRegistrationStatus, false);
+        dataSet = InvestigatorRegistrationTestDataSet.createWithStatus(getDataLoader(), getGridResources(),
+                startingRegistrationStatus);
         ProtocolInvestigatorsTab investigatorsTab = navigateToInvestigatorsTab(dataSet.getSponsorLogin());
         List<InvestigatorRegistrationListing> investigators = investigatorsTab.getListings();
         String expectedRegistrationStatus = getRegistrationStatusWithTimeStamp(startingRegistrationStatus,
-                dataSet.getInvestigatorRegistration());
+                dataSet.getRegistration());
         assertEquals(expectedRegistrationStatus, investigators.get(0).getRegistrationStatus());
 
         InvestigatorDeactivateDialog deactivateDialog = investigators.get(0).clickDeactivate();
@@ -290,11 +277,10 @@ public class InvestigatorStatusChangeTest extends AbstractFirebirdWebDriverTest 
 
     private void checkInvestigatorsSelectedCertificatesRetained() {
         RegistrationOverviewTab overviewTab = openHomePage(dataSet.getInvestigatorLogin()).getHelper()
-                .openReactivatedRegistrationTask(dataSet.getInvestigatorRegistration());
+                .openReactivatedRegistrationTask(dataSet.getRegistration());
         overviewTab.getHelper().assertHasStatus(IN_PROGRESS);
         HumanResearchCertificateTab humanResearchTab = overviewTab.getPage().clickHumanResearchCertificateTab();
-        assertEquals(1, dataSet.getInvestigatorRegistration().getHumanResearchCertificateForm().getCertificates()
-                .size());
+        assertEquals(1, dataSet.getRegistration().getHumanResearchCertificateForm().getCertificates().size());
         CertificateListing certificate = Iterables.getOnlyElement(humanResearchTab.getCertificates());
         assertTrue(certificate.isSelected());
     }

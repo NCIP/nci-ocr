@@ -152,8 +152,8 @@ public class RequestAccountActionTest extends AbstractWebTest {
     }
 
     private void addSponsors() {
-        action.getSelectedSponsorExternalIds().add(sponsorOrganization2.getExternalId());
-        action.getSelectedSponsorDelegateExternalIds().add(sponsorOrganization1.getExternalId());
+        action.getSelectedSponsorIds().add(sponsorOrganization2.getNesId());
+        action.getSelectedSponsorDelegateIds().add(sponsorOrganization1.getNesId());
     }
 
     private void requestAccount() {

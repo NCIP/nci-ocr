@@ -82,8 +82,9 @@
  */
 package gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration;
 
+import static org.junit.Assert.*;
 import gov.nih.nci.firebird.data.AbstractRegistrationForm;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
+import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.OverviewTab.FormListing;
 import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 public class OverviewTabHelper {
@@ -99,7 +100,18 @@ public class OverviewTabHelper {
     }
 
     public void checkProgressBar(int completedForms, int totalRequiredForms) {
-        tab.getProgressBar().getHelper().checkProgressBar(completedForms, totalRequiredForms);
+        Integer percentage = calculatePercentage(completedForms, totalRequiredForms);
+        assertTrue("Progress bar is not accurate. Should have " + completedForms + " out " + totalRequiredForms
+                + " Required forms complete",
+                tab.getProgressBar().getCurrentProgress().startsWith(percentage.toString()));
+    }
+
+    private Integer calculatePercentage(int completedForms, int totalRequiredForms) {
+        if (totalRequiredForms == 0) {
+            return 100;
+        } else {
+            return (int) (Float.valueOf(completedForms) / Float.valueOf(totalRequiredForms) * 100);
+        }
     }
 
 }

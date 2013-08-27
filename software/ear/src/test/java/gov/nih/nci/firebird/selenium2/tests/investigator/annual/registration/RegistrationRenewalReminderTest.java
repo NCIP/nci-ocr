@@ -90,13 +90,11 @@ import gov.nih.nci.firebird.commons.selenium2.util.WaitUtils;
 import gov.nih.nci.firebird.data.AnnualRegistration;
 import gov.nih.nci.firebird.data.AnnualRegistrationType;
 import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.OverviewTab;
 import gov.nih.nci.firebird.selenium2.pages.root.HomePage;
 import gov.nih.nci.firebird.service.periodic.DailyJobService;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.AnnualRegistrationTestDataSet;
 
 import java.util.Date;
 
@@ -108,39 +106,44 @@ public class RegistrationRenewalReminderTest extends AbstractFirebirdWebDriverTe
 
     @Inject
     private DailyJobService dailyJobService;
-    @Inject
-    private DataSetBuilder builder;
-
-    private DataSet dataSet;
+    private AnnualRegistrationTestDataSet dataSet;
     private AnnualRegistration dueDateWithinSecondWindow;
     private AnnualRegistration dueDateOutsideOfSecondWindow;
     private AnnualRegistration renewDateWithinFirstWindow;
     private AnnualRegistration renewDateOutsideOfFirstWindow;
-    private FirebirdUser investigator;
 
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        investigator = builder.createInvestigatorWithCompleteProfile().asCtepUser().get();
-        builder.createCoordinator().asCtepUser().withApprovedMangedInvestigator(investigator);
+        dataSet = AnnualRegistrationTestDataSet.create(getDataLoader(), getGridResources());
         createTestRegistrations();
-        dataSet = builder.build();
     }
 
     private void createTestRegistrations() {
-        dueDateWithinSecondWindow = createRegistration(addDays(new Date(), 30), null);
-        dueDateOutsideOfSecondWindow = createRegistration(addDays(new Date(), 30 + 1), null);
-        renewDateWithinFirstWindow = createRegistration(null, addDays(new Date(), 60));
-        renewDateOutsideOfFirstWindow = createRegistration(null, addDays(new Date(), 60 + 1));
+        dataSet.getRenewalRegistration().setStatus(RegistrationStatus.SUBMITTED);
+        dataSet.getRenewalRegistration().setRenewalDate(null);
+        dataSet.getInitialRegistration().setRenewalDate(null);
+        dataSet.update(dataSet.getInitialRegistration());
+        dataSet.update(dataSet.getRenewalRegistration());
+        dueDateWithinSecondWindow = createRegistration(
+                addDays(new Date(), 30), null);
+        dueDateOutsideOfSecondWindow = createRegistration(
+                addDays(new Date(), 30 + 1), null);
+        renewDateWithinFirstWindow = createRegistration(null,
+                addDays(new Date(), 60));
+        renewDateOutsideOfFirstWindow = createRegistration(null,
+                addDays(new Date(), 60 + 1));
     }
 
     private AnnualRegistration createRegistration(Date dueDate, Date renewalDate) {
-        AnnualRegistration registration = builder.createAnnualRegistration(investigator).get();
+        AnnualRegistration registration = new AnnualRegistration();
         registration.setDueDate(dueDate);
         registration.setRenewalDate(renewalDate);
         registration.setStatus(RegistrationStatus.NOT_STARTED);
-        registration.setProfile(investigator.getInvestigatorRole().getProfile());
+        registration.setProfile(dataSet.getRenewalRegistration().getProfile());
+        registration.setConfiguration(dataSet.getAnnualRegistrationConfiguration());
         registration.setAnnualRegistrationType(AnnualRegistrationType.RENEWAL);
+        dataSet.save(registration);
         return registration;
     }
 
@@ -185,19 +188,23 @@ public class RegistrationRenewalReminderTest extends AbstractFirebirdWebDriverTe
         // dueDateWithinSecondWindow - email to Coordinator and Investigator
         // renewDateWithinFirstWindow - email to Coordinator only
         getEmailChecker().assertEmailCount(3);
-        String coordinatorEmail = dataSet.getCoordinator().getPerson().getEmail();
+        // dummy registration with the correct profile assigned for email template generation. Using actual emails threw
+        // LazyLoadingException
+        AnnualRegistration dummyRegistration = new AnnualRegistration();
+        dummyRegistration.setProfile(dataSet.getRenewalRegistration().getProfile());
+        String coordinatorEmail = dataSet.getRegistrationCoordinatorUser().getPerson().getEmail();
         getEmailChecker().getSentEmail(
                 coordinatorEmail,
                 getExpectedSubject(ANNUAL_REGISTRATION_RENEWAL_THIRTY_DAY_NOTICE_EMAIL_TO_COORDINATOR,
-                        dueDateWithinSecondWindow));
-        getEmailChecker().getSentEmail(investigator.getPerson().getEmail(),
+                        dummyRegistration));
+        getEmailChecker().getSentEmail(dataSet.getInvestigatorUser().getPerson().getEmail(),
                 getExpectedSubject(ANNUAL_REGISTRATION_RENEWAL_THIRTY_DAY_NOTICE_EMAIL_TO_INVESTIGATOR));
         getEmailChecker().getSentEmail(coordinatorEmail,
-                getExpectedSubject(ANNUAL_REGISTRATION_RENEWAL_SIXTY_DAY_NOTICE_EMAIL, renewDateWithinFirstWindow));
+                getExpectedSubject(ANNUAL_REGISTRATION_RENEWAL_SIXTY_DAY_NOTICE_EMAIL, dummyRegistration));
     }
 
     private void checkForCoordinatorTaskListItems() {
-        HomePage homePage = openHomePage(dataSet.getCoordinatorLogin(), getCtepProvider());
+        HomePage homePage = openHomePage(dataSet.getRegistrationCoordinatorLogin(), getCtepProvider());
         assertEquals(3, homePage.getTasks().size());
         homePage = checkForTaskListItem(homePage, dueDateWithinSecondWindow);
         homePage = checkForTaskListItem(homePage, dueDateOutsideOfSecondWindow);
@@ -215,7 +222,7 @@ public class RegistrationRenewalReminderTest extends AbstractFirebirdWebDriverTe
 
     private void checkForInvestigatorTaskListItem() {
         HomePage homePage = openHomePage(dataSet.getInvestigatorLogin(), getCtepProvider());
-        assertEquals(1, homePage.getTasks().size());
+        assertEquals(2, homePage.getTasks().size());
         homePage = checkForTaskListItem(homePage, dueDateWithinSecondWindow);
     }
 

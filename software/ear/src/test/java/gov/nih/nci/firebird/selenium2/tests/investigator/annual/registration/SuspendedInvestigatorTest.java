@@ -105,15 +105,15 @@ import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
 
 public class SuspendedInvestigatorTest extends AbstractFirebirdWebDriverTest {
-
+    
     @Inject
     private DataSetBuilder builder;
-
+    
     @Inject
     private DailyJobService dailyJobService;
-
+    
     private DataSet dataSet;
-
+    
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -126,7 +126,7 @@ public class SuspendedInvestigatorTest extends AbstractFirebirdWebDriverTest {
                 .withRenewalDate(pastDueDate)
                 .withApprovalAcknowledged()
                 .get();
-        builder.createAnnualRegistration(investigator).renewalOf(registration).withDueDate(null);
+        builder.createAnnualRegistration(investigator).renewalOf(registration);
         builder.createCoordinator().asCtepUser().withApprovedMangedInvestigator(investigator);
         dataSet = builder.build();
     }

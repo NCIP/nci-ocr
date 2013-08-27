@@ -134,8 +134,6 @@ public final class RegistrationJsonConverter {
     /**
      * JSON response for grid rows.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
     public static class Row implements Serializable, Comparable<Row> {
         private static final long serialVersionUID = 1L;
         private final SimpleDateFormat dateFormat;

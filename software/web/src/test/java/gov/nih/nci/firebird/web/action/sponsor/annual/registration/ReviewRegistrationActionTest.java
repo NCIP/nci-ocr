@@ -83,18 +83,9 @@
 package gov.nih.nci.firebird.web.action.sponsor.annual.registration;
 
 import static org.junit.Assert.*;
-import gov.nih.nci.firebird.cagrid.UserSessionInformationFactory;
-import gov.nih.nci.firebird.data.AbstractRegistrationForm;
-import gov.nih.nci.firebird.data.AnnualRegistration;
-import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.RegistrationStatus;
-import gov.nih.nci.firebird.data.user.UserRoleType;
-import gov.nih.nci.firebird.security.UserSessionInformation;
-import gov.nih.nci.firebird.test.AnnualRegistrationFactory;
-import gov.nih.nci.firebird.web.action.FirebirdWebTestUtility;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Inject;
@@ -104,15 +95,7 @@ public class ReviewRegistrationActionTest extends AbstractWebTest {
 
     @Inject
     private ReviewRegistrationAction action;
-    private AnnualRegistration registration = AnnualRegistrationFactory.getInstance().create();
 
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        action.setRegistration(registration);
-        setUpGroupMembership(UserRoleType.CTEP_SPONSOR);
-    }
-    
     @Test
     public void testEnter() {
         assertEquals(ActionSupport.SUCCESS, action.enter());
@@ -129,82 +112,6 @@ public class ReviewRegistrationActionTest extends AbstractWebTest {
             String key = "complete.review.button.instructions." + status;
             assertTrue(!action.getText(key).equals(key));
         }
-    }
-
-    @Test
-    public void testGetControlsEnabled_Reviewable() {
-        registration.setStatus(RegistrationStatus.SUBMITTED);
-        assertTrue(action.getControlsEnabled());
-    }
-
-    @Test
-    public void testGetControlsEnabled_OnHold() {
-        registration.setStatus(RegistrationStatus.REVIEW_ON_HOLD);
-        assertTrue(action.getControlsEnabled());
-    }
-
-    @Test
-    public void testGetControlsEnabled_InProgress() {
-        registration.setStatus(RegistrationStatus.IN_PROGRESS);
-        assertFalse(action.getControlsEnabled());
-    }
-
-    @Test
-    public void testGetControlsEnabled_DcpSponsor() {
-        setUpGroupMembership(UserRoleType.SPONSOR);
-        registration.setStatus(RegistrationStatus.SUBMITTED);
-        assertFalse(action.getControlsEnabled());
-    }
-
-    @Test
-    public void testIsCompletable_True() {
-        configuredCompletableRegistration();
-        assertTrue(action.isCompletable());
-    }
-
-    private void configuredCompletableRegistration() {
-        registration.setStatus(RegistrationStatus.IN_REVIEW);
-        for (AbstractRegistrationForm form : registration.getForms()) {
-            form.setFormStatus(FormStatus.ACCEPTED);
-        }
-    }
-    
-    @Test
-    public void testIsCompletable_Submitted() {
-        registration.setStatus(RegistrationStatus.SUBMITTED);
-        assertFalse(action.isCompletable());
-    }
-    
-    @Test
-    public void testIsCompletable_DcpSponsor() {
-        setUpGroupMembership(UserRoleType.SPONSOR);
-        configuredCompletableRegistration();
-        assertFalse(action.isCompletable());
-    }
-
-    @Test
-    public void testIsApprovable_True() {
-        registration.setStatus(RegistrationStatus.ACCEPTED);
-        assertTrue(action.isApprovable());
-    }
-    
-    @Test
-    public void testIsApprovable_Submitted() {
-        registration.setStatus(RegistrationStatus.SUBMITTED);
-        assertFalse(action.isApprovable());
-    }
-    
-    @Test
-    public void testIsApprovable_DcpSponsor() {
-        registration.setStatus(RegistrationStatus.ACCEPTED);
-        setUpGroupMembership(UserRoleType.SPONSOR);
-        assertFalse(action.isApprovable());
-    }
-
-    private void setUpGroupMembership(UserRoleType roleType) {
-        UserSessionInformation sessionInformation = UserSessionInformationFactory.getInstance().create("username", 
-                roleType.getGroupName());
-        FirebirdWebTestUtility.setUpGridSessionInformation(action, sessionInformation);
     }
 
 }

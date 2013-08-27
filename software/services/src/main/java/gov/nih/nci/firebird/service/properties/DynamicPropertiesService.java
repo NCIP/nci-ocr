@@ -94,38 +94,34 @@ public interface DynamicPropertiesService {
 
     /**
      * Returns the value for a String property.
-     *
+     * 
      * @param name the property name
      * @return the property value, or null if not found
      */
-    @SuppressWarnings("ucd")
-    // for future use
     String getProperty(String name);
-
+    
     /**
      * Saves a new or updated String property.
-     *
+     * 
      * @param name the property name
      * @param value the property value
      */
-    @SuppressWarnings("ucd")
-    // for future use
     void setProperty(String name, String value);
 
     /**
      * Returns the value for a date or timestamp property.
-     *
+     * 
      * @param name the property name
      * @return the date/timestamp property value, or null if not found
      */
     Date getDateProperty(String name);
-
+    
     /**
      * Saves a new or updated date property.
-     *
+     * 
      * @param name the property name
      * @param value the property value
      */
     void setDateProperty(String name, Date value);
-
+    
 }

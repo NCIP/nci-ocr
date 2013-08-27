@@ -136,7 +136,7 @@ public final class NesId {
      * @param root the root string
      * @param extension the extension
      */
-    NesId(String root, String extension) {
+    public NesId(String root, String extension) {
         this(NesIIRoot.getByRoot(root), extension);
     }
 

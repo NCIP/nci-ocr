@@ -46,12 +46,36 @@
         setDateSelectors('${fieldName}');
         setupSelectChangeEvents();
 
-        if (hasErrorMessage()) {
-          highlightMonth();
-          highlightYear();
-          adjustDividerPosition();
+        var isRequired = '${required}';
+        if (isRequired) {
+            highlightMonthYearIfNotSupplied();
+            adjustDividerClassIfNecessary();
         }
     });
+
+    function adjustDividerClassIfNecessary() {
+      if ($(".errorMessage").length > 0) {
+        var divider = $(escapeForJquery('#${fieldName}Divider'));
+        divider.removeClass("dateSelectDivider");
+        divider.addClass("dateSelectDividerFieldError");
+      }
+    }
+
+    function highlightMonthYearIfNotSupplied() {
+        if ($(".errorMessage").length > 0) {
+            var monthSelect = escapeForJquery('#${fieldName}MonthSelect');
+            var yearSelect = escapeForJquery('#${fieldName}YearSelect');
+            var selectedMonth = (isBlank($(monthSelect).val()) ? null : $(
+                    monthSelect).val());
+            var selectedYear = $(yearSelect).val();
+            if (isBlank(selectedMonth)) {
+                $(monthSelect).parent().addClass("monthSelectFieldError");
+            }
+            if (isBlank(selectedYear)) {
+                $(yearSelect).parent().addClass("yearSelectFieldError");
+            }
+        }
+    }
 
     function initializeYearSelect() {
         var currentDate = new Date();
@@ -126,25 +150,4 @@
             $('#' + fieldName).val(selectedMonth + "/" + selectedYear);
         }
     }
-
-    function hasErrorMessage() {
-      return $("#${fieldName}Divider").parent().find(".errorMessage").length > 0;
-    }
-
-    function highlightMonth() {
-        var monthSelect = escapeForJquery('#${fieldName}MonthSelect');
-        $(monthSelect).parent().addClass("monthSelectFieldError");
-    }
-
-    function highlightYear() {
-        var yearSelect = escapeForJquery('#${fieldName}YearSelect');
-        $(yearSelect).parent().addClass("yearSelectFieldError");
-    }
-
-    function adjustDividerPosition() {
-        var divider = $(escapeForJquery('#${fieldName}Divider'));
-        divider.removeClass("dateSelectDivider");
-        divider.addClass("dateSelectDividerFieldError");
-    }
-
 </script>

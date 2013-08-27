@@ -125,13 +125,13 @@
                 $(list).append(li);
             };
         },
-        addLeadOrganizationRow: function (organizationKey, organizationName, piExtenalId, piName) {
+        addLeadOrganizationRow: function (organizationKey, organizationName, piKey, piName) {
             var table$ = $("#protocolLeadOrganizations");
             var tableBody$ = $("tbody", table$);
             var row$ = $("<tr/>", {
                 id: organizationKey
             }).appendTo(tableBody$);
-            $("<input type='hidden'/>").attr("name", "leadOrganizationIdMappings['" + organizationKey + "']").val(piExtenalId).appendTo(row$);
+            $("<input type='hidden'/>").attr("name", "leadOrganizationMappings['" + organizationKey + "']").val(piKey).appendTo(row$);
             $("<td/>").text(organizationName).appendTo(row$);
             $("<td/>").text(piName).appendTo(row$);
             this.createRemoveLeadOrganizationColumn(organizationKey).appendTo(row$);
@@ -165,13 +165,13 @@
         }
     };
 
-    <s:iterator var="leadOrganizationMapping" value="%{leadOrganizationMappings.entrySet()}">
-        <s:iterator var="primaryInvestigator" value="%{#leadOrganizationMapping.value}">
+    <s:iterator var="leadOrganization" value="%{leadOrganizationMappings.entrySet()}">
+        <s:iterator var="primaryInvestigator" value="%{#leadOrganization.value}">
             protocolFields.addLeadOrganizationRow(
-                    '<s:property value="%{#leadOrganizationMapping.key.externalId}"/>',
-                    '<s:property value="%{#leadOrganizationMapping.key.name}"/>',
-                    '<s:property value="%{#primaryInvestigator.externalId}"/>',
-                    '<s:property value="%{#primaryInvestigator.displayName}"/>'
+                    '<s:property value="%{#leadOrganization.key}"/>',
+                    '<s:property value="%{leadOrganizations[#leadOrganization.key].name}"/>',
+                    '<s:property value="%{#primaryInvestigator}"/>',
+                    '<s:property value="%{principalInvestigators[#primaryInvestigator].displayName}"/>'
             );
         </s:iterator>
     </s:iterator>

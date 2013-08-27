@@ -120,8 +120,6 @@ public class BoardCertifiedSpecialty extends AbstractCredential<BoardCertifiedSp
      * @param status current status of the Specialty.
      * @param specialtyType specialty type.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public BoardCertifiedSpecialty(InvestigatorProfile profile, Date effectiveDate, Date expirationDate,
             CertificationStatus status, CertifiedSpecialtyType specialtyType) {
         super(profile, effectiveDate, expirationDate, null);
@@ -199,7 +197,7 @@ public class BoardCertifiedSpecialty extends AbstractCredential<BoardCertifiedSp
                 .append(getSpecialtyType(), o.getSpecialtyType()).append(o.getEffectiveDate(), o.getEffectiveDate())
                 .toComparison();
     }
-
+    
     @Override
     public BoardCertifiedSpecialtySnapshot createSnapshot() {
         BoardCertifiedSpecialtySnapshot snapshot = new BoardCertifiedSpecialtySnapshot();

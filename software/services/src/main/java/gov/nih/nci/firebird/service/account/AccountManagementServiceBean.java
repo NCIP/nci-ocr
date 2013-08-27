@@ -114,7 +114,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Resource;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -162,7 +161,7 @@ public class AccountManagementServiceBean implements AccountManagementService {
         this.templateService = templateService;
     }
 
-    @Resource(mappedName = "firebird/FirebirdUserServiceBean/local")
+    @Inject
     void setUserService(FirebirdUserService userService) {
         this.userService = userService;
     }
@@ -172,7 +171,7 @@ public class AccountManagementServiceBean implements AccountManagementService {
         this.gridGrouperService = gridGrouperService;
     }
 
-    @Resource(mappedName = "firebird/SponsorServiceBean/local")
+    @Inject
     void setSponsorService(SponsorService sponsorService) {
         this.sponsorService = sponsorService;
     }

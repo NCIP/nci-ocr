@@ -92,9 +92,9 @@ import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
-import gov.nih.nci.firebird.selenium2.pages.components.tags.SponsorReviewRegistrationFormsTable.RegistrationListing;
-import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.AdditionalAttachmentsDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.protocol.review.ReviewRegistrationTab.RegistrationFormListing;
 import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.FormReviewCommentDialog;
+import gov.nih.nci.firebird.selenium2.pages.sponsor.registration.common.ReviewAdditionalAttachmentsDialog;
 import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.util.Set;
@@ -132,26 +132,27 @@ public class ReviewRegistrationTabHelper {
     }
 
     public AbstractLoadableComponent<?> clickFormDownload(AbstractRegistrationForm form) {
-        return getMatchingListing(form).clickDownload();
+        return getMatchingListing(form).clickFormDownload();
     }
 
-    public RegistrationListing getMatchingListing(final AbstractRegistrationForm form) {
+    public RegistrationFormListing getMatchingListing(final AbstractRegistrationForm form) {
         return FirebirdTableUtils.getListing(getTab().getFormListings(), form);
     }
 
-    public void reviewForm(AbstractRegistrationForm form) {
-        reviewForm(getMatchingListing(form));
+    public ReviewRegistrationTab reviewForm(AbstractRegistrationForm form) {
+        return reviewForm(getMatchingListing(form));
     }
 
-    public void reviewForm(RegistrationListing listing) {
-        AbstractLoadableComponent<?> component = listing.clickDownload();
-        if (component instanceof AdditionalAttachmentsDialog) {
-            AdditionalAttachmentsDialog dialog = (AdditionalAttachmentsDialog) component;
-            dialog.clickClose();
+    public ReviewRegistrationTab reviewForm(RegistrationFormListing listing) {
+        AbstractLoadableComponent<?> component = listing.clickFormDownload();
+        if (component instanceof ReviewAdditionalAttachmentsDialog) {
+            ReviewAdditionalAttachmentsDialog dialog = (ReviewAdditionalAttachmentsDialog) component;
+            return dialog.clickClose();
         } else if (component instanceof ReviewHumanResearchCertificatesDialog) {
             ReviewHumanResearchCertificatesDialog dialog = (ReviewHumanResearchCertificatesDialog) component;
-            dialog.clickClose();
+            return dialog.clickClose();
         }
+        return (ReviewRegistrationTab) component;
     }
 
     public void reviewAllForms(AbstractProtocolRegistration registration) {
@@ -176,7 +177,7 @@ public class ReviewRegistrationTabHelper {
     }
 
     public void rejectForm(AbstractRegistrationForm form, String comments) {
-        FormReviewCommentDialog rejectionCommentsDialog = getMatchingListing(form).clickReject();
+        FormReviewCommentDialog rejectionCommentsDialog = getMatchingListing(form).clickRejectRadioButton();
         rejectionCommentsDialog.typeComments(comments);
         rejectionCommentsDialog.clickSave();
     }
@@ -185,13 +186,13 @@ public class ReviewRegistrationTabHelper {
         for (AbstractRegistrationForm form : getFormsRequiringReview(registration)) {
             acceptForm(form);
         }
-        WaitUtils.pause(400);
+        WaitUtils.pause(200);
     }
 
     public void acceptForm(AbstractRegistrationForm form) {
-        RegistrationListing listing = getMatchingListing(form);
-        if (!listing.isAcceptSelected()) {
-            listing.clickAccept();
+        RegistrationFormListing listing = getMatchingListing(form);
+        if (!listing.isAccepted()) {
+            listing.clickAcceptRadioButton();
         }
     }
 
@@ -202,7 +203,7 @@ public class ReviewRegistrationTabHelper {
     }
 
     public void checkForRegistrationStatus(RegistrationStatus expectedStatus) {
-        assertEquals(expectedStatus.getDisplay(), getTab().getStatusHeader());
+        assertEquals("Status: " + expectedStatus.getDisplay(), getTab().getStatusHeader());
     }
 
     public void checkFormStatuses(AbstractProtocolRegistration registration, FormStatus expectedStatus) {

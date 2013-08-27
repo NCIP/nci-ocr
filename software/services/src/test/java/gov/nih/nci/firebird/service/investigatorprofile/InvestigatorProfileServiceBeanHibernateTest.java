@@ -82,23 +82,47 @@
  */
 package gov.nih.nci.firebird.service.investigatorprofile;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import gov.nih.nci.firebird.data.*;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
+import gov.nih.nci.firebird.data.CertificateType;
+import gov.nih.nci.firebird.data.CertifiedSpecialtyBoard;
+import gov.nih.nci.firebird.data.CertifiedSpecialtyType;
+import gov.nih.nci.firebird.data.FirebirdFile;
+import gov.nih.nci.firebird.data.FormTypeEnum;
+import gov.nih.nci.firebird.data.InvestigatorProfile;
+import gov.nih.nci.firebird.data.Organization;
+import gov.nih.nci.firebird.data.Person;
+import gov.nih.nci.firebird.data.PracticeSiteType;
+import gov.nih.nci.firebird.data.PrimaryOrganization;
+import gov.nih.nci.firebird.data.RegistrationStatus;
+import gov.nih.nci.firebird.data.SpecialtyDesignation;
+import gov.nih.nci.firebird.data.TrainingCertificate;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.nes.correlation.NesPersonRoleIntegrationService;
 import gov.nih.nci.firebird.service.file.FileMetadata;
-import gov.nih.nci.firebird.service.file.FileService;
 import gov.nih.nci.firebird.service.organization.OrganizationAssociationService;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.person.PersonAssociationService;
 import gov.nih.nci.firebird.service.person.PersonService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 import gov.nih.nci.firebird.service.registration.ProtocolRegistrationServiceBean;
-import gov.nih.nci.firebird.test.*;
+import gov.nih.nci.firebird.test.AbstractHibernateTestCase;
+import gov.nih.nci.firebird.test.FirebirdUserFactory;
+import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
+import gov.nih.nci.firebird.test.OrganizationFactory;
+import gov.nih.nci.firebird.test.PersonFactory;
+import gov.nih.nci.firebird.test.PrimaryOrganizationFactory;
+import gov.nih.nci.firebird.test.RegistrationFactory;
 import gov.nih.nci.firebird.test.util.ComparisonUtil;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
 import org.hibernate.Session;
 import org.hibernate.validator.InvalidStateException;
 import org.junit.Before;
@@ -106,23 +130,13 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.anySetOf;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 
 public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHibernateTestCase {
 
-    @Inject
-    private InvestigatorProfileHelper investigatorProfileHelper;
-    @Inject
-    private InvestigatorRegistrationHelper investigatorRegistrationHelper;
     @Inject
     private InvestigatorProfileServiceBean bean;
     @Inject
@@ -131,8 +145,8 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
     private ProtocolRegistrationService registrationServiceSpy;
     @Inject
     private PersonAssociationService personAssociationServiceSpy;
-    @Inject
-    private FileService fileServiceSpy;
+    @Mock
+    private OrganizationService mockOrganizationService;
     @Mock
     private PersonService mockPersonService;
     @Mock
@@ -144,35 +158,59 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
     public void setUp() throws Exception {
         super.setUp();
         MockitoAnnotations.initMocks(this);
-        investigatorProfileHelper.setPersonService(mockPersonService);
-        investigatorRegistrationHelper.setRegistrationService(registrationServiceSpy);
-
-        bean.setInvestigatorProfileHelper(investigatorProfileHelper);
+        bean.setPersonService(mockPersonService);
+        bean.setOrganizationService(mockOrganizationService);
+        bean.setNesPersonRoleService(mockNesPersonRoleService);
         bean.setRegistrationService(registrationServiceSpy);
         bean.setPersonAssociationService(personAssociationServiceSpy);
         bean.setOrganizationAssociationService(mockOrganizationAssociationService);
-        bean.setFileService(fileServiceSpy);
-        reset(mockPersonService, mockNesPersonRoleService, registrationServiceSpy);
+        reset(mockPersonService, mockOrganizationService, mockNesPersonRoleService, registrationServiceSpy);
     }
 
     @Test
-    public void testSave() {
-        InvestigatorProfile originalProfile = createTestProfile();
-        bean.save(originalProfile);
-        flushAndClearSession();
-        InvestigatorProfile retrievedProfile = getObject(InvestigatorProfile.class, originalProfile.getId());
-        assertNotNull(retrievedProfile);
-        ComparisonUtil.assertEquivalent(originalProfile, retrievedProfile);
-    }
+    public void testCreateRetrieveUpdateDelete() {
+        InvestigatorProfile p1 = createTestProfile();
+        Long id = bean.save(p1);
 
-    @Test
-    public void testDelete() {
-        InvestigatorProfile profile = createTestProfile();
-        bean.save(profile);
         flushAndClearSession();
-        bean.delete(profile);
+
+        InvestigatorProfile p2 = (InvestigatorProfile) getCurrentSession().get(InvestigatorProfile.class, id);
+        ComparisonUtil.assertEquivalent(p1, p2);
+
+        p2.getPerson().setNesId("2");
+
+        bean.save(p2);
+
         flushAndClearSession();
-        assertNull(getObject(InvestigatorProfile.class, profile.getId()));
+
+        p2 = bean.getById(id);
+        assertEquals("2", p2.getPerson().getNesId());
+
+        getCurrentSession().clear();
+
+        List<InvestigatorProfile> results = bean.getAll();
+        assertEquals(1, results.size());
+        assertEquals("2", results.get(0).getPerson().getNesId());
+
+        InvestigatorProfile p3 = createTestProfile();
+        p3.getPerson().setNesId("0");
+        p3.getPrimaryOrganization().getOrganization().setNesId("0");
+        bean.save(p3);
+
+        flushAndClearSession();
+
+        results = bean.getAll();
+        assertEquals(2, results.size());
+
+        p2 = bean.getById(id);
+        bean.delete(p2);
+
+        results = bean.getAll();
+        assertEquals(1, results.size());
+
+        flushAndClearSession();
+
+        assertNull(getCurrentSession().get(InvestigatorProfile.class, id));
     }
 
     @Test
@@ -185,8 +223,8 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
         flushAndClearSession();
 
         InvestigatorProfile retrievedProfile = bean.getById(profileId);
-        ComparisonUtil.assertEquivalent(originalProfile.getPrimaryOrganization().getOrganization(), retrievedProfile
-                .getPrimaryOrganization().getOrganization());
+        ComparisonUtil.assertEquivalent(originalProfile.getPrimaryOrganization().getOrganization(),
+                retrievedProfile.getPrimaryOrganization().getOrganization());
 
         flushAndClearSession();
 
@@ -195,8 +233,8 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
         PrimaryOrganization primaryOrganization = PrimaryOrganizationFactory.getInstance().create();
         bean.setPrimaryOrganization(retrievedProfile, primaryOrganization);
         retrievedProfile = bean.getById(profileId);
-        ComparisonUtil.assertEquivalent(originalProfile.getPrimaryOrganization().getOrganization(), retrievedProfile
-                .getPrimaryOrganization().getOrganization());
+        ComparisonUtil.assertEquivalent(originalProfile.getPrimaryOrganization().getOrganization(),
+                retrievedProfile.getPrimaryOrganization().getOrganization());
     }
 
     @Test
@@ -241,7 +279,7 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
         flushAndClearSession();
         profile = bean.getById(profile.getId());
         assertTrue(profile.getUploadedFiles().isEmpty());
-        List<FirebirdFile> all = bean.getSession().createCriteria(FirebirdFile.class).list();
+        List<FirebirdFile> all = bean.getSessionProvider().get().createCriteria(FirebirdFile.class).list();
         assertEquals(1, all.size());
     }
 
@@ -321,8 +359,8 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
         bean.saveCertificate(profile, cert, file, fileInfo);
         assertEquals(1, profile.getCredentials().size());
         verify(registrationServiceSpy).setReturnedOrRevisedRegistrationsFormStatusesToRevised(profile, FormTypeEnum.CV);
-        verify(registrationServiceSpy).setRegistrationFormStatusesToRevisedIfReviewed(
-                Sets.newHashSet(affectedRegistration), FormTypeEnum.HUMAN_RESEARCH_CERTIFICATE);
+        verify(registrationServiceSpy).setRegistrationFormStatusesToRevisedIfReviewed(Sets.newHashSet(affectedRegistration),
+                FormTypeEnum.HUMAN_RESEARCH_CERTIFICATE);
     }
 
     @Test
@@ -374,8 +412,33 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
     }
 
     @Test
+    public void testSearch() {
+        bean.setPersonService(personServiceSpy);
+        Person searchPerson = createSearchPerson();
+        List<InvestigatorProfile> testProfiles = createAndSaveTestProfiles(searchPerson);
+
+        List<InvestigatorProfile> retrievedProfiles = bean.search(searchPerson.getLastName() + ", "
+                + searchPerson.getFirstName());
+        assertEquals(3, retrievedProfiles.size());
+        assertSamePersistentObjects(testProfiles.get(2), retrievedProfiles.get(0));
+        assertSamePersistentObjects(testProfiles.get(0), retrievedProfiles.get(1));
+        assertSamePersistentObjects(testProfiles.get(1), retrievedProfiles.get(2));
+    }
+
+    @Test
+    public void testSearch_EmptyString() {
+        bean.setPersonService(personServiceSpy);
+        Person searchPerson = createSearchPerson();
+        createAndSaveTestProfiles(searchPerson);
+
+        List<InvestigatorProfile> retrievedProfiles = bean.search("");
+        assertTrue(retrievedProfiles.isEmpty());
+    }
+
+    @Test
     public void testSearch_NoMatches() {
-       Person searchPerson = createSearchPerson();
+        bean.setPersonService(personServiceSpy);
+        Person searchPerson = createSearchPerson();
         createAndSaveTestProfiles(searchPerson);
 
         List<InvestigatorProfile> retrievedProfiles = bean.search("sdalfj");
@@ -406,33 +469,37 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
     }
 
     @Test
-    public void testSearch() {
-        InvestigatorProfile profile1 = InvestigatorProfileFactory.getInstance().create();
-        profile1.setUser(FirebirdUserFactory.getInstance().createInvestigator(profile1));
-        profile1.getUser().setCtepUser(true);
-        Person person1 = profile1.getPerson();
-        saveAndFlush(profile1);
-
-        Person person2 = PersonFactory.getInstance().create();
-        when(mockPersonService.search(anyString())).thenReturn(Lists.newArrayList(person1, person2));
-
-        assertEquals(1, bean.search("term").size());
-    }
-
-    @Test
     public void testSearchForCtepProfiles() {
+        bean.setPersonService(personServiceSpy);
         InvestigatorProfile profile1 = InvestigatorProfileFactory.getInstance().create();
         profile1.setUser(FirebirdUserFactory.getInstance().createInvestigator(profile1));
         profile1.getUser().setCtepUser(true);
+        profile1.getPerson().setCtepId("1234");
+        setNameInProfile(profile1, "ryan", "stein");
 
         InvestigatorProfile profile2 = InvestigatorProfileFactory.getInstance().create();
         profile2.setUser(FirebirdUserFactory.getInstance().createInvestigator(profile2));
         profile2.getUser().setCtepUser(false);
-        saveAndFlush(profile1, profile2);
-        when(mockPersonService.search(anyString())).thenReturn(
-                Lists.newArrayList(profile1.getPerson(), profile2.getPerson()));
+        profile2.getPerson().setCtepId("12345");
+        setNameInProfile(profile2, "ryan", "steinski");
 
-        assertEquals(1, bean.searchForCtepProfiles("term").size());
+        InvestigatorProfile profile3 = InvestigatorProfileFactory.getInstance().create();
+        profile3.setUser(FirebirdUserFactory.getInstance().createInvestigator(profile3));
+        profile3.getUser().setCtepUser(true);
+        profile3.getPerson().setCtepId("123456");
+        setNameInProfile(profile3, "steve", "steinski");
+
+        InvestigatorProfile profile4 = InvestigatorProfileFactory.getInstance().create();
+        profile4.setUser(FirebirdUserFactory.getInstance().createInvestigator(profile4));
+        profile4.getUser().setCtepUser(true);
+        profile4.getPerson().setCtepId("1234567");
+        setNameInProfile(profile4, "ryan", "smith");
+        saveAndFlush(profile1, profile2, profile3, profile4);
+
+        assertEquals(2, bean.searchForCtepProfiles("stei").size());
+        assertEquals(1, bean.searchForCtepProfiles(profile1.getPerson().getEmail()).size());
+        assertTrue(bean.searchForCtepProfiles(profile2.getPerson().getEmail()).isEmpty());
+        assertEquals(1, bean.searchForCtepProfiles("1234").size());
     }
 
     @Test(expected = InvalidStateException.class)
@@ -474,4 +541,5 @@ public class InvestigatorProfileServiceBeanHibernateTest extends AbstractHiberna
         assertNull(organization.getId());
         bean.addAssociatedClinicalLab(profile, organization);
     }
+
 }

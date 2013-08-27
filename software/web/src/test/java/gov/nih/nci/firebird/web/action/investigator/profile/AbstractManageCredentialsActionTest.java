@@ -95,12 +95,12 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.State;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 import gov.nih.nci.firebird.service.GenericDataRetrievalService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.OrganizationFactory;
@@ -125,7 +125,7 @@ public class AbstractManageCredentialsActionTest extends AbstractWebTest {
     @Inject
     private InvestigatorProfileService mockProfileService;
     @Inject
-    private OrganizationService mockOrganizationService;
+    private OrganizationSearchService mockSearchService;
     @Inject
     private StateLookupService mockStateLookupService;
     @Inject
@@ -143,12 +143,13 @@ public class AbstractManageCredentialsActionTest extends AbstractWebTest {
         super.setUp();
         FirebirdWebTestUtility.setUpGridSessionInformation(getMockSession(), "TESTING");
         action.setUserService(FirebirdWebTestUtility.setupUserServiceReturnProfile(profile));
+        action.setOrganizationSearchService(mockSearchService);
         credential.setId(1L);
         profile.addCredential(credential);
         action.setProfile(profile);
         action.setServletRequest(getMockRequest());
         action.setPage(DEGREE.name());
-        when(mockOrganizationService.getByExternalId(issuer.getExternalId())).thenReturn(issuer);
+        when(mockSearchService.getOrganization(issuer.getNesId())).thenReturn(issuer);
         ValidationResult result = new ValidationResult(new ValidationFailure(ERROR_MESSAGE));
         validationException = new ValidationException(result);
     }
@@ -177,19 +178,19 @@ public class AbstractManageCredentialsActionTest extends AbstractWebTest {
     public void testPrepare_NoIssuerLookup() {
         action.setCredential(credential);
         credential.setIssuer(new Organization());
-        action.setIssuingOrganizationExternalId(null);
+        action.setIssuerSearchKey(null);
         action.prepare();
         assertNotSame(credential.getIssuer(), issuer);
         assertTrue(action.getExistingCredentials().contains(credential));
     }
 
     @Test
-    public void testPrepare_UnavailableIssuer() throws InvalidatedOrganizationException {
+    public void testPrepare_UnavailableIssuer() throws UnavailableEntityException {
         String key = "NES1";
-        when(mockOrganizationService.getByExternalId(key)).thenThrow(new InvalidatedOrganizationException());
+        when(mockSearchService.getOrganization(key)).thenThrow(new UnavailableEntityException(null, key));
         action.setCredential(credential);
         credential.setIssuer(new Organization());
-        action.setIssuingOrganizationExternalId(key);
+        action.setIssuerSearchKey(key);
         action.prepare();
         assertTrue(action.hasActionErrors());
         assertTrue(action.getExistingCredentials().contains(credential));
@@ -198,7 +199,7 @@ public class AbstractManageCredentialsActionTest extends AbstractWebTest {
     @Test
     public void testPrepare_GetSelectedIssuer() {
         action.setCredential(credential);
-        action.setIssuingOrganizationExternalId(issuer.getExternalId());
+        action.setIssuerSearchKey(issuer.getNesId());
         action.prepare();
         assertEquals(issuer, credential.getIssuer());
         assertTrue(action.getExistingCredentials().contains(credential));
@@ -251,7 +252,7 @@ public class AbstractManageCredentialsActionTest extends AbstractWebTest {
         action.setCredential(credential);
         assertEquals(ActionSupport.INPUT, action.saveCredential());
         assertTrue(action.hasActionErrors());
-        verifyZeroInteractions(mockOrganizationService);
+        verifyZeroInteractions(mockSearchService);
     }
 
     @Test(expected = ValidationException.class)

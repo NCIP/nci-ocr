@@ -83,6 +83,7 @@
 package gov.nih.nci.firebird.service.registration;
 
 import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
+import gov.nih.nci.firebird.data.FirebirdFile;
 import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.InvestigatorRegistration;
@@ -92,7 +93,10 @@ import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.service.file.FileMetadata;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -108,13 +112,13 @@ public interface ProtocolRegistrationService extends BaseRegistrationService<Abs
 
     /**
      * Returns all registrations with the requested status availalble to the current user.
-     *
+     * 
      * @param status get registrations with this status
      * @param user retrieve protocols available to this user.
      * @param groupNames the list of Grid Grouper groups the user belongs to.
      * @return the matching registrations
      */
-    List<AbstractProtocolRegistration> getByStatusForUser(RegistrationStatus status, FirebirdUser user,
+    List<AbstractProtocolRegistration> getByStatusForUser(RegistrationStatus status, FirebirdUser user, 
             Set<String> groupNames);
 
     /**
@@ -144,10 +148,9 @@ public interface ProtocolRegistrationService extends BaseRegistrationService<Abs
      * Creates a new subinvestigator registration and adds it to its primary registration.
      *
      * @param registration the primary registration.
-     * @param personExternalIds a collection of external ids for persons to be added as subinvestigators to the
-     *            registration
+     * @param personIds a collection of ids for persons to be added as subinvestigators to the registration
      */
-    void createSubinvestigatorRegistrations(InvestigatorRegistration registration, List<String> personExternalIds);
+    void createSubinvestigatorRegistrations(InvestigatorRegistration registration, List<Long> personIds);
 
     /**
      * Method used to initialize the invitation of an investigator or subinvestigator to a registration.
@@ -169,6 +172,17 @@ public interface ProtocolRegistrationService extends BaseRegistrationService<Abs
      * @param registration the subinvestigator registration to remove.
      */
     void removeSubInvestigatorRegistrationAndNotify(List<SubInvestigatorRegistration> registration);
+
+    /**
+     * Method used to add a document onto a Financial Disclosure as supplementary documentation.
+     *
+     * @param registration the registration to add the file to
+     * @param file the file to be used for the FirebirdFile
+     * @param fileMetadata the file metadata to be used for the FirebirdFile
+     * @throws IOException if a problem occurs saving the file.
+     */
+    void addFinancialDisclosureFile(AbstractProtocolRegistration registration, File file, FileMetadata fileMetadata)
+            throws IOException;
 
     /**
      * Sets all returned registrations forms of the given type to Revised.
@@ -209,6 +223,22 @@ public interface ProtocolRegistrationService extends BaseRegistrationService<Abs
      */
     void setRegistrationFormStatusesToRevisedIfReviewed(Set<AbstractProtocolRegistration> registrations,
             FormTypeEnum... formTypes);
+
+    /**
+     * Attaches the file to this registration.
+     *
+     * @param registration registration
+     * @param file file to attach
+     */
+    void attachFile(AbstractProtocolRegistration registration, FirebirdFile file);
+
+    /**
+     * Unattaches the file from this registration.
+     *
+     * @param registration registration
+     * @param file file to unattach
+     */
+    void unattachFile(AbstractProtocolRegistration registration, FirebirdFile file);
 
     /**
      * Retrieves all subinvestigator registrations for the given investigator.

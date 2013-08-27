@@ -84,8 +84,6 @@ package gov.nih.nci.firebird.selenium2.scalability.tests;
 
 import static org.junit.Assert.*;
 
-import java.util.concurrent.TimeUnit;
-
 import org.apache.commons.lang3.time.DateUtils;
 
 import com.google.common.base.Stopwatch;
@@ -119,7 +117,7 @@ public abstract class TimedAction<T> {
             throw new RuntimeException("Unexpected Exception in execution of " + actionName, e);
         }
         stopwatch.stop();
-        long elapsedMillis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+        long elapsedMillis = stopwatch.elapsedMillis();
         System.out.println(actionName + " \t" + elapsedMillis);
         String timeoutMessage = "Exeuction time of " + elapsedMillis + " milliseconds exceeded timeout of " 
                 + timeoutSeconds + " for " + actionName;

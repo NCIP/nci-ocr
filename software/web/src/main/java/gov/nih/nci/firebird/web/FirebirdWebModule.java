@@ -82,13 +82,8 @@
  */
 package gov.nih.nci.firebird.web;
 
-import gov.nih.nci.firebird.data.AbstractProtocolRegistration;
-import gov.nih.nci.firebird.data.AbstractRegistration;
 import gov.nih.nci.firebird.data.FinancialDisclosure;
-import gov.nih.nci.firebird.data.Form1572;
-import gov.nih.nci.firebird.data.InvestigatorRegistration;
 import gov.nih.nci.firebird.data.ProtocolFinancialDisclosure;
-import gov.nih.nci.firebird.data.ProtocolForm1572;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -109,9 +104,6 @@ public class FirebirdWebModule extends AbstractModule {
 
     private void bindStrutsObjectInstantiationDefaults() {
         bind(FinancialDisclosure.class).to(ProtocolFinancialDisclosure.class);
-        bind(Form1572.class).to(ProtocolForm1572.class);
-        bind(AbstractRegistration.class).to(InvestigatorRegistration.class);
-        bind(AbstractProtocolRegistration.class).to(InvestigatorRegistration.class);
     }
 
 }

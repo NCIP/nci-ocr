@@ -106,7 +106,7 @@ public class OrganizationSearchDialogHelper {
 
     public SearchResultListing<ProfessionalContactInformationTab> getMatchingResult(Organization organization) {
         for (SearchResultListing<ProfessionalContactInformationTab> result : dialog.getSearchResults()) {
-            if (organization.getExternalId().equals(result.getExternalId())) {
+            if (organization.getNesId().equals(result.getNesId())) {
                 return result;
             }
         }
@@ -115,7 +115,7 @@ public class OrganizationSearchDialogHelper {
 
     public ProfessionalContactInformationTab select(Organization organization) {
         SearchResultListing<ProfessionalContactInformationTab> result = getMatchingResult(organization);
-        assertNotNull("Organization with NES Id: " + organization.getExternalId() + " not found in results", result);
+        assertNotNull("Organization with NES Id: " + organization.getNesId() + " not found in results", result);
         return result.clickSelect();
     }
 

@@ -88,7 +88,6 @@ import gov.nih.nci.firebird.data.FirebirdFile;
 import gov.nih.nci.firebird.data.Keystore;
 import gov.nih.nci.firebird.data.RootKeystore;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.service.file.FileService;
 import gov.nih.nci.firebird.service.signing.DigitalSigningException;
 import gov.nih.nci.firebird.test.AbstractHibernateTestCase;
 import gov.nih.nci.firebird.test.FirebirdFileFactory;
@@ -110,17 +109,6 @@ public class CertificateAuthorityManagerBeanTest extends AbstractHibernateTestCa
 
     @Inject
     private CertificateAuthorityManagerBean bean;
-    @Inject
-    private FileService fileService;
-    @Inject
-    private FirebirdUserService userService;
-
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        bean.setFileService(fileService);
-        bean.setUserService(userService);
-    }
 
     @Test
     public void testCreateRootKeystore() throws IOException, DigitalSigningException, GeneralSecurityException {

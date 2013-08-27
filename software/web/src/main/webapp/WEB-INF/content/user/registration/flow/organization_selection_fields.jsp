@@ -6,8 +6,8 @@
     <div id="tabwrapper">
         <div class="ui-tabs">
             <div class="ui-tabs-panel">
-                <s:if test="%{accountConfigurationData.primaryOrganization.organization.externalId == null
-                    || accountConfigurationData.primaryOrganization.organization.externalId == ''}">
+                <s:if test="%{accountConfigurationData.primaryOrganization.organization.nesId == null
+                    || accountConfigurationData.primaryOrganization.organization.nesId == ''}">
 
                     <div class="formcol clear">
                         <s:select id="accountConfigurationData.primaryOrganization.type"
@@ -23,7 +23,7 @@
                     <div class="clear"><br></div>
 
                     <div class="formcol">
-                       <s:textfield id="accountConfigurationData.primaryOrganization.organization.name" name="accountConfigurationData.primaryOrganization.organization.name" maxlength="160" size="30" required="true"
+                       <s:textfield id="accountConfigurationData.primaryOrganization.organization.name" name="accountConfigurationData.primaryOrganization.organization.name" maxlength="160" size="30" requiredLabel="true"
                            cssStyle="width: 19em;" label="%{getText('textfield.organization.name')}"
                           />
                     </div>

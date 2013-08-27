@@ -1,5 +1,4 @@
 <%@ taglib uri="/struts-tags" prefix="s" %>
-<%@ taglib uri="/struts-jquery-tags" prefix="sj" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ attribute name="form" rtexprvalue="true" required="true"
 type="gov.nih.nci.firebird.data.AbstractRegistrationForm"%>
@@ -9,7 +8,6 @@ type="gov.nih.nci.firebird.data.AbstractRegistrationForm"%>
 <s:url var="completedImageUrl" value='/images/form_icon_complete.png' />
 <s:url var="incompleteImageUrl" value='/images/form_icon_incomplete.png' />
 <s:url var="attachmentImageUrl" value='/images/form_icon_attach.png' />
-<s:url var="commentImageUrl" value='/images/ico_comments_present.gif' />
 
 <s:div cssClass="form" id="%{#form.id}" href='#' onclick="selectTab('form_%{#form.formType.name.toLowerCase().replaceAll(' ','_')}_tab')">
     <s:if test="#form.registration.lockedForInvestigator">
@@ -27,20 +25,13 @@ type="gov.nih.nci.firebird.data.AbstractRegistrationForm"%>
         <div class="formIcon"> <img alt="In Progress" src="${inProgressImageUrl}"/> </div>
     </s:else>
 
-    <div class="float formDescription">
-        <span class="bold"><s:property value='%{#form.formType.description}' /></span>
+    <div class="float">
+        <span class="formDescription"><s:property value='%{#form.formType.description}' /></span>
         <br />
         <span id="formStatus"><s:property value='%{#form.formStatus.display}' /></span>
-        <s:if test="#form.commentsLinkToInvestigatorToBeDisplayed">
-            <s:url action="enterComments" var="commentsUrl" escapeAmp="false">
-                <s:param name="registration.id">${registration.id}</s:param>
-                <s:param name="formType.id">%{#form.formType.id}</s:param>
-            </s:url>
-            <sj:a id="viewFormComments_%{#form.id}" openDialog="registrationDialog" href="%{commentsUrl}"><img alt="View / Edit Comments" src="${commentImageUrl}" class="vertical-align-middle" /></sj:a>
-        </s:if>
     </div>
     <s:if test="#form.numberOfAdditionalDocuments > 0">
-        <div class="float_right boldHeader additionalAttachmentsCount">
+        <div class="float_right boldHeader">
             <img alt="Additional Documents Count" src="${attachmentImageUrl}"/>
             <span id="additionalDocumentsCount"><s:property value='%{#form.numberOfAdditionalDocuments}' /></span>
         </div>

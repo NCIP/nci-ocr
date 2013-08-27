@@ -99,14 +99,12 @@ class OrganizationEntityTranslator extends AbstractOrganizationTranslator {
 
     gov.nih.nci.firebird.data.Organization toFirebirdOrganization(gov.nih.nci.coppa.po.Organization nesOrganization) {
         Organization firebirdOrganization = new Organization();
-        NesOrganizationData nesOrganizationData = new NesOrganizationData();
-        nesOrganizationData.setExternalId(getTranslatorHelper().toNesIdString(nesOrganization.getIdentifier()));
-        firebirdOrganization.setExternalData(nesOrganizationData);
+        firebirdOrganization.setNesId(getTranslatorHelper().toNesIdString(nesOrganization.getIdentifier()));
         firebirdOrganization.setName(toFirebirdName(nesOrganization.getName()));
         firebirdOrganization.setPostalAddress(getAddress(nesOrganization));
         firebirdOrganization.setEmail(getTranslatorHelper().getEmail(nesOrganization.getTelecomAddress()));
         firebirdOrganization.setPhoneNumber(getTranslatorHelper().getPhoneNumber(nesOrganization.getTelecomAddress()));
-        firebirdOrganization.setCurationStatus(getTranslatorHelper().toCurationStatus(nesOrganization.getStatusCode()));
+        firebirdOrganization.setNesStatus(getTranslatorHelper().toCurationStatus(nesOrganization.getStatusCode()));
         return firebirdOrganization;
     }
 

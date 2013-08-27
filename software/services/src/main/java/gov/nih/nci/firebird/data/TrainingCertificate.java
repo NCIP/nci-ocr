@@ -124,8 +124,7 @@ public class TrainingCertificate extends AbstractCredential<TrainingCertificate>
      * @param certType certificate type .
      * @param file certificate file.
      */
-    @SuppressWarnings({ "PMD.ExcessiveParameterList", "ucd" })
-    // convenience constructor used in tests
+    @SuppressWarnings("PMD.ExcessiveParameterList")
     public TrainingCertificate(InvestigatorProfile profile, Date effectiveDate, Date expirationDate,
             CertificateType certType, FirebirdFile file) {
         super(profile, effectiveDate, expirationDate, null);
@@ -227,7 +226,7 @@ public class TrainingCertificate extends AbstractCredential<TrainingCertificate>
                 .append(getFile().getName(), o.getFile().getName()).append(getEffectiveDate(), o.getEffectiveDate())
                 .append(getExpirationDate(), o.getExpirationDate()).append(getIssuer(), o.getIssuer()).toComparison();
     }
-
+    
     @Override
     public TrainingCertificateSnapshot createSnapshot() {
         TrainingCertificateSnapshot snapshot = new TrainingCertificateSnapshot();
@@ -236,5 +235,5 @@ public class TrainingCertificate extends AbstractCredential<TrainingCertificate>
         snapshot.setFile(getFile());
         return snapshot;
     }
-
+    
 }

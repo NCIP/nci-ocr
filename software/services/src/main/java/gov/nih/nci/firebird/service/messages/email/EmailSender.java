@@ -96,8 +96,6 @@ import org.jboss.ejb3.annotation.Depends;
         @ActivationConfigProperty(propertyName = "dLQJNDIName", propertyValue = "queue/firebird.email.dlq"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = EmailSender.EMAIL_QUEUE_JNDI) })
 @Depends("jboss.messaging.destination:service=Queue,name=firebird.email.queue")
-@SuppressWarnings("ucd")
-// used in jboss-service.xml
 public class EmailSender extends AbstractEmailSender {
     static final String EMAIL_QUEUE_JNDI = "queue/firebird.email.queue";
 }

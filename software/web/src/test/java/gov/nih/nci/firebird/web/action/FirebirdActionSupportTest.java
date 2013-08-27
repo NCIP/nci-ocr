@@ -82,6 +82,7 @@
  */
 package gov.nih.nci.firebird.web.action;
 
+import static gov.nih.nci.firebird.web.action.FirebirdActionSupport.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.firebird.cagrid.UserSessionInformationFactory;
@@ -89,15 +90,14 @@ import gov.nih.nci.firebird.common.ValidationFailure;
 import gov.nih.nci.firebird.common.ValidationResult;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.SponsorRole;
 import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.exception.ValidationException;
 import gov.nih.nci.firebird.security.UserSessionInformation;
-import gov.nih.nci.firebird.service.investigatorprofile.ProfileRefreshService;
-import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
+import gov.nih.nci.firebird.service.investigatorprofile.ProfileNesRefreshService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
+import gov.nih.nci.firebird.service.person.PersonSearchService;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.test.FirebirdUserFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
@@ -125,18 +125,13 @@ public class FirebirdActionSupportTest extends AbstractWebTest {
     @Inject
     private SponsorService mockSponsorService;
     @Inject
-    private ProfileRefreshService mockProfileRefreshService;
-    @Inject
-    private PersonService mockPersonService;
-    @Inject
-    private Provider<PersonService> mockPersonServiceProvider;
+    private ProfileNesRefreshService mockProfileRefreshService;
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
         supportAction.setSponsorService(mockSponsorService);
         supportAction.setProfileRefreshService(mockProfileRefreshService);
-        supportAction.setPersonServiceProvider(mockPersonServiceProvider);
     }
 
     @Test
@@ -159,6 +154,35 @@ public class FirebirdActionSupportTest extends AbstractWebTest {
         FirebirdUser user = createTestUser();
         FirebirdWebTestUtility.setCurrentUser(supportAction, user);
         assertEquals(user.getUsername(), supportAction.getCurrentUsername());
+    }
+
+    @Test
+    public void testGetPersonSearchService() {
+        FirebirdWebTestUtility.setupMockRequest(supportAction);
+        Provider<PersonSearchService> mockProvider = mock(Provider.class);
+        PersonSearchService mockService = mock(PersonSearchService.class);
+        when(mockProvider.get()).thenReturn(mockService);
+        supportAction.setPersonSearchServiceProvider(mockProvider);
+        assertEquals(mockService, supportAction.getPersonSearchService());
+        verify(mockProvider).get();
+        when(supportAction.getSession(true).getAttribute(PERSON_SEARCH_SERVICE_ATTRIBUTE_NAME)).thenReturn(mockService);
+        supportAction.setPersonSearchService(null);
+        assertEquals(mockService, supportAction.getPersonSearchService());
+        verify(mockProvider).get();
+    }
+
+    @Test
+    public void testGetOrganizationSearchService() {
+        FirebirdWebTestUtility.setupMockRequest(supportAction);
+        Provider<OrganizationSearchService> mockProvider = mock(Provider.class);
+        OrganizationSearchService mockService = mock(OrganizationSearchService.class);
+        when(mockProvider.get()).thenReturn(mockService);
+        supportAction.setOrganizationSearchServiceProvider(mockProvider);
+        assertEquals(mockService, supportAction.getOrganizationSearchService());
+        verify(mockProvider).get();
+        supportAction.setOrganizationSearchService(null);
+        assertEquals(mockService, supportAction.getOrganizationSearchService());
+        verify(mockProvider, times(2)).get();
     }
 
     @Test
@@ -426,20 +450,5 @@ public class FirebirdActionSupportTest extends AbstractWebTest {
         } else {
             return user.addSponsorRepresentativeRole(sponsor);
         }
-    }
-
-    @Test
-    public void testGetPerson() throws Exception {
-        String externalId = "externalId";
-        Person person = new Person();
-        when(mockPersonService.getByExternalId(externalId)).thenReturn(person);
-        assertEquals(person, supportAction.getPerson(externalId));
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testGetPerson_InvalidatedPersonException() throws Exception {
-        String externalId = "externalId";
-        when(mockPersonService.getByExternalId(externalId)).thenThrow(new InvalidatedPersonException());
-        supportAction.getPerson(externalId);
     }
 }

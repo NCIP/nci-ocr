@@ -102,7 +102,7 @@ public class TestDataRemover {
 
     private static final Logger LOG = Logger.getLogger(TestDataRemover.class);
     private final HibernateHelper hibernateHelper;
-
+    
     @Inject
     TestDataRemover(HibernateHelper hibernateHelper) {
         this.hibernateHelper = hibernateHelper;
@@ -121,9 +121,7 @@ public class TestDataRemover {
         } catch (HibernateException he) {
             handleException(tx, he, "Error deleting test data");
         } finally {
-            if (session != null) {
-                session.close();
-            }
+            session.close();
         }
     }
 
@@ -149,5 +147,5 @@ public class TestDataRemover {
             initialDataCleared = true;
         }
     }
-
+    
 }

@@ -167,10 +167,7 @@ public class RegistrationCoordinatorRole implements Auditable {
         return managedInvestigators;
     }
 
-
-    @SuppressWarnings("unused")
-    // setter required by hibernate
-    private void setManagedInvestigators(Set<ManagedInvestigator> managedInvestigators) {
+    void setManagedInvestigators(Set<ManagedInvestigator> managedInvestigators) {
         this.managedInvestigators = managedInvestigators;
     }
 

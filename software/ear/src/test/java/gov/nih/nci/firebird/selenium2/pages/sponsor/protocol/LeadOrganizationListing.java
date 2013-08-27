@@ -16,17 +16,17 @@ public class LeadOrganizationListing implements TableListing {
     private static final int ORGANIZATION_NAME_COLUMN = 0;
     private static final int PRINCIPAL_INVESTIGATOR_NAME_COLUMN = 1;
 
-    private String organizationExternalId;
+    private String organizationSearchKey;
     private String organizationName;
     private String principalInvestigatorName;
     private WebElement removeLink;
 
     public LeadOrganizationListing(WebElement row) {
-        this.organizationExternalId = WebElementUtils.getId(row);
+        this.organizationSearchKey = WebElementUtils.getId(row);
         List<WebElement> cells = TableUtils.getCells(row);
         this.organizationName = cells.get(ORGANIZATION_NAME_COLUMN).getText();
         this.principalInvestigatorName = cells.get(PRINCIPAL_INVESTIGATOR_NAME_COLUMN).getText();
-        this.removeLink = row.findElement(By.id(REMOVE_LEAD_ORGANIZATION_BUTTON_PREFIX + organizationExternalId));
+        this.removeLink = row.findElement(By.id(REMOVE_LEAD_ORGANIZATION_BUTTON_PREFIX + organizationSearchKey));
     }
 
     @Override
@@ -34,8 +34,8 @@ public class LeadOrganizationListing implements TableListing {
         return null; //The row id isn't actually a long.
     }
 
-    public String getOrganizationExternalId() {
-        return organizationExternalId;
+    public String getOrganizationSearchKey() {
+        return organizationSearchKey;
     }
 
     public String getOrganizationName() {

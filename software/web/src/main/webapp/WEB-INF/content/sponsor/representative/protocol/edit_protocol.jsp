@@ -60,7 +60,6 @@ editProtocolPage.areValidationErrorsPresent = function () {
 editProtocolPage.addHandlersToFormElements = function () {
     $("#cancelButton").click(editProtocolPage.form.checkForChangesAndBlock);
     $(editProtocolPage.form).change(editProtocolPage.toggleSaveButtonIfNeccessary);
-    $(editProtocolPage.form).find("select").change(editProtocolPage.toggleSaveButtonIfNeccessary);
     $(editProtocolPage.form).keyup(editProtocolPage.toggleSaveButtonIfNeccessary);
     $(editProtocolPage.form).delegate("a", "click", editProtocolPage.toggleSaveButtonIfNeccessary);
 };

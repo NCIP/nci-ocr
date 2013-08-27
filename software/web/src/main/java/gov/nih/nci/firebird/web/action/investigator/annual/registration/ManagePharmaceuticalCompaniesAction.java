@@ -86,14 +86,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import gov.nih.nci.firebird.data.Country;
 import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.OrganizationRoleType;
 import gov.nih.nci.firebird.data.State;
-import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationIntegrationService;
+import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
 import gov.nih.nci.firebird.service.annual.registration.AnnualRegistrationService;
 import gov.nih.nci.firebird.service.investigatorprofile.InvestigatorProfileService;
 import gov.nih.nci.firebird.service.lookup.CountryLookupService;
 import gov.nih.nci.firebird.service.lookup.StateLookupService;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
 import gov.nih.nci.firebird.web.action.AbstractAnnualRegistrationAction;
 
 import java.util.List;
@@ -121,23 +121,27 @@ public class ManagePharmaceuticalCompaniesAction extends AbstractAnnualRegistrat
     static final String RETURN_MANAGE_PHARMACEUTICAL_COMPANY = "managePharmaceuticalCompany";
     static final String RETURN_MANAGE_PHARMACEUTICAL_COMPANY_FIELDS = "managePharmaceuticalCompanyFields";
     private Organization pharmaceuticalCompany = new Organization();
-    private String pharmaceuticalCompanyExternalId;
+    private String pharmaceuticalCompanyId;
     private final StateLookupService stateLookup;
     private final CountryLookupService countryLookup;
     private List<Country> countries;
     private List<State> states;
+    private final ResearchOrganizationIntegrationService researchOrganizationService;
 
     /**
      * @param annualRegistrationService annual registration service
      * @param profileService profile service
+     * @param researchOrganizationService NES ResearchOrganization Service
      * @param stateLookup the stateLookupService to set
      * @param countryLookup country lookup service.
      */
     @Inject
     public ManagePharmaceuticalCompaniesAction(AnnualRegistrationService annualRegistrationService,
+            ResearchOrganizationIntegrationService researchOrganizationService, 
             InvestigatorProfileService profileService,
             StateLookupService stateLookup, CountryLookupService countryLookup) {
         super(annualRegistrationService, profileService);
+        this.researchOrganizationService = researchOrganizationService;
         this.stateLookup = stateLookup;
         this.countryLookup = countryLookup;
     }
@@ -145,11 +149,10 @@ public class ManagePharmaceuticalCompaniesAction extends AbstractAnnualRegistrat
     @Override
     public void prepare() {
         super.prepare();
-        if (isNotBlank(getPharmaceuticalCompanyExternalId())) {
+        if (isNotBlank(getPharmaceuticalCompanyId())) {
             try {
-                setPharmaceuticalCompany(getOrganizationService().getByExternalId(
-                        getPharmaceuticalCompanyExternalId()));
-            } catch (InvalidatedOrganizationException e) {
+                setPharmaceuticalCompany(getOrganizationSearchService().getOrganization(getPharmaceuticalCompanyId()));
+            } catch (UnavailableEntityException e) {
                 addActionError(getText("organization.search.selected.organization.unavailable"));
             }
         }
@@ -179,7 +182,7 @@ public class ManagePharmaceuticalCompaniesAction extends AbstractAnnualRegistrat
 
         if (hasActionErrors()) {
             return RETURN_MANAGE_PHARMACEUTICAL_COMPANY;
-        } else if (!getPharmaceuticalCompany().hasExternalRecord()) {
+        } else if (!getPharmaceuticalCompany().hasNesRecord()) {
             setPharmaceuticalCompany(new Organization());
             return RETURN_MANAGE_PHARMACEUTICAL_COMPANY_FIELDS;
         }
@@ -207,7 +210,7 @@ public class ManagePharmaceuticalCompaniesAction extends AbstractAnnualRegistrat
     @Validations(customValidators = { @CustomValidator(type = "hibernate",
             fieldName = "pharmaceuticalCompany", parameters = {
             @ValidationParameter(name = "resourceKeyBase", value = "organization"),
-            @ValidationParameter(name = "excludes", value = "externalId") }) },
+            @ValidationParameter(name = "excludes", value = "nesId") }) },
             requiredFields = @RequiredFieldValidator(fieldName = "pharmaceuticalCompany.phoneNumber",
                     key = "phoneNumber.required"),
             fieldExpressions = {
@@ -217,11 +220,7 @@ public class ManagePharmaceuticalCompaniesAction extends AbstractAnnualRegistrat
     @Action(value = "savePharmaceuticalCompany",
     results = { @Result(name = INPUT, location = "manage_pharmaceutical_company_fields.jsp") })
     public String savePharmaceuticalCompany() {
-        try {
-            getOrganizationService().create(getPharmaceuticalCompany(), OrganizationRoleType.PHARMACEUTICAL_COMPANY);
-        } catch (ValidationException e) {
-            return handleValidationException(e);
-        }
+        researchOrganizationService.create(getPharmaceuticalCompany(), ResearchOrganizationType.DRUG_COMPANY);
         getRegistration().getFinancialDisclosure().getPharmaceuticalCompanies().add(getPharmaceuticalCompany());
         return saveFinancialDisclosure();
     }
@@ -244,12 +243,18 @@ public class ManagePharmaceuticalCompaniesAction extends AbstractAnnualRegistrat
         return saveFinancialDisclosure();
     }
 
-    public String getPharmaceuticalCompanyExternalId() {
-        return pharmaceuticalCompanyExternalId;
+    /**
+     * @return the pharmaceuticalCompanyId
+     */
+    public String getPharmaceuticalCompanyId() {
+        return pharmaceuticalCompanyId;
     }
 
-    public void setPharmaceuticalCompanyExternalId(String pharmaceuticalCompanyExternalId) {
-        this.pharmaceuticalCompanyExternalId = pharmaceuticalCompanyExternalId;
+    /**
+     * @param pharmaceuticalCompanyId the pharmaceuticalCompanyId to set
+     */
+    public void setPharmaceuticalCompanyId(String pharmaceuticalCompanyId) {
+        this.pharmaceuticalCompanyId = pharmaceuticalCompanyId;
     }
 
     /**

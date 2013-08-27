@@ -83,7 +83,7 @@
 package gov.nih.nci.firebird.selenium2.pages.investigator.profile.contact;
 
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.PrimaryOrganizationType;
+import gov.nih.nci.firebird.data.PracticeSiteType;
 
 public class CreatePrimaryOrganizationDialogHelper {
 
@@ -93,9 +93,9 @@ public class CreatePrimaryOrganizationDialogHelper {
         this.dialog = dialog;
     }
 
-    public ProfessionalContactInformationTab enterDataAndSave(Organization organization, PrimaryOrganizationType type) {
+    public ProfessionalContactInformationTab enterDataAndSave(Organization organization, PracticeSiteType primaryOrganizationType) {
         dialog.getCreateOrganizationComponent().getHelper().enterData(organization);
-        dialog.selectOrganizationType(type);
+        dialog.selectOrganizationType(primaryOrganizationType);
         return dialog.clickSave();
     }
 

@@ -97,11 +97,13 @@ public class ClinicalLaboratoryTest {
         Organization organization = OrganizationFactory.getInstance().create();
         lab.setId(getUniqueLong());
         lab.setOrganization(organization);
+        lab.setCapExemption(CapCertificateExemption.GOVERNMENT_LAB);
         LaboratoryCertificate certificate = createCertificate();
         lab.addCertificate(certificate);
         ClinicalLaboratorySnapshot snapshot = lab.createSnapshot();
-
+        
         assertEquals(lab.getOrganization().getName(), snapshot.getOrganizationSnapshot().getName());
+        assertEquals(lab.getCapExemption(), snapshot.getCapExemption());
         assertEquals(1, snapshot.getCertificateSnapshots().size());
         LaboratoryCertificateSnapshot certificateSnapshot = snapshot.getCertificateSnapshots().get(LaboratoryCertificateType.CAP);
         assertEquals(certificate.getCertificateFile(), certificateSnapshot.getCertificateFile());

@@ -85,8 +85,8 @@ package gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration;
 import static org.apache.commons.lang3.StringUtils.*;
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration.FinancialDisclosureTab.PharmaceuticalCompanyListing;
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import com.google.common.base.Predicate;
@@ -111,20 +111,11 @@ public class FinancialDisclosureTabHelper {
     }
 
     public PharmaceuticalCompanyListing getListing(Organization pharmaceuticalCompany) {
-        if (pharmaceuticalCompany.getExternalId() != null) {
-            return getByExternalId(pharmaceuticalCompany);
+        if (pharmaceuticalCompany.getId() != null) {
+            return FirebirdTableUtils.getListing(tab.getListings(), pharmaceuticalCompany);
         } else {
             return getListingByValues(pharmaceuticalCompany);
         }
-    }
-
-    private PharmaceuticalCompanyListing getByExternalId(final Organization pharmaceuticalCompany) {
-        return Iterables.find(tab.getListings(), new Predicate<PharmaceuticalCompanyListing>() {
-            @Override
-            public boolean apply(PharmaceuticalCompanyListing listing) {
-                return ObjectUtils.equals(listing.getId(), pharmaceuticalCompany.getExternalId());
-            }
-        }, null);
     }
 
     private PharmaceuticalCompanyListing getListingByValues(final Organization pharmaceuticalCompany) {

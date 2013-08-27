@@ -16,7 +16,7 @@ import com.google.inject.name.Named;
  * Abstract class for a message driven bean that listens for emails over a JMS queue and sends them. Implementations of
  * this class must define the queue for the message driven bean to subscribe to.
  */
-abstract class AbstractEmailSender implements MessageListener {
+public abstract class AbstractEmailSender implements MessageListener {
     private static final Logger LOG = Logger.getLogger(AbstractEmailSender.class);
     private EmailService emailService;
 
@@ -25,7 +25,7 @@ abstract class AbstractEmailSender implements MessageListener {
         try {
             ObjectMessage objectMessage = (ObjectMessage) message;
             FirebirdEmail firebirdEmail = (FirebirdEmail) objectMessage.getObject();
-            emailService.sendMessage(firebirdEmail.getTo(), firebirdEmail.getCc(), firebirdEmail.getBounce(),
+            emailService.sendMessage(firebirdEmail.getTo(), firebirdEmail.getCc(), firebirdEmail.getBounce(), 
                     firebirdEmail.getMessage());
         } catch (JMSException e) {
             LOG.error("Could not extract FirebirdEmail out of incoming JMS message", e);

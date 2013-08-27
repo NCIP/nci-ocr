@@ -90,6 +90,8 @@ import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.InvestigatorStatus;
 import gov.nih.nci.firebird.test.util.FirebirdPropertyUtils;
 
+import java.util.Date;
+
 public class ProfessionalContactInformationTabHelper {
 
     private static final String PENDING_UPDATES_MESSAGE_KEY = "profile.pending.person.updates.message";
@@ -112,7 +114,7 @@ public class ProfessionalContactInformationTabHelper {
 
     public void checkForPendingUpdateMessage() {
         assertTrue(tab.hasPendingUpdateMessage());
-        String expectedMessage = FirebirdPropertyUtils.getPropertyText(PENDING_UPDATES_MESSAGE_KEY);
+        String expectedMessage = FirebirdPropertyUtils.getPropertyText(PENDING_UPDATES_MESSAGE_KEY, new Date());
         assertEquals(expectedMessage, tab.getPendingUpdateMessage());
     }
 

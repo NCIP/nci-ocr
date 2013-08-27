@@ -123,7 +123,7 @@ public class ExportProtocolsTabHelper {
         return registration.getProtocol().getProtocolNumber() + ","
                 + "\"" + registration.getProfile().getPerson().getDisplayNameForList() + "\","
                 + nullToEmpty(registration.getProfile().getPerson().getCtepId()) + ","
-                + registration.getProfile().getPerson().getExternalId() + "," + registration.getStatus().getDisplay() + ","
+                + registration.getProfile().getPerson().getNesId() + "," + registration.getStatus().getDisplay() + ","
                 + dateFormat.format(registration.getStatusDate());
     }
 

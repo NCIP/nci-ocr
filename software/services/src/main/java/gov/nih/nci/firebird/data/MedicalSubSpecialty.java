@@ -105,8 +105,6 @@ public class MedicalSubSpecialty extends AbstractListItem implements Specialty<M
      * @param name name of specialty.
      * @param certifyingBoard medical specialty certifying board
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public MedicalSubSpecialty(String name, MedicalSubSpecialtyCertifyingBoard certifyingBoard) {
         super(name);
         this.certifyingBoard = certifyingBoard;
@@ -132,6 +130,7 @@ public class MedicalSubSpecialty extends AbstractListItem implements Specialty<M
     /**
      * @param certifyingBoard the certifyingBoard to set
      */
+    @Override
     public void setCertifyingBoard(MedicalSubSpecialtyCertifyingBoard certifyingBoard) {
         this.certifyingBoard = certifyingBoard;
     }

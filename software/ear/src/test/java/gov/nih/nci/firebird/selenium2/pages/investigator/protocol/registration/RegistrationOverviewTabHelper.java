@@ -90,7 +90,7 @@ import gov.nih.nci.firebird.data.FormStatus;
 import gov.nih.nci.firebird.data.FormType;
 import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.selenium2.pages.base.AbstractMenuPage;
-import gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing;
+import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab.FormListing;
 import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 
 import java.io.IOException;
@@ -105,7 +105,7 @@ public class RegistrationOverviewTabHelper extends AbstractRegistrationTabHelper
 
     public FormListing getFormListing(FormType formType) {
         for (FormListing listing : tab.getFormListings()) {
-            if (listing.getDescription().equals(formType.getDescription())) {
+            if (listing.getForm().equals(formType.getDescription())) {
                 return listing;
             }
         }
@@ -132,11 +132,11 @@ public class RegistrationOverviewTabHelper extends AbstractRegistrationTabHelper
         for (AbstractRegistrationForm form : registration.getForms()) {
             FormListing listing = getFormListing(form);
             if (!listing.getOptionality().equals(FormOptionality.SUPPLEMENTARY.getDisplay())) {
-                assertEquals(expectedFormStatuses.getDisplay(), listing.getFormStatus());
+                assertEquals(expectedFormStatuses.getDisplay(), listing.getStatus());
             } else {
-                assertEquals(FormStatus.NOT_APPLICABLE.getDisplay(), listing.getFormStatus());
+                assertEquals(FormStatus.NOT_APPLICABLE.getDisplay(), listing.getStatus());
             }
-            AbstractFormTab<?> formTab = (AbstractFormTab<?>) listing.click();
+            AbstractFormTab<?> formTab = listing.clickFormLink();
             assertTrue(formTab.isSelected());
             assertTrue(formTab.getHelper().isLockedForInvestigator());
             formTab.getHelper().checkFormDownloads();
@@ -151,20 +151,16 @@ public class RegistrationOverviewTabHelper extends AbstractRegistrationTabHelper
     public void assertFormsHaveStatus(FormStatus status) {
         for (FormListing listing : tab.getFormListings()) {
             if (listing.getOptionality().equals(FormOptionality.SUPPLEMENTARY.getDisplay())) {
-                assertEquals(FormStatus.NOT_APPLICABLE.getDisplay(), listing.getFormStatus());
+                assertEquals(FormStatus.NOT_APPLICABLE.getDisplay(), listing.getStatus());
             } else {
-                assertEquals(status.getDisplay(), listing.getFormStatus());
+                assertEquals(status.getDisplay(), listing.getStatus());
             }
         }
     }
-
+    
     public static RegistrationOverviewTab openRegistration(AbstractMenuPage<?> fromPage, AbstractProtocolRegistration registration) {
         BrowseRegistrationsPage browsePage = BrowseRegistrationsPageHelper.openPage(fromPage);
         return browsePage.getHelper().clickRegistrationLink(registration);
-    }
-
-    public void checkProgressBar(int completedForms, int totalRequiredForms) {
-        tab.getProgressBar().getHelper().checkProgressBar(completedForms, totalRequiredForms);
     }
 
 }

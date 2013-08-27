@@ -116,8 +116,8 @@ import com.google.inject.Inject;
 public class InvestigatorsTabAction extends AbstractProtocolDetailsTabAction {
     private static final long serialVersionUID = 1L;
 
-    private String selectedPersonExternalId;
-    private List<Long> invitedRegistrationIds;
+    private String selectedPersonKey;
+    private List<Long> invitedRegistrations;
     private Person investigator = new Person();
 
     /**
@@ -133,8 +133,8 @@ public class InvestigatorsTabAction extends AbstractProtocolDetailsTabAction {
     @Override
     public void prepare() {
         super.prepare();
-        if (StringUtils.isNotBlank(selectedPersonExternalId)) {
-            investigator = getPerson(getSelectedPersonExternalId());
+        if (StringUtils.isNotBlank(selectedPersonKey)) {
+            investigator = getPersonSearchService().getPerson(getSelectedPersonKey());
         }
     }
 
@@ -185,30 +185,34 @@ public class InvestigatorsTabAction extends AbstractProtocolDetailsTabAction {
     /**
      * @return investigator selected from the autocompleter.
      */
-    public String getSelectedPersonExternalId() {
-        return selectedPersonExternalId;
+    public String getSelectedPersonKey() {
+        return selectedPersonKey;
     }
 
     /**
-     * @param selectedPersonExternalId investigator selected from the autocompleter.
+     * @param selectedPersonKey investigator selected from the autocompleter.
      */
-    public void setSelectedPersonExternalId(String selectedPersonExternalId) {
-        this.selectedPersonExternalId = selectedPersonExternalId;
+    public void setSelectedPersonKey(String selectedPersonKey) {
+        this.selectedPersonKey = selectedPersonKey;
     }
 
-    public List<Long> getInvitedRegistrationIds() {
-        return invitedRegistrationIds;
+    /**
+     * @return selected registrations to invite.
+     */
+    public List<Long> getInvitedRegistrations() {
+        return invitedRegistrations;
     }
 
-    public void setInvitedRegistrationIds(List<Long> invitedRegistrationIds) {
-        this.invitedRegistrationIds = invitedRegistrationIds;
+    /**
+     * @param registrations selected registrations to invite.
+     */
+    public void setInvitedRegistrations(List<Long> registrations) {
+        this.invitedRegistrations = registrations;
     }
 
     /**
      * Listing object for a registration.
      */
-    @SuppressWarnings("ucd")
-    // needs to be public for JSONUtil.serialize()
     public class RegistrationListing implements Serializable, Comparable<RegistrationListing> {
         private static final long serialVersionUID = 1L;
         private final SimpleDateFormat dateFormat;

@@ -86,6 +86,8 @@ import static org.apache.commons.lang3.StringUtils.*;
 import gov.nih.nci.firebird.commons.selenium2.util.TableUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.WaitUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
+import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
+
 import java.util.List;
 
 import gov.nih.nci.firebird.selenium2.pages.components.EditOhrpNumberComponent;
@@ -96,7 +98,7 @@ import org.openqa.selenium.WebElement;
 /**
  * Organization association listing on the Form 1572 Tab.
  */
-public class Form1572OrganizationAssociationListing {
+public class Form1572OrganizationAssociationListing implements TableListing {
 
     private static final int VALIDATEION_ERROR_INDEX = 0;
     private static final int CHECK_BOX_INDEX = 1;
@@ -107,7 +109,7 @@ public class Form1572OrganizationAssociationListing {
     private static final int PHONE_NUMBER_INDEX = 5;
 
     private final WebElement checkBox;
-    private final String id;
+    private final Long id;
     private final boolean validationError;
     private final String name;
     private String ctepId;
@@ -120,7 +122,7 @@ public class Form1572OrganizationAssociationListing {
     private WebDriver driver;
 
     public Form1572OrganizationAssociationListing(WebElement row) {
-        id = WebElementUtils.getId(row);
+        id = Long.valueOf(WebElementUtils.getId(row));
         List<WebElement> cells = TableUtils.getCells(row);
         checkBox = cells.get(CHECK_BOX_INDEX).findElement(By.tagName("input"));
         validationError = WebElementUtils.getElementIfPresent(cells.get(VALIDATEION_ERROR_INDEX),
@@ -154,7 +156,8 @@ public class Form1572OrganizationAssociationListing {
         this.driver = driver;
     }
 
-    public String getId() {
+    @Override
+    public Long getId() {
         return id;
     }
 

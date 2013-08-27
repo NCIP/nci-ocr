@@ -162,7 +162,7 @@ public enum NesIIRoot {
      * @param root get enum matching this root
      * @return the root enum.
      */
-    static NesIIRoot getByRoot(String root) {
+    public static NesIIRoot getByRoot(String root) {
         return rootMap.get(root);
     }
 

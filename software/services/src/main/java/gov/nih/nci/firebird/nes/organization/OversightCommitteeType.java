@@ -82,10 +82,6 @@
  */
 package gov.nih.nci.firebird.nes.organization;
 
-import java.util.Map;
-
-import com.google.common.collect.Maps;
-
 /**
  * ResearchOrganization type codes.
  */
@@ -95,15 +91,6 @@ public enum OversightCommitteeType {
      * Institutional Review Board.
      */
     INSTITUTIONAL_REVIEW_BOARD("Institutional Review Board (IRB)");
-
-    static final int MAX_LENGTH = 26;
-
-    private static final Map<String, OversightCommitteeType> CODE_TYPE_MAPPINGS = Maps.newHashMap();
-    static {
-        for (OversightCommitteeType type : values()) {
-            CODE_TYPE_MAPPINGS.put(type.getCode(), type);
-        }
-    }
 
     private final String code;
 
@@ -116,10 +103,6 @@ public enum OversightCommitteeType {
      */
     public String getCode() {
         return code;
-    }
-
-    static OversightCommitteeType getByCode(String typeCode) {
-        return CODE_TYPE_MAPPINGS.get(typeCode);
     }
 
 }

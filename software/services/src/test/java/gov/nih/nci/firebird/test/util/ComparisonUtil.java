@@ -109,10 +109,11 @@ public class ComparisonUtil {
         PROFILE_COMPARISON_BUILDER.addFieldComparisonBuilder("person", PERSON_COMPARISON_BUILDER);
         PROFILE_COMPARISON_BUILDER.addFieldComparisonBuilder("organization", ORGANIZATION_COMPARISON_BUILDER);
         PROFILE_COMPARISON_BUILDER.addFieldComparisonBuilder("clinicalResearchExperience", CLINCIAL_RESEARCH_EXPERIENCE_COMPARISON_BUILDER);
-        PERSON_COMPARISON_BUILDER.addExcludedFields("id", "externalData");
+        PERSON_COMPARISON_BUILDER.addExcludedFields("id", "updateRequested");
+        PERSON_COMPARISON_BUILDER.addExcludedFields("lastNesRefresh");
         PERSON_COMPARISON_BUILDER.addFieldComparisonBuilder("postalAddress", ADDRESS_COMPARISON_BUILDER);
         ORGANIZATION_COMPARISON_BUILDER.addExcludedFields("id");
-        ORGANIZATION_COMPARISON_BUILDER.addExcludedFields("externalData");
+        ORGANIZATION_COMPARISON_BUILDER.addExcludedFields("lastNesRefresh");
         ORGANIZATION_COMPARISON_BUILDER.addExcludedFields("roles");
         ORGANIZATION_COMPARISON_BUILDER.addFieldComparisonBuilder("postalAddress", ADDRESS_COMPARISON_BUILDER);
     }

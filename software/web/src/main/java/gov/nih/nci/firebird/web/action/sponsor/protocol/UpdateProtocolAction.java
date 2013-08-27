@@ -82,10 +82,12 @@
  */
 package gov.nih.nci.firebird.web.action.sponsor.protocol;
 
+import com.opensymphony.xwork2.ActionSupport;
 import gov.nih.nci.firebird.common.RichTextUtil;
 import gov.nih.nci.firebird.data.Protocol;
 import gov.nih.nci.firebird.data.ProtocolRevision;
 import gov.nih.nci.firebird.exception.ValidationException;
+import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 
 import java.util.List;
@@ -100,7 +102,6 @@ import org.apache.struts2.json.JSONUtil;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.opensymphony.xwork2.ActionSupport;
 import com.opensymphony.xwork2.validator.annotations.CustomValidator;
 import com.opensymphony.xwork2.validator.annotations.RequiredFieldValidator;
 import com.opensymphony.xwork2.validator.annotations.ValidationParameter;
@@ -120,10 +121,11 @@ public class UpdateProtocolAction extends AbstractModifyProtocolAction {
 
     /**
      * @param protocolService the protocol service
+     * @param organizationService the organization service
      */
     @Inject
-    public UpdateProtocolAction(ProtocolService protocolService) {
-        super(protocolService);
+    public UpdateProtocolAction(ProtocolService protocolService, OrganizationService organizationService) {
+        super(protocolService, organizationService);
     }
 
     @Override
@@ -132,7 +134,7 @@ public class UpdateProtocolAction extends AbstractModifyProtocolAction {
         if (getId(getProtocol()) == null) {
             throw new IllegalStateException("No protocol configured for this action.");
         }
-        oldProtocol = getProtocol().createCopy();
+        oldProtocol = getProtocol().clone();
     }
 
     /**

@@ -85,6 +85,7 @@ package gov.nih.nci.firebird.common;
 import static org.junit.Assert.*;
 
 import org.apache.commons.lang.StringUtils;
+import org.dom4j.DocumentException;
 import org.junit.Test;
 
 public class RichTextUtilTest {
@@ -138,13 +139,13 @@ public class RichTextUtilTest {
     }
 
     @Test
-    public void testGetRichTextSize() {
+    public void testGetRichTextSize() throws DocumentException {
         int richTextSize = RichTextUtil.getRichTextSize(richTextWithoutScriptTags);
         assertEquals(plainComments.length(), richTextSize);
     }
 
     @Test
-    public void testGetRichTextSize_EmptyString() {
+    public void testGetRichTextSize_EmptyString() throws DocumentException {
         assertEquals(0, RichTextUtil.getRichTextSize(StringUtils.EMPTY));
     }
 

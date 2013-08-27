@@ -99,20 +99,19 @@ import gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.P
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure;
 import gov.nih.nci.firebird.selenium2.pages.util.ExpectedValidationFailure.FailingAction;
 import gov.nih.nci.firebird.test.ValueGenerator;
-import gov.nih.nci.firebird.test.data.DataSet;
-import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.InvestigatorRegistrationTestDataSet;
 
 import org.junit.Test;
 
 public class Form1572TabTest extends AbstractForm1572TabTest {
 
-    private DataSet dataSet;
+    private InvestigatorRegistrationTestDataSet dataSet;
     private final String newOhrp = ValueGenerator.getUniqueOhrpNumber();
 
     @Test
     public void testPracticeSiteOhrpNumber() {
 
-        PracticeSite practiceSite = getTestDataSource().getPracticeSite();
+        PracticeSite practiceSite = getNesTestDataSource().getPracticeSite();
         addPracticeSiteTo1572(practiceSite);
 
         Form1572OrganizationAssociationListing practiceSiteListing = form1572Tab.getPracticeSiteSection().getHelper()
@@ -154,11 +153,11 @@ public class Form1572TabTest extends AbstractForm1572TabTest {
     
     @Test
     public void testDownload1572WithAdditionalContent() throws IOException {
-        ProtocolForm1572 form1572 = getRegistration().getForm1572();
+        ProtocolForm1572 form1572 = dataSet.getRegistration().getForm1572();
         for (int i = 0; i < 3; i++) {
-            form1572.getPracticeSites().add(getTestDataSource().getPracticeSite().getOrganization());
-            form1572.getLabs().add(getTestDataSource().getClinicalLab().getOrganization());
-            form1572.getIrbs().add(getTestDataSource().getIrb().getOrganization());
+            form1572.getPracticeSites().add(getNesTestDataSource().getPracticeSite().getOrganization());
+            form1572.getLabs().add(getNesTestDataSource().getClinicalLab().getOrganization());
+            form1572.getIrbs().add(getNesTestDataSource().getIrb().getOrganization());
         }
         dataSet.update(form1572);
         File form1572Pdf = ((ProtocolForm1572Tab) form1572Tab).clickViewGenerated1572();
@@ -167,9 +166,8 @@ public class Form1572TabTest extends AbstractForm1572TabTest {
 
     @Override
     protected void setUpData() {
-        DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
-        builder.createRegistration().withStatus(RegistrationStatus.IN_PROGRESS);
-        dataSet = builder.build();
+        dataSet = InvestigatorRegistrationTestDataSet.createWithStatus(getDataLoader(), getGridResources(),
+                RegistrationStatus.IN_PROGRESS);
     }
 
     @Override
@@ -189,7 +187,7 @@ public class Form1572TabTest extends AbstractForm1572TabTest {
 
     @Override
     protected AbstractProtocolRegistration getRegistration() {
-        return dataSet.getInvestigatorRegistration();
+        return dataSet.getRegistration();
     }
 
     @Override

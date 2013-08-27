@@ -83,16 +83,12 @@
 package gov.nih.nci.firebird.data;
 
 import static org.junit.Assert.*;
-
-import java.util.Date;
-
 import gov.nih.nci.firebird.common.ValidationResult;
 import gov.nih.nci.firebird.exception.CredentialAlreadyExistsException;
 import gov.nih.nci.firebird.test.CredentialFactory;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.RegistrationFactory;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -188,36 +184,13 @@ public class HumanResearchCertificateFormTest extends AbstractRegistrationFormTe
         assertEquals(FormStatus.SUBMITTED, form.getFormStatus());
         assertTrue(form.getCertificates().iterator().next() instanceof SubmittedTrainingCertificate);
 
-        returnForm();
+        registration.setStatus(RegistrationStatus.RETURNED);
+        form.setFormStatus(FormStatus.REJECTED);
+        form.returnForm();
         assertEquals(FormStatus.REJECTED, form.getFormStatus());
         assertFalse(form.getCertificates().isEmpty());
         assertEquals(2, form.getCertificates().size());
         assertTrue(form.getCertificates().iterator().next() instanceof TrainingCertificate);
-    }
-
-    private void returnForm() {
-        registration.setStatus(RegistrationStatus.RETURNED);
-        form.setFormStatus(FormStatus.REJECTED);
-        form.returnForm();
-    }
-
-    @Test
-    public void testReturnForm_SubmittedCertificateExpired() throws CredentialAlreadyExistsException {
-        registration.setStatus(RegistrationStatus.SUBMITTED);
-        TrainingCertificate certificate = CredentialFactory.getInstance().createCertificate(CertificateType.HUMAN_RESEARCH_CERTIFICATE);
-        certificate.setExpirationDate(DateUtils.addMonths(new Date(), -1));
-        registration.getProfile().addCredential(
-                certificate);
-        addProfileCertificatesToForm();
-
-        form.submitForm();
-        assertEquals(1, form.getCertificates().size());
-        assertEquals(FormStatus.SUBMITTED, form.getFormStatus());
-        assertTrue(form.getCertificates().iterator().next() instanceof SubmittedTrainingCertificate);
-
-        returnForm();
-        assertEquals(FormStatus.REJECTED, form.getFormStatus());
-        assertTrue(form.getCertificates().isEmpty());
     }
 
     @Test
@@ -235,7 +208,9 @@ public class HumanResearchCertificateFormTest extends AbstractRegistrationFormTe
         assertTrue(formCert instanceof SubmittedTrainingCertificate);
 
         ((SubmittedTrainingCertificate) formCert).removeLinkToOrginalCertificate();
-        returnForm();
+        registration.setStatus(RegistrationStatus.RETURNED);
+        form.setFormStatus(FormStatus.REJECTED);
+        form.returnForm();
         assertEquals(FormStatus.REJECTED, form.getFormStatus());
         assertFalse(form.getCertificates().isEmpty());
         assertEquals(1, form.getCertificates().size());

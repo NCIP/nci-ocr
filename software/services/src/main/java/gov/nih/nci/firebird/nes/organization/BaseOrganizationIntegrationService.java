@@ -84,24 +84,25 @@ package gov.nih.nci.firebird.nes.organization;
 
 import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.exception.ValidationException;
-import gov.nih.nci.firebird.service.organization.InvalidatedOrganizationException;
+import gov.nih.nci.firebird.nes.common.ReplacedEntityException;
+import gov.nih.nci.firebird.nes.common.UnavailableEntityException;
 
 /**
  * Provides common service methods for all NES organization integration services.
  */
-@SuppressWarnings("ucd")
-// needs to be public
 public interface BaseOrganizationIntegrationService {
 
     /**
      * Get the organization with the given NES id from the NES.
      *
      * @param nesId the id.
-     * @return the organization.
-     * @throws InvalidatedOrganizationException if the corresponding Organization has been nullified and there are no
-     *             replacements available.
+     * @return the org.
+     * @throws UnavailableEntityException if the corresponding Organization has been nullified with no
+     * correction indicated or the nesId was not found
+     * @throws ReplacedEntityException if the corresponding Organization has been nullified and there
+     * is a correction available.
      */
-    Organization getById(String nesId) throws InvalidatedOrganizationException;
+    Organization getById(String nesId) throws UnavailableEntityException, ReplacedEntityException;
 
     /**
      * Validates a organization object against NES and returns a ValidationException with all of the field errors from

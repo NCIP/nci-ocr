@@ -94,7 +94,6 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.PracticeSite;
 import gov.nih.nci.firebird.data.PracticeSiteType;
 import gov.nih.nci.firebird.nes.NesIIRoot;
-import gov.nih.nci.firebird.nes.organization.AbstractNesRoleData;
 import gov.nih.nci.firebird.nes.organization.IdentifiedOrganizationIntegrationService;
 import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
 import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
@@ -119,6 +118,7 @@ import gov.nih.nci.firebird.test.OrganizationFactory;
 import gov.nih.nci.firebird.test.ValueGenerator;
 import gov.nih.nci.firebird.test.data.DataSet;
 import gov.nih.nci.firebird.test.data.DataSetBuilder;
+import gov.nih.nci.firebird.test.data.ProtocolTestDataSet;
 import gov.nih.nci.firebird.test.util.FirebirdPropertyUtils;
 
 import java.io.File;
@@ -144,24 +144,19 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
     private Calendar effectiveDate2 = Calendar.getInstance();
     private Calendar expirationDate2 = Calendar.getInstance();
     private File tmp;
-    private DataSet dataSet;
+    private ProtocolTestDataSet dataSet;
 
     @Inject
     private NesOrganizationIntegrationServiceFactory integrationServiceFactory;
     @Inject
     private IdentifiedOrganizationIntegrationService identifiedOrganizationService;
 
-    private LoginAccount ctepInvestigatorLogin;
-
     @Before
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
-        LoginAccount investigatorLogin = builder.createInvestigator().getLogin();
-        ctepInvestigatorLogin = builder.createInvestigator().asCtepUser().getLogin();
-        dataSet = builder.build();
-        organizationAssociationsTab = openOrgAssociationsTab(investigatorLogin, false);
+        dataSet = ProtocolTestDataSet.createStandardProtocolTestDataSet(getDataLoader(), getGridResources());
+        organizationAssociationsTab = openOrgAssociationsTab(dataSet.getInvestigatorLogin(), false);
 
         effectiveDate.set(Calendar.YEAR, 2011);
         expirationDate.set(Calendar.YEAR, 2015);
@@ -192,15 +187,15 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
     }
 
     private PracticeSite getExistingPracticeSite() {
-        return getTestDataSource().getPracticeSite();
+        return getNesTestDataSource().getPracticeSite();
     }
 
     private ClinicalLaboratory getExistingLab() {
-        return getTestDataSource().getClinicalLab();
+        return getNesTestDataSource().getClinicalLab();
     }
 
     private InstitutionalReviewBoard getExistingIrb() {
-        return getTestDataSource().getIrb();
+        return getNesTestDataSource().getIrb();
     }
 
     private void addIrb(InstitutionalReviewBoard irb) {
@@ -208,7 +203,7 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
                 .clickCreateNew();
         organizationAssociationsTab = addOrganizationAssociationDialog.clickCancel();
 
-        if (irb.getOrganization().hasExternalRecord()) {
+        if (irb.getOrganization().hasNesRecord()) {
             selectExistingIrbValidateDuplicate(irb);
         } else {
             addOrganizationAssociationDialog = organizationAssociationsTab.getIrbSection().clickCreateNew();
@@ -327,7 +322,7 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
                 .getClinicalLabSection().clickCreateNew();
         organizationAssociationsTab = addOrganizationAssociationDialog.clickCancel();
 
-        if (lab.getOrganization().hasExternalRecord()) {
+        if (lab.getOrganization().hasNesRecord()) {
             selectExistingLabValidateDuplicate(lab);
         } else {
             addOrganizationAssociationDialog = organizationAssociationsTab.getClinicalLabSection().clickCreateNew();
@@ -362,7 +357,7 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
     }
 
     private void addPracticeSite(PracticeSite practiceSite, boolean phoneNumberRequired) {
-        if (practiceSite.getOrganization().hasExternalRecord()) {
+        if (practiceSite.getOrganization().hasNesRecord()) {
             selectExistingPracticeSiteValidateDuplicate(practiceSite);
         } else {
             createNewPracticeSite(practiceSite, phoneNumberRequired);
@@ -429,14 +424,17 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
 
     @Test
     public void testAddNewPracticeSiteAsCtepUser() {
-        openOrgAssociationsTab(ctepInvestigatorLogin, true);
+        DataSetBuilder builder = new DataSetBuilder(getDataLoader(), getGridResources());
+        builder.createInvestigator().asCtepUser();
+        DataSet dataSet = builder.build();
+        openOrgAssociationsTab(dataSet.getInvestigatorLogin(), true);
         PracticeSite practiceSite = createNewPracticeSite();
         addPracticeSite(practiceSite, true);
         assertNotNull(organizationAssociationsTab.getPracticeSiteSection().getHelper().getListing(practiceSite));
     }
 
     private PracticeSite createNewPracticeSite() {
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         PracticeSite practiceSite = new PracticeSite();
         practiceSite.setOrganization(organization);
         practiceSite.setType(PracticeSiteType.HEALTH_CARE_FACILITY);
@@ -460,14 +458,14 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
     }
 
     private ClinicalLaboratory createNewLab() {
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         ClinicalLaboratory lab = new ClinicalLaboratory();
         lab.setOrganization(organization);
         return lab;
     }
 
     private InstitutionalReviewBoard createNewIrb() {
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         InstitutionalReviewBoard irb = new InstitutionalReviewBoard();
         irb.setOrganization(organization);
         return irb;
@@ -718,8 +716,7 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
     }
 
     private String getOrganizationCtepId(Organization organization) {
-        AbstractNesRoleData roleData = (AbstractNesRoleData) organization.getExternalData();
-        return identifiedOrganizationService.getCtepId(roleData.getPlayerId());
+        return identifiedOrganizationService.getCtepId(organization.getPlayerIdentifier());
     }
 
     private void selectPracticeSiteAndVerifyType(Organization practiceSiteOrganization, PracticeSiteType expectedType) {
@@ -733,9 +730,9 @@ public class AssociatedOrganizationTabTest extends AbstractFirebirdWebDriverTest
     private void checkDatabaseForPracticeSiteData(PracticeSiteType expectedType) {
         Organization createdOrganization = dataSet.getLastCreatedObject(Organization.class);
         if (expectedType == PracticeSiteType.HEALTH_CARE_FACILITY) {
-            assertTrue(createdOrganization.getExternalId().startsWith(NesIIRoot.HEALTH_CARE_FACILITY.getRoot()));
+            assertTrue(createdOrganization.getNesId().startsWith(NesIIRoot.HEALTH_CARE_FACILITY.getRoot()));
         } else {
-            assertTrue(createdOrganization.getExternalId().startsWith(NesIIRoot.RESEARCH_ORGANIZATION.getRoot()));
+            assertTrue(createdOrganization.getNesId().startsWith(NesIIRoot.RESEARCH_ORGANIZATION.getRoot()));
         }
         PracticeSite createdPracticeSite = dataSet.getLastCreatedObject(PracticeSite.class);
         assertEquals(createdPracticeSite.getType(), expectedType);

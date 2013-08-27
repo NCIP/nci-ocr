@@ -1,26 +1,24 @@
 package gov.nih.nci.firebird.selenium2.pages.investigator.annual.registration;
 
-import static org.apache.commons.lang3.StringUtils.*;
-import static org.junit.Assert.*;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
+import static org.junit.Assert.assertTrue;
 import gov.nih.nci.firebird.commons.selenium2.support.IdentifiableComponentFactory;
 import gov.nih.nci.firebird.commons.selenium2.util.FileDownloadUtils;
-import gov.nih.nci.firebird.commons.selenium2.util.JQueryUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.TableUtils;
 import gov.nih.nci.firebird.commons.selenium2.util.WebElementUtils;
 import gov.nih.nci.firebird.data.FormTypeEnum;
 import gov.nih.nci.firebird.selenium2.pages.base.ConfirmDialog;
+import gov.nih.nci.firebird.selenium2.pages.base.TableListing;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.SupportingDocumentsTag;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
+import gov.nih.nci.firebird.selenium2.pages.util.FirebirdTableUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 
-import com.google.common.base.Function;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * investigator/annual/registration/ajax/financialdisclosure/financial_disclosure_tab.jsp
@@ -28,7 +26,6 @@ import com.google.common.base.Function;
 public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<FinancialDisclosureTab> {
 
     static final String TAB_ID = "form_fdf_tab";
-    private static final String TAB_UNIQUE_LOCATOR_CLASS = "ctepFinancialDisclosure";
     private static final String LOCKED_PDF_BUTTON_DIV_ID = "lockedViewFinancialDisclosurePdfButtonDiv";
     private static final String UNLOCKED_PDF_BUTTON_DIV_ID = "unlockedViewFinancialDisclosurePdfButtonDiv";
     private static final String REQUIRED_PHARMACEUTICAL_COMPANY_ASTERISK_ID = "requiredPharmaceuticalCompanyAsterisk";
@@ -37,9 +34,9 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
     private static final String PHARMACEUTICAL_COMPANIES_TABLE_ID = "pharmaceuticalCompaniesTable";
 
     public enum Question {
-        Q1_MONETARY_GAIN("registration_financialDisclosure_monetaryGain", "monetaryGainAsterisk"),
-        Q2_OTHER_SPONSOR_PAYMENTS("registration_financialDisclosure_otherSponsorPayments", "otherSponsorPaymentsAsterisk"),
-        Q3_FINANCIAL_INTEREST("registration_financialDisclosure_financialInterest", "financialInterestAsterisk"),
+        Q1_MONETARY_GAIN("registration_financialDisclosure_monetaryGain", "monetaryGainAsterisk"), 
+        Q2_OTHER_SPONSOR_PAYMENTS("registration_financialDisclosure_otherSponsorPayments", "otherSponsorPaymentsAsterisk"), 
+        Q3_FINANCIAL_INTEREST("registration_financialDisclosure_financialInterest", "financialInterestAsterisk"), 
         Q4_EQUITY_IN_SPONSOR("registration_financialDisclosure_equityInSponsor", "equityInSponsorAsterisk");
 
         String questionId;
@@ -90,13 +87,8 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
     }
 
     public List<PharmaceuticalCompanyListing> getListings() {
-        Function<WebElement, PharmaceuticalCompanyListing> transformation = new Function<WebElement, PharmaceuticalCompanyListing>() {
-            @Override
-            public PharmaceuticalCompanyListing apply(WebElement row) {
-                return new PharmaceuticalCompanyListing(row);
-            }
-        };
-        return JQueryUtils.transformDataTableRows(pharmaceuticalCompaniesTable, transformation);
+        return FirebirdTableUtils.transformDataTableRows(this, pharmaceuticalCompaniesTable,
+                PharmaceuticalCompanyListing.class);
     }
 
     public AddPharmaceuticalCompanyDialog clickAddPharmaceuticalCompanyButton() {
@@ -115,8 +107,7 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
     @Override
     public boolean isReadOnly() {
         return !isPresent(By.id(ADD_PHARMACEUTICAL_COMPANY_BUTTON_ID))
-                && !isPresent(By.id(PHARMACEUTICAL_COMPANIES_TABLE_ID))
-                && isPresent(By.id(SupportingDocumentsTag.SUPPORTING_DOCUMENT_TABLE_ID));
+                && !isPresent(By.id(PHARMACEUTICAL_COMPANIES_TABLE_ID));
     }
 
     @Override
@@ -132,7 +123,6 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
     @Override
     protected void assertLoaded() {
         super.assertLoaded();
-        assertPresent(By.className(TAB_UNIQUE_LOCATOR_CLASS));
         assertTrue(isPresent(By.id(LOCKED_PDF_BUTTON_DIV_ID)) || isPresent(By.id(UNLOCKED_PDF_BUTTON_DIV_ID)));
         if (isPresent(By.id(UNLOCKED_PDF_BUTTON_DIV_ID))) {
             assertFindBysPresent();
@@ -171,7 +161,7 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
 
     }
 
-    public class PharmaceuticalCompanyListing {
+    public class PharmaceuticalCompanyListing implements TableListing {
 
         private static final int NAME_INDEX = 0;
         private static final int CTEP_ID_INDEX = 1;
@@ -180,7 +170,7 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
         private static final int ADDRESS_INDEX = 4;
         private static final int DELETE_INDEX = 5;
 
-        private final String id;
+        private final Long id;
         private final String name;
         private final String ctepId;
         private final String email;
@@ -189,7 +179,7 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
         private final WebElement deleteIcon;
 
         public PharmaceuticalCompanyListing(WebElement row) {
-            id = WebElementUtils.getId(row);
+            id = Long.valueOf(WebElementUtils.getId(row));
             List<WebElement> cells = TableUtils.getCells(row);
             name = cells.get(NAME_INDEX).getText();
             ctepId = trimToNull(cells.get(CTEP_ID_INDEX).getText());
@@ -199,7 +189,8 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
             deleteIcon = cells.get(DELETE_INDEX).findElement(By.tagName("a"));
         }
 
-        public String getId() {
+        @Override
+        public Long getId() {
             return id;
         }
 
@@ -227,7 +218,8 @@ public class FinancialDisclosureTab extends AbstractAnnualRegistrationTab<Financ
             deleteIcon.click();
             String titleKey = "remove.pharmaceutical.company.confirm.title";
             String messageKey = "remove.pharmaceutical.company.confirm.text";
-            return new ConfirmDialog(getDriver(), FinancialDisclosureTab.this, titleKey, messageKey).waitUntilReady();
+            return new ConfirmDialog(getDriver(), FinancialDisclosureTab.this, titleKey,
+                    messageKey).waitUntilReady();
         }
     }
 }

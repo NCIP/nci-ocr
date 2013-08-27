@@ -20,7 +20,7 @@
     <s:param name="registration.id" value="registration.id" />
 </s:url>
 <div>
-    <s:if test="%{!readOnly}">
+    <s:if test="not registration.lockedForInvestigator">
         <sj:a openDialog="registrationDialog" href="%{listFromProfileUrl}" cssClass="button"
             id="listSubinvestigatorFromProfile"><fmt:message key="button.add.from.profile"/></sj:a>
         <sj:a openDialog="registrationDialog" href="%{addNewUrl}" cssClass="button"
@@ -55,8 +55,6 @@
         </tr>
     </thead>
 </table>
-
-<firebird:nextTabButton />
 
 <script type='text/javascript'>
     $(document).ready(function() {

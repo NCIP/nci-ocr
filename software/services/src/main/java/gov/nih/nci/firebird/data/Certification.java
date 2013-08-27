@@ -115,8 +115,6 @@ public class Certification extends AbstractCredential<Certification> {
      * @param expirationDate credential expiration date.
      * @param certificationType certification type .
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public Certification(InvestigatorProfile profile, CertificationType certificationType, Date effectiveDate,
             Date expirationDate) {
         super(profile, effectiveDate, expirationDate, null);

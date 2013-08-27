@@ -76,23 +76,23 @@ SearchSupport.prototype.cancelOldRequest = function(searchBox) {
     }
 };
 
-SearchSupport.prototype.createSelectButtonColumn = function (externalId, buttonText) {
-  return '<a id="select_' + externalId + '" class="button" href="javascript:void(0)">' + buttonText + '</a>';
+SearchSupport.prototype.createSelectButtonColumn = function (nesId, buttonText) {
+  return '<a id="select_' + nesId + '" class="button" href="javascript:void(0)">' + buttonText + '</a>';
 };
 
-SearchSupport.prototype.completeRow = function(row, rowData) {
-    $(row).attr("id", rowData.externalId);
+SearchSupport.prototype.completeRow = function(row, nesId, searchKey, rowData) {
+    $(row).attr("id", nesId);
 
     var addButtonLink = $(row).find("a");
     var _this = this;
     $(addButtonLink).click(function() {
-        _this.clickSelectButton(rowData);
+        _this.clickSelectButton(searchKey, rowData);
     });
 
     return row;
 };
 
-SearchSupport.prototype.clickSelectButton = function(rowData) {
+SearchSupport.prototype.clickSelectButton = function(searchKey, rowData) {
     //Stub, Page should implement this to make sure the correct functionality occurs.
     alert("ERROR: clickSelectButton() not implemented for this page");
 };

@@ -213,7 +213,6 @@ public class ManageDegreeDialog extends AbstractDialog<ManageDegreeDialog> {
 
     @Override
     protected void assertLoaded() {
-        super.assertLoaded();
         assertElementWithIdPresent(DEGREE_TYPE_SELECT_ID);
     }
 

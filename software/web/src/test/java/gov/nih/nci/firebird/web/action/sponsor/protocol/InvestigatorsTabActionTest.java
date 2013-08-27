@@ -94,6 +94,7 @@ import gov.nih.nci.firebird.data.RegistrationStatus;
 import gov.nih.nci.firebird.data.RevisedInvestigatorRegistration;
 import gov.nih.nci.firebird.data.SubInvestigatorRegistration;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
+import gov.nih.nci.firebird.service.person.PersonSearchService;
 import gov.nih.nci.firebird.service.protocol.ProtocolService;
 import gov.nih.nci.firebird.test.InvestigatorProfileFactory;
 import gov.nih.nci.firebird.test.ProtocolFactory;
@@ -123,6 +124,8 @@ public class InvestigatorsTabActionTest extends AbstractWebTest {
     @Inject
     private ProtocolService protocolService;
     @Inject
+    private PersonSearchService searchService;
+    @Inject
     private InvestigatorsTabAction action;
     private Protocol protocol;
 
@@ -130,6 +133,7 @@ public class InvestigatorsTabActionTest extends AbstractWebTest {
     public void setUp() throws Exception {
         super.setUp();
         action.setServletRequest(ServletActionContext.getRequest()); // closeDialog() needs a request
+        action.setPersonSearchService(searchService);
         protocol = ProtocolFactory.getInstanceWithId().createWithFormsDocuments();
         action.setProtocol(protocol);
         FirebirdUser sponsor = new FirebirdUser();
@@ -280,8 +284,8 @@ public class InvestigatorsTabActionTest extends AbstractWebTest {
         InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
                 RegistrationStatus.APPROVED);
         registration.setStatus(RegistrationStatus.INACTIVE);
-        InvestigatorRegistration reactivatedRegistration = RegistrationFactory.getInstance()
-                .createInvestigatorRegistration(RegistrationStatus.IN_PROGRESS);
+        InvestigatorRegistration reactivatedRegistration = RegistrationFactory.getInstance().createInvestigatorRegistration(
+                RegistrationStatus.IN_PROGRESS);
         reactivatedRegistration.getProtocol().addRegistration(registration);
         reactivatedRegistration.getInvitation().setInvitationStatus(InvitationStatus.REACTIVATED);
         registration.setCurrentRegistration(reactivatedRegistration);
@@ -295,19 +299,16 @@ public class InvestigatorsTabActionTest extends AbstractWebTest {
 
     @Test
     public void testRegistrationListing_getStatusText_NotStarted() {
-        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
-                RegistrationStatus.NOT_STARTED);
+        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(RegistrationStatus.NOT_STARTED);
         RegistrationListing listing = action.new RegistrationListing(registration);
         assertEquals(RegistrationStatus.NOT_STARTED.getDisplay(), listing.getStatusText());
     }
 
     @Test
     public void testRegistrationListing_isAbleToBeReactivated_ApprovedWithReactivatedRegistration() {
-        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
-                RegistrationStatus.APPROVED);
+        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(RegistrationStatus.APPROVED);
         registration.setStatus(RegistrationStatus.INACTIVE);
-        InvestigatorRegistration reactivatedRegistration = RegistrationFactory.getInstance()
-                .createInvestigatorRegistration();
+        InvestigatorRegistration reactivatedRegistration = RegistrationFactory.getInstance().createInvestigatorRegistration();
         reactivatedRegistration.getInvitation().setInvitationStatus(InvitationStatus.REACTIVATED);
         registration.setCurrentRegistration(reactivatedRegistration);
         RegistrationListing listing = action.new RegistrationListing(registration);
@@ -316,11 +317,9 @@ public class InvestigatorsTabActionTest extends AbstractWebTest {
 
     @Test
     public void testRegistrationListing_isRemovable_ApprovedWithReactivatedRegistration() {
-        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
-                RegistrationStatus.APPROVED);
+        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(RegistrationStatus.APPROVED);
         registration.setStatus(RegistrationStatus.INACTIVE);
-        InvestigatorRegistration reactivatedRegistration = RegistrationFactory.getInstance()
-                .createInvestigatorRegistration();
+        InvestigatorRegistration reactivatedRegistration = RegistrationFactory.getInstance().createInvestigatorRegistration();
         reactivatedRegistration.getInvitation().setInvitationStatus(InvitationStatus.REACTIVATED);
         reactivatedRegistration.getParentRegistrations().add(registration);
         RegistrationListing listing = action.new RegistrationListing(reactivatedRegistration);
@@ -329,8 +328,7 @@ public class InvestigatorsTabActionTest extends AbstractWebTest {
 
     @Test
     public void testRegistrationListing_isRemovable_RevisedRegistration() {
-        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(
-                RegistrationStatus.APPROVED);
+        InvestigatorRegistration registration = RegistrationFactory.getInstance().createInvestigatorRegistration(RegistrationStatus.APPROVED);
         RevisedInvestigatorRegistration revisedRegistration = registration.createRevisedRegistration();
         revisedRegistration.setStatus(RegistrationStatus.IN_PROGRESS);
         registration.setApprovalDate(null);

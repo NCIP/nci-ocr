@@ -82,33 +82,32 @@
  */
 package gov.nih.nci.firebird.web.action.search;
 
-import static gov.nih.nci.firebird.data.OrganizationRoleType.*;
 import static org.mockito.Mockito.*;
-import gov.nih.nci.firebird.service.organization.OrganizationService;
+import gov.nih.nci.firebird.service.organization.OrganizationSearchService;
 import gov.nih.nci.firebird.web.test.AbstractWebTest;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.inject.Inject;
+import org.mockito.Mock;
 
 public class OrganizationSearchActionTest extends AbstractWebTest {
+    
+    private OrganizationSearchAction action = new OrganizationSearchAction();
 
-    @Inject
-    private OrganizationSearchAction action;
-    @Inject
-    private OrganizationService mockOrganizationService;
+    @Mock
+    private OrganizationSearchService mockOrganizationSearchService;
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
+        action.setOrganizationSearchService(mockOrganizationSearchService);
     }
-
+    
     @Test
     public void testSearchForOrganizations() {
         action.setTerm("term");
         action.searchForOrganizations();
-        verify(mockOrganizationService).search(action.getTerm(), GENERIC_ORGANIZATION);
+        verify(mockOrganizationSearchService).search(action.getTerm());
     }
 
 }

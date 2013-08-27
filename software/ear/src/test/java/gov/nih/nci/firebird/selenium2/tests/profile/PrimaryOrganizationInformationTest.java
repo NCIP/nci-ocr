@@ -85,13 +85,10 @@ package gov.nih.nci.firebird.selenium2.tests.profile;
 import static org.junit.Assert.*;
 import gov.nih.nci.firebird.data.InvestigatorProfile;
 import gov.nih.nci.firebird.data.Organization;
-import gov.nih.nci.firebird.data.PrimaryOrganizationType;
+import gov.nih.nci.firebird.data.PracticeSiteType;
 import gov.nih.nci.firebird.nes.NesIIRoot;
-import gov.nih.nci.firebird.nes.organization.AbstractNesRoleData;
-import gov.nih.nci.firebird.nes.organization.HealthCareFacilityData;
 import gov.nih.nci.firebird.nes.organization.IdentifiedOrganizationIntegrationService;
 import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
-import gov.nih.nci.firebird.nes.organization.ResearchOrganizationData;
 import gov.nih.nci.firebird.nes.organization.ResearchOrganizationType;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.components.tags.search.SearchResultListing;
@@ -134,7 +131,7 @@ public class PrimaryOrganizationInformationTest extends AbstractFirebirdWebDrive
         ProfessionalContactInformationTab contactInfoTab = loginAsInvestigatorOpenProfile();
         String originalOrganizationCtepId = dataSet.getInvestigatorProfile().getPrimaryOrganization().getOrganization().getCtepId();
         assertEquals(originalOrganizationCtepId, contactInfoTab.getOrganizationCtepId());
-        Organization organization = OrganizationFactory.getInstance().createWithoutExternalData();
+        Organization organization = OrganizationFactory.getInstance().createWithoutNesData();
         OrganizationSearchDialog organizationSearchDialog = contactInfoTab.clickSearchOrganizationAgain();
         organizationSearchDialog.clickCancel();
         organizationSearchDialog = contactInfoTab.clickSearchOrganizationAgain();
@@ -144,7 +141,7 @@ public class PrimaryOrganizationInformationTest extends AbstractFirebirdWebDrive
         checkForInvalidEmailFormatError(createOrganizationDialog, organization);
 
         organization.setEmail("this@example.com");
-        createOrganizationDialog.getHelper().enterDataAndSave(organization, PrimaryOrganizationType.CANCER_CENTER);
+        createOrganizationDialog.getHelper().enterDataAndSave(organization, PracticeSiteType.CANCER_CENTER);
         contactInfoTab.getHelper().verifyOrganization(organization);
         assertTrue(contactInfoTab.getOrganizationCtepId().isEmpty());
     }
@@ -175,7 +172,7 @@ public class PrimaryOrganizationInformationTest extends AbstractFirebirdWebDrive
         expectedValidationFailure.assertFailureOccurs(new FailingAction() {
             @Override
             public void perform() {
-                createOrganizationDialog.getHelper().enterDataAndSave(organization, PrimaryOrganizationType.CANCER_CENTER);
+                createOrganizationDialog.getHelper().enterDataAndSave(organization, PracticeSiteType.CANCER_CENTER);
             }
         });
     }
@@ -214,56 +211,61 @@ public class PrimaryOrganizationInformationTest extends AbstractFirebirdWebDrive
         existingClinicalCenter.setCtepId(getOrganizationCtepId(existingClinicalCenter));
 
         ProfessionalContactInformationTab contactInfoTab = loginAsInvestigatorOpenProfile();
-        selectPrimaryOrganizationAndExternalId(contactInfoTab, existingHealthCareFacility,
-                PrimaryOrganizationType.HEALTH_CARE_FACILITY);
-        selectPrimaryOrganizationAndExternalId(contactInfoTab, existingCancerCenter, PrimaryOrganizationType.CANCER_CENTER);
-        selectPrimaryOrganizationAndExternalId(contactInfoTab, existingClinicalCenter, PrimaryOrganizationType.CLINICAL_CENTER);
+        selectPrimaryOrganizationAndNesId(contactInfoTab, existingHealthCareFacility,
+                PracticeSiteType.HEALTH_CARE_FACILITY);
+        selectPrimaryOrganizationAndNesId(contactInfoTab, existingCancerCenter, PracticeSiteType.CANCER_CENTER);
+        selectPrimaryOrganizationAndNesId(contactInfoTab, existingClinicalCenter, PracticeSiteType.CLINICAL_CENTER);
     }
 
     private String getOrganizationCtepId(Organization organization) {
-        AbstractNesRoleData nesRoleData = (AbstractNesRoleData) organization.getExternalData();
-        return identifiedOrganizationService.getCtepId(nesRoleData.getPlayerId());
+        return identifiedOrganizationService.getCtepId(organization.getPlayerIdentifier());
     }
 
-    private void selectPrimaryOrganizationAndExternalId(ProfessionalContactInformationTab contactInfoTab,
-            Organization primaryOrganization, PrimaryOrganizationType primaryOrganizationType) {
+    private void selectPrimaryOrganizationAndNesId(ProfessionalContactInformationTab contactInfoTab,
+            Organization primaryOrganization, PracticeSiteType primaryOrganizationType) {
         OrganizationSearchDialog organizationSearchDialog = contactInfoTab.clickSearchOrganizationAgain();
         organizationSearchDialog.getHelper().searchAndSelect(primaryOrganization);
         contactInfoTab.getHelper().verifyOrganization(primaryOrganization);
-        checkDatabaseForCorrectNesData(primaryOrganizationType);
+        checkDatabaseForCorrectNesId(primaryOrganizationType);
     }
 
-    private void checkDatabaseForCorrectNesData(PrimaryOrganizationType type) {
+    private void checkDatabaseForCorrectNesId(PracticeSiteType expectedType) {
         dataSet.reload();
         Organization primaryOrganization = dataSet.getInvestigator().getInvestigatorRole().getProfile()
                 .getPrimaryOrganization().getOrganization();
-        if (type == PrimaryOrganizationType.HEALTH_CARE_FACILITY) {
-            assertTrue(primaryOrganization.getExternalId().startsWith(NesIIRoot.HEALTH_CARE_FACILITY.getRoot()));
-            assertTrue(primaryOrganization.getExternalData() instanceof HealthCareFacilityData);
+        if (expectedType == PracticeSiteType.HEALTH_CARE_FACILITY) {
+            assertTrue(primaryOrganization.getNesId().startsWith(NesIIRoot.HEALTH_CARE_FACILITY.getRoot()));
         } else {
-            assertTrue(primaryOrganization.getExternalId().startsWith(NesIIRoot.RESEARCH_ORGANIZATION.getRoot()));
-            assertTrue(primaryOrganization.getExternalData() instanceof ResearchOrganizationData);
-            ResearchOrganizationData researchOrganizationData = (ResearchOrganizationData) primaryOrganization.getExternalData();
-            assertEquals(type.name(), researchOrganizationData.getResearchOrganizationType().name());
+            assertTrue(primaryOrganization.getNesId().startsWith(NesIIRoot.RESEARCH_ORGANIZATION.getRoot()));
         }
     }
 
     @Test
     public void testPrimaryOrganizationCreation() {
         ProfessionalContactInformationTab contactInfoTab = loginAsInvestigatorOpenProfile();
-        for (PrimaryOrganizationType type : PrimaryOrganizationType.values()) {
+        for (PracticeSiteType type : PracticeSiteType.values()) {
             createAndVerifyPrimaryOrganization(contactInfoTab, type);
         }
     }
 
     private void createAndVerifyPrimaryOrganization(ProfessionalContactInformationTab contactInfoTab,
-            PrimaryOrganizationType type) {
+            PracticeSiteType type) {
         CreatePrimaryOrganizationDialog createPrimaryOrganizationDialog = contactInfoTab.clickSearchOrganizationAgain()
                 .clickCreateNew();
         Organization newPrimaryOrganization = OrganizationFactory.getInstance().create();
         createPrimaryOrganizationDialog.getHelper().enterDataAndSave(newPrimaryOrganization, type);
         contactInfoTab.getHelper().verifyOrganization(newPrimaryOrganization);
-        checkDatabaseForCorrectNesData(type);
+        checkDatabaseForCorrectNesId(type);
+
+        if (type != PracticeSiteType.HEALTH_CARE_FACILITY) {
+            verifyCorrectResearchOrganizationType(type);
+        }
+    }
+
+    private void verifyCorrectResearchOrganizationType(PracticeSiteType type) {
+        ResearchOrganizationType actualType = integrationServiceFactory.getResearchOrganizationService().getType(
+                dataSet.getInvestigator().getInvestigatorRole().getProfile().getPrimaryOrganization().getNesId());
+        assertEquals(actualType, ResearchOrganizationType.valueOf(type.name()));
     }
 
 }

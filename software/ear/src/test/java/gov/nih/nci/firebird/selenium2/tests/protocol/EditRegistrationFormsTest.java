@@ -316,7 +316,7 @@ public class EditRegistrationFormsTest extends AbstractFirebirdWebDriverTest {
     private void checkInvestigatorForms() {
         BrowseRegistrationsPage registrationsPage = openHomePage(getPrimaryInvestigatorLogin()).getInvestigatorMenu().clickProtocolRegistrations();
         RegistrationOverviewTab overviewTab = registrationsPage.getHelper().clickRegistrationLink(getPrimaryInvestigatorRegistration());
-        List<gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing> listedForms = overviewTab.getFormListings();
+        List<gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab.FormListing> listedForms = overviewTab.getFormListings();
         assertEquals(3, listedForms.size());
         assertEquals(form1572Type.getInvestigatorDefault().getDisplay(),
                 overviewTab.getHelper().getFormListing(form1572Type).getOptionality());
@@ -340,7 +340,7 @@ public class EditRegistrationFormsTest extends AbstractFirebirdWebDriverTest {
         BrowseRegistrationsPage registrationsPage = openHomePage(getSubinvestigatorLogin()).getInvestigatorMenu().clickProtocolRegistrations();
         RegistrationOverviewTab overviewTab = registrationsPage.getHelper().clickRegistrationLink(getSubinvestigatorRegistration());
 
-        List<gov.nih.nci.firebird.selenium2.pages.investigator.registration.common.InvestigatorRegistrationFormTablesTag.FormListing> listedForms = overviewTab.getFormListings();
+        List<gov.nih.nci.firebird.selenium2.pages.investigator.protocol.registration.RegistrationOverviewTab.FormListing> listedForms = overviewTab.getFormListings();
         assertEquals(3, listedForms.size());
         assertEquals(form1572Type.getSubinvestigatorDefault().getDisplay(),
                 overviewTab.getHelper().getFormListing(form1572Type).getOptionality());

@@ -126,10 +126,6 @@ public class ToggleSwitch extends AbstractLoadableComponent<ToggleSwitch> {
         return WebElementUtils.getClasses(getRightOption()).contains(TOGGLE_CHOICE_SELECTED_CLASS);
     }
 
-    public boolean isPresent() {
-        return isPresent(By.className(TOGGLE_SWITCH_CLASS));
-    }
-
     @Override
     protected void assertLoaded() {
         assertPresent(By.className(TOGGLE_SWITCH_CLASS));

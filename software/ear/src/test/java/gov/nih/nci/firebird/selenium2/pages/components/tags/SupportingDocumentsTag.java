@@ -109,8 +109,7 @@ public class SupportingDocumentsTag extends AbstractLoadableComponent<Supporting
     private static final String REQUIRED_DOCUMENTATION_ASTERISK_ID = "requiredDocumentationAsterisk";
     private static final String SUPPORTING_DOCUMENT_FIELD_ID = "document_data";
     private static final String UPLOAD_BUTTON_ID = "uploadSupportingDocument";
-
-    public static final String SUPPORTING_DOCUMENT_TABLE_ID = "supportingDocumentsTable";
+    private static final String SUPPORTING_DOCUMENT_TABLE_ID = "supportingDocumentsTable";
 
     @FindBy(id = SUPPORTING_DOCUMENT_TABLE_ID)
     private WebElement table;

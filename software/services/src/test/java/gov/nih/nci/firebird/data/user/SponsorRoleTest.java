@@ -173,9 +173,21 @@ public class SponsorRoleTest {
     }
 
     @Test
+    public void testGetVerifiedSponsorRepresentativeOrganizationGroupName_ByNesId() {
+        assertEquals("verified_sponsor_" + getNesIdExtension(sponsor),
+                SponsorRole.getVerifiedSponsorRepresentativeOrganizationGroupName(sponsor.getNesId()));
+    }
+
+    @Test
     public void testGetVerifiedSponsorDelegateOrganizationGroupName() {
         assertEquals("verified_sponsor_delegate_" + getNesIdExtension(sponsor),
                 SponsorRole.getVerifiedSponsorDelegateOrganizationGroupName(sponsor));
+    }
+
+    @Test
+    public void testGetVerifiedSponsorDelegateOrganizationGroupName_ByNesId() {
+        assertEquals("verified_sponsor_delegate_" + getNesIdExtension(sponsor),
+                SponsorRole.getVerifiedSponsorDelegateOrganizationGroupName(sponsor.getNesId()));
     }
 
     @Test
@@ -224,6 +236,17 @@ public class SponsorRoleTest {
     public void testGetVerifiedSponsorOrganizationGroupDisplayName_Delegate() {
         assertEquals("FIREBIRD Verified " + sponsor.getName() + " Sponsor Delegates",
                 sponsorDelegateRole.getVerifiedSponsorOrganizationGroupDisplayName());
+    }
+
+    @Test
+    public void testIsVerfied_False() {
+        assertFalse(sponsorRepresentativeRole.isVerfied());
+    }
+
+    @Test
+    public void testIsVerfied_True() {
+        sponsorRepresentativeRole.setVerified(true);
+        assertTrue(sponsorRepresentativeRole.isVerfied());
     }
 
 }

@@ -175,7 +175,7 @@ public abstract class AbstractCancelRegistrationRevisionTest extends AbstractFir
 
     private SubInvestigatorRegistration addSubinvestigator(SubinvestigatorsTab subinvestigatorsTab, boolean invite) {
         SubInvestigatorAssociationFormDialog newSubinvestigatorDialog = subinvestigatorsTab.clickAddNew();
-        newSubinvestigatorDialog.getHelper().searchAndSelectPerson(getExistingExternalPerson());
+        newSubinvestigatorDialog.getHelper().searchAndSelectPerson(getExistingNesPerson());
         if (invite) {
             subinvestigatorsTab.clickInvite().clickSendInvitations();
         }

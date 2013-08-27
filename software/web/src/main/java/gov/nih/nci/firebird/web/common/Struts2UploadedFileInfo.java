@@ -117,8 +117,6 @@ public class Struts2UploadedFileInfo implements Serializable {
      * @param dataContentType mime type.
      * @param description description of the file.
      */
-    @SuppressWarnings("ucd")
-    // convenience constructor used in tests
     public Struts2UploadedFileInfo(File data, String dataFileName, String dataContentType, String description) {
         this.data = data;
         this.dataFileName = dataFileName;

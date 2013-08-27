@@ -87,9 +87,7 @@ import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import gov.nih.nci.coppa.common.LimitOffset;
 import gov.nih.nci.coppa.po.HealthCareFacility;
-import gov.nih.nci.coppa.po.IdentifiedPerson;
 import gov.nih.nci.coppa.services.structuralroles.healthcarefacility.common.HealthCareFacilityI;
-import gov.nih.nci.coppa.services.structuralroles.identifiedperson.common.IdentifiedPersonI;
 import gov.nih.nci.ctep.ces.ocr.api.CesInvestigatorService;
 import gov.nih.nci.ctep.ces.ocr.api.InvestigatorStatus;
 import gov.nih.nci.firebird.cagrid.UserSessionInformationFactory;
@@ -98,11 +96,12 @@ import gov.nih.nci.firebird.data.Organization;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
 import gov.nih.nci.firebird.data.user.UserRoleType;
 import gov.nih.nci.firebird.nes.NesIIRoot;
+import gov.nih.nci.firebird.nes.organization.HealthCareFacilityIntegrationService;
+import gov.nih.nci.firebird.nes.organization.NesOrganizationIntegrationServiceFactory;
 import gov.nih.nci.firebird.service.ctep.iam.IamIntegrationService;
 import gov.nih.nci.firebird.service.investigator.InvestigatorService;
 import gov.nih.nci.firebird.service.organization.OrganizationService;
 import gov.nih.nci.firebird.service.person.PersonService;
-import gov.nih.nci.firebird.service.person.external.InvalidatedPersonException;
 import gov.nih.nci.firebird.service.sponsor.SponsorService;
 import gov.nih.nci.firebird.service.user.FirebirdUserService;
 import gov.nih.nci.firebird.test.OrganizationFactory;
@@ -156,10 +155,13 @@ public class IamRoleHandlerTest {
     private HealthCareFacilityI mockHealthCareFacilityService;
 
     @Mock
-    private OrganizationService mockOrganizationService;
+    private HealthCareFacilityIntegrationService mockHealthCareFacilityIntegrationService;
 
     @Mock
-    private IdentifiedPersonI mockIdentifiedPersonService;
+    private NesOrganizationIntegrationServiceFactory mockNesServiceFactory;
+
+    @Mock
+    private OrganizationService mockOrganizationService;
 
     private UserSessionInformation sessionInformation = UserSessionInformationFactory.getInstance().create(
             TEST_FULLY_QUALIFIED_USERNAME);
@@ -172,9 +174,9 @@ public class IamRoleHandlerTest {
         when(mockSponsorService.getSponsorOrganizationWithAnnualRegistrations()).thenReturn(sponsor);
         roleHandler = new IamRoleHandler(mockUserService, mockIamIntegrationService, mockPersonService,
                 mockCesInvestigatorService, mockInvestigatorService, mockSponsorService, mockHealthCareFacilityService,
-                mockOrganizationService, mockIdentifiedPersonService);
+                mockNesServiceFactory, mockOrganizationService);
         when(mockIamIntegrationService.getGroups(TEST_BASE_USERNAME)).thenReturn(TEST_ROLES);
-        when(mockPersonService.getByExternalId(anyString())).thenReturn(PersonFactory.getInstance().create());
+        when(mockPersonService.getByCtepId(anyString())).thenReturn(PersonFactory.getInstance().create());
         when(mockCesInvestigatorService.getInvestigatorStatus(anyString())).thenReturn(InvestigatorStatus.ACTIVE);
         HealthCareFacility healthCareFacility = new HealthCareFacility();
         DSETII identifier = mock(DSETII.class);
@@ -185,11 +187,8 @@ public class IamRoleHandlerTest {
         healthCareFacility.setIdentifier(identifier);
         when(mockHealthCareFacilityService.query(any(HealthCareFacility.class), any(LimitOffset.class))).thenReturn(
                 new HealthCareFacility[] { healthCareFacility });
-        when(mockOrganizationService.getByExternalId(anyString())).thenReturn(primaryOrganization);
-        IdentifiedPerson identifiedPerson = new IdentifiedPerson();
-        identifiedPerson.setPlayerIdentifier(ii);
-        when(mockIdentifiedPersonService.query(any(IdentifiedPerson.class), any(LimitOffset.class))).thenReturn(
-                new IdentifiedPerson[] { identifiedPerson });
+        when(mockNesServiceFactory.getService(anyString())).thenReturn(mockHealthCareFacilityIntegrationService);
+        when(mockHealthCareFacilityIntegrationService.getById(anyString())).thenReturn(primaryOrganization);
     }
 
     @Test
@@ -205,11 +204,11 @@ public class IamRoleHandlerTest {
     }
 
     @Test
-    public void testHandleRoles_NewUser() throws InvalidatedPersonException {
+    public void testHandleRoles_NewUser() {
         roleHandler.handleRoles(sessionInformation);
         ArgumentCaptor<FirebirdUser> userCaptor = ArgumentCaptor.forClass(FirebirdUser.class);
         verify(mockUserService).save(userCaptor.capture());
-        verify(mockPersonService).getByExternalId(anyString());
+        verify(mockPersonService).getByCtepId(anyString());
         FirebirdUser user = userCaptor.getValue();
         assertNotNull(user.getInvestigatorRole());
         assertEquals(primaryOrganization, user.getInvestigatorRole().getProfile().getPrimaryOrganization()
@@ -220,13 +219,13 @@ public class IamRoleHandlerTest {
     }
 
     @Test
-    public void testHandleRoles_NoRoles() throws InvalidatedPersonException {
+    public void testHandleRoles_NoRoles() {
         Set<String> emptyRoles = Sets.newHashSet();
         when(mockIamIntegrationService.getGroups(TEST_BASE_USERNAME)).thenReturn(emptyRoles);
         roleHandler.handleRoles(sessionInformation);
         ArgumentCaptor<FirebirdUser> userCaptor = ArgumentCaptor.forClass(FirebirdUser.class);
         verify(mockUserService).save(userCaptor.capture());
-        verify(mockPersonService).getByExternalId(anyString());
+        verify(mockPersonService).getByCtepId(anyString());
         FirebirdUser user = userCaptor.getValue();
         assertNull(user.getInvestigatorRole());
         assertNull(user.getRegistrationCoordinatorRole());
@@ -235,13 +234,13 @@ public class IamRoleHandlerTest {
     }
 
     @Test
-    public void testHandleRoles_Sponsor() throws InvalidatedPersonException {
+    public void testHandleRoles_Sponsor() {
         Set<String> roles = Sets.newHashSet(UserRoleType.CTEP_SPONSOR.getGroupName());
         when(mockIamIntegrationService.getGroups(TEST_BASE_USERNAME)).thenReturn(roles);
         roleHandler.handleRoles(sessionInformation);
         ArgumentCaptor<FirebirdUser> userCaptor = ArgumentCaptor.forClass(FirebirdUser.class);
         verify(mockUserService).save(userCaptor.capture());
-        verify(mockPersonService).getByExternalId(anyString());
+        verify(mockPersonService).getByCtepId(anyString());
         FirebirdUser user = userCaptor.getValue();
         assertNull(user.getInvestigatorRole());
         assertNull(user.getRegistrationCoordinatorRole());
@@ -252,13 +251,13 @@ public class IamRoleHandlerTest {
     }
 
     @Test
-    public void testHandleRoles_SponsorDelegate() throws InvalidatedPersonException {
+    public void testHandleRoles_SponsorDelegate() {
         Set<String> roles = Sets.newHashSet(UserRoleType.CTEP_SPONSOR_DELEGATE.getGroupName());
         when(mockIamIntegrationService.getGroups(TEST_BASE_USERNAME)).thenReturn(roles);
         roleHandler.handleRoles(sessionInformation);
         ArgumentCaptor<FirebirdUser> userCaptor = ArgumentCaptor.forClass(FirebirdUser.class);
         verify(mockUserService).save(userCaptor.capture());
-        verify(mockPersonService).getByExternalId(anyString());
+        verify(mockPersonService).getByCtepId(anyString());
         FirebirdUser user = userCaptor.getValue();
         assertNull(user.getInvestigatorRole());
         assertNull(user.getRegistrationCoordinatorRole());

@@ -85,8 +85,6 @@ package gov.nih.nci.firebird.web.action.investigator.registration;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import java.util.List;
-
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
@@ -140,8 +138,8 @@ public class RegistrationActionTest extends AbstractWebTest {
                 .createInvestigatorRegistration();
         InvestigatorRegistration registration2 = RegistrationFactory.getInstanceWithId()
                 .createInvestigatorRegistration();
-        RegistrationListing listing1 = action.new RegistrationListing(registration1);
-        RegistrationListing listing2 = action.new RegistrationListing(registration2);
+        RegistrationListing listing1 = new RegistrationListing(registration1);
+        RegistrationListing listing2 = new RegistrationListing(registration2);
         assertTrue(listing1.compareTo(listing2) != 0);
     }
 
@@ -151,8 +149,8 @@ public class RegistrationActionTest extends AbstractWebTest {
                 .createInvestigatorRegistration();
         registration1.setStatus(RegistrationStatus.APPROVED);
         InvestigatorRegistration registration2 = registration1.createRevisedRegistration();
-        RegistrationListing listing1 = action.new RegistrationListing(registration1);
-        RegistrationListing listing2 = action.new RegistrationListing(registration2);
+        RegistrationListing listing1 = new RegistrationListing(registration1);
+        RegistrationListing listing2 = new RegistrationListing(registration2);
         assertEquals(-1, listing1.compareTo(listing2));
         assertEquals(1, listing2.compareTo(listing1));
     }
@@ -164,8 +162,8 @@ public class RegistrationActionTest extends AbstractWebTest {
         registration1.setStatus(RegistrationStatus.APPROVED);
         InvestigatorRegistration registration2 = registration1.createRevisedRegistration();
         InvestigatorRegistration registration3 = registration1.createRevisedRegistration();
-        RegistrationListing listing1 = action.new RegistrationListing(registration2);
-        RegistrationListing listing2 = action.new RegistrationListing(registration3);
+        RegistrationListing listing1 = new RegistrationListing(registration2);
+        RegistrationListing listing2 = new RegistrationListing(registration3);
         assertEquals(listing1.getCurrentRegistrationId().compareTo(listing2.getCurrentRegistrationId()),
                 listing1.compareTo(listing2));
     }
@@ -173,25 +171,16 @@ public class RegistrationActionTest extends AbstractWebTest {
     @Test
     public void testGetRegistrations() throws JSONException {
         InvestigatorProfile profile = InvestigatorProfileFactory.getInstance().create();
-        RevisedInvestigatorRegistration revisedRegistration = createRevisedRegistration(profile);
+        RevisedInvestigatorRegistration revisedRegistration1 = createRevisedRegistration(profile);
+        InvestigatorRegistration registration1 = RegistrationFactory.getInstanceWithId().createInvestigatorRegistration(profile);
         action.setProfile(profile);
 
         profile.getAllProtocolRegistrations();
 
-        List<RegistrationListing> listings = action.getRegistrationListings();
-        assertEquals(1, listings.size());
-        RegistrationListing listing = listings.get(0);
-        assertEquals(1, listing.getRevisedRegistrations().size());
-        checkEquivalent(listing, revisedRegistration.getCurrentRegistration());
-        RegistrationListing revisedListing = listing.getRevisedRegistrations().get(0);
-        checkEquivalent(revisedListing, revisedRegistration);
-    }
-
-    private void checkEquivalent(RegistrationListing listing, AbstractProtocolRegistration registration) {
-        assertEquals(registration.getProtocol().getProtocolTitle(), listing.getTitle());
-        assertEquals(registration.getProtocol().getProtocolNumber(), listing.getProtocolNumber());
-        assertEquals(registration.getProtocol().getSponsor().getName(), listing.getSponsor());
-        assertEquals(registration.getStatus(), listing.getStatus());
+        String registrationsJson = action.getRegistrations();
+        checkJsonForRegistration(revisedRegistration1.getCurrentRegistration(), registrationsJson);
+        checkJsonForRegistration(revisedRegistration1, registrationsJson);
+        checkJsonForRegistration(registration1, registrationsJson);
     }
 
     private RevisedInvestigatorRegistration createRevisedRegistration(InvestigatorProfile profile) {
@@ -203,6 +192,19 @@ public class RegistrationActionTest extends AbstractWebTest {
         return revisedRegistration;
     }
 
+    private void checkJsonForRegistration(AbstractProtocolRegistration registration, String registrationsJson) {
+        assertTrue(registrationsJson.contains(registration.getId().toString()));
+        assertTrue(registrationsJson.contains(registration.getStatus().getDisplay()));
+        assertTrue(registrationsJson.contains(registration.getProtocol().getProtocolTitle()));
+        assertTrue(registrationsJson.contains(registration.getProtocol().getProtocolNumber()));
+        assertTrue(registrationsJson.contains(registration.getProtocol().getSponsor().getName()));
+        if (registration.isRevisedInvestigatorRegistration()) {
+            Long currentRegistrationId = ((RevisedInvestigatorRegistration) registration).getCurrentRegistration()
+                    .getId();
+            assertTrue(registrationsJson.contains(currentRegistrationId.toString()));
+        }
+    }
+
     @Test
     public void testGetRegistrations_NotInvited() throws JSONException {
         AbstractProtocolRegistration registration = RegistrationFactory.getInstanceWithId()
@@ -210,8 +212,8 @@ public class RegistrationActionTest extends AbstractWebTest {
         registration.getInvitation().setInvitationStatus(InvitationStatus.NOT_INVITED);
         action.setProfile(registration.getProfile());
 
-        List<RegistrationListing> listings = action.getRegistrationListings();
-        assertTrue(listings.isEmpty());
+        String registrationsJson = action.getRegistrations();
+        assertFalse(registrationsJson.contains(registration.getId().toString()));
     }
 
     @Test
@@ -222,7 +224,7 @@ public class RegistrationActionTest extends AbstractWebTest {
 
     @Test
     public void testEnterRegistration_NoRegistration() {
-        action.setRegistration(new InvestigatorRegistration());
+        action.setRegistration(null);
         assertEquals("browse", action.enterRegistrations());
     }
 

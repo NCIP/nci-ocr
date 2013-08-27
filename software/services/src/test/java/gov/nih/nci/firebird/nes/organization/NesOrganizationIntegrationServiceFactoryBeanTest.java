@@ -110,9 +110,7 @@ public class NesOrganizationIntegrationServiceFactoryBeanTest {
     }
     
     private void setNesIdRoot(Organization organization, NesIIRoot root) {
-        NesOrganizationData nesOrganizationData = new NesOrganizationData();
-        nesOrganizationData.setExternalId(new NesId(root, TEST_EXTENSION).toString());
-        organization.setExternalData(nesOrganizationData);
+        organization.setNesId(new NesId(root, TEST_EXTENSION).toString());
     }
 
 

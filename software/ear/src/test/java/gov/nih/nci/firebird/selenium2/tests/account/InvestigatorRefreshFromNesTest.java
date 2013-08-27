@@ -95,7 +95,6 @@ import com.google.inject.Inject;
 
 import gov.nih.nci.firebird.data.Person;
 import gov.nih.nci.firebird.data.user.FirebirdUser;
-import gov.nih.nci.firebird.nes.person.NesPersonData;
 import gov.nih.nci.firebird.selenium2.framework.AbstractFirebirdWebDriverTest;
 import gov.nih.nci.firebird.selenium2.pages.coordinator.investigators.BrowseInvestigatorsPage;
 import gov.nih.nci.firebird.selenium2.pages.coordinator.investigators.BrowseInvestigatorsPage.InvestigatorListing;
@@ -107,7 +106,7 @@ public class InvestigatorRefreshFromNesTest extends AbstractFirebirdWebDriverTes
 
     @Inject
     private DataSetBuilder builder;
-
+    
     private DataSet dataSet;
     private Person investigator;
 
@@ -122,8 +121,8 @@ public class InvestigatorRefreshFromNesTest extends AbstractFirebirdWebDriverTes
 
     private void setInvestigatorUpdatePending() {
         investigator = dataSet.getInvestigator().getPerson();
-        ((NesPersonData) investigator.getExternalData()).setLastNesRefresh(null);
-        ((NesPersonData) investigator.getExternalData()).requestUpdate();
+        investigator.setLastNesRefresh(null);
+        investigator.requestUpdate();
         investigator.setLastName("new last name");
         dataSet.update(investigator);
         dataSet.reload();

@@ -95,12 +95,15 @@ import gov.nih.nci.firebird.service.registration.ProtocolRegistrationService;
 import gov.nih.nci.firebird.web.action.AbstractProtocolRegistrationAction;
 import gov.nih.nci.firebird.web.common.RegistrationJsonConverter;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import javax.persistence.Transient;
 
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.Actions;
@@ -110,7 +113,6 @@ import org.apache.struts2.convention.annotation.Result;
 import org.apache.struts2.json.JSONException;
 import org.apache.struts2.json.JSONUtil;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.opensymphony.xwork2.Preparable;
@@ -125,8 +127,7 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
     private static final long serialVersionUID = 1L;
 
     private SubInvestigatorRegistration subinvestigatorRegistration;
-    private List<String> selectedExternalIds = Lists.newArrayList();
-    private List<Long> invitedRegistrationIds = Lists.newArrayList();
+    private List<Long> selectedIds = new ArrayList<Long>();
     private final ResourceBundle resources;
     private final Set<Long> invalidSubinvestigatorIds = Sets.newHashSet();
 
@@ -166,8 +167,7 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
     }
 
     /**
-     * Enter action for entering the tab. Validates submission status if necessary.
-     *
+     * Enter action for entering the tab.  Validates submission status if necessary.
      * @return SUCCESS
      */
     @Action(value = "list", results = @Result(location = "subinvestigators.jsp"))
@@ -196,6 +196,7 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
     /**
      * @return All subinvestigator ids which have failed validation
      */
+    @Transient
     public Set<Long> getInvalidSubinvestigatorIds() {
         return invalidSubinvestigatorIds;
     }
@@ -208,7 +209,7 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
     @Action("addFromProfile")
     public String addFromProfile() {
         filterExistingSubinvestigators();
-        getRegistrationService().createSubinvestigatorRegistrations(getRegistration(), selectedExternalIds);
+        getRegistrationService().createSubinvestigatorRegistrations(getRegistration(), selectedIds);
         getRegistrationService().setReturnedOrRevisedRegistrationsFormStatusesToRevised(getRegistration().getProfile(),
                 FormTypeEnum.FORM_1572);
 
@@ -228,26 +229,31 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
 
     /**
      * send an invitation to investigatorsTab involved in the protocol.
-     *
      * @return close dialog if all went well.
      */
     @Action(value = "invite", results = { @Result(name = ERROR, location = "invite.jsp") })
     public String invite() {
-        for (SubInvestigatorRegistration registration : getRegistration().getSubinvestigatorRegistrations()) {
-            if (getInvitedRegistrationIds().contains(registration.getId())) {
-                getRegistrationService().inviteToRegistration(registration);
+        for (SubInvestigatorRegistration reg : getRegistration().getSubinvestigatorRegistrations()) {
+            if (getInvitedRegistrations().contains(reg.getId())) {
+                getRegistrationService().inviteToRegistration(reg);
             }
         }
 
         return closeDialog();
     }
 
-    public List<Long> getInvitedRegistrationIds() {
-        return invitedRegistrationIds;
+    /**
+     * @return selected registrations to invite.
+     */
+    public List<Long> getInvitedRegistrations() {
+        return getSelectedIds();
     }
 
-    public void setInvitedRegistrationIds(List<Long> invitedRegistrationIds) {
-        this.invitedRegistrationIds = invitedRegistrationIds;
+    /**
+     * @param registrations selected registrations to invite.
+     */
+    public void setInvitedRegistrations(List<Long> registrations) {
+        this.setSelectedIds(registrations);
     }
 
     /**
@@ -257,7 +263,7 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
         Set<SubInvestigator> subInvestigators = getRegistration().getProfile().getSubInvestigators();
         SortedSet<Person> list = new TreeSet<Person>(Person.NAME_COMPARATOR);
         for (SubInvestigator subInvestigator : subInvestigators) {
-            if (findExistingReg(subInvestigator.getPerson().getExternalId()) == null) {
+            if (findExistingReg(subInvestigator.getPerson().getId()) == null) {
                 list.add(subInvestigator.getPerson());
             }
         }
@@ -275,7 +281,6 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
 
     /**
      * JSON response for table data.
-     *
      * @return table data to display as a JSON string.
      * @throws JSONException if serialization fails
      */
@@ -303,21 +308,21 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
     }
 
     /**
-     * @return external ids of the selected subinvestigators.
+     * @return ids of the selected subinvestigators.
      */
-    public List<String> getSelectedExternalIds() {
-        return selectedExternalIds;
+    public List<Long> getSelectedIds() {
+        return selectedIds;
     }
 
     /**
-     * @param selectedExternalIds external ids of the selected subinvestigators.
+     * @param selectedIds ids of the selected subinvestigators.
      */
-    public void setSelectedExternalIds(List<String> selectedExternalIds) {
-        this.selectedExternalIds = selectedExternalIds;
+    public void setSelectedIds(List<Long> selectedIds) {
+        this.selectedIds = selectedIds;
     }
 
     private void filterExistingSubinvestigators() {
-        for (Iterator<String> idIterator = selectedExternalIds.iterator(); idIterator.hasNext();) {
+        for (Iterator<Long> idIterator = selectedIds.iterator(); idIterator.hasNext();) {
             SubInvestigatorRegistration reg = findExistingReg(idIterator.next());
             if (reg != null) {
                 idIterator.remove();
@@ -325,10 +330,10 @@ public class SubinvestigatorTabAction extends AbstractProtocolRegistrationAction
         }
     }
 
-    private SubInvestigatorRegistration findExistingReg(String externalId) {
+    private SubInvestigatorRegistration findExistingReg(Long id) {
         for (SubInvestigatorRegistration reg : getRegistration().getSubinvestigatorRegistrations()) {
-            String subInvestigatorExternalId = reg.getProfile().getPerson().getExternalId();
-            if (subInvestigatorExternalId.equals(externalId)) {
+            Long subInvestigatorId = reg.getProfile().getPerson().getId();
+            if (subInvestigatorId.equals(id)) {
                 return reg;
             }
         }
