@@ -9,7 +9,7 @@ You will need to add to Eclipse the following plug-in versions (install site URL
     - Eclipse Checkstyle Plug-in, version 5.5.x (http://eclipse-cs.sf.net/update)
     - Subclipse GIT Plug-in
     - m2eclipse Maven Plug-in. This needs to be installed manually. 
-	- Unzip the plugin found in firebird/tools/eclipse/maven_eclipse_plugin.zip
+	- Unzip the plugin found in tools/eclipse/maven_eclipse_plugin.zip
 	- Copy the contents of the unzipped folder into the Eclipse plugins folder
         
 Checkstyle, PMD, and Java code formatter XML configuration can be found in the software/resources folder

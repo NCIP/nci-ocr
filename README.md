@@ -46,7 +46,7 @@ These are the pre-requisites for deploying NCI OCR in a development environment:
 
 8.  Initialize the database:
 
-    cd firebird/software/firebird/services
+    cd software/services
     mvn -Pnuke-db,local sql:execute
 
 9. Synchronize with the Staging grid trust fabric:
