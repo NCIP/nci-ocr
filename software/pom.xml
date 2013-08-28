@@ -147,26 +147,15 @@
 
     <!-- General Project information -->
     <scm>
-        <connection>scm:svn:https://ncisvn.nci.nih.gov/svn/firebird/branches/3.2.0</connection>
-        <developerConnection>scm:svn:https://ncisvn.nci.nih.gov/svn/firebird/branches/3.2.0</developerConnection>
-        <url>https://ncisvn.nci.nih.gov/svn/firebird/branches/3.2.0</url>
+        <connection>scm:git:https://github.com/NCIP/nci-ocr.git</connection>
+        <developerConnection>scm:git:git@github.com:NCIP/nci-ocr.git</developerConnection>
+        <url>https://github.com/NCIP/nci-ocr</url>
     </scm>
-
+    
     <issueManagement>
         <system>Jira</system>
         <url>https://tracker.nci.nih.gov/browse/FB</url>
     </issueManagement>
-
-    <ciManagement>
-        <system>Hudson</system>
-        <url>http://ncias-c490-v.nci.nih.gov:48080/hudson/</url>
-        <notifiers>
-            <notifier>
-                <type>mail</type>
-                <address>team-firebird@5amsolutions.com</address>
-            </notifier>
-        </notifiers>
-    </ciManagement>
 
     <mailingLists>
         <mailingList>
@@ -323,17 +312,6 @@
                 </configuration>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.2.2</version>
-                <configuration>
-                    <preparationGoals>clean install</preparationGoals>
-                    <arguments>-Dskip-liquibase=true</arguments>
-                    <tagBase>https://ncisvn.nci.nih.gov/svn/firebird/releases</tagBase>
-                    <stagingRepository>releases::default::https://ncimvn.nci.nih.gov/nexus/service/local/staging/deploy/maven2</stagingRepository>
-                </configuration>
-            </plugin>
             <!--
                 See http://maven.apache.org/scm/maven-scm-plugin/examples/bootstrapping-with-pom.html
                 and http://maven.apache.org/scm/maven-scm-plugin/
